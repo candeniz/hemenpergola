@@ -27,7 +27,7 @@ proven — not when the code is written.
 |---|---|---|---|
 | Docs | 00–26, README, CLAUDE.md | ✅ done | — |
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
-| 1 | Identity | ⬜ | authorisation matrix covers every service method |
+| 1 | Identity | **🟡 in progress · 5/9** | authorisation matrix covers every service method |
 | 2 | Catalogue + admin skeleton | ⬜ | admin adds a product with no deploy |
 | 3 | Manufacturer supply side | ⬜ | a company is matchable |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
@@ -834,6 +834,174 @@ Nothing from Phase 0 is left half-done. What Phase 0 deliberately deferred, with
   now finds the schema and the tests and runs them, but the GitHub runner has still never
   executed it — the repository has no remote (`25-progress.md`, 2026-08-15). First push.
 
+### 2026-08-16 — Phase 1 tasks 1.1, 1.8, 1.2, 1.3, 1.7 (commit `P1.1+1.8+1.2+1.3+1.7`)
+
+The first half of Phase 1: the permission catalogue, the matrix harness, credentials,
+tokens and the real `resolveActor`. No user-facing pages — 1.4, 1.5, 1.6 and 1.9 are the
+second half. Phase 1 row is now **🟡 in progress · 5/9**.
+
+#### `modules/iam/` is the template for eleven more modules
+
+The first module, so its shape is the shape every later one copies. What it fixes:
+
+```
+modules/iam/
+  domain/          permissions.ts, password.ts — pure. No Prisma, no Next, no imports
+                   from application/ or infrastructure/.
+  application/     auth-service.ts, authorization.ts, dto.ts, actions.ts — takes an
+                   ActorContext, asserts, returns Result<T, DomainError>.
+  infrastructure/  password-hasher, token-service, identify, captcha — Prisma and adapters.
+```
+
+Import direction: `app/` → `application/` → `domain/`, and `infrastructure/` is reachable
+only from `application/`. Task **0.8's boundary rule finally has real targets** — until now
+it was proven against paths that did not exist. `test/module-boundary.test.ts` gained three
+cases against actual files: `modules/iam/infrastructure/identify`,
+`.../password-hasher` and `modules/iam/domain/permissions` are each rejected from `app/`,
+and the dynamic import of `application/auth-service` is still allowed.
+
+One thing worth copying deliberately: **the server actions live in
+`modules/iam/application/actions.ts`, not in `app/`.** Non-negotiable 9 bans `app/` from
+importing a service at module scope, and an action file has to import one — so the action
+belongs inside the module and the page imports the action.
+
+#### 1.8 — how the matrix mechanism works
+
+Two halves, because either alone has a hole.
+
+**The type.** `serviceMethod(service, method, authorisation, implementation)` cannot be
+called without an authorisation spec. The spec is a closed union — `permission`, `owner`,
+`admin`, `authenticated`, `anonymous` — so a new kind of authorisation is a deliberate edit
+to the union rather than a blank at a call site. `anonymous` and `owner` carry a required
+sentence (`why`, `describe`); a test asserts they are non-trivial, because "no
+authorisation" must not be the cheapest option on the menu.
+
+**The scan.** A developer can still export a plain `async function` from an `application/`
+file and never call `serviceMethod`. `test/authorisation-matrix.test.ts` walks every
+`modules/*/application/*.ts`, extracts exported functions, and fails on any not in the
+registry — naming the file and the symbol. This is a **unit** test rather than an
+integration one, deliberately: the check is pure static analysis, so it gates every
+`pnpm test` instead of only the stage that needs a container.
+
+Proven with a fixture: an unregistered `publishPriceBook` in `application/` produced
+
+```
+Unregistered service methods:
+  src/modules/iam/application/__unregistered-probe.ts → publishPriceBook
+Wrap each in serviceMethod() so it enters the authorisation matrix.
+```
+
+The grid itself is **generated from the catalogue**, never typed out: 20 permissions × 8
+actors (`OWNER`, `ADMIN`, `SALES`, `VIEWER`, other-company, customer, anonymous, global
+admin) = 160 cases, plus 20 × 4 roles × 4 statuses = 320 for the role ∩ status half. A
+hand-written expectation table would be a second source of truth whose first act would be
+to disagree with the first.
+
+**The scan found a real gap on its first run:** `checkHealth`, from Phase 0. It is an
+operational probe — no actor, no user data, and a load balancer has no credentials — so it
+is the single entry on an exemption list, and a test asserts the list has exactly that one
+entry. A second exemption has to be argued for.
+
+#### 1.1 — the catalogue is now genuinely the source
+
+`02`'s table is **generated** by `scripts/generate-permission-table.mjs` between two
+markers, and `permissions.test.ts` reads the document back and fails when any cell
+disagrees with the code. `02` said the table "must be regenerated from it, never hand-edited
+to diverge"; that is now enforced rather than requested.
+
+One permission was added that `02`'s prose implies but its table omits:
+`company:document.upload`. `02` §Verification state says a `PENDING` company "can complete
+profile and upload documents" and a `REJECTED` one "may resubmit documents" — that is a
+capability, and without a name for it the status gate could not express either sentence.
+
+**Capability is role ∩ status, and the two failures are different errors.** Role missing →
+`FORBIDDEN`. Role present but the company's status forbids it → `PRECONDITION`. "You are not
+allowed" and "your company is suspended" must not read the same to the person who has to fix
+it; only the second is actionable.
+
+#### 1.2 — credentials
+
+Argon2id at the parameters `12` fixes — 19 MiB, t=2, p=1 — asserted against the encoded hash
+(`m=19456,t=2,p=1`), not just against a constant.
+
+The identical-latency requirement is the part that needed real work. `burnPasswordTime`
+verifies against a throwaway hash on the unknown-email path, so both branches pay the Argon2
+cost. Measured over five alternating runs, median unknown-email vs median wrong-password,
+asserted within 3× — the failure this catches is roughly 100×, and both medians must exceed
+5 ms so a branch that skipped the work cannot pass.
+
+Registration returns the same shape for a new and an existing address, and does not
+overwrite the existing account.
+
+#### 1.3 — tokens
+
+Access JWT carries exactly `sub`, `role`, `jti`, `iat`, `exp` (plus `iss`/`aud`). The test
+decodes the **raw payload** rather than the typed result and asserts the key set exactly,
+because a typed reader would hide a claim added "just for convenience" — and the claim that
+must never appear is `companyId`.
+
+Refresh tokens are hashed at rest, single-use, and grouped into families. Replaying a used
+token revokes the whole family, including the successor the honest client is holding; the
+test asserts every row in the family ends `revokedReason: 'reuse_detected'`. Every failure
+mode returns the same error to the caller, because "expired" versus "someone else used this"
+is exactly what an attacker wants to learn.
+
+Verification tokens (email 24 h, reset 1 h, OTP 5 min) are SHA-256 at rest — a database dump
+must not be a set of working reset links. Issuing a new one invalidates the outstanding one,
+so three clicks on "resend" do not leave three live links.
+
+#### 1.7 — `resolveActor`
+
+All four steps, with the two IO calls injected so the resolver is unit-testable and so both
+surfaces plug into one implementation. `/api/v1` accepts **only** `Authorization: Bearer` —
+no cookie is read there, which is why CSRF cannot exist on that surface. The role is read
+from the database rather than from the claim, so a role change or a suspension takes effect
+on the next request.
+
+The two-tab case is a test: one user, two companies, both open, and the first tab keeps its
+own scope after the second loads. So is the revocation case — a membership removed between
+two requests is gone on the second.
+
+`resolveActor` deliberately does **not** reject. No membership leaves `companyRole: null`
+and `authorize()` turns that into `FORBIDDEN` — one place decides, the same place for every
+surface.
+
+#### Both surfaces, one mapping
+
+`src/shared/http/respond.ts` maps `Result` → transport once. `respond()` for route handlers,
+`actionResult()` for server actions. The test asserts all seven kinds map to
+404/403/422/409/409/429/503 **on both**, and that with a fixed request id the two produce
+byte-identical envelopes — the only difference being where the status lives, since an action
+cannot set a header. `Retry-After` is set on 429.
+
+`/api/v1/auth/{login,register,refresh}` and `loginAction`/`registerAction`/`refreshAction`
+call the same services through the same Zod schemas.
+
+#### Evidence
+
+| Check | Result |
+|---|---|
+| `typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 |
+| unit tests | **733** (was 192) |
+| integration tests | **61** (was 36) |
+| `pnpm build` with no `.env` | exit 0 |
+| `prisma migrate diff` after migration 2 | `No difference detected`, exit 0 |
+| unregistered service method fixture | fails, naming file and symbol |
+| `app/` importing iam internals fixture | 3 errors, one per layer |
+| Argon2 timing, unknown email vs wrong password | both > 5 ms, ratio < 3× |
+| refresh replay | whole family revoked, successor dead |
+| JWT payload keys | `aud, exp, iat, iss, jti, role, sub` — no `companyId` |
+
+#### Deferred, with owners
+
+- **CAPTCHA — Q10.** Port built, no provider. Progressive delay and the lockout notification
+  are implemented; the challenge is not. Blocks the second half of Phase 1.
+- **Auth events to `AuditLog`** — task 1.9, second half. The failure counters are recorded on
+  `User`; the audit rows are not yet written.
+- **Auth.js wiring.** `identifyFromRequest` reads the `Session` table directly, which is the
+  same table the Auth.js Prisma adapter owns. The provider configuration lands with the
+  login page in 1.4.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -846,6 +1014,7 @@ Nothing from Phase 0 is left half-done. What Phase 0 deliberately deferred, with
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
+| Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Phase 1 second half** (login and registration pages). The port and the progressive delay are built; only the challenge itself is missing. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

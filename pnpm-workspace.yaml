@@ -23,3 +23,5 @@ allowBuilds:
   sharp: true
   ssh2: false
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - jose@6.2.9

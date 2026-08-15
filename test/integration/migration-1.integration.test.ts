@@ -182,8 +182,15 @@ describe('migration 1 · geography columns accept and return points', () => {
   })
 })
 
-describe('migration 1 · scope', () => {
-  it('creates the tables this migration owns and none of the later ones', async () => {
+/**
+ * Migration scope, phase by phase (`ADR-014`: one migration per phase).
+ *
+ * This assertion is exact on purpose. A table appearing before its phase means a module got
+ * built early, and the list is the cheapest way to notice. It moves when a phase lands —
+ * which is a deliberate edit in that phase's commit, not a surprise.
+ */
+describe('migration scope', () => {
+  it('has exactly the tables Phases 0 and 1 own, and none from later phases', async () => {
     const rows = await getPrisma().$queryRaw<{ tablename: string }[]>`
       SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename
     `
@@ -192,6 +199,8 @@ describe('migration 1 · scope', () => {
     expect(tables).toEqual([
       'Account',
       'AuditLog',
+      // Phase 1 · migration 2
+      'AuthToken',
       'City',
       'Company',
       'CompanyContact',
@@ -206,6 +215,8 @@ describe('migration 1 · scope', () => {
       'Payment',
       'Plan',
       'PlatformSetting',
+      // Phase 1 · migration 2
+      'RefreshToken',
       'Session',
       'Subscription',
       'User',

@@ -32,6 +32,26 @@ export type ActorRouteParams = {
   companyId?: string
 }
 
+/**
+ * How the user was identified. Injected rather than imported so `resolveActor` stays
+ * testable and so the two surfaces — cookie session and Bearer JWT — plug into one
+ * resolver (`12` §Two surfaces, one identity).
+ */
+export type IdentifiedUser = {
+  userId: string
+  globalRole: 'CUSTOMER' | 'ADMIN'
+}
+
+export type ActorDependencies = {
+  /** Step 1: cookie session (web) or Bearer JWT (`/api/v1`). */
+  identify: (request: ActorRequestLike) => Promise<IdentifiedUser | null>
+  /** Step 2–3: the membership and the company's status, in one lookup. */
+  loadMembership: (
+    userId: string,
+    companyId: string,
+  ) => Promise<{ role: CompanyRole; status: CompanyStatus } | null>
+}
+
 const DEFAULT_LOCALE: Locale = 'tr'
 
 function readLocale(params: ActorRouteParams): Locale {
@@ -60,43 +80,75 @@ function readUserAgent(request: ActorRequestLike): string {
 }
 
 /**
- * Resolve the actor for this request.
+ * Resolve the actor for this request — `12-authentication-authorization.md`
+ * §Context resolution, all four steps.
  *
- * **Phase 0 returns an anonymous context.** Authentication is Phase 1
- * (`12-authentication-authorization.md`), and this function is where it lands — steps 1–3
- * of §Context resolution slot in below, in order:
- *
- *   1. identify the user (cookie session, or Bearer JWT on `/api/v1`)
- *   2. if the route carries `[companyId]`, load the `CompanyMembership` for (user, company);
- *      missing → `FORBIDDEN`, not `NOT_FOUND`, and never a redirect
- *   3. load `Company.status`, because capability is role ∩ status
- *
- * Two things are already correct and Phase 1 must not reshape them:
- *
- * **The signature.** `(request, params)` — everything comes from the request and the route,
- * nothing from module state.
+ *   1. identify the user (cookie session or Bearer JWT); no user → anonymous context
+ *   2. if the route carries `[companyId]`, load the `CompanyMembership` for (user, company)
+ *   3. load `Company.status` — capability is role ∩ status
+ *   4. attach `locale`, `ip`, `userAgent` for audit and consent records
  *
  * **`companyId` comes from `params`, never from the session.** A "current company" stored
  * in the session means a user with two companies open in two tabs has one tab silently
  * rewrite the other's scope, and revoking a membership would not take effect until the
- * token expired (`12` §Context resolution). Resolving per request from the path is what
- * makes revocation immediate.
+ * token expired. Resolving per request from the path is what makes revocation immediate.
+ * `actor.test.ts` holds the two-tab case.
+ *
+ * Note what this function does **not** do: it does not reject. A user with no membership
+ * for the requested company gets `companyRole: null`, and `authorize()` turns that into
+ * `FORBIDDEN` — one place decides, and it is the same place for every surface
+ * (`02` §Enforcement rule).
  */
 export async function resolveActor(
   request: ActorRequestLike,
   params: ActorRouteParams = {},
+  dependencies?: Partial<ActorDependencies>,
 ): Promise<ActorContext> {
-  return {
+  const identify = dependencies?.identify ?? defaultDependencies().identify
+  const loadMembership = dependencies?.loadMembership ?? defaultDependencies().loadMembership
+
+  const base: ActorContext = {
     userId: null,
     globalRole: null,
-    // Read from the route even while anonymous: the scope of the request is a property of
-    // the URL, and Phase 1 only adds the membership lookup that turns it into a role.
     companyId: params.companyId ?? null,
     companyRole: null,
     companyStatus: null,
     locale: readLocale(params),
     ip: readIp(request),
     userAgent: readUserAgent(request),
+  }
+
+  const identified = await identify(request)
+  if (identified === null) return base
+
+  const withUser: ActorContext = {
+    ...base,
+    userId: identified.userId,
+    globalRole: identified.globalRole,
+  }
+
+  if (withUser.companyId === null) return withUser
+
+  const membership = await loadMembership(identified.userId, withUser.companyId)
+  if (membership === null) return withUser
+
+  return { ...withUser, companyRole: membership.role, companyStatus: membership.status }
+}
+
+/**
+ * The real dependencies, imported lazily so that importing this module from a test — or
+ * from anywhere that has no database — does not drag in Prisma.
+ */
+function defaultDependencies(): ActorDependencies {
+  return {
+    async identify(request) {
+      const { identifyFromRequest } = await import('@/modules/iam/infrastructure/identify')
+      return identifyFromRequest(request)
+    },
+    async loadMembership(userId, companyId) {
+      const { loadMembership } = await import('@/modules/iam/infrastructure/identify')
+      return loadMembership(userId, companyId)
+    },
   }
 }
 

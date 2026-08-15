@@ -37,11 +37,17 @@ Permissions are string constants (`company:price_book.publish`), not booleans on
 The full list lives in `src/modules/iam/domain/permissions.ts`; it is the single source of
 truth and this table must be regenerated from it, never hand-edited to diverge.
 
+<!-- BEGIN GENERATED PERMISSION TABLE -->
+
+<!-- Generated from src/modules/iam/domain/permissions.ts by scripts/generate-permission-table.mjs.
+     Do not edit by hand: permissions.test.ts fails when this drifts from the code. -->
+
 | Permission | OWNER | ADMIN | SALES | VIEWER |
 |---|:--:|:--:|:--:|:--:|
 | `company.update` | ✓ | ✓ | — | — |
 | `company.delete` | ✓ | — | — | — |
-| `member.invite` / `member.remove` | ✓ | ✓ | — | — |
+| `member.invite` | ✓ | ✓ | — | — |
+| `member.remove` | ✓ | ✓ | — | — |
 | `member.change_role` | ✓ | ✓¹ | — | — |
 | `product.manage` | ✓ | ✓ | — | — |
 | `price_book.read` | ✓ | ✓ | ✓ | ✓ |
@@ -50,14 +56,18 @@ truth and this table must be regenerated from it, never hand-edited to diverge.
 | `service_area.manage` | ✓ | ✓ | — | — |
 | `offer_request.read` | ✓ | ✓ | ✓ | ✓ |
 | `offer_request.respond` | ✓ | ✓ | ✓ | — |
-| `offer.create` / `offer.send` | ✓ | ✓ | ✓ | — |
+| `offer.create` | ✓ | ✓ | ✓ | — |
+| `offer.send` | ✓ | ✓ | ✓ | — |
 | `appointment.manage` | ✓ | ✓ | ✓ | — |
 | `message.send` | ✓ | ✓ | ✓ | — |
 | `portfolio.manage` | ✓ | ✓ | ✓ | — |
 | `review.respond` | ✓ | ✓ | ✓ | — |
 | `analytics.read` | ✓ | ✓ | ✓ | ✓ |
+| `document.upload` | ✓ | ✓ | — | — |
 
 ¹ `ADMIN` cannot grant or revoke `OWNER`.
+
+<!-- END GENERATED PERMISSION TABLE -->
 
 ## Customer permissions
 

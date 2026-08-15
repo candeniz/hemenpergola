@@ -25,10 +25,12 @@
     "seed": "tsx prisma/seed/index.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.1.0",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "jose": "6.2.9",
     "next": "15.5.23",
     "next-intl": "4.13.6",
     "pg": "^8.23.0",

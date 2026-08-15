@@ -1,9 +1,9 @@
 import { execFileSync } from 'node:child_process'
 
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
-import { afterAll, beforeAll } from 'vitest'
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
+import { afterAll } from 'vitest'
 
 /**
  * The integration harness — `20-testing-strategy.md` §Integration.
@@ -14,6 +14,13 @@ import { afterAll, beforeAll } from 'vitest'
  *   every test inside a transaction that is rolled back
  *   no shared mutable fixture state
  *
+ * **The container starts at module scope, not in `beforeAll`.** Vitest imports and awaits
+ * setup files before it imports the test files, and the test files pull in
+ * `@/shared/db` — which builds its Prisma client from `DATABASE_URL` when that module is
+ * evaluated. Starting the container in a hook would be too late: the application client
+ * would already be pointing at the developer's database, and the suite would quietly test
+ * against it.
+ *
  * The container is created with `--locale=C`, matching `docker-compose.yml` and the
  * requirement in `23-deployment-and-environments.md` §Migrations. Testing against a
  * different collation than production runs would make the Turkish-ordering tests lie.
@@ -21,14 +28,31 @@ import { afterAll, beforeAll } from 'vitest'
 
 const IMAGE = 'postgis/postgis:16-3.4'
 
-let container: StartedPostgreSqlContainer
-let databaseUrl: string
-let rootClient: PrismaClient
+const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(IMAGE)
+  .withDatabase('pergola_test')
+  .withUsername('pergola')
+  .withPassword('pergola')
+  .withCommand(['postgres', '-c', 'fsync=off', '-c', 'full_page_writes=off'])
+  .withEnvironment({ POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8' })
+  .start()
+
+const databaseUrl = container.getConnectionUri()
+
+// Before any application module is imported: the typed env parses `process.env` at load,
+// and `@/shared/db` builds its adapter from the parsed value.
+process.env.DATABASE_URL = databaseUrl
+process.env.DIRECT_URL = databaseUrl
+
+execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
+  env: { ...process.env, DATABASE_URL: databaseUrl, DIRECT_URL: databaseUrl },
+  stdio: 'inherit',
+  shell: true,
+})
+
+const rootClient = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) })
+await rootClient.$connect()
 
 export function getDatabaseUrl(): string {
-  if (databaseUrl === undefined) {
-    throw new Error('The integration harness has not started. Is this file in `setupFiles`?')
-  }
   return databaseUrl
 }
 
@@ -37,31 +61,9 @@ export function getPrisma(): PrismaClient {
   return rootClient
 }
 
-beforeAll(async () => {
-  container = await new PostgreSqlContainer(IMAGE)
-    .withDatabase('pergola_test')
-    .withUsername('pergola')
-    .withPassword('pergola')
-    // Byte-order collation at the cluster, Turkish only per column (04 §Conventions).
-    .withCommand(['postgres', '-c', 'fsync=off', '-c', 'full_page_writes=off'])
-    .withEnvironment({ POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8' })
-    .start()
-
-  databaseUrl = container.getConnectionUri()
-
-  execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
-    env: { ...process.env, DATABASE_URL: databaseUrl, DIRECT_URL: databaseUrl },
-    stdio: 'inherit',
-    shell: true,
-  })
-
-  rootClient = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) })
-  await rootClient.$connect()
-}, 300_000)
-
 afterAll(async () => {
-  await rootClient?.$disconnect()
-  await container?.stop()
+  await rootClient.$disconnect()
+  await container.stop()
 })
 
 /**

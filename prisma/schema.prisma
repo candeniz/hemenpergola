@@ -117,12 +117,19 @@ model User {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  memberships CompanyMembership[]
-  consents    Consent[]
-  auditLogs   AuditLog[]          @relation("AuditActor")
-  uploads     File[]              @relation("FileUploader")
+  /// 12 §Abuse controls: progressive delay after 5 failed logins per account.
+  failedLoginCount  Int       @default(0)
+  lastFailedLoginAt DateTime?
+  lockoutNotifiedAt DateTime?
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   CompanyMembership[]
+  consents      Consent[]
+  auditLogs     AuditLog[]          @relation("AuditActor")
+  uploads       File[]              @relation("FileUploader")
+  authTokens    AuthToken[]
+  refreshTokens RefreshToken[]
 
   @@index([deletedAt])
   @@index([globalRole, status])
@@ -347,19 +354,19 @@ model Consent {
 }
 
 model AuditLog {
-  id           String     @id @default(cuid())
-  actorUserId  String?
-  actorRole    String
-  companyId    String?
-  entityType   String
-  entityId     String
-  action       String
-  before       Json?
-  after        Json?
-  reason       String?
-  ip           String
-  userAgent    String
-  createdAt    DateTime   @default(now())
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorRole   String
+  companyId   String?
+  entityType  String
+  entityId    String
+  action      String
+  before      Json?
+  after       Json?
+  reason      String?
+  ip          String
+  userAgent   String
+  createdAt   DateTime @default(now())
 
   actor   User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -385,15 +392,15 @@ model PlatformSetting {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Plan {
-  id        String          @id @default(cuid())
-  code      String          @unique
-  name      String
+  id         String          @id @default(cuid())
+  code       String          @unique
+  name       String
   priceKurus Int
-  interval  BillingInterval
-  features  Json
-  isActive  Boolean         @default(true)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  interval   BillingInterval
+  features   Json
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
   subscriptions Subscription[]
 }
@@ -472,4 +479,67 @@ model ConfiguratorRule {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 1 · Identity — migration 2 (ADR-014: one migration per phase)
+// 12-authentication-authorization.md §Tokens, §Abuse controls
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  PHONE_OTP
+}
+
+/**
+ * Verification and reset tokens. Separate from Auth.js's `VerificationToken`, which the
+ * adapter owns and whose shape it dictates: this one is hashed at rest, typed, and counts
+ * attempts, none of which that table does.
+ * `tokenHash` is a SHA-256 of the token, never the token — a database dump must not be a
+ * set of working password-reset links (19-security-and-kvkk.md §Logging).
+ */
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int           @default(0)
+  /// The phone or email the token was issued against, so a changed address invalidates it.
+  target    String?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+/**
+ * Refresh tokens for the `/api/v1` surface, stored hashed and grouped into families.
+ * A family is one login. Rotation issues a new token in the same family and marks the old
+ * one used; **replaying a used token revokes the entire family** (`12` §Tokens), because
+ * the only way a used token is presented again is that someone else has a copy.
+ */
+model RefreshToken {
+  id            String    @id @default(cuid())
+  userId        String
+  familyId      String
+  tokenHash     String    @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  revokedAt     DateTime?
+  /// Why the family died, when it did — `rotated`, `reuse_detected`, `logout`, `password_change`.
+  revokedReason String?
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, familyId])
+  @@index([familyId])
+  @@index([expiresAt])
 }

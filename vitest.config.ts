@@ -5,6 +5,9 @@ import { defineConfig } from 'vitest/config'
 import { VALID_ENV } from './test/fixtures/env.js'
 
 export default defineConfig({
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts', 'test/**/*.{test,spec}.ts'],

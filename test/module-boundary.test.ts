@@ -154,3 +154,48 @@ describe('build-time coupling: app/ must not read config or services at module s
     ).toEqual([])
   })
 })
+
+/**
+ * Phase 1 gives the boundary rule its first real targets. Before `modules/iam` existed the
+ * patterns matched nothing that was actually there.
+ */
+describe('the rule protects the iam module specifically', () => {
+  const iamFixture = readFileSync(
+    fileURLToPath(new URL('./fixtures/boundary/app-imports-iam-internals.tsx', import.meta.url)),
+    'utf8',
+  )
+
+  it('reports all three real internals the fixture reaches for', async () => {
+    const messages = await lintAsAppFile(iamFixture)
+    const boundary = messages.filter((message) => message.ruleId === 'no-restricted-imports')
+
+    expect(boundary).toHaveLength(3)
+  })
+
+  it.each([
+    ['@/modules/iam/infrastructure/identify', /repository or adapter/],
+    ['@/modules/iam/infrastructure/password-hasher', /repository or adapter/],
+    ['@/modules/iam/domain/permissions', /domain internals/],
+  ])('bans %s from app/', async (specifier, expected) => {
+    const messages = await lintAsAppFile(
+      `import x from '${specifier}'\nexport default function Page() { return x }\n`,
+    )
+    const boundary = messages.filter((m) => m.ruleId === 'no-restricted-imports')
+
+    expect(boundary).toHaveLength(1)
+    expect(boundary[0]?.message).toMatch(expected)
+  })
+
+  it('still allows the application layer — dynamically imported, per rule 9', async () => {
+    const messages = await lintAsAppFile(
+      [
+        'export default async function handler() {',
+        "  const { login } = await import('@/modules/iam/application/auth-service')",
+        '  return login',
+        '}',
+      ].join('\n'),
+    )
+
+    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([])
+  })
+})
