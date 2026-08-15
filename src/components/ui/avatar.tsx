@@ -23,7 +23,7 @@ export function AvatarFallback({
   return (
     <AvatarPrimitive.Fallback
       className={cn(
-        'flex size-full items-center justify-center rounded-full bg-primary-fixed text-body-sm text-on-primary-fixed-variant',
+        'flex size-full items-center justify-center rounded-full bg-action-wash text-body-sm text-on-action-wash',
         className,
       )}
       {...props}

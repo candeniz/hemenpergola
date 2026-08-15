@@ -14,7 +14,7 @@ export const DialogClose = DialogPrimitive.Close
 function Overlay({ className, ...props }: ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
-      className={cn('fixed inset-0 z-50 bg-inverse-surface/40', className)}
+      className={cn('fixed inset-0 z-50 bg-scrim/40', className)}
       {...props}
     />
   )
@@ -39,7 +39,7 @@ export function DialogContent({
       >
         {children}
         <DialogPrimitive.Close
-          className="absolute right-sm top-sm inline-flex size-11 items-center justify-center rounded-sm text-muted hover:bg-panel-subtle"
+          className="absolute right-sm top-sm inline-flex size-11 items-center justify-center rounded-sm text-muted hover:bg-panel-hover"
           aria-label={closeLabel}
         >
           <Icon name="close" />

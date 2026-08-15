@@ -27,12 +27,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        confirm:
-          'bg-confirm text-on-confirm hover:bg-secondary-fixed-dim hover:text-on-secondary-fixed',
-        primary: 'bg-action text-on-action hover:bg-primary-container',
-        outline: 'border border-action bg-transparent text-action hover:bg-primary-fixed',
-        destructive: 'bg-destructive text-on-destructive hover:bg-on-error-container',
-        ghost: 'bg-transparent text-on-panel hover:bg-panel-subtle',
+        // Every hover stays on the semantic layer, and every one keeps its foreground at
+        // AA — the previous `destructive` hover reached for `on-error-container`, a
+        // foreground role used as a background.
+        confirm: 'bg-confirm text-on-confirm hover:bg-confirm-hover',
+        primary: 'bg-action text-on-action hover:bg-action-hover',
+        outline: 'border border-action bg-transparent text-action hover:bg-action-wash',
+        destructive: 'bg-destructive text-on-destructive hover:bg-destructive-hover',
+        ghost: 'bg-transparent text-on-panel hover:bg-panel-hover',
         link: 'bg-transparent text-action underline-offset-4 hover:underline',
       },
       size: {

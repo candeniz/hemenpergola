@@ -62,6 +62,13 @@ export const palette = {
   'tertiary-fixed-dim': '#ffb783',
   'on-tertiary-fixed': '#301400',
   'on-tertiary-fixed-variant': '#713700',
+
+  // Interaction states. These are the only two values in the system that are not lifted
+  // straight from the theme file, so their derivation is recorded here and in globals.css:
+  // brightness(1.1) applied to the resting fill, which is the effect
+  // `customer_dashboard_final` renders as `hover:brightness-110`.
+  'confirm-hover': '#00783d',
+  'destructive-hover': '#cd1d1d',
 } as const satisfies Record<string, string>
 
 export type PaletteToken = keyof typeof palette
@@ -77,6 +84,14 @@ export const semanticTokens: readonly { name: string; token: PaletteToken; use: 
   { name: 'muted', token: 'on-surface-variant', use: 'muted text' },
   { name: 'divider', token: 'outline-variant', use: 'decorative divider' },
   { name: 'control-border', token: 'outline', use: 'boundary that identifies a control' },
+  { name: 'action-hover', token: 'primary-container', use: 'primary fill, hovered' },
+  { name: 'confirm-hover', token: 'confirm-hover', use: 'confirm fill, hovered' },
+  { name: 'destructive-hover', token: 'destructive-hover', use: 'destructive fill, hovered' },
+  { name: 'action-wash', token: 'primary-fixed', use: 'outline button hover, avatar fallback' },
+  { name: 'panel-hover', token: 'surface-variant', use: 'row, menu item and ghost hover' },
+  { name: 'track', token: 'surface-container-high', use: 'progress track, skeleton, switch off' },
+  { name: 'inverse', token: 'inverse-surface', use: 'admin chrome, tooltip, scrim' },
+  { name: 'inverse-hover', token: 'primary-container', use: 'admin nav item, hovered' },
 ]
 
 /** 22 §Semantic mapping, status badges — the `*-fixed` family from the `_final` screens. */
@@ -243,6 +258,62 @@ export const contrastPairs: readonly {
     foreground: 'on-error-container',
     background: 'error-container',
     requirement: 'text',
+  },
+
+  // Interaction states — a hover that drops below AA is a hover that hides its own label
+  {
+    label: 'hover: primary fill',
+    foreground: 'on-primary',
+    background: 'primary-container',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: confirm fill',
+    foreground: 'on-secondary',
+    background: 'confirm-hover',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: destructive fill',
+    foreground: 'on-error',
+    background: 'destructive-hover',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: outline button wash',
+    foreground: 'primary',
+    background: 'primary-fixed',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: row / ghost / menu item',
+    foreground: 'on-surface',
+    background: 'surface-variant',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: muted label on a hovered row',
+    foreground: 'on-surface-variant',
+    background: 'surface-variant',
+    requirement: 'text',
+  },
+  {
+    label: 'hover: admin nav item',
+    foreground: 'inverse-on-surface',
+    background: 'primary-container',
+    requirement: 'text',
+  },
+  {
+    label: 'avatar fallback on action wash',
+    foreground: 'on-primary-fixed-variant',
+    background: 'primary-fixed',
+    requirement: 'text',
+  },
+  {
+    label: 'track on page (inert fill)',
+    foreground: 'surface-container-high',
+    background: 'background',
+    requirement: 'decorative',
   },
 
   // Boundaries — 3:1 under WCAG 1.4.11

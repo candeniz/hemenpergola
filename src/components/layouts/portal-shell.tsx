@@ -46,7 +46,7 @@ export function PortalShell({ children, title }: { children: ReactNode; title: s
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex min-h-11 items-center gap-base rounded-sm px-base text-body-sm text-muted hover:bg-panel-subtle hover:text-on-panel"
+                className="flex min-h-11 items-center gap-base rounded-sm px-base text-body-sm text-muted hover:bg-panel-hover hover:text-on-panel"
               >
                 <Icon name={item.icon} dense />
                 {t(item.labelKey)}

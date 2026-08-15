@@ -57,7 +57,7 @@ export function DashboardShell({ children, title }: { children: ReactNode; title
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex min-h-11 items-center gap-sm rounded px-sm text-body-md text-muted hover:bg-panel-subtle hover:text-on-page"
+                  className="flex min-h-11 items-center gap-sm rounded px-sm text-body-md text-muted hover:bg-panel-hover hover:text-on-page"
                 >
                   <Icon name={item.icon} dense />
                   {t(item.labelKey)}

@@ -87,7 +87,7 @@ uses few of them.
 | subtle panel, table header | `surface-container-low` |
 | primary action, headers, structural chrome | `primary` |
 | success, confirm, primary CTA on marketing | `secondary` |
-| warning / highlight badge | `tertiary-container` |
+| warning / highlight badge | `tertiary-fixed` — see §Status badges |
 | destructive | `error` |
 | decorative divider | `outline-variant` |
 | boundary that identifies a control | `outline` |
@@ -97,6 +97,34 @@ uses few of them.
 **1.61:1** against the page — far below the 3:1 that WCAG 1.4.11 requires of a boundary a
 user needs in order to identify a control. It may separate table rows; it may never outline
 an input, a select or a checkbox. Those use `outline`, at 4.25:1. Measured on `/dev/tokens`.
+
+### Interaction states
+
+Resting colours alone are not a design system. Without a name for the hovered state, every
+component reaches past the semantic layer into the raw palette — which is how a `Button`
+ended up with `hover:bg-on-error-container`, a **foreground** role used as a background. It
+looked plausible and was wrong.
+
+| Semantic | Token | Where it comes from |
+|---|---|---|
+| `action-hover` | `primary-container` `#2c3e50` | the screens: `<button class="bg-primary … hover:bg-primary-container">` |
+| `confirm-hover` | `#00783d` | derived — `brightness(1.1)` of `secondary`, which is the effect `customer_dashboard_final` renders as `hover:brightness-110` |
+| `destructive-hover` | `#cd1d1d` | derived — the same `brightness(1.1)`, applied to `error`; no destructive button appears in the screens |
+| `action-wash` | `primary-fixed` | outline-button hover fill and the avatar fallback |
+| `panel-hover` | `surface-variant` | the screens' commonest hover fill: 26 uses across the four `_final` screens |
+| `track` | `surface-container-high` | inert fills — progress track, skeleton, switch when off |
+| `inverse` / `on-inverse` | `inverse-surface` / `inverse-on-surface` | admin chrome, tooltip |
+| `inverse-hover` | `primary-container` | admin nav item, hovered |
+| `scrim` | `inverse-surface` | behind a modal, at 40% |
+
+Only two values in the whole system are not lifted from the theme file — `confirm-hover`
+and `destructive-hover` — and both are derived by the screens' own method rather than
+picked. Every one of these pairs is in the `/dev/tokens` audit: **a hover state that drops
+below AA is a hover state that hides its own label.**
+
+One screen renders `bg-secondary hover:bg-secondary-fixed`. That is not adopted: white text
+on `secondary-fixed` (`#7efba4`) is 1.5:1. Where the screens disagree with each other, the
+one that passes AA wins.
 
 ### Status badges — the `*-fixed` family
 
@@ -233,7 +261,11 @@ the disclosure rules live in one component instead of eleven screens.
 
 ## Rules
 
-1. No hex literals, no arbitrary Tailwind values (`text-[#162839]`) in application code.
+1. No hex literals, no arbitrary Tailwind values (`text-[#162839]`), and **no raw palette
+   names** (`bg-primary-container`, `hover:bg-secondary-fixed-dim`) in application code —
+   semantic names only. All three are lint errors under `src/components`, and the raw-name
+   list is generated from `globals.css` at lint time so it cannot drift. If no semantic name
+   fits, the gap is in the semantic layer: add an alias, do not reach past it.
 2. No `dark:` classes in V1. Tokens are structured so dark mode is a token-file change; the
    screens are light-only and shipping a half-done dark mode is worse than none.
 3. Every interactive element has a visible focus ring: 2px `primary`, 2px offset.

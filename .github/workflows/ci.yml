@@ -1,0 +1,168 @@
+name: CI
+
+# 23-deployment-and-environments.md §Pipeline and 20-testing-strategy.md §Pipeline give the
+# same order, and it is the order below:
+#
+#   lint + typecheck + format:check → unit → integration → build → e2e → a11y + Lighthouse
+#
+# Every stage blocks. Two of them cannot run against this repository yet and say so out
+# loud rather than passing empty — see scripts/ci-integration.mjs and ci-lighthouse.mjs.
+#
+# NOT IN THIS WORKFLOW, deliberately: the deploy tail from 23 §Pipeline
+# (`[main] deploy staging → smoke → deploy prod`). There is no staging environment and no
+# production environment to deploy to. It is deferred, not forgotten; it lands with the
+# environments themselves in Phase 9.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch cancels the first — CI should report on the head commit,
+# not queue behind three stale runs of it.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keeps Next quiet in CI and makes the build deterministic.
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ── Stage 1 · static analysis ────────────────────────────────────────────────
+  static:
+    name: lint · typecheck · format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        # Version comes from `packageManager` in package.json — one source of truth with
+        # the developer machine.
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Design system — no raw palette names under src/components
+        run: node scripts/audit-raw-tokens.mjs
+
+      - name: Release gate — e2e/core-flow.spec.ts exists and still walks F1
+        run: node scripts/ci-release-gate.mjs
+
+  # ── Stage 2 · unit ───────────────────────────────────────────────────────────
+  unit:
+    name: unit
+    runs-on: ubuntu-latest
+    needs: static
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  # ── Stage 3 · integration ────────────────────────────────────────────────────
+  # Skips loudly today (no prisma/schema.prisma). Fails the moment 0.4 lands without the
+  # suites 20 §Integration owes, which is how the stage opens itself.
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/ci-integration.mjs
+
+  # ── Stage 4 · build ──────────────────────────────────────────────────────────
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # No .env here on purpose: since the env parse moved to instrumentation.ts, the build
+      # needs no secrets (23 §Configuration, §Runtime). If this step ever starts needing
+      # one, the parse has crept back into build time.
+      - run: pnpm build
+
+  # ── Stage 5 + 6 · e2e and a11y ───────────────────────────────────────────────
+  # One job: both drive the same production server, and starting it twice doubles the
+  # slowest part of the pipeline for no signal.
+  e2e:
+    name: e2e · a11y
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # `next start` DOES need configuration, unlike `next build`. Real secrets are not
+      # involved and must not be: this is the local-stack example, and .env is gitignored.
+      - name: Write .env from .env.example
+        run: cp .env.example .env
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Playwright — core flow (release gate), secondary flows, a11y
+        run: pnpm exec playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── Stage 6b · Lighthouse ────────────────────────────────────────────────────
+  # Skips loudly until Phase 8 writes the budget file.
+  lighthouse:
+    name: lighthouse
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/ci-lighthouse.mjs

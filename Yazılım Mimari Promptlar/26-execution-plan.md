@@ -110,7 +110,7 @@ build Phase 1 on. The tasks below are ordered so each one is verifiable when it 
 | 0.6 | `shared/`: `Result`/`DomainError`, kuruş helpers, PostGIS helpers, Prisma client + transaction helper | `src/shared/*` | unit tests on rounding (half away from zero) and on `Result` mapping |
 | 0.7 | `ActorContext` resolver, anonymous-only until Phase 1 | `src/shared/context/actor.ts` | returns an anonymous context; signature matches `05` |
 | 0.8 | Module boundary lint rule | `eslint.config.*` `no-restricted-imports` | a **committed** fixture importing Prisma from `app/` fails CI on purpose |
-| 0.9 | Design tokens | `src/app/globals.css`, `tailwind.config.ts` | a `/dev/tokens` page renders the full palette, type scale and radii; compared side by side with `outdoor_systems_public_homepage_final` |
+| 0.9 | Design tokens | `src/app/[locale]/globals.css` (Tailwind 4 has no `tailwind.config.ts` — `@theme` is the config) | a `/dev/tokens` page renders the full palette, type scale and radii; compared side by side with `outdoor_systems_public_homepage_final` |
 | 0.10 | Fonts + icons self-hosted | `next/font` Montserrat + Inter, latin-ext; Material Symbols variable | Turkish glyphs (ğ İ ş ı ç ö ü) render with no fallback flash |
 | 0.11 | shadcn/ui init, primitives restyled centrally | `components.json`, `src/components/ui/*` | no hex literal anywhere under `src/components`; lint rule proves it |
 | 0.12 | Four shells with the density split | `src/components/layouts/*` | `PublicShell` 48/80 rhythm, `PortalShell`/`AdminShell` 8/12 — visually diffed against `22` §Density |

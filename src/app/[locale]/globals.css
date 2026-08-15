@@ -166,6 +166,41 @@
   --color-destructive: var(--color-error);
   --color-on-destructive: var(--color-on-error);
 
+  /* ---- Interaction states -------------------------------------------------
+   * Resting colours alone are not a design system: without these, every hover
+   * reaches past the semantic layer into the raw palette. Values are taken from the
+   * `_final` screens where the screens say something, and derived by the screens' own
+   * method where they do not. All keep their foreground at AA — see /dev/tokens.
+   *
+   *   action-hover       `<button class="bg-primary … hover:bg-primary-container">`
+   *                      in outdoor_systems_public_homepage_final. 10.98:1 with on-action.
+   *   confirm-hover      customer_dashboard_final renders `bg-secondary hover:brightness-110`.
+   *                      brightness(1.1) applied to #006d37 is #00783d, so that is the
+   *                      token — the screen's effect, expressed as a value. 5.59:1.
+   *   destructive-hover  no destructive button appears in the screens; same brightness(1.1)
+   *                      derivation applied to #ba1a1a. 5.54:1.
+   *   action-wash        the tinted fill under an outline button on hover, and the avatar
+   *                      fallback. `primary-fixed`, as `hover:text-primary-fixed` uses it.
+   *   panel-hover        row and ghost hover. `surface-variant` is the screens' commonest
+   *                      hover fill by a wide margin (26 uses across the four `_final`s).
+   */
+  --color-action-hover: #2c3e50;
+  --color-confirm-hover: #00783d;
+  --color-destructive-hover: #cd1d1d;
+  --color-action-wash: var(--color-primary-fixed);
+  --color-on-action-wash: var(--color-on-primary-fixed-variant);
+  --color-panel-hover: var(--color-surface-variant);
+
+  /* Inert filled surfaces: progress track, skeleton, switch in its off state. Decorative
+     by definition — it carries no information that its absence would remove. */
+  --color-track: var(--color-surface-container-high);
+
+  /* Inverse chrome: the admin sidebar, tooltips, and the scrim behind a modal. */
+  --color-inverse: var(--color-inverse-surface);
+  --color-on-inverse: var(--color-inverse-on-surface);
+  --color-inverse-hover: var(--color-primary-container);
+  --color-scrim: var(--color-inverse-surface);
+
   /* Rule 5 finding: `outline-variant` measures 1.62:1 against the page and cannot carry a
      control boundary (WCAG 1.4.11 wants 3:1). `divider` stays decorative; `control-border`
      is the one that identifies an input, and it uses `outline` at 4.26:1. */

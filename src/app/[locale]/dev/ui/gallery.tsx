@@ -166,13 +166,18 @@ export function UiGallery() {
           </span>
         </Item>
         <Item label="input: invalid">
-          <Input aria-invalid defaultValue="not-a-number" className="w-64" />
+          <Input
+            aria-invalid
+            aria-label="Invalid example"
+            defaultValue="not-a-number"
+            className="w-64"
+          />
         </Item>
         <Item label="input: disabled">
-          <Input disabled placeholder="Disabled" className="w-64" />
+          <Input disabled aria-label="Disabled example" placeholder="Disabled" className="w-64" />
         </Item>
         <Item label="textarea">
-          <Textarea placeholder="Notes" className="w-64" />
+          <Textarea aria-label="Notes" placeholder="Notes" className="w-64" />
         </Item>
       </Section>
 
@@ -188,7 +193,7 @@ export function UiGallery() {
           </span>
         </Item>
         <Item label="checkbox: disabled">
-          <Checkbox disabled />
+          <Checkbox disabled aria-label="Disabled checkbox" />
         </Item>
         <Item label="radio">
           <RadioGroup defaultValue="a">
@@ -203,14 +208,14 @@ export function UiGallery() {
           </RadioGroup>
         </Item>
         <Item label="switch">
-          <Switch checked={switched} onCheckedChange={setSwitched} />
+          <Switch checked={switched} onCheckedChange={setSwitched} aria-label="Notifications" />
         </Item>
       </Section>
 
       <Section title="Select · Dropdown · Tooltip">
         <Item label="select">
           <Select>
-            <SelectTrigger className="w-64">
+            <SelectTrigger aria-label="City" className="w-64">
               <SelectValue placeholder="Choose a city" />
             </SelectTrigger>
             <SelectContent>
@@ -376,7 +381,7 @@ export function UiGallery() {
           </Pagination>
         </Item>
         <Item label="progress">
-          <Progress value={60} className="w-64" />
+          <Progress value={60} label="Upload progress" className="w-64" />
         </Item>
         <Item label="skeleton">
           <span className="flex w-64 flex-col gap-base">

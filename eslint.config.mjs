@@ -1,4 +1,5 @@
-import { dirname } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { FlatCompat } from '@eslint/eslintrc'
@@ -7,6 +8,51 @@ import tseslint from 'typescript-eslint'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const compat = new FlatCompat({ baseDirectory: __dirname })
+
+/**
+ * The raw palette names, read out of `globals.css` at lint time.
+ *
+ * `globals.css` holds two `@theme` blocks: the raw roles first, the semantic aliases
+ * second (22-design-system.md §Tokens). Generating the list here rather than hard-coding
+ * it means adding a palette entry automatically bans it at call sites, and promoting one
+ * to a semantic alias automatically allows it — the rule cannot drift from the stylesheet.
+ */
+function rawPaletteTokens() {
+  const css = readFileSync(join(__dirname, 'src/app/[locale]/globals.css'), 'utf8')
+  const starts = [...css.matchAll(/@theme\s*\{/g)].map((match) => match.index)
+
+  if (starts.length < 2) {
+    throw new Error(`Expected two @theme blocks in globals.css, found ${starts.length}`)
+  }
+
+  const names = (chunk) => [...chunk.matchAll(/--color-([a-z0-9-]+):/g)].map((match) => match[1])
+  const semantic = new Set(names(css.slice(starts[1])))
+
+  return names(css.slice(starts[0], starts[1]))
+    .filter((name) => !semantic.has(name))
+    .sort((a, b) => b.length - a.length) // longest first, so prefixes do not shadow
+}
+
+const COLOUR_UTILITIES = [
+  'bg',
+  'text',
+  'border',
+  'ring',
+  'fill',
+  'stroke',
+  'divide',
+  'outline',
+  'from',
+  'via',
+  'to',
+  'shadow',
+  'accent',
+  'caret',
+  'decoration',
+  'placeholder',
+]
+
+const RAW_TOKEN_PATTERN = `(?:^|["'\\s:])(?:[a-z0-9-]+(?:\\[[^\\]]*\\])?:)*(?:${COLOUR_UTILITIES.join('|')})-(?:${rawPaletteTokens().join('|')})(?![a-z0-9-])`
 
 /** Committed reference material, never linted and never imported (CLAUDE.md §Layout). */
 const REFERENCE_DIRS = ['Frontend Tasarım/**', 'Yazılım Mimari Promptlar/**', 'Prompt/**']
@@ -22,6 +68,10 @@ const ENV_BOUNDARY_FILES = [
   'src/shared/config/env.test.ts',
   'src/instrumentation.ts',
   'vitest.config.ts',
+  // Test tooling, not application code: Playwright reads `CI` to decide retries and
+  // workers, and it runs before — and outside — the app's typed configuration.
+  'playwright.config.ts',
+  'e2e/**/*.ts',
 ]
 
 export default tseslint.config(
@@ -82,6 +132,20 @@ export default tseslint.config(
           selector: 'TemplateElement[value.raw=/#[0-9a-fA-F]{3,8}\\b/]',
           message:
             'No hex literals in components (22-design-system.md Rule 1). Use a semantic token from globals.css.',
+        },
+        {
+          // 22 §Semantic mapping: call sites use semantic names. A raw role name means the
+          // semantic layer has a gap — the fix is to add an alias, not to reach past it.
+          // This is what caught `hover:bg-on-error-container`: a foreground role used as a
+          // background, which reads fine and is wrong.
+          selector: `Literal[value=/${RAW_TOKEN_PATTERN}/]`,
+          message:
+            'No raw palette names in components (22-design-system.md §Semantic mapping). Use a semantic alias, or add one to globals.css if none fits.',
+        },
+        {
+          selector: `TemplateElement[value.raw=/${RAW_TOKEN_PATTERN}/]`,
+          message:
+            'No raw palette names in components (22-design-system.md §Semantic mapping). Use a semantic alias, or add one to globals.css if none fits.',
         },
         {
           // Arbitrary *values* — `text-[#162839]`, `p-[13px]`, `w-[42rem]`.

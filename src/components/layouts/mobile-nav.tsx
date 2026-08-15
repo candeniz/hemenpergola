@@ -39,7 +39,7 @@ export function MobileNav({
               <Link
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center gap-sm rounded-sm px-sm text-body-md hover:bg-panel-subtle"
+                className="flex min-h-11 items-center gap-sm rounded-sm px-sm text-body-md hover:bg-panel-hover"
               >
                 <Icon name={item.icon} dense className="text-muted" />
                 {t(item.labelKey)}

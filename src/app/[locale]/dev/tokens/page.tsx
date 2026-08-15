@@ -138,7 +138,17 @@ export default async function TokensPage({ params }: { params: Promise<{ locale:
               {results.map((row) => (
                 <tr key={row.label} className="h-row">
                   <td className="px-sm">
+                    {/*
+                      Decorative: the row already states the pair, the threshold, the
+                      measured ratio and the verdict in text. Hidden from assistive tech
+                      because several of these swatches are *deliberately* failing or
+                      exempt pairs — this page's job is to show them, and axe is right to
+                      flag them if they are exposed.
+                    */}
                     <span
+                      aria-hidden
+
+                      data-contrast-sample
                       className="mr-base inline-flex items-center rounded-sm px-base py-xs text-label-md"
                       style={{
                         backgroundColor: palette[row.background],

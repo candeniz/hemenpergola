@@ -332,6 +332,129 @@ is parsed by ICU as a variable placeholder, which threw `FORMATTING_ERROR` in
 4. Route stubs exist only for the four shell landing pages. The Turkish slug map in `07`
    §Route map arrives with the pages themselves, phase by phase.
 
+### 2026-08-15 — Interaction tokens, plus Phase 0 tasks 0.14 and 0.16 (commit `P0.14+0.16 · hover tokenları`)
+
+0.15 and 0.17 are not in this change: both need Prisma, and a half-built health endpoint or
+seed profile is something 0.4 would have to unpick. **The Phase 0 row does not move** —
+0.4–0.8, 0.15 and 0.17 are open.
+
+#### A · Interaction states are now part of the semantic layer
+
+**Audit: 17 raw-palette uses across 10 of the 31 files under `src/components`.** Not only
+hovers — `bg-inverse-surface` in three components, `bg-surface-container-high` as a track in
+two, `bg-primary-fixed` as an avatar fill. The count is now **0**, and
+`scripts/audit-raw-tokens.mjs` reports it on demand.
+
+The worst of them was `hover:bg-on-error-container` on the destructive button: an `on-*`
+role — a *foreground* colour — used as a background. It reads plausibly and is wrong, and
+nothing in the system objected.
+
+Values, derived rather than invented:
+
+| Token | Value | Source |
+|---|---|---|
+| `action-hover` | `primary-container` | the screens: `<button class="bg-primary … hover:bg-primary-container">` in `outdoor_systems_public_homepage_final` |
+| `confirm-hover` | `#00783d` | `brightness(1.1)` of `secondary` — the effect `customer_dashboard_final` renders as `hover:brightness-110`, expressed as a value |
+| `destructive-hover` | `#cd1d1d` | the same derivation applied to `error`; the screens have no destructive button |
+| `action-wash` | `primary-fixed` | outline-button hover fill, avatar fallback |
+| `panel-hover` | `surface-variant` | the screens' commonest hover fill — 26 uses across the four `_final` screens |
+| `track` | `surface-container-high` | progress track, skeleton, switch when off |
+| `inverse` / `on-inverse` / `inverse-hover` / `scrim` | `inverse-surface` / `inverse-on-surface` / `primary-container` / `inverse-surface` | admin chrome, tooltip, modal scrim |
+
+Only `confirm-hover` and `destructive-hover` are not lifted straight from the theme file.
+**One screen was deliberately not followed:** `bg-secondary hover:bg-secondary-fixed` would
+put white text on `#7efba4` at 1.5:1. Where screens disagree, the one that passes AA wins.
+
+All nine new pairs are in the `/dev/tokens` audit: **33 audited pairs, 33 pass** (was 24).
+
+The lint rule was extendable, so it exists: raw palette names are an error under
+`src/components`, and **the banned list is generated from `globals.css` at lint time** — the
+first `@theme` block is raw, the second is semantic, so adding a palette entry bans it and
+promoting one to an alias allows it, with no list to maintain. Proven with a fixture (2
+errors). `22` §Semantic mapping gained an *Interaction states* table, Rule 1 now names raw
+palette names alongside hex literals, the `tertiary-container` / `tertiary-fixed`
+contradiction on the badge row is fixed, and `26` row 0.9 no longer names `tailwind.config.ts`.
+
+#### B · 0.14 — CI pipeline
+
+`.github/workflows/ci.yml`, in the order `23` §Pipeline and `20` §Pipeline both give:
+`static → unit → integration → build → e2e + a11y → lighthouse`. Node from `.nvmrc`, pnpm
+from `packageManager`, pnpm store cached, `concurrency` cancels superseded runs of a ref,
+`--frozen-lockfile` everywhere.
+
+| Stage | Today |
+|---|---|
+| static (lint, typecheck, format, raw-token audit, release-gate guard) | **runs** |
+| unit | **runs** — 142 tests |
+| integration | **skips loudly**, printing that `prisma/schema.prisma` does not exist, that 0.4 is blocked by Q8, and that it will fail once a schema exists without integration tests |
+| build | **runs**, with no `.env` — the build needs no secrets |
+| e2e + a11y | **runs** — writes `.env` from `.env.example`, then Playwright |
+| lighthouse | **skips loudly** — budgets are Phase 8's |
+| deploy → staging → smoke → prod | **absent, with a comment saying so.** There is no environment to deploy to; deferred, not forgotten |
+
+`scripts/ci-integration.mjs` has three outcomes and the middle one is the point: schema
+present + no integration tests = **fail**. The stage opens itself the day 0.4 lands.
+Verified by planting an empty `prisma/schema.prisma` — exit 1 with the list of suites `20`
+§Integration owes — then removing it.
+
+`test/ci-workflow.test.ts` parses the workflow and pins the stage order, the `.nvmrc`/pnpm
+setup, `--frozen-lockfile`, the "no `.env` in the build job" rule and the absence of deploy
+steps, so the pipeline cannot quietly drift from the documents.
+
+#### C · 0.16 — e2e skeleton
+
+`e2e/core-flow.spec.ts`: the nine F1 steps as named `test.skip`s, each carrying the phase
+that un-skips it (1–2 → Phase 4, 3–4 → Phase 5, 5–9 → Phase 6).
+`e2e/secondary-flows.spec.ts`: the secondary specs from `20` §End to end plus all six rows
+of `03` §Failure paths, as `test.fixme` so they read as owed rather than decided — 13 of
+them. `scripts/ci-release-gate.mjs` fails CI if the gate file disappears, empties, gains a
+`test.only`, or loses one of the nine numbered steps.
+
+#### Evidence
+
+| Check | Result |
+|---|---|
+| `typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 |
+| tests | **142** (was 135) |
+| `pnpm exec playwright test` | exit 0 — **7 passed, 22 skipped**, 0 failed |
+| a11y, 7 routes | no WCAG 2 A/AA violations |
+| raw palette names under `src/components` | **17 → 0** |
+| `/dev/tokens` audit | **33 audited pairs, 33 pass**; 3 decorative shown with ratios |
+| integration stage | prints "SKIPPED · prisma/schema.prisma does not exist yet" |
+| integration stage, schema planted | exit 1, naming the suites it owes |
+| `pnpm build` with **no `.env`** | exit 0 |
+| `APP_ENV=production` + `pnpm start` | `/` 200, `/dev/tokens` and `/dev/ui` **404** |
+| whole workflow, run locally in order | **all steps passed** (`node scripts/ci-local.mjs`) |
+
+**How the workflow was shown to run: neither `act` nor a push.** `act` needs Docker, and
+Docker is blocked by Q8 — installing it would not have helped. There is no git remote, so
+there was nothing to push to. Instead `scripts/ci-local.mjs` parses the workflow and
+executes every `run:` step on this machine in job order; the output above is that run. What
+this does **not** prove: the runner image, the marketplace actions
+(`pnpm/action-setup`, `actions/setup-node`, `actions/upload-artifact`) and the pnpm cache.
+Those are unverified until the repository has a remote — worth ten minutes on the first push.
+
+#### Findings
+
+**1 · A regression this session introduced, caught by the CI design within the hour.**
+`src/app/[locale]/dev/layout.tsx` imported `env` at module scope to read `APP_ENV`. Next
+evaluates that while collecting page data — build time — so `pnpm build` started requiring a
+full `.env` again, undoing the fix that moved the parse to `instrumentation.ts`. It was
+invisible locally because a developer always has a `.env`; the build job deliberately has
+none, which is exactly why it has none. Fixed with `force-dynamic` and a dynamic import, so
+the read happens when serving. Production gating re-verified afterwards.
+
+**2 · The a11y stage found three real defects in the primitives on its first run**, none of
+which any unit test would have caught: `Progress` had no accessible name (`label` is now a
+required prop), and `Switch` and `SelectTrigger` allowed nameless instances. This is the
+argument for the stage existing in Phase 0 rather than Phase 9.
+
+**3 · One narrow axe exclusion, and it is documented in place.** `/dev/tokens` renders
+swatches for pairs that are *deliberately* failing or exempt — that is the page's subject.
+They carry `data-contrast-sample` and are excluded from the axe run; every other rule stays
+active on that page, and the page's own table plus `design-tokens.test.ts` report those
+pairs more precisely than axe can.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

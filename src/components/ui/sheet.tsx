@@ -35,14 +35,14 @@ export function SheetContent({
   VariantProps<typeof sheetVariants> & { closeLabel: string }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-inverse-surface/40" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim/40" />
       <DialogPrimitive.Content
         className={cn(sheetVariants({ side }), 'p-md', className)}
         {...props}
       >
         {children}
         <DialogPrimitive.Close
-          className="absolute right-sm top-sm inline-flex size-11 items-center justify-center rounded-sm text-muted hover:bg-panel-subtle"
+          className="absolute right-sm top-sm inline-flex size-11 items-center justify-center rounded-sm text-muted hover:bg-panel-hover"
           aria-label={closeLabel}
         >
           <Icon name="close" />

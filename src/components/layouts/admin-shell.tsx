@@ -35,7 +35,7 @@ export function AdminShell({ children, title }: { children: ReactNode; title: st
 
       <nav
         aria-label={t('section')}
-        className="hidden w-60 shrink-0 flex-col bg-inverse-surface text-inverse-on-surface md:flex"
+        className="hidden w-60 shrink-0 flex-col bg-inverse text-on-inverse md:flex"
       >
         <div className="flex flex-col gap-0.5 px-sm py-sm">
           <span className="font-heading text-body-md">{t('section')}</span>
@@ -46,7 +46,7 @@ export function AdminShell({ children, title }: { children: ReactNode; title: st
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex min-h-11 items-center gap-base rounded-sm px-base text-body-sm opacity-80 hover:bg-primary-container hover:opacity-100"
+                className="flex min-h-11 items-center gap-base rounded-sm px-base text-body-sm opacity-80 hover:bg-inverse-hover hover:opacity-100"
               >
                 <Icon name={item.icon} dense />
                 {t(item.labelKey)}
