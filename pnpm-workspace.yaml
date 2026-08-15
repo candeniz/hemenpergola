@@ -5,6 +5,7 @@
 #   sharp                   — image processing used by next/image at build and runtime
 #   unrs-resolver           — native resolver behind eslint-config-next's import plugin
 #   prisma, @prisma/engines — the query engine binary; Prisma cannot run without it
+#   esbuild                 — tsx compiles the seed scripts through it
 #
 # Denied deliberately — all optional native accelerations with working fallbacks, and
 # 19-security-and-kvkk.md §Dependencies says allow only what is needed:
@@ -16,6 +17,7 @@ allowBuilds:
   '@prisma/engines': true
   '@swc/core': false
   cpu-features: false
+  esbuild: true
   prisma: true
   protobufjs: false
   sharp: true

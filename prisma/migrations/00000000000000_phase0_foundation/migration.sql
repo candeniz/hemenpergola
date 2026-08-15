@@ -368,6 +368,9 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 CREATE UNIQUE INDEX "Company_slug_key" ON "Company"("slug");
 
 -- CreateIndex
+CREATE INDEX "Company_displayName_trgm" ON "Company" USING GIN ("displayName" gin_trgm_ops);
+
+-- CreateIndex
 CREATE INDEX "Company_status_idx" ON "Company"("status");
 
 -- CreateIndex
@@ -392,6 +395,9 @@ CREATE INDEX "CompanyDocument_fileId_idx" ON "CompanyDocument"("fileId");
 CREATE UNIQUE INDEX "CompanyContact_companyId_key" ON "CompanyContact"("companyId");
 
 -- CreateIndex
+CREATE INDEX "CompanyContact_point_gist" ON "CompanyContact" USING GIST ("point");
+
+-- CreateIndex
 CREATE INDEX "CompanyContact_cityId_idx" ON "CompanyContact"("cityId");
 
 -- CreateIndex
@@ -401,7 +407,13 @@ CREATE INDEX "CompanyContact_districtId_idx" ON "CompanyContact"("districtId");
 CREATE UNIQUE INDEX "City_plateCode_key" ON "City"("plateCode");
 
 -- CreateIndex
+CREATE INDEX "City_point_gist" ON "City" USING GIST ("point");
+
+-- CreateIndex
 CREATE INDEX "City_name_idx" ON "City"("name");
+
+-- CreateIndex
+CREATE INDEX "District_point_gist" ON "District" USING GIST ("point");
 
 -- CreateIndex
 CREATE INDEX "District_cityId_idx" ON "District"("cityId");
@@ -516,31 +528,26 @@ ALTER TABLE "LeadCredit" ADD CONSTRAINT "LeadCredit_companyId_fkey" FOREIGN KEY 
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Everything below is hand-written: Prisma's schema language cannot express it.
--- 04-data-model.md §Conventions and §Indexes worth naming now.
+-- Hand-written: the two things Prisma's schema language still cannot express.
+-- 04-data-model.md §Conventions, 02-user-roles-and-permissions.md §Company-scoped roles.
+--
+-- The GiST and trigram indexes used to live here too. They do not any more: declaring them
+-- as `@@index([point], type: Gist, map: "…")` and
+-- `@@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "…")` makes Prisma
+-- generate them, which is what `prisma migrate diff` needs in order to report an empty
+-- diff — the release gate in 23-deployment-and-environments.md §Pipeline. Anything Prisma
+-- *can* model belongs in the schema, not down here.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- Turkish collation, per column. The cluster stays C — a tr_TR cluster would lower-case
--- `I` to `ı` and break every email, slug and identifier comparison in the system
--- (04 §Conventions). Only columns a Turkish reader sorts by get the clause.
+-- `I` to `ı` and break every email, slug and identifier comparison in the system.
 ALTER TABLE "Company"  ALTER COLUMN "displayName" TYPE text COLLATE "tr-TR-x-icu";
 ALTER TABLE "City"     ALTER COLUMN "name"        TYPE text COLLATE "tr-TR-x-icu";
 ALTER TABLE "District" ALTER COLUMN "name"        TYPE text COLLATE "tr-TR-x-icu";
 
--- GiST indexes on the geography columns. Prisma has no geography type, so the columns are
--- `Unsupported` in the schema and their indexes live here (ADR-002: real spatial queries at
--- the database level, never Haversine in application code).
-CREATE INDEX "CompanyContact_point_gist" ON "CompanyContact" USING GIST ("point");
-CREATE INDEX "City_point_gist"           ON "City"           USING GIST ("point");
-CREATE INDEX "District_point_gist"       ON "District"       USING GIST ("point");
-
--- Exactly one OWNER per company (02-user-roles-and-permissions.md §Company-scoped roles).
--- A partial unique index is the only way to say "one row per company *where* role = OWNER";
--- Prisma cannot express a WHERE clause on a unique constraint.
+-- Exactly one OWNER per company. A partial unique index is the only way to say "one row
+-- per company *where* role = OWNER"; Prisma cannot put a WHERE clause on a unique
+-- constraint. `migrate diff` tolerates it, so the gate stays green.
 CREATE UNIQUE INDEX "CompanyMembership_one_owner_per_company"
   ON "CompanyMembership" ("companyId")
   WHERE "role" = 'OWNER';
-
--- Trigram index for the manufacturer directory search (04 §Indexes worth naming now).
-CREATE INDEX "Company_displayName_trgm"
-  ON "Company" USING GIN ("displayName" gin_trgm_ops);

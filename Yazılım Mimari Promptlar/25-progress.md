@@ -6,17 +6,27 @@ someone already knew.
 
 ## Status
 
-**Current phase:** documentation complete, execution plan written (`26-execution-plan.md`)
-→ Phase 0 (Foundation) not started.
-**No application code exists yet.** The repository currently holds this documentation set and
-the design reference in `Frontend Tasarım/`.
+**Current phase:** **Phase 0 is complete and its gate is proven** (2026-08-16). Phase 1
+(Identity) is next — `26-execution-plan.md` §Phase 1 for its ordered tasks.
+
+The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
+local stack with 81 provinces, 974 districts, five demo companies and four shells rendering
+in both locales. 192 unit tests, 36 integration tests against a real PostGIS container,
+7 Playwright a11y checks, and the nine-step release gate standing by as skips.
 
 ## Phase tracker
 
+Status values: **⬜ not started** · **🟡 in progress · n/m** · **✅ gate met**.
+
+The middle one exists because it was missing: for fifteen tasks Phase 0 read "not started"
+while most of it was built and verified, which is not a rounding error, it is wrong
+information. A phase moves to 🟡 on its first landed task and to ✅ only when its gate is
+proven — not when the code is written.
+
 | Phase | Scope | Status | Gate |
 |---|---|---|---|
-| Docs | 00–25, README, CLAUDE.md | ✅ done | — |
-| 0 | Foundation | ⬜ not started | pipeline green, shells render in tr/en |
+| Docs | 00–26, README, CLAUDE.md | ✅ done | — |
+| 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
 | 1 | Identity | ⬜ | authorisation matrix covers every service method |
 | 2 | Catalogue + admin skeleton | ⬜ | admin adds a product with no deploy |
 | 3 | Manufacturer supply side | ⬜ | a company is matchable |
@@ -691,6 +701,139 @@ Phase 0's remaining work is now exactly: prove the container stack, seed geograp
 the three profiles, and close the gate. All four need a database and nothing else blocks
 them.
 
+### 2026-08-16 — Phase 0 closed. Tasks 0.5 and 0.17, and the verification debt (commit `P0.5+0.17 · Faz 0 kapanışı`)
+
+**Q8 is closed.** Virtualization was enabled in firmware and the machine restarted;
+`docker info` returns server 29.7.2. Everything that had been written-but-unproven across
+three sessions ran, and two things in it were wrong — see Findings.
+
+#### The eight-item debt list, with output
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `docker compose up -d` | `pergola-postgres` and `pergola-minio` both **healthy**; `pergola-minio-init` **exited 0** with `minio-init: bucket pergola-local ready` |
+| 2 | `select postgis_version()` | `3.4 USE_GEOS=1 USE_PROJ=1 USE_STATS=1` |
+| 3 | database collation | `datcollate = C`, `datctype = C`, provider `c` — **not** via `SHOW lc_collate`, see Finding 1 |
+| 4 | bucket | `mc ls` → `pergola-local/` |
+| 5 | `prisma migrate deploy` on an empty database | applied `00000000000000_phase0_foundation` cleanly |
+| 6 | `prisma migrate diff --from-migrations --to-schema --exit-code` | **`No difference detected`, exit 0** — after Finding 2 |
+| 7 | `pg_indexes` | `City_point_gist`, `District_point_gist`, `CompanyContact_point_gist` (all `USING gist`), `Company_displayName_trgm` (`gin_trgm_ops`), and `CompanyMembership_one_owner_per_company` `USING btree ("companyId") WHERE (role = 'OWNER')` |
+| 8 | integration + health | **36 integration tests pass**; `/api/health` returns all three checks with `version: 00000000000000_phase0_foundation`; with `pergola-postgres` stopped it returns **503 `degraded`** with database and migrations failing and storage still `true`, and recovers to 200 when the container restarts |
+
+#### 0.5 — geography
+
+**Source: GeoNames, CC BY 4.0** (`prisma/seed/geo/README.md`). Commercial use and
+redistribution are explicitly permitted and there is **no share-alike clause** — which is
+why OSM-derived lists were rejected: those are ODbL, and shipping an ODbL-derived table
+inside a commercial product's database is exactly the case ODbL §4.4 governs. Attribution is
+owed and carried in the JSON so it cannot be lost; Phase 8 must surface it on the public
+site. Data downloaded **2026-08-15**; the date is recorded because the district list changes.
+
+**81 provinces, 974 districts, every one with a centre point.** Plate codes come from the
+official 1–81 list held in `scripts/build-geo-seed.mjs` and matched to GeoNames by name —
+GeoNames' `admin1` is its own sequence and is not the plate number.
+
+#### 0.17 — seed profiles
+
+`minimal` (geography, settings, one admin), `demo` (five companies across İzmir, İstanbul,
+Ankara, Antalya and Trabzon, in `VERIFIED`/`PENDING`/`REJECTED` states so the admin queue and
+the directory both have something to show, plus a customer), `e2e` (fixed ids in
+`E2E_IDS`, which `e2e/core-flow.spec.ts` binds to in Phase 6).
+
+**Today's scope is deliberately smaller than `20` §Test data describes.** Migration 1 has no
+catalogue, pricing or review tables, so `demo` cannot have price books or ratings yet.
+Each profile builds its own skeleton and later phases extend their own slice: Phase 2 adds
+products, Phase 3 price books and service areas, Phase 5 a priceable project, Phase 7
+reviews. Nothing seeds a table that does not exist.
+
+`PlatformSetting` seeds come from the documents, not from constants: `pricing.band_percent`
+10, `pricing.band_min_kurus` 500 000, `pricing.round_step_kurus` 50 000,
+`offer_request.sla_hours` 48, `tax.kdv_default_percent` 20,
+`matching.max_companies_per_project` 5. Re-running never overwrites a value an admin has
+tuned.
+
+All three run on an empty database and are idempotent — asserted in the integration suite by
+running each profile twice and comparing both the returned summary and the row counts.
+
+#### Findings
+
+**1 · `SHOW lc_collate` does not exist in PostgreSQL 16.** It was removed as a runtime
+parameter; collation is a per-database property now. The check — and the integration test
+that asserted it — errored with `unrecognized configuration parameter`. Both now read
+`pg_database.datcollate`. `23-deployment-and-environments.md` §Migrations carried the wrong
+command and has been corrected. This is the sort of thing that only surfaces when the
+command is actually run.
+
+**2 · The release gate was failing, and the fix removed hand-written SQL rather than adding
+any.** `prisma migrate diff` reported four differences: Prisma wanted to drop the three GiST
+indexes and the trigram index, because they existed in the database but not in the schema.
+Prisma *can* express both — `@@index([point], type: Gist)` and
+`@@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin)` — so they moved into
+`schema.prisma` with `map:` pinning the descriptive names, and out of the hand-written
+section of the migration. Hand-written SQL dropped from 30 lines to 12: only the three
+`COLLATE` statements and the partial unique OWNER index, which Prisma genuinely cannot model.
+Anything Prisma can model belongs in the schema.
+
+Two smaller ones: `migration_lock.toml` was missing (the migration was generated by
+`migrate diff`, not `migrate dev`, which is what normally writes it), and Prisma 7 removed
+`--shadow-database-url` from `migrate diff` — the shadow database is configured in
+`prisma.config.ts` now, derived from `DATABASE_URL` so the gate needs no extra setup.
+
+**3 · GeoNames' district names needed real work, and the fix is a rule rather than a list.**
+The raw `ADM2` names were wrong in two ways: **693 of 974** carried an " İlçesi" suffix
+(`Çelikhan İlçesi`), and **159** were ASCII-folded (`Yesilhisar`, `Beypazari`, `Canakkale`).
+Guessing the diacritics place by place would have been exactly the invented-specification
+problem. Instead the build joins GeoNames' Turkish-tagged alternate names and accepts one
+**only if it is the same word as the base name once both are folded to ASCII** — which
+admits every missing diacritic and rejects renames (`Muradiye / Berkri`) and typos
+(`Alacakaya` → `Alacakayal`). 698 names corrected, suffixes gone, and the 18 remaining
+central districts took their province's spelling, which is authoritative and in the same
+dataset. Result: `Yeşilhisar`, `Beypazarı`, `Çanakkale`, `Lâpseki`.
+
+**4 · The Turkish collation is doing real work, and there is now a test that proves it
+rather than asserting it.** On seeded data: `Iğdır < Isparta < İstanbul < İzmir` and
+`Bornova < Çankaya < Dinar < Şile < Tuzla`. The same query with `COLLATE "C"` puts
+`Dinar` before `Çankaya` — the test asserts both, so the column collation cannot silently
+stop applying.
+
+**5 · A build failure that was not a build failure.** Playwright's `webServer` runs
+`pnpm build && pnpm start`, which raced a still-running `pnpm dev` over the same `.next`
+directory and reported "Build failed because of webpack errors". Killing the dev server
+made it pass. Worth knowing before someone spends an hour on the webpack error.
+
+#### Phase 0 gate — proven, not asserted
+
+`21-development-roadmap.md`: *"an empty page renders in both locales through the real
+shells, and the pipeline runs green end to end."*
+
+| | |
+|---|---|
+| `/` · `/en` | 200 · `lang="tr"` / `lang="en"` · *"Projeniz için doğru dış mekân sistemini bulun."* / *"Find the right outdoor system for your project."* |
+| `/hesap` · `/en/hesap` | 200 · Panel / Dashboard — `DashboardShell` |
+| `/panel` · `/en/panel` | 200 · Panel / Dashboard — `PortalShell` |
+| `/yonetim` · `/en/yonetim` | 200 · Komuta merkezi / Command center — `AdminShell` |
+| `typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 · **192 unit tests** |
+| `pnpm test:integration` | **36 tests**, real PostGIS container |
+| `pnpm exec playwright test` | exit 0 — 7 a11y checks pass, 22 release-gate steps skipped |
+| `pnpm build` with no `.env` | exit 0 — the build still needs no secrets |
+| `/api/health` | 200 with three checks; 503 when Postgres stops |
+
+**Phase 0: 17/17.** The phase table moved for the first time.
+
+#### Carried into later phases
+
+Nothing from Phase 0 is left half-done. What Phase 0 deliberately deferred, with its owner:
+
+- **`demo` breadth** — price books, reviews, portfolio: Phases 3 and 7, when those tables exist.
+- **GeoNames attribution on the public site** — Phase 8 (`18-cms-seo.md` §CMS).
+- **District-name spot check by a Turkish reader.** 442 district names are pure ASCII and
+  genuinely appear to be so (Ceyhan, Alanya, Kozan); the build cannot distinguish those from
+  a diacritic that GeoNames lost and never recorded. A native reader scanning the list once
+  is cheap; added as **Q9**.
+- **CI has never run the integration stage against Docker.** `scripts/ci-integration.mjs`
+  now finds the schema and the tests and runs them, but the GitHub runner has still never
+  executed it — the repository has no remote (`25-progress.md`, 2026-08-15). First push.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -702,7 +845,8 @@ them.
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
-| Q8 | **Development machine still cannot run containers — NOT yet resolved.** Docker Desktop is installed (CLI 29.7.2) but no daemon is reachable. `systeminfo` still reports `Virtualization Enabled In Firmware: No`, `Win32_Processor.VirtualizationFirmwareEnabled` is still `False`, and `LastBootUpTime` is 2026-08-15 15:10 — **the machine has not restarted since before the firmware change was reported**. Fast Startup (`HiberbootEnabled = 1`) is on, so a *Shut down* + power on does not re-read firmware settings; only **Restart** does. | **Phase 0 tasks 0.3, 0.5, 0.17, and the database half of 0.4 and 0.15.** Everything that does not need a live database is done and verified. | none. **Restart** (not shut down), confirm `systeminfo` reports `Virtualization Enabled In Firmware: Yes`, start Docker Desktop once, then run the verification list in the log entry below |
+| Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
+| ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief
 

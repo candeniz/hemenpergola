@@ -25,11 +25,18 @@ describe('migration 1 · extensions and collation', () => {
     expect(rows).toHaveLength(1)
   })
 
-  it('runs on a C-collated cluster', async () => {
+  it('runs on a C-collated database', async () => {
     // 23 §Migrations requires this, and it is create-time: getting it wrong is a dump and
     // restore, not a migration.
-    const rows = await getPrisma().$queryRaw<{ lc_collate: string }[]>`SHOW lc_collate`
-    expect(rows[0]?.lc_collate).toBe('C')
+    //
+    // Read from `pg_database`, not `SHOW lc_collate`: PostgreSQL 16 removed `lc_collate`
+    // and `lc_ctype` as runtime parameters — they are per-database properties now, and
+    // `SHOW` errors with "unrecognized configuration parameter".
+    const rows = await getPrisma().$queryRaw<{ datcollate: string; datctype: string }[]>`
+      SELECT datcollate, datctype FROM pg_database WHERE datname = current_database()
+    `
+    expect(rows[0]?.datcollate).toBe('C')
+    expect(rows[0]?.datctype).toBe('C')
   })
 
   it.each([

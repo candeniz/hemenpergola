@@ -62,7 +62,15 @@ Rules that keep deploys reversible:
   getting it wrong is not a migration away from being fixed — it is a dump, recreate and
   restore. Turkish-sorted columns carry their own `COLLATE "tr-TR-x-icu"`
   (`04-data-model.md` §Conventions); the cluster itself stays byte-order. Verify on any new
-  database before the first migration runs: `SHOW lc_collate;` must report `C`.
+  database before the first migration runs:
+
+  ```sql
+  SELECT datcollate, datctype FROM pg_database WHERE datname = current_database();
+  ```
+
+  Both must report `C`. Not `SHOW lc_collate` — PostgreSQL 16 removed `lc_collate` and
+  `lc_ctype` as runtime parameters, and `SHOW` now errors with
+  `unrecognized configuration parameter`.
 
 Rollback: redeploy the previous image. Because migrations are expand-only within a release,
 the previous image still runs against the new schema. A migration that breaks this rule

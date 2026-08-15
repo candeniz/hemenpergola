@@ -195,6 +195,7 @@ model Company {
   payments      Payment[]
   leadCredits   LeadCredit[]
 
+  @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
   @@index([deletedAt])
 }
@@ -257,6 +258,7 @@ model CompanyContact {
   city     City?     @relation(fields: [cityId], references: [id])
   district District? @relation(fields: [districtId], references: [id])
 
+  @@index([point], type: Gist, map: "CompanyContact_point_gist")
   @@index([cityId])
   @@index([districtId])
 }
@@ -278,6 +280,7 @@ model City {
   districts       District[]
   companyContacts CompanyContact[]
 
+  @@index([point], type: Gist, map: "City_point_gist")
   @@index([name])
 }
 
@@ -295,6 +298,7 @@ model District {
   companyContacts CompanyContact[]
 
   @@unique([cityId, name])
+  @@index([point], type: Gist, map: "District_point_gist")
   @@index([cityId])
 }
 

@@ -71,6 +71,11 @@ const ENV_BOUNDARY_FILES = [
   // Test tooling, not application code: Playwright reads `CI` to decide retries and
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',
+  // Prisma CLI tooling and the seed runner: both must run against an arbitrary database
+  // (a container, a scratch copy) that the application's typed configuration does not
+  // describe, and both execute outside Next entirely.
+  'prisma.config.ts',
+  'prisma/seed/**/*.ts',
   'e2e/**/*.ts',
   // The integration harness must hand the container's URL to the Prisma CLI as an env
   // var; the typed env describes the application's database, not an ephemeral one.
