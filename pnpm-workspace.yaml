@@ -1,0 +1,10 @@
+# pnpm 11 reads settings from here, not from the "pnpm" field in package.json.
+# (`onlyBuiltDependencies` was removed in v11 and replaced by `allowBuilds`.)
+#
+# Dependency postinstall scripts are blocked by default. These two are allowed
+# deliberately, and nothing else is:
+#   sharp         — image processing used by next/image at build and runtime
+#   unrs-resolver — native resolver behind eslint-config-next's import plugin
+allowBuilds:
+  sharp: true
+  unrs-resolver: true

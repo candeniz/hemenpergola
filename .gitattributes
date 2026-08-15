@@ -1,0 +1,14 @@
+# Prettier is configured with endOfLine: lf. Without this, Git's autocrlf turns every
+# checked-out file into CRLF on Windows and `pnpm format:check` fails on a clean clone.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Collapsed in review UIs, but still diffable: lockfile changes are a supply-chain
+# review surface (19-security-and-kvkk.md §Dependencies).
+pnpm-lock.yaml linguist-generated=true

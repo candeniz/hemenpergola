@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ArchPortal - Pricing Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-fixed-dim": "#b5c8df",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#e1e3e4",
+                        "tertiary": "#411d00",
+                        "inverse-on-surface": "#f0f1f2",
+                        "outline": "#74777d",
+                        "tertiary-fixed": "#ffdcc5",
+                        "outline-variant": "#c4c6cd",
+                        "surface-container-low": "#f3f4f5",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b5c8df",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#edeeef",
+                        "primary-fixed": "#d1e4fb",
+                        "surface-tint": "#4e6073",
+                        "primary": "#162839",
+                        "on-background": "#191c1d",
+                        "on-secondary-container": "#007239",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-primary-container": "#96a9be",
+                        "secondary-fixed": "#7efba4",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#00210c",
+                        "background": "#f8f9fa",
+                        "surface-bright": "#f8f9fa",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-dim": "#d9dadb",
+                        "on-tertiary-fixed": "#301400",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-tertiary-container": "#f78b30",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#091d2e",
+                        "surface-container-high": "#e7e8e9",
+                        "primary-container": "#2c3e50",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#43474c",
+                        "secondary-container": "#7bf8a1",
+                        "tertiary-container": "#612f00",
+                        "secondary": "#006d37",
+                        "on-surface": "#191c1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xl": "80px",
+                        "xs": "4px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "base": "8px",
+                        "lg": "48px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Montserrat"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav aria-label="Main Navigation" class="hidden md:flex flex-col h-screen fixed left-0 top-0 p-sm gap-base docked left-0 w-64 border-r border-outline-variant bg-surface">
+<!-- Header -->
+<div class="flex items-center gap-sm mb-md px-base py-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden shrink-0">
+<img alt="Manufacturer Logo" class="w-full h-full object-cover" data-alt="A clean, minimalist logo mark for a premium steel fabrication and architectural products manufacturer. The logo should feature crisp geometric lines, a monochromatic slate grey and white palette, and convey a sense of structural integrity and modern engineering. It should be perfectly centered in the circular frame." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZlNyvV_3zPGdJwherYmzvzH0BjNER3NrI494rnFZYBP6A6nwl6LLuXaJNak5MXToD5_TyGKwc1JJEPHQXbh6KQ4VpC0a1hg_BA1Cn_ssXxXE1Z3Mi5IL_EnBJ0zHXfIgXQ5PzP7aaqa2WiKKq9SKzyWr-tXKYhHW6gs52VES_al03jcPibeFHTh8asqUDsEkjASi4nD1AfCeo8-ZPgygPBg3Nqvct-7P4AB9RmnTr1ULiuqPXkQDd"/>
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="font-headline-md text-headline-md text-primary truncate" style="font-size: 16px; line-height: 20px;">Global Steel Fabrications</span>
+<span class="font-label-md text-label-md text-on-surface-variant truncate">Admin Console</span>
+</div>
+</div>
+<!-- CTA -->
+<button class="flex items-center justify-center gap-xs px-md py-sm bg-secondary text-on-secondary rounded-lg mb-sm hover:bg-on-secondary-container transition-colors font-label-md text-label-md w-full">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Product
+        </button>
+<!-- Main Tabs -->
+<div class="flex flex-col gap-xs flex-1">
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+<span>Offer Requests</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Customers</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span>Products</span>
+</a>
+<a aria-current="page" class="flex items-center gap-sm px-md py-sm rounded-lg text-on-secondary-container bg-secondary-container font-bold hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span>Pricing</span>
+</a>
+</div>
+<!-- Footer Tabs -->
+<div class="flex flex-col gap-xs mt-auto pt-md border-t border-outline-variant">
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">contact_support</span>
+<span>Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 bg-surface-container-lowest min-h-screen">
+<!-- Top App Bar (Mobile only for SideNav scenarios usually, but keeping it per instruction if needed, opting for page header instead) -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant/30 px-margin-mobile md:px-margin-desktop py-sm flex justify-between items-center h-16 backdrop-blur-md bg-opacity-90">
+<div class="flex items-center gap-sm">
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile md:text-headline-md text-primary">Pricing Management - Bioclimatic Pergola</h1>
+</div>
+<div class="flex items-center gap-sm">
+<button class="px-md py-[6px] border border-outline rounded-lg text-primary hover:bg-surface-container-low transition-colors font-label-md text-label-md bg-surface-container-lowest">
+                    Save Draft
+                </button>
+<button class="px-md py-[6px] bg-secondary text-on-secondary rounded-lg hover:bg-on-secondary-container transition-colors font-label-md text-label-md">
+                    Publish Price
+                </button>
+</div>
+</header>
+<div class="p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto space-y-md">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+<!-- Main Configuration Column -->
+<div class="lg:col-span-2 space-y-md">
+<!-- Section 1: Price Book -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden" style="box-shadow: 0 4px 12px rgba(44, 62, 80, 0.04);">
+<div class="border-b border-outline-variant/50 px-md py-sm bg-surface">
+<h2 class="font-headline-md text-[18px] text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">book</span> Price Book
+                            </h2>
+</div>
+<div class="p-md grid grid-cols-1 sm:grid-cols-2 gap-md">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant block">Base Price (per m²)</label>
+<div class="relative">
+<span class="absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">₺</span>
+<input class="w-full pl-[28px] pr-sm py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-background font-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="9,000"/>
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant block">Minimum Project Value</label>
+<div class="relative">
+<span class="absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">₺</span>
+<input class="w-full pl-[28px] pr-sm py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-background font-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="120,000"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Options Pricing -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden" style="box-shadow: 0 4px 12px rgba(44, 62, 80, 0.04);">
+<div class="border-b border-outline-variant/50 px-md py-sm bg-surface flex justify-between items-center">
+<h2 class="font-headline-md text-[18px] text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">extension</span> Options Pricing
+                            </h2>
+<button class="text-primary hover:bg-surface-container-high p-xs rounded-full transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-lowest border-b border-outline-variant/50">
+<tr>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant font-medium">Option Name</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant font-medium">Pricing Type</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant font-medium text-right">Price (₺)</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant font-medium w-10"></th>
+</tr>
+</thead>
+<tbody class="font-body-md text-on-background">
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">Integrated LED System</td>
+<td class="px-md py-sm"><span class="px-2 py-1 bg-surface-container-high rounded-md text-[12px]">per linear meter</span></td>
+<td class="px-md py-sm text-right">900</td>
+<td class="px-md py-sm text-center">
+<button class="text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">Zip Screen</td>
+<td class="px-md py-sm"><span class="px-2 py-1 bg-surface-container-high rounded-md text-[12px]">per m²</span></td>
+<td class="px-md py-sm text-right">4,500</td>
+<td class="px-md py-sm text-center">
+<button class="text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">Sliding Glass System</td>
+<td class="px-md py-sm"><span class="px-2 py-1 bg-surface-container-high rounded-md text-[12px]">per m²</span></td>
+<td class="px-md py-sm text-right">6,000</td>
+<td class="px-md py-sm text-center">
+<button class="text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">Infrared Heater</td>
+<td class="px-md py-sm"><span class="px-2 py-1 bg-surface-container-high rounded-md text-[12px]">per unit</span></td>
+<td class="px-md py-sm text-right">18,000</td>
+<td class="px-md py-sm text-center">
+<button class="text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">Rain Sensor</td>
+<td class="px-md py-sm"><span class="px-2 py-1 bg-surface-container-high rounded-md text-[12px]">fixed</span></td>
+<td class="px-md py-sm text-right">6,000</td>
+<td class="px-md py-sm text-center">
+<button class="text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 3: Regional Pricing -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden" style="box-shadow: 0 4px 12px rgba(44, 62, 80, 0.04);">
+<div class="border-b border-outline-variant/50 px-md py-sm bg-surface">
+<h2 class="font-headline-md text-[18px] text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">location_on</span> Regional Logistics Surcharge
+                            </h2>
+</div>
+<div class="p-md grid grid-cols-1 sm:grid-cols-3 gap-sm">
+<div class="border border-outline-variant/50 rounded-lg p-sm bg-surface-container-lowest">
+<div class="font-label-md text-label-md text-on-surface-variant mb-xs">Istanbul</div>
+<div class="font-body-md text-secondary font-medium">Included (Base)</div>
+</div>
+<div class="border border-outline-variant/50 rounded-lg p-sm bg-surface-container-lowest">
+<div class="font-label-md text-label-md text-on-surface-variant mb-xs">Kocaeli</div>
+<div class="font-body-md text-on-background font-medium">+₺10,000</div>
+</div>
+<div class="border border-outline-variant/50 rounded-lg p-sm bg-surface-container-lowest">
+<div class="font-label-md text-label-md text-on-surface-variant mb-xs">Bursa</div>
+<div class="font-body-md text-on-background font-medium">+₺15,000</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Column -->
+<div class="space-y-md">
+<!-- Section 4: Price Simulator -->
+<section class="bg-surface rounded-xl border border-outline-variant/50 overflow-hidden">
+<div class="border-b border-outline-variant/50 px-md py-sm bg-surface-container-low">
+<h2 class="font-headline-md text-[18px] text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">calculate</span> Simulator
+                            </h2>
+</div>
+<div class="p-md space-y-md bg-surface-container-lowest">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant block">Dimensions (W x Projection)</label>
+<div class="flex gap-2 items-center">
+<input class="w-full px-sm py-xs rounded border border-outline-variant bg-surface text-center font-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none" type="text" value="5"/>
+<span class="text-on-surface-variant">x</span>
+<input class="w-full px-sm py-xs rounded border border-outline-variant bg-surface text-center font-body-md focus:ring-1 focus:ring-primary focus:border-primary outline-none" type="text" value="4"/>
+<span class="text-on-surface-variant font-label-md">m</span>
+</div>
+<div class="text-[12px] text-outline text-right mt-1">Total: 20m²</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-md text-label-md text-on-surface-variant block">Included Options</label>
+<div class="flex flex-col gap-xs">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" type="checkbox"/>
+<span class="font-body-sm text-on-background">Integrated LED</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" type="checkbox"/>
+<span class="font-body-sm text-on-background">Sliding Glass</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" type="checkbox"/>
+<span class="font-body-sm text-on-background">Zip Screen</span>
+</label>
+</div>
+</div>
+<div class="pt-sm border-t border-outline-variant/30">
+<div class="flex justify-between items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">Estimated Total</span>
+<span class="font-headline-md text-headline-md text-primary font-bold tracking-tight">₺226,400</span>
+</div>
+<div class="text-[10px] text-outline text-right mt-1">*Excludes regional surcharge</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Version History -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden" style="box-shadow: 0 4px 12px rgba(44, 62, 80, 0.04);">
+<div class="border-b border-outline-variant/50 px-md py-sm bg-surface">
+<h2 class="font-headline-md text-[16px] text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">history</span> Version History
+                            </h2>
+</div>
+<ul class="font-body-sm text-on-background">
+<li class="flex justify-between items-center px-md py-sm border-b border-outline-variant/30 hover:bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-medium">v2.1</span>
+<span class="text-[12px] text-outline">Oct 12, 2023</span>
+</div>
+<span class="px-2 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded text-[10px] font-bold uppercase tracking-wider border border-[#C8E6C9]">Active</span>
+</li>
+<li class="flex justify-between items-center px-md py-sm hover:bg-surface-container-low">
+<div class="flex flex-col">
+<span class="text-on-surface-variant">v2.0</span>
+<span class="text-[12px] text-outline">Jan 05, 2023</span>
+</div>
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold uppercase tracking-wider">Archived</span>
+</li>
+</ul>
+</section>
+</div>
+</div>
+</div>
+</main>
+</body></html>

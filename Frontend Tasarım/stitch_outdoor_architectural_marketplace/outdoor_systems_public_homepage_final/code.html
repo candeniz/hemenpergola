@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Archivault - Outdoor Systems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-container": "#f78b30",
+                        "surface-container": "#edeeef",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-primary": "#b5c8df",
+                        "outline": "#74777d",
+                        "on-primary-fixed": "#091d2e",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "primary-fixed-dim": "#b5c8df",
+                        "tertiary-container": "#612f00",
+                        "surface": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#7bf8a1",
+                        "surface-tint": "#4e6073",
+                        "secondary": "#006d37",
+                        "surface-dim": "#d9dadb",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "tertiary": "#411d00",
+                        "background": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-primary-fixed-variant": "#36485b",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2c3e50",
+                        "on-secondary-container": "#007239",
+                        "secondary-fixed-dim": "#61de8a",
+                        "secondary-fixed": "#7efba4",
+                        "on-primary": "#ffffff",
+                        "primary": "#162839",
+                        "on-secondary-fixed": "#00210c",
+                        "on-secondary-fixed-variant": "#005228",
+                        "outline-variant": "#c4c6cd",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#43474c",
+                        "on-primary-container": "#96a9be",
+                        "tertiary-fixed": "#ffdcc5",
+                        "primary-fixed": "#d1e4fb",
+                        "on-background": "#191c1d",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed": "#301400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "sm": "12px",
+                        "xl": "80px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "lg": "48px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .ambient-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flat no shadows">
+<div class="flex justify-between items-center h-20 px-margin-desktop w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-xl">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="#">Archivault</a>
+<div class="hidden md:flex gap-8">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Products</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">How It Works</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Manufacturers</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Projects</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="font-label-md text-label-md text-primary px-4 py-2 hover:bg-surface-container rounded-lg transition-colors">Sign In</button>
+<button class="font-label-md text-label-md bg-transparent border border-outline text-primary px-4 py-2 rounded-lg hover:bg-surface-container transition-colors">Contact Sales</button>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<main class="pt-[140px] pb-xl px-margin-desktop w-full max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+<div class="lg:col-span-6 flex flex-col items-start gap-8">
+<h1 class="font-display-lg text-display-lg text-primary max-w-2xl leading-tight">
+                    Find the right outdoor system for your project.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                    Discover premium pergolas, structural glass systems, and technical outdoor enclosures engineered for precision and built to last.
+                </p>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-6 py-3 rounded-lg hover:bg-secondary-fixed transition-colors flex items-center gap-2">
+                    Get Offers
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="lg:col-span-6">
+<div class="rounded-lg overflow-hidden ambient-shadow h-[500px] w-full bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A high-end modern architectural louvered pergola system installed on a luxury home patio. The structure features clean, sharp geometric lines in a matte dark grey finish. Natural light filters through the adjustable roof blades, casting precise structural shadows on the sleek concrete paving below. The mood is premium, serene, and engineered for durability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMofXxMlTs13-Psc16E_4UlJ7bBgA-L2kCbUJZaaqgSEqs4CK_xTpGtQJUQQBbGWBH7NAJI7X6sN7LlfkDtmldsia_GmmulR3NuXSlshGXAO3oJuYLP1u9ek0YlQI3fDtknyXYuHa9rt1z6b4oiG2JscE7OSuOeH4wJUv2RKWglQtviq1zD4jAiWWxO4bgKPlUp0xxhCiaR_6-MRm3uCq-Q5OFbLbhl0yxvto63S_AFTwsTzSEU3cf"/>
+</div>
+</div>
+</div>
+</main>
+<!-- Categories Section -->
+<section class="py-xl px-margin-desktop w-full max-w-7xl mx-auto">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-12">What are you looking for?</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<a class="group block bg-surface-container-lowest rounded-lg ambient-shadow overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md" href="#">
+<div class="h-48 w-full bg-surface-container-high">
+<img class="w-full h-full object-cover rounded-t-none" data-alt="Detailed architectural shot looking up at a premium aluminum louvered roof system against a clear sky. Precision engineering and minimalist design, emphasizing structural lines and modern light-mode aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtmmEtpqco5roYuiZRpQCGGl2WzC5Q7aUSx9y5HUAQ4TP5HGP43-9aumnJG1oJWgHPJ-b6T-zfdpIGG2zaVx_5yW964NIcsw2p-4WAcNiu4e3GjZmv_6Hgmt2IJaUMkyhRfF3vYVfjy4icuGRL_oeC0n2hs2iEiz8dw6W7Z5jKIGelLRguo6tBqfdn6frFjNY86Ph4rQSFwz8NvkLGJXCmourqXrkIGnSTkGSWpqoYeNwnoFMlj9l2"/>
+</div>
+<div class="p-6 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary">Louvered Roof</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<!-- Card 2 -->
+<a class="group block bg-surface-container-lowest rounded-lg ambient-shadow overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md" href="#">
+<div class="h-48 w-full bg-surface-container-high">
+<img class="w-full h-full object-cover rounded-t-none" data-alt="Modern fixed glass patio roof attached to a contemporary residence. Clean lines, structural integrity, bright daylight filtering through creating a serene, high-end architectural environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY0Osg2bV2tMhpnrzvD9ascm77NPEP-azgEaNpwj2oeqsL8fAvLxE96gyEIlZlW-PRgLD3oFXQ5LQleNzcDKgaF5QcpjVzex3sZJJwM-2mN1iC7sPLuBxyBAS-_Y452GEVHlgU0_FyAC-q_QKZOCynXY7U43Wglt5WXHdhSBv9PtqyCmzW9I6lYZ6T52h2ewtTjOHF5s137lISIGxdzJcefG1_AcjJZFrDEifS3wgfrDUf_oXV9cSe"/>
+</div>
+<div class="p-6 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary">Fixed Roof</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<!-- Card 3 -->
+<a class="group block bg-surface-container-lowest rounded-lg ambient-shadow overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md" href="#">
+<div class="h-48 w-full bg-surface-container-high">
+<img class="w-full h-full object-cover rounded-t-none" data-alt="Seamless glass sliding door enclosure for an outdoor living space. High-end residential architecture, minimalist framing, demonstrating thermal isolation and engineered precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjJyS4_MhryGT1TRfAIU7DipzJtdwsUbTZHqvXvEH5GH8SHNTXRzHkFvopswWjaLGr3bIEwJTBm75B6UzQYMaah-mJ3U_AOCdCPPtXzsb2hf8Q2RLyXe-bM9Ud9DhYej5xMXONSWrtdD4EubmE4OEphqEj98-_1ufyUKeGAgk7B8JoomgdHzCWHI-mgV9HPt7mlg_CpiaxMjQzKjOW8dGRu0a7eg0YRZd9-_Ss_1Fw4kbY1BVfyZbq"/>
+</div>
+<div class="p-6 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary">Enclosure</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+<!-- Card 4 -->
+<a class="group block bg-surface-container-lowest rounded-lg ambient-shadow overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-md" href="#">
+<div class="h-48 w-full bg-surface-container-high">
+<img class="w-full h-full object-cover rounded-t-none" data-alt="Premium multi-slide structural glass doors opening to an expansive outdoor landscape. Focus on the heavy-duty tracks, sleek frames, and robust mechanical engineering necessary for large-span openings." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFjOh1Vhw0G5YZddwpVsNsrYuR4CKXkOyE_eSb38QQZmz6qYo7JEVywx3Arhbh1igjwm2CkG-Gc3fn07xfL9TxU-pTnwPnVoCxUOxkpRP6lmOBCLR0IydcXDACiJsCYzsA1Fxwx7qhZSEjPXP8kOtirptGcc1cbO6JzquJvaiy4-Btv0XfgY-oVQg3EobrmVyL-cOpqj1rCtfeOkUdIwFjbTZ8H5CaIhiYJwMYR3BuUuLoi218cfpl"/>
+</div>
+<div class="p-6 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary">Door Systems</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</a>
+</div>
+</section>
+<!-- Manufacturer CTA Section -->
+<section class="bg-surface-container mt-lg py-xl">
+<div class="max-w-7xl mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter items-center">
+<div class="flex flex-col items-start gap-6">
+<h2 class="font-display-lg text-display-lg text-primary">Are you a manufacturer?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">
+                    Join Archivault Marketplace to connect with premium architectural projects, showcase your technical specifications, and streamline your sales pipeline.
+                </p>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded-lg hover:bg-primary-container transition-colors mt-4">
+                    Register Your Company
+                </button>
+</div>
+<div class="h-64 rounded-lg bg-surface-variant ambient-shadow flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 opacity-20" data-alt="An abstract architectural blueprint or structural engineering diagram in light grey tones, emphasizing precision, technical expertise, and reliability in the manufacturing process. Technical grid lines and geometric nodes pattern." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBxhe5c1hJywRe0cYA7qYK5CTPqWdjlWwTLzCzj59y3t9WXFuJpBjOzjYzSK7zjG4Cv3YppafVS8vlqW5XOdxVaW_0J5rZByrF_mYZpL0WaVFAdIuMsU0MHC_AxqsfStVVtGinGFrY4_QlKd0ZBtqot6y1Qi-hnWetK5E7WSQdhdW_fTlxPSBEowwtIfvwPm46WO4FMAJcIywthMxNvHVt82L7HYG8sn0TXJuInTZieiSnf1C_HetjD')"></div>
+<span class="material-symbols-outlined text-6xl text-primary opacity-50 z-10" style="font-variation-settings: 'FILL' 0;">precision_manufacturing</span>
+</div>
+</div>
+</section>
+<!-- Footer Component -->
+<footer class="bg-surface-container-lowest dark:bg-surface-dim border-t border-outline-variant full-width w-full py-lg px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter mt-xl">
+<div class="flex flex-col gap-4 col-span-1">
+<span class="font-headline-md text-headline-md text-primary">Archivault</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 max-w-xs">
+                The premier marketplace for architectural outdoor systems. Connecting structural engineering with premium landscapes.
+            </p>
+<span class="font-body-sm text-body-sm text-on-surface dark:text-on-surface-variant mt-auto pt-4">© 2024 Archivault Marketplace. All rights reserved.</span>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Legal</span>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Terms of Service</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Cookie Policy</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Company</span>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Sustainability</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Careers</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Press</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider mb-2">Resources</span>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Technical Specs</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Structural Guides</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Manufacturer Support</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm w-fit" href="#">Contact Engineering</a>
+</div>
+</footer>
+</body></html>

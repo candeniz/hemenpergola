@@ -1,0 +1,379 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ArchMarket - Compare Companies</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#b5c8df",
+                      "secondary-fixed-dim": "#61de8a",
+                      "on-primary-fixed": "#091d2e",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "tertiary-container": "#612f00",
+                      "on-primary-container": "#96a9be",
+                      "on-tertiary-container": "#f78b30",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#b5c8df",
+                      "surface-container-highest": "#e1e3e4",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-bright": "#f8f9fa",
+                      "on-error": "#ffffff",
+                      "surface-dim": "#d9dadb",
+                      "secondary-fixed": "#7efba4",
+                      "tertiary-fixed": "#ffdcc5",
+                      "tertiary": "#411d00",
+                      "on-surface-variant": "#43474c",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#7bf8a1",
+                      "outline": "#74777d",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#36485b",
+                      "outline-variant": "#c4c6cd",
+                      "primary-container": "#2c3e50",
+                      "on-secondary-fixed": "#00210c",
+                      "primary": "#162839",
+                      "surface-container": "#edeeef",
+                      "on-primary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "secondary": "#006d37",
+                      "on-tertiary-fixed": "#301400",
+                      "primary-fixed": "#d1e4fb",
+                      "inverse-surface": "#2e3132",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-secondary-container": "#007239",
+                      "on-background": "#191c1d",
+                      "surface-tint": "#4e6073",
+                      "on-surface": "#191c1d",
+                      "surface-variant": "#e1e3e4",
+                      "surface": "#f8f9fa",
+                      "background": "#f8f9fa",
+                      "tertiary-fixed-dim": "#ffb783"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-desktop": "64px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "lg": "48px",
+                      "sm": "12px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface antialiased">
+<!-- Top Navigation (ArchMarket) -->
+<!-- Navigation Suppressed: Task-focused sub-page with a explicit 'Back' action. -->
+<main class="w-full max-w-screen-2xl mx-auto px-margin-mobile md:px-margin-desktop py-lg pb-32">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-sm">
+<div>
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-body-sm text-body-sm mb-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Back to Results
+                </a>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Compare Selected Companies</h1>
+</div>
+<div class="hidden md:flex gap-sm">
+<button class="px-[16px] py-[8px] rounded-lg border border-primary-container text-primary-container hover:bg-surface-container-low transition-colors font-label-md text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">share</span>
+                    Share Comparison
+                </button>
+</div>
+</div>
+<!-- Comparison Grid Container -->
+<div class="overflow-x-auto pb-6">
+<div class="min-w-[800px] md:min-w-0 grid grid-cols-4 gap-gutter border-t border-outline-variant pt-lg">
+<!-- ROW HEADERS (Column 1) -->
+<div class="flex flex-col space-y-lg pr-sm">
+<!-- Spacer for sticky header row -->
+<div class="h-[120px] flex items-end pb-sm border-b border-surface-container">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Company</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Estimated Project Range</span></div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Verification Status</span></div><div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Rating</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Warranty Period</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Avg. Response Time</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Completed Marketplace Projects</span>
+</div>
+<div class="flex items-start h-[120px] pt-sm border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Featured Products</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Service Area</span>
+</div>
+<!-- Action Row Spacer -->
+<div class="h-[60px]"></div>
+</div>
+<!-- COMPANY 1 (Column 2) -->
+<div class="flex flex-col space-y-lg relative group bg-surface-container-lowest rounded-lg p-sm shadow-[0_4px_12px_rgba(44,62,80,0.04)] border border-surface-container hover:shadow-[0_4px_12px_rgba(44,62,80,0.08)] transition-all">
+<!-- Sticky-ish Header -->
+<div class="h-[120px] flex flex-col justify-end pb-sm border-b border-surface-container">
+<div class="flex justify-between items-start mb-2">
+<div class="w-[48px] h-[48px] rounded bg-surface-container-low flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A minimalist, geometric logo featuring an abstract 'A' combined with a structural arch, rendered in deep navy and clean white, suitable for a premium architectural engineering firm. The logo is centered in a square frame with high-key lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLpLTb8RmXoW5iJ_ZqGNQJ0JTIg7A17Xiui6PwnUfClVFFMkzVyam9lJ6mc634KOlJ8pl4JbcABP_52kYulMqSn_ePJwq-hob0Ffw20YFY68ezFA2KMDEU4-Wa92Y2PdnCx-OXQiLReq9XHtYS5dQsiQ3L-uUOe15J9eXUkKvPwJfeO6rQR2W_DbzUekRKByda4LxUxl_jf3nTOsnDOSoDEufP9dNz0iyR4C80j1y3jOHLdvlnOEBv">
+</div>
+<div class="flex items-center gap-1 bg-[rgba(126,251,164,0.15)] text-secondary px-2 py-1 rounded-[4px]">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span class="font-label-md text-label-md text-[10px]">VERIFIED</span>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary truncate">AeroBuild Inc.</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Facade Specialists</p>
+</div>
+<!-- Data Rows -->
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><div class="flex flex-col justify-center w-full"><div class="flex justify-between items-center w-full"><span class="text-[10px] font-label-md text-on-surface-variant uppercase">Original Estimate</span><span class="font-body-md text-body-md text-on-surface font-semibold">₺218,000 – ₺231,000</span></div><p class="text-[10px] text-on-surface-variant mt-1">* Final price after technical inspection</p></div></div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><div class="flex items-center gap-1 bg-[rgba(126,251,164,0.15)] text-secondary px-2 py-1 rounded-[4px]"><span class="material-symbols-outlined text-[14px]">verified</span><span class="font-label-md text-label-md text-[10px]">VERIFIED</span></div></div><div class="flex items-center h-[60px] border-b border-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface font-semibold">4.9/5.0</span>
+<div class="flex text-on-tertiary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+</div>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">15-year warranty</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">&lt; 2 hours</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">284 projects</span>
+</div>
+<div class="flex flex-col justify-start h-[120px] pt-sm border-b border-surface-container-low gap-1">
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Aluminum Cladding</span>
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Curtain Walls</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px] mt-1">+3 more</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">Global</span>
+</div>
+<!-- Action -->
+<div class="h-[60px] flex items-center justify-center mt-auto pt-sm">
+<button class="w-full bg-secondary hover:bg-on-secondary-container transition-colors text-on-secondary font-label-md text-label-md py-[12px] px-[16px] rounded-lg">
+                            Choose Company
+                        </button>
+</div>
+</div>
+<!-- COMPANY 2 (Column 3) -->
+<div class="flex flex-col space-y-lg relative group bg-surface-container-lowest rounded-lg p-sm shadow-[0_4px_12px_rgba(44,62,80,0.04)] border border-surface-container hover:shadow-[0_4px_12px_rgba(44,62,80,0.08)] transition-all ring-2 ring-primary-container">
+<!-- Featured Badge for column -->
+<div class="absolute -top-[12px] left-1/2 transform -translate-x-1/2 bg-primary-container text-on-primary font-label-md text-[10px] px-3 py-1 rounded-full whitespace-nowrap z-10">
+                        Best Match
+                    </div>
+<!-- Sticky-ish Header -->
+<div class="h-[120px] flex flex-col justify-end pb-sm border-b border-surface-container"><div class="flex flex-col justify-center w-full"><div class="flex justify-between items-center w-full"><span class="text-[10px] font-label-md text-on-surface-variant uppercase">Original Estimate</span><span class="font-body-md text-body-md text-on-surface font-semibold">₺195,000 – ₺215,000</span></div><p class="text-[10px] text-on-surface-variant mt-1">* Final price after technical inspection</p></div></div>
+<!-- Data Rows -->
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><div class="flex items-center gap-1 bg-[rgba(126,251,164,0.15)] text-secondary px-2 py-1 rounded-[4px]"><span class="material-symbols-outlined text-[14px]">verified</span><span class="font-label-md text-label-md text-[10px]">VERIFIED</span></div></div><div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface font-semibold">₺195,000 – ₺215,000</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface font-semibold">4.7/5.0</span>
+<div class="flex text-on-tertiary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+</div>
+</div>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">10-year warranty</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">~ 4 hours</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">142 projects</span>
+</div>
+<div class="flex flex-col justify-start h-[120px] pt-sm border-b border-surface-container-low gap-1">
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Frameless Glazing</span>
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Canopies</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">Europe &amp; Middle East</span>
+</div>
+<!-- Action -->
+<div class="h-[60px] flex items-center justify-center mt-auto pt-sm">
+<button class="w-full bg-secondary hover:bg-on-secondary-container transition-colors text-on-secondary font-label-md text-label-md py-[12px] px-[16px] rounded-lg">
+                            Choose Company
+                        </button>
+</div>
+</div>
+<!-- COMPANY 3 (Column 4) -->
+<div class="flex flex-col space-y-lg relative group bg-surface-container-lowest rounded-lg p-sm shadow-[0_4px_12px_rgba(44,62,80,0.04)] border border-surface-container hover:shadow-[0_4px_12px_rgba(44,62,80,0.08)] transition-all opacity-80 hover:opacity-100">
+<!-- Sticky-ish Header -->
+<div class="h-[120px] flex flex-col justify-end pb-sm border-b border-surface-container">
+<div class="flex justify-between items-start mb-2">
+<div class="w-[48px] h-[48px] rounded bg-surface-container-low flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A modern industrial logo featuring interlocking steel beams forming the letter 'N', utilizing a palette of stark white, deep slate gray, and subtle rust orange accents, representing a robust engineering manufacturer." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1AwqZLXJEAP65ePgccHiFPptHGIS8dxpKikQQdfDVB02oBn4J0IZq3Air-X_YB3yLjP021l_93TaMpXR2Sv2ElduQXctcgXCVVDiamoZpDg8ZgV78Joao73ECEaLn_b-pXbhREowIPII_FZJ84AxKCKV9xdNnvUnn_Xn8YRNrnBvkU3hC58IA_LnfOcei9SECcJI9lq5O7yi3htcDqhI7CEYPVPZavS6hzfsZe5kNAQYQPxl-TfjG">
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary truncate">Novus Steel</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Structural Elements</p>
+</div>
+<!-- Data Rows -->
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><div class="flex flex-col justify-center w-full"><div class="flex justify-between items-center w-full"><span class="text-[10px] font-label-md text-on-surface-variant uppercase">Original Estimate</span><span class="font-body-md text-body-md text-on-surface font-semibold">₺240,000 – ₺260,000</span></div><p class="text-[10px] text-on-surface-variant mt-1">* Final price after technical inspection</p></div></div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low"><span class="font-body-md text-body-md text-on-surface-variant">Standard</span></div><div class="flex items-center h-[60px] border-b border-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-on-surface font-semibold">4.5/5.0</span>
+<div class="flex text-on-tertiary-container">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]">star_half</span>
+</div>
+</div>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">5-year warranty</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">~ 12 hours</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">89 projects</span>
+</div>
+<div class="flex flex-col justify-start h-[120px] pt-sm border-b border-surface-container-low gap-1">
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Custom Truss</span>
+<span class="font-body-sm text-body-sm text-on-surface bg-surface-container-low px-2 py-1 rounded inline-block truncate w-fit max-w-full">Support Columns</span>
+</div>
+<div class="flex items-center h-[60px] border-b border-surface-container-low">
+<span class="font-body-md text-body-md text-on-surface">North America</span>
+</div>
+<!-- Action -->
+<div class="h-[60px] flex items-center justify-center mt-auto pt-sm">
+<button class="w-full bg-surface-container hover:bg-surface-dim transition-colors text-on-surface font-label-md text-label-md py-[12px] px-[16px] rounded-lg border border-outline-variant">
+                            Choose Company
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<!-- Navigation Suppressed: Task-focused sub-page -->
+
+
+</body></html>

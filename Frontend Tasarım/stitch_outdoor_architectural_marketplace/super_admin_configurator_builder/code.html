@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-background dark:bg-background" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Admin Configurator Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#7bf8a1",
+                    "tertiary-fixed": "#ffdcc5",
+                    "background": "#f8f9fa",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#b5c8df",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#f78b30",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#091d2e",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#006d37",
+                    "on-secondary-container": "#007239",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#00210c",
+                    "inverse-primary": "#b5c8df",
+                    "tertiary": "#411d00",
+                    "on-tertiary-fixed": "#301400",
+                    "outline": "#74777d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface-container-low": "#f3f4f5",
+                    "primary-fixed": "#d1e4fb",
+                    "on-background": "#191c1d",
+                    "surface-tint": "#4e6073",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "outline-variant": "#c4c6cd",
+                    "inverse-surface": "#2e3132",
+                    "surface": "#f8f9fa",
+                    "secondary-fixed-dim": "#61de8a",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#7efba4",
+                    "surface-variant": "#e1e3e4",
+                    "primary-container": "#2c3e50",
+                    "surface-container": "#edeeef",
+                    "on-secondary-fixed-variant": "#005228",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-bright": "#f8f9fa",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "primary": "#162839",
+                    "tertiary-container": "#612f00",
+                    "on-primary-fixed-variant": "#36485b",
+                    "surface-dim": "#d9dadb",
+                    "on-surface-variant": "#43474c",
+                    "on-surface": "#191c1d",
+                    "on-primary-container": "#96a9be",
+                    "surface-container-highest": "#e1e3e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "md": "24px",
+                    "gutter": "24px",
+                    "margin-desktop": "64px",
+                    "sm": "12px",
+                    "margin-mobile": "16px",
+                    "lg": "48px",
+                    "base": "8px",
+                    "xl": "80px"
+            },
+            "fontFamily": {
+                    "headline-lg": [
+                            "Montserrat"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Montserrat"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Montserrat"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Montserrat"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-on-surface font-body-sm bg-surface">
+<!-- SideNavBar -->
+<nav class="bg-primary dark:bg-primary h-screen w-64 flex flex-col border-r border-outline-variant dark:border-outline fixed left-0 top-0 h-full z-40">
+<div class="p-6">
+<div class="flex items-center gap-4 mb-2">
+<div class="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">architecture</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-surface-bright dark:text-surface-bright text-[16px] leading-tight">ArchSystem Admin</h1>
+<p class="font-label-md text-label-md text-primary-fixed-dim">Product Builder</p>
+</div>
+</div>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-secondary text-on-secondary rounded-lg py-2.5 font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-on-secondary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                New Configurator
+            </button>
+</div>
+<ul class="flex-1 overflow-y-auto font-label-md text-label-md">
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="bg-primary-container text-on-primary-container rounded-lg mx-2 my-1 px-4 py-2 flex items-center gap-3 scale-95 active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined fill" data-icon="account_tree">account_tree</span>
+                    Configurators
+                </a>
+</li>
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                    Product Library
+                </a>
+</li>
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="rebase_edit">rebase_edit</span>
+                    Logic Rules
+                </a>
+</li>
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<ul class="p-4 border-t border-outline-variant dark:border-outline font-label-md text-label-md">
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                    Help Center
+                </a>
+</li>
+<li>
+<a class="text-on-primary-fixed-variant hover:text-surface-bright mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors hover:bg-on-primary-fixed-variant dark:hover:bg-on-primary-fixed-variant transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                    Log Out
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ml-64">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim w-full h-16 flex items-center border-b border-outline-variant dark:border-outline fixed top-0 right-0 left-64 z-30 flex justify-between px-md">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed text-[18px]">ArchSystem Configurator Builder</span>
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-outline-variant rounded-full text-sm focus:ring-secondary focus:border-secondary w-64 border" placeholder="Search components..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low transition-all p-2 rounded-full opacity-80 active:opacity-100 duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-low transition-all p-2 rounded-full opacity-80 active:opacity-100 duration-200">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<button class="px-4 py-1.5 border border-outline text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Preview
+                </button>
+<button class="px-4 py-1.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm">
+                    Publish Changes
+                </button>
+</div>
+</header>
+<!-- Builder Workspace -->
+<main class="flex-1 flex mt-16 overflow-hidden">
+<!-- Center: Question List -->
+<div class="flex-1 bg-background overflow-y-auto p-md border-r border-outline-variant">
+<div class="max-w-3xl mx-auto">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary text-[24px]">Premium Pergola Configuration</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Configure step-by-step logic for this product.</p>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:text-on-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_circle</span> Add Step
+                        </button>
+</div>
+<div class="space-y-3">
+<!-- Card 1 -->
+<div class="bg-surface rounded-lg border border-outline-variant shadow-sm flex group hover:border-secondary cursor-pointer transition-colors">
+<div class="w-10 bg-surface-container-low border-r border-outline-variant rounded-l-lg flex items-center justify-center cursor-grab text-on-surface-variant group-hover:text-primary">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">radio_button_checked</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Step 1</div>
+<div class="font-headline-md text-[16px] text-primary font-medium">Product Type</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 bg-surface-container rounded text-xs text-on-surface-variant font-medium">Single Select</span>
+<button class="text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-lg border border-outline-variant shadow-sm flex group hover:border-secondary cursor-pointer transition-colors">
+<div class="w-10 bg-surface-container-low border-r border-outline-variant rounded-l-lg flex items-center justify-center cursor-grab text-on-surface-variant group-hover:text-primary">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">straighten</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Step 2</div>
+<div class="font-headline-md text-[16px] text-primary font-medium">Dimensions</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 bg-surface-container rounded text-xs text-on-surface-variant font-medium">Dimension (W x H)</span>
+<button class="text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Card 3 (Active) -->
+<div class="bg-surface-container-lowest rounded-lg border-2 border-secondary shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex group cursor-pointer">
+<div class="w-10 bg-surface-container-low border-r border-outline-variant rounded-l-md flex items-center justify-center cursor-grab text-primary">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">toggle_on</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Step 3</div>
+<div class="font-headline-md text-[16px] text-primary font-medium">Integrated LED Lighting?</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 bg-surface-container rounded text-xs text-on-surface-variant font-medium">Boolean</span>
+<button class="text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+</div>
+<!-- Logic connector visual -->
+<div class="ml-14 w-px h-6 bg-outline-variant relative">
+<div class="absolute top-1/2 -translate-y-1/2 -left-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-tertiary">alt_route</span>
+<span class="text-xs font-medium text-tertiary bg-tertiary-fixed px-2 py-0.5 rounded">If YES</span>
+</div>
+</div>
+<!-- Card 4 (Conditional) -->
+<div class="ml-14 bg-surface rounded-lg border border-outline-variant shadow-sm flex group hover:border-secondary cursor-pointer transition-colors relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary"></div>
+<div class="w-10 bg-surface-container-low border-r border-outline-variant rounded-l-lg flex items-center justify-center cursor-grab text-on-surface-variant group-hover:text-primary ml-1">
+<span class="material-symbols-outlined">drag_indicator</span>
+</div>
+<div class="flex-1 p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">lightbulb</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Step 3.1</div>
+<div class="font-headline-md text-[16px] text-primary font-medium flex items-center gap-2">
+                                            LED Options 
+                                            <span class="material-symbols-outlined text-[16px] text-tertiary" title="Conditional Logic Applied">visibility</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 bg-surface-container rounded text-xs text-on-surface-variant font-medium">Single Select</span>
+<button class="text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Properties/Logic -->
+<div class="w-96 bg-surface border-l border-outline-variant flex flex-col overflow-y-auto">
+<div class="p-4 border-b border-outline-variant sticky top-0 bg-surface/95 backdrop-blur z-10 flex justify-between items-center">
+<h3 class="font-headline-md text-[18px] text-primary">Edit Question</h3>
+<span class="px-2 py-1 bg-surface-container rounded text-xs text-on-surface-variant font-medium">ID: q_led_toggle</span>
+</div>
+<div class="p-4 space-y-6">
+<!-- Basic Info -->
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">Question Label</label>
+<input class="w-full bg-surface-container-lowest border-outline-variant rounded focus:border-secondary focus:ring-secondary text-sm p-2 border" type="text" value="Integrated LED Lighting?"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">Internal Name</label>
+<input class="w-full bg-surface-container-lowest border-outline-variant rounded focus:border-secondary focus:ring-secondary text-sm p-2 border font-mono text-xs" type="text" value="led_lighting"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">Question Type</label>
+<select class="w-full bg-surface-container-lowest border-outline-variant rounded focus:border-secondary focus:ring-secondary text-sm p-2 border">
+<option>Text</option>
+<option>Number</option>
+<option>Dimension</option>
+<option>Single Select</option>
+<option>Multi Select</option>
+<option selected="">Boolean (Toggle)</option>
+<option>Date</option>
+<option>Location</option>
+<option>Upload</option>
+</select>
+</div>
+</div>
+<hr class="border-outline-variant"/>
+<!-- Conditional Logic -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-tertiary">alt_route</span>
+<h4 class="font-headline-md text-[16px] text-primary">Conditional Logic</h4>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 border border-outline-variant mb-3">
+<p class="text-xs text-on-surface-variant mb-2">Show this question if:</p>
+<div class="flex gap-2">
+<select class="flex-1 bg-surface border-outline-variant rounded text-xs p-1.5 border">
+<option>Select Question...</option>
+<option>Product Type</option>
+<option>Dimensions</option>
+</select>
+<select class="w-20 bg-surface border-outline-variant rounded text-xs p-1.5 border">
+<option>is</option>
+<option>is not</option>
+</select>
+<select class="flex-1 bg-surface border-outline-variant rounded text-xs p-1.5 border">
+<option>Value...</option>
+</select>
+</div>
+</div>
+<button class="text-xs font-medium text-secondary hover:text-on-secondary-container flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Condition
+                        </button>
+</div>
+<hr class="border-outline-variant"/>
+<!-- Pricing Variables -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary-container">payments</span>
+<h4 class="font-headline-md text-[16px] text-primary">Pricing Variables</h4>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded-lg bg-surface-container-lowest">
+<div>
+<div class="text-sm font-medium text-primary">If YES</div>
+<div class="text-xs text-on-surface-variant">Base wiring cost</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium text-secondary">+$250.00</span>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+</div>
+</div>
+<button class="mt-3 w-full py-2 border border-outline-variant rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Price Rule
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

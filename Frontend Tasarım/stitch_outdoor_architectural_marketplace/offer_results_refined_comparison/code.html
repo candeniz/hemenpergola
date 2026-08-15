@@ -1,0 +1,397 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Offer Results - ArchMarket</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-secondary": "#ffffff",
+                "on-primary-fixed-variant": "#36485b",
+                "outline-variant": "#c4c6cd",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed-variant": "#713700",
+                "primary": "#162839",
+                "primary-fixed-dim": "#b5c8df",
+                "surface-container-low": "#f3f4f5",
+                "tertiary": "#411d00",
+                "inverse-primary": "#b5c8df",
+                "primary-fixed": "#d1e4fb",
+                "on-primary-container": "#96a9be",
+                "on-tertiary-fixed": "#301400",
+                "outline": "#74777d",
+                "inverse-on-surface": "#f0f1f2",
+                "secondary-fixed": "#7efba4",
+                "surface-container-high": "#e7e8e9",
+                "tertiary-fixed": "#ffdcc5",
+                "surface": "#f8f9fa",
+                "surface-variant": "#e1e3e4",
+                "on-surface-variant": "#43474c",
+                "on-primary": "#ffffff",
+                "on-surface": "#191c1d",
+                "error": "#ba1a1a",
+                "secondary-container": "#7bf8a1",
+                "background": "#f8f9fa",
+                "on-background": "#191c1d",
+                "on-secondary-container": "#007239",
+                "on-tertiary": "#ffffff",
+                "surface-bright": "#f8f9fa",
+                "surface-container": "#edeeef",
+                "surface-tint": "#4e6073",
+                "on-secondary-fixed": "#00210c",
+                "primary-container": "#2c3e50",
+                "on-primary-fixed": "#091d2e",
+                "inverse-surface": "#2e3132",
+                "on-error": "#ffffff",
+                "on-secondary-fixed-variant": "#005228",
+                "surface-dim": "#d9dadb",
+                "secondary-fixed-dim": "#61de8a",
+                "on-error-container": "#93000a",
+                "tertiary-fixed-dim": "#ffb783",
+                "tertiary-container": "#612f00",
+                "error-container": "#ffdad6",
+                "surface-container-highest": "#e1e3e4",
+                "secondary": "#006d37",
+                "on-tertiary-container": "#f78b30"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "sm": "12px",
+                "margin-desktop": "64px",
+                "xl": "80px",
+                "xs": "4px",
+                "base": "8px",
+                "margin-mobile": "16px",
+                "lg": "48px",
+                "gutter": "24px",
+                "md": "24px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Montserrat"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Montserrat"
+                ],
+                "headline-lg-mobile": [
+                        "Montserrat"
+                ],
+                "headline-md": [
+                        "Montserrat"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .shadow-ambient {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-primary text-primary dark:text-primary-fixed font-body-md text-body-md docked full-width top-0 bg-surface dark:bg-primary border-b border-outline-variant shadow-sm z-50 sticky">
+<div class="flex justify-between items-center px-margin-desktop py-base w-full max-w-screen-2xl mx-auto md:px-margin-desktop px-margin-mobile">
+<div class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed font-bold tracking-tight">
+                ArchMarket
+            </div>
+<nav class="hidden md:flex gap-gutter items-center h-full">
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer transition-all duration-200" href="#">Marketplace</a>
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer transition-all duration-200" href="#">Architects</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer transition-all duration-200" href="#">Installations</a>
+<a class="text-on-surface-variant dark:text-on-primary-container hover:text-primary dark:hover:text-primary-fixed-dim transition-colors cursor-pointer transition-all duration-200" href="#">Services</a>
+</nav>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-container transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-container transition-colors" data-icon="shopping_cart">shopping_cart</span>
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover cursor-pointer border border-outline-variant" data-alt="A professional headshot of a female architect wearing minimalist black clothing, standing in a well-lit modern studio space with large windows and architectural models in the background. High contrast, sharp focus, neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsa2ovoYA-Q4HIidB0AL9VTmxrpbG37NvgfS1_f3MPf7mgIRIYWq1LcD-OHy76djpdsDiQ_TCNuLO7Ih_KW-Y0C6eewlB3QFr160spg1AqKTAVavCZB0iKTrpda4bD-uOoYqUn1IbbaSKQWcL4AVKilk0byOsc7V4M1L2oemn9kC3mr3KVx1cvKh-2_uz9IApiLRfdCHWISrgG1SNS8QLzYOB5CpUYLLrFFyd8hRSP704w7DQ0y3I1">
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-screen-2xl mx-auto px-margin-mobile md:px-margin-desktop py-lg grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Sidebar Filter -->
+<aside class="md:col-span-3 space-y-md">
+<div class="bg-surface-container-lowest shadow-ambient rounded-lg p-md">
+<h3 class="font-headline-md text-headline-md text-primary mb-md">Filters</h3>
+<div class="space-y-sm mb-md">
+<label class="font-label-md text-label-md text-on-surface-variant block uppercase tracking-wider">Price Range</label>
+<div class="flex gap-sm items-center">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Min ₺" type="number">
+<span class="text-on-surface-variant">-</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Max ₺" type="number">
+</div>
+</div>
+<div class="space-y-sm mb-md">
+<label class="font-label-md text-label-md text-on-surface-variant block uppercase tracking-wider">Location</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary">
+<option>All Locations</option>
+<option>Istanbul</option>
+<option>Ankara</option>
+<option>Izmir</option>
+</select>
+</div>
+<div class="space-y-xs mb-md">
+<label class="flex items-center gap-sm cursor-pointer group">
+<input checked="" class="rounded border-outline-variant text-secondary focus:ring-secondary" type="checkbox">
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Verified Only</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer group">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary" type="checkbox">
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Top Rated (&gt;4.5)</span>
+</label>
+</div>
+<button class="w-full bg-surface border border-outline-variant text-primary font-label-md text-label-md py-xs rounded hover:bg-surface-container transition-colors uppercase tracking-wider">
+                    Reset Filters
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="md:col-span-9 space-y-md">
+<!-- Header Section -->
+<div class="bg-surface-container-lowest shadow-ambient rounded-lg p-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-end gap-md">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-xs">Companies suitable for your project</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-outline" data-icon="architecture" style="font-size: 20px;">architecture</span>
+                        Bioclimatic Pergola | 20 m² | Istanbul / Sarıyer
+                    </p>
+</div>
+<div class="bg-surface-container-low px-sm py-xs rounded border border-outline-variant text-right">
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Marketplace Historical Range</div>
+<div class="font-headline-md text-headline-md text-primary">₺198,000 – ₺247,000</div>
+<div class="font-body-sm text-body-sm text-outline mt-1 text-xs">*Estimated pricing. Final offer may change after technical inspection.</div>
+</div>
+</div>
+<!-- Controls -->
+<div class="flex flex-col sm:flex-row justify-between items-center gap-sm">
+<div class="flex bg-surface-container-low rounded border border-outline-variant overflow-hidden">
+<button class="px-md py-xs bg-surface-container-lowest text-primary font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="list" style="font-size: 18px;">list</span>
+                        List View
+                    </button>
+<button class="px-md py-xs text-on-surface-variant hover:bg-surface-container-lowest font-label-md text-label-md flex items-center gap-xs transition-colors">
+<span class="material-symbols-outlined" data-icon="map" style="font-size: 18px;">map</span>
+                        Map View
+                    </button>
+</div>
+<div class="flex items-center gap-sm w-full sm:w-auto">
+<span class="font-label-md text-label-md text-on-surface-variant whitespace-nowrap uppercase tracking-wider">Sort by:</span>
+<select class="w-full sm:w-auto bg-surface-container-lowest border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary">
+<option>Recommended</option>
+<option>Lowest Price</option>
+<option>Highest Rated</option>
+<option>Fastest Response</option>
+<option>Closest</option>
+</select>
+</div>
+</div>
+<!-- Results List -->
+<div class="space-y-md">
+<!-- Manufacturer Card 1 -->
+<div class="bg-surface-container-lowest shadow-ambient rounded-lg border border-outline-variant/30 flex flex-col md:flex-row overflow-hidden relative">
+<div class="absolute top-xs right-xs md:top-md md:right-md">
+<span class="bg-secondary/10 text-secondary border border-secondary/20 px-sm py-xs rounded font-label-md text-label-md uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="workspace_premium" style="font-size: 14px;">workspace_premium</span>
+                            Best Match
+                        </span>
+</div>
+<div class="md:w-1/4 bg-surface-container p-md flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-outline-variant">
+<img alt="Company Logo" class="w-24 h-24 rounded object-contain bg-white p-xs mb-sm shadow-sm" data-alt="A sleek, modern corporate logo design for an architectural manufacturing company, featuring sharp geometric lines forming a stylized building structure, rendered in deep navy and crisp white against a neutral light grey background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDO6LNTay2bA8qCuEjFWGeL0Nn73FIUTKA4kFoAKQ8Ctsx7tJUM00-xRrHDC7tmeBp5ZmXJUemdjgvkEoZC70FoUW_8H7n8kfWjb5y1y2_17nNw8LhB2FhZ_jPHeCIquEqk-cG7giga8U1fKg94zkijJcHMQyd8xZz5Ovi7FpSO46QsEtvIeLCfMXEJa72V1XznEhzQ08bktHqRsHXWUMr5qRWSHK5uDUxhcTtsMwkjFwS95k_2eMly">
+<div class="flex items-center gap-xs text-secondary font-label-md text-label-md uppercase tracking-wider">
+<span class="material-symbols-outlined" data-icon="verified" style="font-size: 16px;">verified</span>
+                            Verified
+                        </div>
+</div>
+<div class="md:w-3/4 p-md flex flex-col justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-xs pr-20">Luna Architecture &amp; Pergola Systems</h2>
+<div class="flex flex-wrap gap-md mb-md text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="star" style="font-size: 16px; font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.9/5.0</span> (142 projects)
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="location_on" style="font-size: 16px;">location_on</span>
+                                    Istanbul, Sarıyer
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="schedule" style="font-size: 16px;">schedule</span>
+                                    &lt; 2 hours response
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="shield" style="font-size: 16px;">shield</span>
+                                    10-year warranty
+                                </div>
+</div>
+<div class="bg-surface rounded p-sm border border-outline-variant/50 mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider block mb-1">Estimated Project Range:</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">₺218,000 – ₺231,000</span><div class="font-body-sm text-body-sm text-outline mt-1 text-xs">*Final price after technical inspection.</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-sm justify-end mt-auto">
+<button class="bg-surface text-primary border border-outline-variant font-label-md text-label-md px-md py-sm rounded hover:bg-surface-container transition-colors uppercase tracking-wider">
+                                View Profile
+                            </button>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-md py-sm rounded hover:bg-secondary/90 transition-colors uppercase tracking-wider shadow-sm">
+                                Request Technical Inspection
+                            </button>
+</div>
+</div>
+</div>
+<!-- Manufacturer Card 2 -->
+<div class="bg-surface-container-lowest shadow-ambient rounded-lg border border-outline-variant/30 flex flex-col md:flex-row overflow-hidden relative">
+<div class="md:w-1/4 bg-surface-container p-md flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-outline-variant">
+<img alt="Company Logo" class="w-24 h-24 rounded object-contain bg-white p-xs mb-sm shadow-sm" data-alt="A minimalist, industrial-style logo for an engineering firm, utilizing bold sans-serif typography and a subtle metallic gray and deep slate color palette, set against a crisp white background with sharp lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuARjxbjnWNxEj_i1H8vmaFzDOF5_8sphf02IsO8RfC7efeQd3DBpbsAhWfylJrlsavH9jeTMWiULXjISQcKEfzw6GAG6EauLpcrrHV_aTTmBpIsFbrsa0rqfWbrNI4pa7QQBaDkpEs-EsSL4NpWHuFi3TqZdvAFXUkHxdKtMmj-FVmpX3Npb425oQnylB7grn7QNtfsm_cetPYfM54ymW8RyK0M5_0Ds1XNIu-xL-AsJgOCBValrSHu">
+<div class="flex items-center gap-xs text-secondary font-label-md text-label-md uppercase tracking-wider">
+<span class="material-symbols-outlined" data-icon="verified" style="font-size: 16px;">verified</span>
+                            Verified
+                        </div>
+</div>
+<div class="md:w-3/4 p-md flex flex-col justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-xs">Apex Outdoor Solutions</h2>
+<div class="flex flex-wrap gap-md mb-md text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary-container" data-icon="star" style="font-size: 16px; font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.7/5.0</span> (89 projects)
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="location_on" style="font-size: 16px;">location_on</span>
+                                    Istanbul, Beşiktaş
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="schedule" style="font-size: 16px;">schedule</span>
+                                    &lt; 4 hours response
+                                </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="shield" style="font-size: 16px;">shield</span>
+                                    5-year warranty
+                                </div>
+</div>
+<div class="bg-surface rounded p-sm border border-outline-variant/50 mb-md flex items-center justify-center h-[72px]">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline" data-icon="info" style="font-size: 18px;">info</span>
+                                    Price available after technical inspection
+                                </span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-sm justify-end mt-auto">
+<button class="bg-surface text-primary border border-outline-variant font-label-md text-label-md px-md py-sm rounded hover:bg-surface-container transition-colors uppercase tracking-wider">
+                                View Profile
+                            </button>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-md py-sm rounded hover:bg-secondary/90 transition-colors uppercase tracking-wider shadow-sm">
+                                Request Technical Inspection
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container font-body-sm text-body-sm full-width bottom-0 mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-lg w-full max-w-screen-2xl mx-auto gap-md">
+<div class="font-headline-md text-headline-md text-on-primary font-bold">
+                ArchMarket
+            </div>
+<div class="flex flex-wrap justify-center gap-gutter">
+<a class="text-on-primary-container dark:text-on-primary-fixed-variant hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Terms of Service</a>
+<a class="text-on-primary-container dark:text-on-primary-fixed-variant hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-on-primary-container dark:text-on-primary-fixed-variant hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Technical Support</a>
+<a class="text-on-primary-container dark:text-on-primary-fixed-variant hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Partner Portal</a>
+</div>
+<div class="text-on-primary-container dark:text-on-primary-fixed-variant text-center md:text-right">
+                © 2024 ArchMarket Architectural Solutions. Built to last.
+            </div>
+</div>
+</footer>
+
+
+</body></html>

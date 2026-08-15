@@ -1,0 +1,454 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Request Detail - Architectural Outdoor Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#00210c",
+                    "surface": "#f8f9fa",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#7efba4",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "primary": "#162839",
+                    "secondary-fixed-dim": "#61de8a",
+                    "on-surface-variant": "#43474c",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#2c3e50",
+                    "tertiary-container": "#612f00",
+                    "on-primary-fixed": "#091d2e",
+                    "tertiary-fixed": "#ffdcc5",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#4e6073",
+                    "surface-container-highest": "#e1e3e4",
+                    "outline": "#74777d",
+                    "on-tertiary-fixed": "#301400",
+                    "surface-container-low": "#f3f4f5",
+                    "secondary-container": "#7bf8a1",
+                    "tertiary": "#411d00",
+                    "on-background": "#191c1d",
+                    "on-surface": "#191c1d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-fixed": "#d1e4fb",
+                    "on-primary-fixed-variant": "#36485b",
+                    "on-secondary-container": "#007239",
+                    "surface-variant": "#e1e3e4",
+                    "primary-fixed-dim": "#b5c8df",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "surface-bright": "#f8f9fa",
+                    "on-tertiary-container": "#f78b30",
+                    "background": "#f8f9fa",
+                    "secondary": "#006d37",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-container": "#edeeef",
+                    "surface-dim": "#d9dadb",
+                    "on-primary-container": "#96a9be",
+                    "on-secondary-fixed-variant": "#005228",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#b5c8df",
+                    "inverse-surface": "#2e3132",
+                    "on-error-container": "#93000a",
+                    "error-container": "#ffdad6",
+                    "outline-variant": "#c4c6cd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "12px",
+                    "md": "24px",
+                    "gutter": "24px",
+                    "base": "8px",
+                    "lg": "48px",
+                    "margin-desktop": "64px",
+                    "xs": "4px",
+                    "margin-mobile": "16px",
+                    "xl": "80px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Montserrat"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Montserrat"
+                    ],
+                    "display-lg": [
+                            "Montserrat"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Montserrat"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 10px;
+            height: calc(100% + 24px);
+            width: 2px;
+            background-color: theme('colors.surface-container-highest');
+            z-index: 0;
+        }
+        .timeline-step:last-child::before {
+            display: none;
+        }
+        .timeline-step.completed::before {
+            background-color: theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-surface-dim font-headline-md text-headline-md font-body-md text-body-md w-full top-0 sticky border-b border-outline-variant dark:border-on-surface-variant shadow-sm z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-7xl mx-auto">
+<div class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed cursor-pointer active:opacity-80">
+                Architectural Outdoor Exchange
+            </div>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Systems</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Architects</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80" href="#">Resources</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 cursor-pointer active:opacity-80" href="#">Projects</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors">Get Started</button>
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="account_circle" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-7xl mx-auto px-margin-desktop py-lg">
+<!-- Breadcrumbs & Header -->
+<div class="mb-lg">
+<div class="flex items-center gap-2 font-label-md text-on-surface-variant mb-4">
+<a class="hover:text-primary" href="#">Dashboard</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary" href="#">My Requests</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary">Request #AOE-99421</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary mb-6">Bioclimatic Pergola <span class="text-on-surface-variant text-headline-lg font-headline-lg font-normal block mt-2">(Residential Terrace)</span></h1>
+<div class="flex flex-wrap gap-6 border-b border-surface-container-highest pb-6">
+<div class="flex flex-col">
+<span class="font-label-md text-on-surface-variant uppercase tracking-wider">Company</span>
+<span class="font-body-md font-medium">ARTE Outdoor</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-on-surface-variant uppercase tracking-wider">Request Date</span>
+<span class="font-body-md font-medium">Oct 24, 2024</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-on-surface-variant uppercase tracking-wider">Status</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-md font-medium text-secondary">Survey Scheduled</span>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Column: Content -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<!-- Status Timeline (Horizontal for Desktop, Vertical for Mobile) -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)]">
+<h3 class="font-headline-md text-headline-md text-primary mb-6">Request Progress</h3>
+<div class="flex flex-col md:flex-row md:items-center justify-between relative">
+<!-- Desktop Timeline Line -->
+<div class="hidden md:block absolute top-4 left-4 right-4 h-0.5 bg-surface-container-highest z-0">
+<div class="absolute top-0 left-0 h-full bg-primary w-[80%]"></div>
+</div>
+<!-- Steps -->
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-md text-primary">Created</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-md text-primary">Sent</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-md text-primary">Viewed</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-md text-primary">Accepted</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-md text-primary">Contacted</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0">
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-lowest text-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">event</span>
+</div>
+<span class="font-label-md text-primary font-bold">Survey Scheduled</span>
+</div>
+<div class="flex items-center md:flex-col gap-4 md:gap-2 relative z-10 mb-6 md:mb-0 opacity-50">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-highest bg-surface-container-lowest text-outline flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">description</span>
+</div>
+<span class="font-label-md text-outline">Offer Sent</span>
+</div>
+</div>
+</div>
+<!-- Messages Section -->
+<section class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)] flex flex-col h-[500px]">
+<div class="flex justify-between items-center mb-6 pb-4 border-b border-surface-container-highest">
+<h3 class="font-headline-md text-headline-md text-primary">Messages</h3>
+<span class="font-label-md text-secondary bg-secondary-fixed/20 px-3 py-1 rounded-full">ARTE Outdoor is online</span>
+</div>
+<div class="flex-grow overflow-y-auto flex flex-col gap-4 mb-4 pr-2">
+<!-- Message 1 -->
+<div class="flex flex-col gap-1 max-w-[80%] self-end items-end">
+<div class="bg-primary text-on-primary p-4 rounded-xl rounded-tr-sm">
+<p class="font-body-md">Hello, I'm interested in the motorized louver system for my terrace. Can we arrange a site visit to discuss the integration with existing structural elements?</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-on-surface-variant">Jane Doe</span>
+<span class="font-label-md text-outline">• Oct 25, 14:30</span>
+<span class="material-symbols-outlined text-[14px] text-secondary">done_all</span>
+</div>
+</div>
+<!-- Message 2 -->
+<div class="flex flex-col gap-1 max-w-[80%] self-start items-start">
+<div class="bg-surface-container text-on-surface p-4 rounded-xl rounded-tl-sm">
+<p class="font-body-md">Good afternoon Jane. Thank you for reaching out. Yes, absolutely. A site survey is crucial for ensuring the structural integrity of the pergola mounting points. We have availability next week.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-on-surface-variant">ARTE Outdoor</span>
+<span class="font-label-md text-outline">• Oct 25, 16:15</span>
+</div>
+</div>
+</div>
+<div class="mt-auto">
+<div class="relative">
+<input class="w-full bg-surface border border-surface-container-highest rounded-lg py-3 px-4 pr-12 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md" placeholder="Type a message..." type="text">
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-surface-container-highest rounded-full transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Appointment Section -->
+<section class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-l-primary border border-y-surface-container-highest border-r-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)]">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="p-3 bg-primary-container/10 rounded-lg text-primary">
+<span class="material-symbols-outlined text-[24px]">architecture</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary">Site Survey Appointment</h3>
+</div>
+<button class="flex items-center gap-2 text-primary font-label-md border border-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+                            Add to Calendar
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface p-4 rounded-lg">
+<div>
+<span class="block font-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Date</span>
+<span class="font-body-md font-medium">Nov 2, 2024</span>
+</div>
+<div>
+<span class="block font-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Time</span>
+<span class="font-body-md font-medium">10:00 - 12:00</span>
+</div>
+<div>
+<span class="block font-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Location</span>
+<span class="font-body-md font-medium">Istanbul / Sarıyer</span>
+</div>
+</div>
+</section>
+<!-- Final Offer Section -->
+<section class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)] opacity-70">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-outline">request_quote</span>
+<h3 class="font-headline-md text-headline-md text-on-surface-variant">Final Manufacturer Quotation</h3>
+</div>
+<div class="bg-surface border border-dashed border-outline-variant p-8 rounded-lg flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-[32px] text-outline-variant mb-3">hourglass_empty</span>
+<p class="font-body-md text-on-surface-variant max-w-md">Waiting for manufacturer to upload final quotation after site survey is completed.</p>
+</div>
+</section>
+</div>
+<!-- Right Column: Sidebar -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Price Comparison Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.08)]"><h3 class="font-headline-md text-headline-md text-primary mb-6 border-b border-surface-container-highest pb-4">Project Pricing</h3><div class="mb-6 p-4 bg-primary-container/10 rounded-lg border border-primary/10"><span class="block font-label-md text-primary mb-2 uppercase tracking-wider">Estimated Project Range</span><div class="text-headline-lg font-headline-lg text-primary">₺218,000 <span class="text-body-lg font-body-lg text-outline">to</span> ₺231,000</div><p class="font-label-md text-on-surface-variant mt-2 italic">* Final price after technical inspection</p><p class="font-label-md text-outline mt-1">Based on 20m² standard configuration</p></div><div class="bg-surface p-4 rounded-lg border border-surface-container-highest"><span class="block font-label-md text-on-surface-variant mb-2 uppercase tracking-wider">Manufacturer's Final Quotation</span><div class="text-headline-md font-headline-md text-on-surface-variant italic">Pending</div><p class="text-body-sm text-outline mt-2">Awaiting site survey completion</p></div></div>
+<!-- Project Summary Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)]">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Project Summary</h3>
+<ul class="flex flex-col gap-4">
+<li class="flex justify-between items-center py-2 border-b border-surface-container-highest last:border-0">
+<span class="font-body-sm text-on-surface-variant">Total Area</span>
+<span class="font-body-md font-medium text-primary">20 m²</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-surface-container-highest last:border-0">
+<span class="font-body-sm text-on-surface-variant">Louver Type</span>
+<span class="font-body-md font-medium text-primary">Motorized Aluminum</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-surface-container-highest last:border-0">
+<span class="font-body-sm text-on-surface-variant">Lighting</span>
+<span class="font-body-md font-medium text-primary">Integrated LED</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-surface-container-highest last:border-0">
+<span class="font-body-sm text-on-surface-variant">Color Finish</span>
+<span class="font-body-md font-medium text-primary">Anthracite Grey</span>
+</li>
+</ul>
+</div>
+<!-- Company Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container-highest shadow-[0_4px_12px_rgba(44,62,80,0.04)]">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 bg-surface-container rounded-lg flex items-center justify-center overflow-hidden">
+<img class="object-cover w-full h-full" data-alt="A clean, minimalist logo mark for a premium architectural outdoor company named ARTE Outdoor, utilizing deep navy and slate grey colors, set against a pristine white background. High contrast, professional corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSlp9cOgG-kxaoVLZnoGX2CWCwVOZkk1OTF3AAPrg7u76xE5ja5j0BgReThJXlpIbesEZLbz_iuFuN_Os5KlEvlzH87xgOhv1IkenTKd6quE1WXKHKUoypAu6zoZLJwFXslTMYYHLqQIRINLYFLRCFneFqSfsxtSn8Yl5uPuQZ2hOvXphuBcmbn2FsSNcft4IzyI0cYG7m3DMGYFrNPY8bJjxlpzz2Z5awCyZkFCvAkHQ8-5fPVFVz">
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">ARTE Outdoor</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+<span class="font-label-md text-secondary">Verified Manufacturer</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors" href="mailto:contact@arteoutdoor.com">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+<span class="font-body-sm">contact@arteoutdoor.com</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors" href="tel:+905551234567">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span class="font-body-sm">+90 555 123 4567</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">language</span>
+<span class="font-body-sm">www.arteoutdoor.com</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-primary dark:bg-on-primary-fixed text-on-primary dark:text-on-primary-fixed-variant font-body-sm text-body-sm font-label-md text-label-md w-full mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter px-margin-desktop py-xl w-full max-w-7xl mx-auto">
+<div class="col-span-1 lg:col-span-2">
+<div class="text-headline-md font-headline-md text-on-primary mb-4">Architectural Outdoor Exchange</div>
+<p class="font-body-sm text-on-primary-container opacity-80 max-w-sm mb-6">Built for permanence. Connecting premium manufacturers with architectural visionaries.</p>
+<div class="font-label-md text-secondary-fixed">© 2024 Architectural Outdoor Exchange. Built for permanence.</div>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-headline-md text-body-lg text-on-primary mb-2">Resources</h4>
+<a class="text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Technical Specifications</a>
+<a class="text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Structural Guides</a>
+<a class="text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Manufacturer Support</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-headline-md text-body-lg text-on-primary mb-2">Legal</h4>
+<a class="text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Privacy Policy</a>
+<a class="text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Contact Engineering</a>
+</div>
+</div>
+</footer>
+
+
+</body></html>

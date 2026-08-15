@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ARCHISTRUCT - Build Your Outdoor Dreams</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b5c8df",
+                        "outline": "#74777d",
+                        "primary-fixed": "#d1e4fb",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#ffdcc5",
+                        "inverse-surface": "#2e3132",
+                        "secondary": "#006d37",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-container": "#007239",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-container": "#7bf8a1",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#4e6073",
+                        "on-surface": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "on-background": "#191c1d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-fixed": "#301400",
+                        "on-tertiary-container": "#f78b30",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f3f4f5",
+                        "inverse-primary": "#b5c8df",
+                        "tertiary-container": "#612f00",
+                        "on-primary-container": "#96a9be",
+                        "primary": "#162839",
+                        "on-primary-fixed": "#091d2e",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-container-highest": "#e1e3e4",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c4c6cd",
+                        "on-surface-variant": "#43474c",
+                        "on-secondary-fixed": "#00210c",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#7efba4",
+                        "on-secondary-fixed-variant": "#005228",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#411d00",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "lg": "48px",
+                        "base": "8px",
+                        "md": "24px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface sticky top-0 z-50 shadow-sm border-b border-outline-variant">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-base max-w-7xl mx-auto">
+<div class="flex items-center gap-md">
+<a class="text-headline-md font-headline-md font-bold text-primary" href="#">ARCHISTRUCT</a>
+<nav class="hidden md:flex items-center gap-md ml-lg">
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Systems</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Architects</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Resources</a>
+<a class="font-body-md text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer" href="#">Projects</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+</div>
+<button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-md hover:bg-on-secondary-container transition-colors duration-200 whitespace-nowrap">Get Quote</button>
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative h-[80vh] min-h-[500px] flex items-center justify-center bg-surface-variant overflow-hidden">
+<div class="absolute inset-0 w-full h-full">
+<img class="w-full h-full object-cover" data-alt="A sweeping, high-angle architectural photograph of a luxurious modern outdoor living space featuring a custom ArchiStruct pergola system. The setting is a minimalist, high-end residential patio at golden hour, with warm sunlight illuminating the clean lines of the structure. The design style is corporate/modern with a minimalist focus, utilizing a neutral palette of deep slates, light grays, and crisp whites. The mood conveys premium quality, stability, and built-to-last reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZN_jUAOoHNurHYEEDatrzfOnTnqzabUsPeM6CeZj5h07MElp6ClGzQH2dAyzMedjmO23zGh1EzorGinTk1pBTHTqE6wRSo8RvcBDB0Ou8y86m41vvm3gOOGLkFUdPEmxrdin_RhFQMTaaY7bB8LIK9U92Rf2M9Q3miMGsa5UBOaxIi_JH0KhojQqiLp2yzFewDDEQe2ZoOlHCgJFq_2bFP8KCzybF2NCYhjXB4IWgiZMzJoquP6OY"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent"></div>
+<div class="relative z-10 w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="max-w-2xl">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-md">Build Your Outdoor Dreams</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg">Precision-engineered architectural systems for premium outdoor living spaces. Built for durability, designed for elegance.</p>
+<div class="flex flex-wrap gap-sm">
+<button class="bg-secondary text-on-secondary px-6 py-3 rounded-lg font-label-md hover:bg-on-secondary-container transition-colors duration-200 shadow-[0_4px_12px_rgba(44,62,80,0.08)]">Explore Systems</button>
+<button class="border border-primary text-primary bg-surface/50 backdrop-blur-sm px-6 py-3 rounded-lg font-label-md hover:bg-surface-container transition-colors duration-200">View Gallery</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Product Categories -->
+<section class="py-xl bg-surface">
+<div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-lg">
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg-mobile md:text-headline-lg-mobile text-on-surface mb-sm">Engineered Systems</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl mx-auto">Explore our range of structurally sound, architecturally refined outdoor solutions.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Category Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)] group cursor-pointer border border-outline-variant/30">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up, detail-oriented photograph of a premium ArchiStruct pergola louver system. The image highlights the technical precision and clean geometry of the intersecting metal beams. The lighting is bright and diffuse, casting soft shadows that emphasize the high-quality finish and structural integrity. The style is modern, minimalist, and corporate, using light grays and deep slates. The mood is highly professional and technically sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuHlVd9XJyaQ18P7S3T0pRmxn671RvHhRkdtrxS0xnxlYwXBVj0hy42TVOSLqe8VFN7RVwUYbWq81o-uT8X0EINnfUSvfNo2GFEzfCgLdTy_iOGrCep0Irj0gd-GsAmkAP-Zfr-DYmiPnWoFNn-iuYmKks1xU-g5Nw_lf4M6EC7C6Bt6kDlTswe-X38KlBpuVyxNmkjSPBNT2UyWY_JjPzXBlaH4rtG-fB9qriWe3CtMUnBN6FzGrS"/>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Pergola Systems</h3>
+<p class="font-body-sm text-on-surface-variant">Adjustable louvered roofs for ultimate climate control.</p>
+</div>
+</div>
+<!-- Category Card 2 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)] group cursor-pointer border border-outline-variant/30">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sleek, modern outdoor privacy screen installation by ArchiStruct. The structure is composed of vertical, precisely spaced architectural slats in a deep slate finish, set against a minimalist light gray concrete wall. The image captures the interplay of light and shadow filtering through the screen. The aesthetic is corporate, clean, and structurally deliberate, conveying a sense of premium privacy and lasting design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw5IJReH5B0eb1RMma0t9whNpJzvONf9ieW0E4xlLw6rA6INLvELV5BBwChwI5b___j2jzRsr3kLnILpNpXev-cWn3uk7rrW8eM7gbEXlsR0evulYFfZYwLwpblQk__8d8ftccF3m3jeJK0AnRQgHexDXohFfYjnzHzLAD4k8mX_LxgEKuAFFicWvETOeu6CBc-sjhbaI8nwxoEGLyP46n0M5E8zoew841KhAD9bRwmJcywpvfoYPS"/>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Privacy Screens</h3>
+<p class="font-body-sm text-on-surface-variant">Architectural screening for secluded spaces.</p>
+</div>
+</div>
+<!-- Category Card 3 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)] group cursor-pointer border border-outline-variant/30">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An expansive, high-end decking system featured in a luxury commercial setting. The decking materials are meticulously aligned, showcasing perfect geometry and structural stability. The scene is lit with bright, natural daylight, highlighting the subtle textures of the premium materials. The overall visual style is minimalist and modern, utilizing a sophisticated palette of neutral grays and crisp whites to emphasize the 'built to last' quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAylzgY22_ik8l9kYgUmqEy2NMj9ORh15xgjDTkYUNducfapTq5iIqeLJmAbMhWDqOTRZNKZo3Enwga4Xrkj5C_G2NDta8etkxUV70qtp87ja4S5NxsEljjQiXrwzSupUm3WAv4g1qAhr911LnsTyOxyR90EGLD07wk3lF2wArSFmW9SCBHZylBmfIm1kIWncQDt7DyUBYhG-0l7WlgEIKjtTJ0QibJ3ndbCbT_qRrepy37fN1wZJKp"/>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Decking Solutions</h3>
+<p class="font-body-sm text-on-surface-variant">Durable, high-performance decking materials.</p>
+</div>
+</div>
+<!-- Category Card 4 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)] group cursor-pointer border border-outline-variant/30">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A state-of-the-art outdoor kitchen structure integrated seamlessly into a modern architectural patio. The design features clean lines, flush surfaces, and premium deep slate accents against light gray stone. The lighting is professional and clear, creating a pristine, gallery-like presentation of the structural components. The image projects an aura of expertise, technical precision, and minimalist elegance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf8ooQcjjkXbzuC_zWHs2DhUxA5Zzz0lXHmPMWFGMcE1twDsQaPR9BBLgwmNATXkOcEDQigmYlKJtBjgNGDQDp3d6c5NEegNZerDeXA1fwSlUktyErfBShr3xw4oAOhioWFu4tWyfXp9Idl1Ym_VEBUuGOpBzgioSSkWweUTV05dRMjRt33nbMszgd4xKclie-vB3mJ6FFySyYkaz6lE6IvHXxmZgzbOO6-eQ2c9sGx0AJ6G1-UJgX"/>
+</div>
+<div class="p-md">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Outdoor Kitchens</h3>
+<p class="font-body-sm text-on-surface-variant">Integrated structural frameworks for culinary spaces.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works (Bento/Asymmetric style for tablet) -->
+<section class="py-xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-lg">
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg-mobile md:text-headline-lg-mobile text-on-surface mb-sm">The Process</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl mx-auto">From concept to structural reality.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="glass-card rounded-xl p-lg flex flex-col md:col-span-2">
+<div class="mb-sm text-primary">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 0, 'wght' 200;">architecture</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">1. Consultation &amp; Design</h3>
+<p class="font-body-md text-on-surface-variant">Collaborate with our structural experts to define the technical requirements and aesthetic vision of your outdoor space.</p>
+</div>
+<div class="glass-card rounded-xl p-lg flex flex-col">
+<div class="mb-sm text-primary">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 0, 'wght' 200;">precision_manufacturing</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">2. Engineering</h3>
+<p class="font-body-md text-on-surface-variant">Precision fabrication of every component.</p>
+</div>
+<div class="glass-card rounded-xl p-lg flex flex-col md:col-span-3">
+<div class="mb-sm text-primary">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 0, 'wght' 200;">construction</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">3. Installation</h3>
+<p class="font-body-md text-on-surface-variant">Professional assembly by certified installers ensuring structural integrity and perfect alignment, bringing the design to life.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-primary text-on-primary w-full px-margin-mobile md:px-margin-desktop py-xl">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="col-span-1 md:col-span-2 lg:col-span-1 mb-md lg:mb-0">
+<div class="text-headline-md font-headline-md text-on-primary mb-md">ARCHISTRUCT</div>
+<p class="font-body-sm text-on-primary-container">Engineered for the outdoors. Built to last.</p>
+</div>
+<div class="flex flex-col gap-sm">
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Technical Specifications</a>
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Installation Guides</a>
+</div>
+<div class="flex flex-col gap-sm">
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Manufacturer Directory</a>
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Warranty Support</a>
+</div>
+<div class="flex flex-col gap-sm">
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Sustainability</a>
+<a class="font-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+</div>
+<div class="max-w-7xl mx-auto mt-xl pt-md border-t border-on-primary-container/30">
+<p class="font-body-sm text-on-primary-container text-center md:text-left">© 2024 ArchiStruct Outdoor Systems. All rights reserved.</p>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Service Area Management - Iron &amp; Emerald</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#7bf8a1",
+                        "secondary": "#006d37",
+                        "surface-container": "#edeeef",
+                        "tertiary": "#411d00",
+                        "background": "#f8f9fa",
+                        "on-surface-variant": "#43474c",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary-container": "#96a9be",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary-fixed": "#091d2e",
+                        "primary-fixed": "#d1e4fb",
+                        "inverse-surface": "#2e3132",
+                        "primary-container": "#2c3e50",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-fixed-variant": "#36485b",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface": "#f8f9fa",
+                        "on-secondary-container": "#007239",
+                        "primary-fixed-dim": "#b5c8df",
+                        "tertiary-fixed": "#ffdcc5",
+                        "outline-variant": "#c4c6cd",
+                        "on-tertiary-fixed": "#301400",
+                        "inverse-primary": "#b5c8df",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-tertiary-container": "#f78b30",
+                        "outline": "#74777d",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "tertiary-container": "#612f00",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1d",
+                        "surface-dim": "#d9dadb",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "surface-tint": "#4e6073",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-secondary-fixed": "#00210c",
+                        "secondary-fixed": "#7efba4",
+                        "primary": "#162839",
+                        "surface-variant": "#e1e3e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "margin-desktop": "64px",
+                        "sm": "12px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "base": "8px",
+                        "md": "24px",
+                        "lg": "48px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    },
+                    boxShadow: {
+                        'ambient': '0 4px 12px rgba(44, 62, 80, 0.08)',
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant flex flex-col p-md gap-base z-50">
+<div class="flex flex-col gap-xs mb-lg">
+<h1 class="font-display-lg text-headline-md text-primary" data-alt="Manufacturer Brand Logo">Iron &amp; Emerald</h1>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Admin Portal</p>
+</div>
+<button class="w-full bg-secondary text-on-secondary rounded-lg px-md py-sm font-label-md text-label-md hover:bg-secondary-fixed-dim transition-colors mb-md shadow-ambient">
+            New Entry
+        </button>
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="pending_actions">pending_actions</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Requests</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="architecture">architecture</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Products</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Pricing</span>
+</a>
+<a class="flex items-center gap-sm bg-secondary-container text-on-secondary-container rounded-lg px-sm py-xs transition-transform duration-150 transform scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-label-md text-label-md">Service Areas</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Inventory</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant">
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Settings</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="help_outline">help_outline</span>
+<span class="font-label-md text-label-md group-hover:text-primary transition-colors">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-margin-desktop z-40">
+<div class="font-headline-md text-headline-md text-primary">Architectural Systems Manager</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden ml-sm cursor-pointer hover:opacity-80 transition-opacity">
+<img class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a professional corporate administrator in a modern, well-lit office setting. The lighting is crisp and natural, highlighting clean lines and a pristine architectural environment. Soft shadows define the subject's features, emphasizing trust and stability, perfectly aligned with a premium, structural engineering brand identity. White background elements subtly suggest expansive glass windows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwX1X5FWwjrxHj3bjNWmCpvREcmJezLwFv_2Z5uScuwHwIS_BSkP-g93Nl8CjA90a4ypY8ZBtoaArwvnRYCjonlrhCxZPJ-1lmzHlvJ0SpLw7_PXtwNLT6-kaEk9P_WClH0qQF1ydz8OClD1_xug39jY7ArGqTvlWR56YvH1H3zaoazHoiQRVjtYUEL4Hr4BKUhkquhQDaTQhkfj6TGuQw3LdnWCXZjZehwYyidVXR4CKWkzXmAt3V"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 mt-16 p-margin-desktop flex flex-col gap-lg overflow-hidden bg-background">
+<header class="flex-shrink-0">
+<h2 class="font-headline-lg text-headline-lg text-primary">Service Area Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Define your operational reach and regional logistics surcharges.</p>
+</header>
+<div class="flex-1 grid grid-cols-12 gap-gutter min-h-0">
+<!-- Map Area (Left) -->
+<div class="col-span-8 bg-surface-container-lowest rounded-lg border border-outline-variant overflow-hidden relative flex flex-col shadow-ambient">
+<img class="absolute inset-0 w-full h-full object-cover grayscale opacity-60" data-alt="A highly detailed, professional map interface showing the Western Turkey region, specifically focusing on Istanbul, Kocaeli, and Bursa. The map uses a minimalist, modern aesthetic with a light gray and white color palette, accented by deep navy and emerald green overlays representing active service areas. The style is technical and architectural, resembling a premium logistics software interface with crisp vector lines and subtle topographical details." data-location="Western Turkey (Istanbul, Kocaeli, Bursa)" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEQgSP0zKNNSVzfwhbU5XyUBFCDW1u_7adJwZy_uN0knZMOXvRqArXMId6fZW0973TDS4503SaygajLvyRlP4l8JzGpGvNJovFMsl2KMeay3BOseQgmP5fasdMTAQp4BsiwHBB7WFLwEFoSXnD3VVvtWVL08KLbIpa3riB5JseKHx2vOTpg_JKIR28N0W9F-gj5E_g70AHpA-HTrabmMtmPLnHBdhWIXfuhknRtvU-Ak7yivubjVv-"/>
+<!-- Map Overlays / Shading (Simulated) -->
+<div class="absolute inset-0 z-10 pointer-events-none">
+<!-- Istanbul Area -->
+<div class="absolute top-[20%] left-[30%] w-48 h-32 bg-primary/20 border border-primary/40 rounded-full blur-xl mix-blend-multiply"></div>
+<!-- Kocaeli Area -->
+<div class="absolute top-[35%] left-[55%] w-32 h-24 bg-secondary/20 border border-secondary/40 rounded-full blur-lg mix-blend-multiply"></div>
+<!-- Bursa Area -->
+<div class="absolute top-[60%] left-[40%] w-40 h-32 bg-secondary/10 border border-secondary/30 rounded-full blur-lg mix-blend-multiply"></div>
+</div>
+<!-- Map Controls -->
+<div class="absolute bottom-md right-md z-20 flex flex-col gap-xs bg-surface-container-lowest rounded-DEFAULT shadow-ambient border border-outline-variant">
+<button class="p-sm text-on-surface hover:text-primary hover:bg-surface-container-low transition-colors border-b border-outline-variant">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<button class="p-sm text-on-surface hover:text-primary hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+</div>
+<div class="absolute top-md right-md z-20 bg-surface-container-lowest rounded-DEFAULT shadow-ambient border border-outline-variant overflow-hidden">
+<button class="p-sm text-on-surface hover:text-primary hover:bg-surface-container-low transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" data-icon="layers">layers</span>
+</button>
+</div>
+</div>
+<!-- Configuration Panel (Right) -->
+<div class="col-span-4 flex flex-col bg-surface-container-lowest rounded-lg border border-outline-variant shadow-ambient overflow-hidden">
+<div class="p-md border-b border-outline-variant bg-surface flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-headline-md text-primary">Active Regions</h3>
+<button class="bg-secondary text-on-secondary rounded-lg px-sm py-xs font-label-md text-label-md hover:bg-secondary-fixed-dim transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                            New
+                        </button>
+</div>
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-sm bg-background">
+<!-- Region Card: Istanbul -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm flex flex-col gap-sm hover:border-outline transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-body-lg text-body-lg text-primary font-semibold group-hover:text-secondary transition-colors">Istanbul</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">All Districts</p>
+</div>
+<span class="bg-primary/10 text-primary font-label-md text-label-md px-2 py-1 rounded-sm">Base</span>
+</div>
+<div class="grid grid-cols-2 gap-xs">
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Radius</label>
+<div class="font-body-sm text-body-sm text-on-surface bg-surface-container px-2 py-1 rounded-DEFAULT border border-outline-variant border-dashed">50km from center</div>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Pricing</label>
+<div class="font-body-sm text-body-sm text-on-surface">Included</div>
+</div>
+</div>
+</div>
+<!-- Region Card: Kocaeli -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm flex flex-col gap-sm hover:border-outline transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-body-lg text-body-lg text-primary font-semibold group-hover:text-secondary transition-colors">Kocaeli</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Select Districts (3)</p>
+</div>
+<span class="bg-secondary/10 text-secondary font-label-md text-label-md px-2 py-1 rounded-sm">Surcharge</span>
+</div>
+<div class="grid grid-cols-2 gap-xs">
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Radius</label>
+<div class="font-body-sm text-body-sm text-on-surface bg-surface-container px-2 py-1 rounded-DEFAULT border border-outline-variant border-dashed">30km from center</div>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Pricing</label>
+<div class="font-body-sm text-body-sm text-error font-medium">+₺10,000</div>
+</div>
+</div>
+</div>
+<!-- Region Card: Bursa -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm flex flex-col gap-sm hover:border-outline transition-colors cursor-pointer group">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-body-lg text-body-lg text-primary font-semibold group-hover:text-secondary transition-colors">Bursa</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">All Districts</p>
+</div>
+<span class="bg-secondary/10 text-secondary font-label-md text-label-md px-2 py-1 rounded-sm">Surcharge</span>
+</div>
+<div class="grid grid-cols-2 gap-xs">
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Radius</label>
+<div class="font-body-sm text-body-sm text-on-surface bg-surface-container px-2 py-1 rounded-DEFAULT border border-outline-variant border-dashed">40km from center</div>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant block mb-1">Pricing</label>
+<div class="font-body-sm text-body-sm text-error font-medium">+₺15,000</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-md border-t border-outline-variant bg-surface flex justify-end gap-sm shrink-0">
+<button class="bg-surface-container-lowest border border-outline text-on-surface font-label-md text-label-md px-md py-sm rounded-lg hover:bg-surface-container transition-colors">
+                            Discard
+                        </button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded-lg hover:bg-primary-fixed-dim transition-colors shadow-ambient">
+                            Save Changes
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

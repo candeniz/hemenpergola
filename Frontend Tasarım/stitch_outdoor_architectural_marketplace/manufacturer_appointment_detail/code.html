@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Appointment Detail - Architectural Outdoor Exchange</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#091d2e",
+                      "on-error": "#ffffff",
+                      "primary": "#162839",
+                      "surface-tint": "#4e6073",
+                      "inverse-primary": "#b5c8df",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "surface-container": "#edeeef",
+                      "surface-variant": "#e1e3e4",
+                      "primary-fixed-dim": "#b5c8df",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#007239",
+                      "on-secondary-fixed": "#00210c",
+                      "secondary": "#006d37",
+                      "secondary-container": "#7bf8a1",
+                      "tertiary-fixed": "#ffdcc5",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-surface-variant": "#43474c",
+                      "on-surface": "#191c1d",
+                      "surface-container-low": "#f3f4f5",
+                      "inverse-surface": "#2e3132",
+                      "primary-container": "#2c3e50",
+                      "secondary-fixed-dim": "#61de8a",
+                      "surface-dim": "#d9dadb",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#36485b",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#c4c6cd",
+                      "primary-fixed": "#d1e4fb",
+                      "on-background": "#191c1d",
+                      "on-primary-container": "#96a9be",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary": "#411d00",
+                      "surface": "#f8f9fa",
+                      "secondary-fixed": "#7efba4",
+                      "background": "#f8f9fa",
+                      "on-tertiary-fixed": "#301400",
+                      "error-container": "#ffdad6",
+                      "surface-container-highest": "#e1e3e4",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary-container": "#f78b30",
+                      "outline": "#74777d",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#f8f9fa",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#612f00",
+                      "surface-container-high": "#e7e8e9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "gutter": "24px",
+                      "sm": "12px",
+                      "xl": "80px",
+                      "margin-mobile": "16px",
+                      "lg": "48px",
+                      "md": "24px",
+                      "base": "8px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      }
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="h-full flex items-center justify-center p-6 bg-surface-container-high/50 backdrop-blur-sm">
+<!-- Modal Container (Simulating being over a calendar) -->
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex flex-col overflow-hidden ring-1 ring-outline-variant/30 relative">
+<!-- Header -->
+<div class="px-gutter py-md border-b border-surface-container-highest flex items-start justify-between">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="inline-flex items-center rounded-sm bg-primary-fixed/20 px-2 py-1 font-label-md text-label-md text-primary">
+                        Upcoming
+                    </span>
+<span class="font-label-md text-label-md text-on-surface-variant">Project #AOE-99421</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary">Site Survey</h2>
+</div>
+<button aria-label="Close" class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 300;">close</span>
+</button>
+</div>
+<!-- Content Body -->
+<div class="p-gutter flex flex-col gap-lg flex-grow overflow-y-auto">
+<!-- Grid Layout for Details -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-y-md gap-x-gutter">
+<!-- Customer -->
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 300;">person</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Customer</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Jane Doe</p>
+</div>
+</div>
+<!-- Date & Time -->
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 300;">calendar_today</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Date &amp; Time</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Oct 25, 2023</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">10:00 AM - 11:30 AM</p>
+</div>
+</div>
+<!-- Location -->
+<div class="flex items-start gap-3 md:col-span-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 300;">location_on</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Location</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold mb-2">Sariyer, Istanbul</p>
+<!-- Static Map Placeholder -->
+<div class="h-32 w-full rounded-lg overflow-hidden border border-outline-variant/30">
+<div class="bg-cover bg-center w-full h-full" data-alt="A clean, modern, light-themed map UI showing a generic residential area in Sariyer, Istanbul. The map is minimalist, using soft grays, whites, and subtle green accents for parks. A navy blue marker pin points to a specific location. The style is technical and highly polished, suitable for a professional architectural software dashboard." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-5ThiBZknxhy0z4ba6wvUSTpQCWqDPIFn8tqkp6E2en983WoCHUb8vhwojRylOlSt3BH7FDYSoTKBZ4tXqDfzY-1vT7Ej8KkvF8j97ZpCFVoiZXzTfenthysl_qGt09pZE9v45gbz9KsUasqsaYirwwu6PDBJ9_jnzf6TqoDbNQfiRGhTJ56-d28OvuyGduY_c_7u62AHooDcDEbl26CMEQorGpdMsoh2KnaZrZ4vKBWZEXPrRpIp')"></div>
+</div>
+</div>
+</div>
+<!-- Product -->
+<div class="flex items-start gap-3 md:col-span-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 300;">architecture</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant mb-1">Product</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Bioclimatic Pergola</p>
+</div>
+</div>
+</div>
+<!-- Notes Section -->
+<div class="bg-surface-container-low p-sm rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px;">note</span>
+<h3 class="font-label-md text-label-md text-on-surface-variant">Survey Notes</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface italic">
+                    "Customer wants to discuss integrated LED options and wind sensors during the survey."
+                </p>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="px-gutter py-md bg-surface border-t border-surface-container-highest flex flex-col md:flex-row items-center justify-between gap-sm">
+<div class="flex items-center gap-sm w-full md:w-auto">
+<button class="font-label-md text-label-md text-error hover:bg-error-container/20 px-4 py-2 rounded-lg transition-colors">
+                    Cancel
+                </button>
+<button class="font-label-md text-label-md text-primary hover:bg-surface-container-highest px-4 py-2 rounded-lg transition-colors border border-outline-variant">
+                    Reschedule
+                </button>
+</div>
+<div class="flex items-center gap-sm w-full md:w-auto justify-end">
+<button class="font-label-md text-label-md text-primary bg-surface-container-lowest border border-primary px-4 py-2 rounded-lg hover:bg-surface-container-low transition-colors">
+                    Edit Appointment
+                </button>
+<button class="font-label-md text-label-md text-on-secondary bg-secondary px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 400; font-size: 18px;">check_circle</span>
+                    Mark as Completed
+                </button>
+</div>
+</div>
+</div>
+</body></html>

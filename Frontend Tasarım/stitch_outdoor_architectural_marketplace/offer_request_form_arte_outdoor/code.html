@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Request Offer | ArchiStruct Outdoor Systems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container": "#edeeef",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1d",
+                        "secondary-container": "#7bf8a1",
+                        "outline-variant": "#c4c6cd",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#d1e4fb",
+                        "on-surface": "#191c1d",
+                        "surface-tint": "#4e6073",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#7efba4",
+                        "on-surface-variant": "#43474c",
+                        "background": "#f8f9fa",
+                        "primary-fixed-dim": "#b5c8df",
+                        "surface-dim": "#d9dadb",
+                        "surface": "#f8f9fa",
+                        "tertiary-container": "#612f00",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-fixed": "#00210c",
+                        "on-primary-fixed": "#091d2e",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#411d00",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-container": "#96a9be",
+                        "on-error": "#ffffff",
+                        "primary": "#162839",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-primary-fixed-variant": "#36485b",
+                        "surface-variant": "#e1e3e4",
+                        "secondary": "#006d37",
+                        "surface-container-low": "#f3f4f5",
+                        "outline": "#74777d",
+                        "on-tertiary-fixed": "#301400",
+                        "inverse-primary": "#b5c8df",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed-variant": "#005228",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#61de8a",
+                        "on-secondary-container": "#007239",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-tertiary-container": "#f78b30",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-fixed-variant": "#713700"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "xl": "80px",
+                        "lg": "48px",
+                        "margin-desktop": "64px",
+                        "md": "24px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Montserrat"]
+                    },
+                    fontSize: {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Input Styles */
+        input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea {
+            @apply w-full rounded-lg border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-body-md py-3 px-4;
+        }
+        label {
+            @apply block text-label-md text-on-surface-variant mb-2;
+        }
+        .form-section {
+            @apply bg-surface-container-lowest p-md lg:p-lg rounded-xl shadow-[0_4px_12px_rgba(44,62,80,0.08)] mb-gutter;
+        }
+        .ambient-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased">
+<!-- Top Navigation (Generated from JSON) -->
+<nav class="bg-surface border-b border-outline-variant shadow-sm w-full top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-base max-w-[1440px] mx-auto">
+<!-- Brand -->
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[32px] icon-filled">architecture</span>
+                ARCHISTRUCT
+            </a>
+<!-- Desktop Nav -->
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer text-body-md" href="#">Systems</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer text-body-md" href="#">Architects</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer text-body-md" href="#">Resources</a>
+<a class="text-primary border-b-2 border-primary pb-1 cursor-pointer text-body-md" href="#">Projects</a>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">person</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">shopping_cart</span></button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:bg-primary-container transition-colors hidden md:block">Get Quote</button>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface"><span class="material-symbols-outlined text-[28px]">menu</span></button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-lg md:py-xl grid grid-cols-1 lg:grid-cols-12 gap-lg lg:gap-gutter">
+<!-- Left Column: Header & Form -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<!-- Header Section -->
+<header>
+<!-- Breadcrumbs -->
+<nav aria-label="Breadcrumb" class="flex items-center text-body-sm text-on-surface-variant mb-4">
+<a class="hover:text-primary transition-colors" href="#">Confirm Selection</a>
+<span class="material-symbols-outlined mx-2 text-[16px]">chevron_right</span>
+<span class="text-primary font-semibold">Request Offer</span>
+</nav>
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary mb-2">Request Your Official Offer</h1>
+<p class="text-body-lg text-on-surface-variant">You are requesting an offer from <strong>ARTE Outdoor</strong>.</p>
+</header>
+<!-- Form -->
+<form action="#" class="flex flex-col gap-gutter" method="POST">
+<!-- Personal Details Section -->
+<section class="form-section">
+<h2 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">person</span>
+                        Personal Details
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label for="firstName">First Name *</label>
+<input id="firstName" name="firstName" placeholder="Jane" required="" type="text"/>
+</div>
+<div>
+<label for="lastName">Last Name *</label>
+<input id="lastName" name="lastName" placeholder="Doe" required="" type="text"/>
+</div>
+<div>
+<label for="mobile">Mobile Number *</label>
+<input id="mobile" name="mobile" placeholder="+90 555 123 4567" required="" type="tel"/>
+</div>
+<div>
+<label for="email">Email Address *</label>
+<input id="email" name="email" placeholder="jane.doe@example.com" required="" type="email"/>
+</div>
+</div>
+</section>
+<!-- Contact Preferences Section -->
+<section class="form-section">
+<h2 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">communication</span>
+                        Preferred Contact Method
+                    </h2>
+<p class="text-body-sm text-on-surface-variant mb-4">How would you prefer ARTE Outdoor to reach you?</p>
+<div class="flex flex-wrap gap-4">
+<label class="flex items-center gap-2 cursor-pointer bg-surface p-3 rounded-lg border border-outline-variant hover:border-primary transition-colors flex-1 min-w-[120px] justify-center">
+<input checked="" class="text-primary focus:ring-primary" name="contactMethod" type="radio" value="phone"/>
+<span class="text-body-md text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">call</span> Phone</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer bg-surface p-3 rounded-lg border border-outline-variant hover:border-primary transition-colors flex-1 min-w-[120px] justify-center">
+<input class="text-primary focus:ring-primary" name="contactMethod" type="radio" value="whatsapp"/>
+<span class="text-body-md text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">forum</span> WhatsApp</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer bg-surface p-3 rounded-lg border border-outline-variant hover:border-primary transition-colors flex-1 min-w-[120px] justify-center">
+<input class="text-primary focus:ring-primary" name="contactMethod" type="radio" value="email"/>
+<span class="text-body-md text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">mail</span> Email</span>
+</label>
+</div>
+</section>
+<!-- Technical Survey Section -->
+<section class="form-section">
+<h2 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">event_available</span>
+                        Technical Survey Scheduling
+                    </h2>
+<p class="text-body-sm text-on-surface-variant mb-4">Suggest a time for a preliminary site assessment (Optional).</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label for="surveyDate">Preferred Date</label>
+<input id="surveyDate" name="surveyDate" type="date"/>
+</div>
+<div>
+<label for="surveyTime">Preferred Time Range</label>
+<select id="surveyTime" name="surveyTime">
+<option disabled="" selected="" value="">Select a time range</option>
+<option value="morning">Morning (09:00 - 12:00)</option>
+<option value="afternoon">Afternoon (13:00 - 17:00)</option>
+<option value="evening">Evening (17:00 - 20:00)</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Message Section -->
+<section class="form-section">
+<h2 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">description</span>
+                        Additional Information
+                    </h2>
+<label for="message">Message for ARTE Outdoor</label>
+<textarea id="message" name="message" placeholder="e.g., I would like to install this system on my terrace overlooking the Bosphorus. Access is via a narrow staircase." rows="4"></textarea>
+</section>
+<!-- Consent & Action -->
+<section class="mt-4 flex flex-col gap-6">
+<div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant">
+<label class="flex items-start gap-3 cursor-pointer mb-4">
+<input class="mt-1 rounded text-primary focus:ring-primary" required="" type="checkbox"/>
+<div>
+<span class="text-body-md text-on-surface font-semibold block mb-1">I agree to be contacted regarding this request. *</span>
+<span class="text-body-sm text-on-surface-variant">By checking this, you allow ARTE Outdoor and ArchiStruct to process your data to fulfill this request in accordance with our <a class="text-primary underline" href="#">Privacy Policy</a>.</span>
+</div>
+</label>
+<label class="flex items-start gap-3 cursor-pointer">
+<input class="mt-1 rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-body-md text-on-surface">I would like to receive marketing updates and architectural inspiration.</span>
+</label>
+</div>
+<button class="w-full bg-secondary text-on-secondary py-4 rounded-xl text-headline-md font-headline-md hover:bg-on-secondary-container transition-colors shadow-sm flex items-center justify-center gap-2" type="submit">
+                        SEND REQUEST
+                        <span class="material-symbols-outlined">send</span>
+</button>
+</section>
+</form>
+</div>
+<!-- Right Column: Project Summary Sidebar -->
+<aside class="lg:col-span-4 mt-8 lg:mt-0">
+<div class="sticky top-24">
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow border border-outline-variant overflow-hidden">
+<!-- Image Area -->
+<div class="h-48 w-full relative bg-surface-container">
+<img alt="Bioclimatic Pergola Preview" class="object-cover w-full h-full" data-alt="A pristine, modern bioclimatic pergola installed on a high-end luxury terrace in Istanbul, overlooking the Bosphorus. The structure is finished in matte dark grey (navy-adjacent) metal, with adjustable louvers open to allow soft afternoon sunlight. The scene is photorealistic, architectural digest style, emphasizing clean lines, structural precision, and a light-mode, airy aesthetic. Minimalist outdoor furniture sits below." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhfJazWyAY8O_hNGD967df8haMENpVb5Jxx5R9gbUV-5GSCBnzf_W3jnG0BbXXm7sNlIfWdAysGJ2hU-D6zMWP_EPyJGdVNLZUJ6zbai8souOz8Cfj8AWZySTM31SpNFIG6nc4SHapDzpvppgNRe3ipwSmj3jw5uUYM8jVoMr15vs8UQEeJRR9CcjFq_cB3EdJonTJ7aznfMSx7O_T4kAUgc4DzwL3rlYU5uMjsaY_ILY669DuAFmM"/>
+<div class="absolute top-4 left-4 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded text-label-md text-primary uppercase tracking-wider font-bold">
+                            ARTE Outdoor
+                        </div>
+</div>
+<!-- Content Area -->
+<div class="p-6">
+<h3 class="text-label-md text-on-surface-variant uppercase tracking-widest mb-1">Project Summary</h3>
+<h4 class="text-headline-md font-headline-md text-primary mb-4">Bioclimatic Pergola</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3 border-b border-surface-variant pb-3">
+<span class="material-symbols-outlined text-outline">square_foot</span>
+<div>
+<p class="text-label-md text-on-surface-variant">Estimated Area</p>
+<p class="text-body-lg text-on-surface font-semibold">20 m²</p>
+</div>
+</div>
+<div class="flex items-center gap-3 border-b border-surface-variant pb-3">
+<span class="material-symbols-outlined text-outline">location_on</span>
+<div>
+<p class="text-label-md text-on-surface-variant">Installation Site</p>
+<p class="text-body-lg text-on-surface font-semibold">Istanbul / Sarıyer</p>
+</div>
+</div>
+<div class="flex items-center gap-3 pt-1">
+<span class="material-symbols-outlined text-outline">build</span>
+<div>
+<p class="text-label-md text-on-surface-variant">System Type</p>
+<p class="text-body-md text-on-surface">Motorized Aluminum Louvers</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Trust Indicator -->
+<div class="bg-surface p-4 border-t border-outline-variant flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-[24px]">verified</span>
+<p class="text-body-sm text-on-surface-variant leading-tight">
+                            ARTE Outdoor is a <strong>Verified Manufacturer</strong> on the ArchiStruct network, guaranteeing premium structural standards.
+                        </p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer (Generated from JSON) -->
+<footer class="bg-primary w-full mt-auto">
+<div class="w-full px-margin-mobile md:px-margin-desktop py-xl max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<!-- Brand -->
+<div class="col-span-1 md:col-span-1 flex flex-col gap-4">
+<span class="text-headline-md font-headline-md text-on-primary flex items-center gap-2">
+<span class="material-symbols-outlined icon-filled">architecture</span>
+                    ARCHISTRUCT
+                </span>
+<p class="font-body-sm text-body-sm text-on-primary-container">
+                    © 2024 ArchiStruct Outdoor Systems. All rights reserved.
+                </p>
+</div>
+<!-- Links -->
+<div class="col-span-1 md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8">
+<div class="flex flex-col gap-3">
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Technical Specifications</a>
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Installation Guides</a>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Manufacturer Directory</a>
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Warranty Support</a>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Sustainability</a>
+<a class="font-body-sm text-body-sm text-on-primary-container hover:text-secondary-fixed-dim transition-colors cursor-pointer" href="#">Contact</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

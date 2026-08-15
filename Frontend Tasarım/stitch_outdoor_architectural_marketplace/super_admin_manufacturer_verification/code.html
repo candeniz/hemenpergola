@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Admin - Manufacturer Verification Queue</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary-fixed": "#301400",
+                      "surface-container-low": "#f3f4f5",
+                      "outline-variant": "#c4c6cd",
+                      "surface-container-highest": "#e1e3e4",
+                      "tertiary-container": "#612f00",
+                      "surface-bright": "#f8f9fa",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#7bf8a1",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#b5c8df",
+                      "on-surface-variant": "#43474c",
+                      "tertiary-fixed": "#ffdcc5",
+                      "primary-fixed": "#d1e4fb",
+                      "tertiary": "#411d00",
+                      "inverse-on-surface": "#f0f1f2",
+                      "secondary-fixed-dim": "#61de8a",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "error-container": "#ffdad6",
+                      "secondary": "#006d37",
+                      "on-surface": "#191c1d",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#191c1d",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#d9dadb",
+                      "surface-container": "#edeeef",
+                      "background": "#f8f9fa",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-primary-fixed-variant": "#36485b",
+                      "on-primary-container": "#96a9be",
+                      "inverse-surface": "#2e3132",
+                      "surface-container-high": "#e7e8e9",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed": "#091d2e",
+                      "surface-variant": "#e1e3e4",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-secondary-container": "#007239",
+                      "secondary-fixed": "#7efba4",
+                      "on-secondary-fixed": "#00210c",
+                      "surface": "#f8f9fa",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#2c3e50",
+                      "on-tertiary-container": "#f78b30",
+                      "surface-tint": "#4e6073",
+                      "outline": "#74777d",
+                      "primary": "#162839"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "64px",
+                      "lg": "48px",
+                      "base": "8px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "xs": "4px",
+                      "xl": "80px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-md px-sm bg-surface-container-lowest dark:bg-surface-dim border-r border-outline-variant dark:border-outline w-64 fixed left-0 top-0 z-40">
+<div class="mb-lg px-sm">
+<h1 class="font-headline-md text-headline-md text-primary">Admin Portal</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Technical Operations</p>
+</div>
+<button class="bg-secondary hover:bg-secondary/90 text-on-secondary font-label-md text-label-md rounded-lg py-sm px-md mb-lg flex items-center justify-center gap-xs transition-colors">
+<span class="material-symbols-outlined" data-icon="add" style="font-size: 18px;">add</span>
+            New Entry
+        </button>
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-bold rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span class="font-label-md text-label-md">Verification Queue</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+<span class="font-label-md text-label-md">Leads</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-sm">
+<a class="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-64 flex flex-col h-full bg-surface">
+<!-- Top App Bar (Mobile) -->
+<div class="md:hidden flex justify-between items-center w-full px-margin-mobile h-16 bg-surface border-b border-outline-variant z-30">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Admin Portal</h1>
+<button class="text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop">
+<!-- Header -->
+<div class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary mb-xs">Verification Queue</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Review and approve pending manufacturer registrations.</p>
+</div>
+</div>
+<!-- Filters -->
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-[0_4px_12px_rgba(44,62,80,0.08)] mb-md flex flex-col md:flex-row gap-md items-end">
+<div class="flex-1 w-full">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Search Company</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-surface-bright border border-outline-variant rounded text-body-sm py-sm pl-lg pr-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="e.g. Apex Structures..." type="text"/>
+</div>
+</div>
+<div class="w-full md:w-48">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Region</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded text-body-sm py-sm px-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer">
+<option>All Regions</option>
+<option>North America</option>
+<option>Europe</option>
+<option>Asia Pacific</option>
+</select>
+</div>
+<div class="w-full md:w-48">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Product Category</label>
+<select class="w-full bg-surface-bright border border-outline-variant rounded text-body-sm py-sm px-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer">
+<option>All Categories</option>
+<option>Steel Frameworks</option>
+<option>Concrete Precasts</option>
+<option>Timber Panels</option>
+</select>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-low">
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Company Name</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Region</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Category</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Certificates</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Status</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-highest transition-colors">
+<td class="py-sm px-md font-medium text-primary">Apex Structures Ltd.</td>
+<td class="py-sm px-md">Europe</td>
+<td class="py-sm px-md">Steel Frameworks</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-variant text-on-surface-variant">ISO 9001</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-variant text-on-surface-variant">CE Mark</span>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-secondary/10 text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Docs Verified
+                                    </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="border border-outline hover:border-primary text-primary font-label-md text-label-md py-1 px-3 rounded transition-colors">Review</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-highest transition-colors">
+<td class="py-sm px-md font-medium text-primary">Nordic Precast</td>
+<td class="py-sm px-md">North America</td>
+<td class="py-sm px-md">Concrete Precasts</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-surface-variant text-on-surface-variant">ISO 14001</span>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-tertiary-container/10 text-tertiary-container">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span> Pending Review
+                                    </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="border border-outline hover:border-primary text-primary font-label-md text-label-md py-1 px-3 rounded transition-colors">Review</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-highest transition-colors">
+<td class="py-sm px-md font-medium text-primary">Zenith Timber</td>
+<td class="py-sm px-md">Asia Pacific</td>
+<td class="py-sm px-md">Timber Panels</td>
+<td class="py-sm px-md">
+<div class="flex gap-xs text-outline font-label-md text-[10px]">
+                                        Pending Upload
+                                    </div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold bg-error-container/30 text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Action Required
+                                    </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="border border-outline hover:border-primary text-primary font-label-md text-label-md py-1 px-3 rounded transition-colors">Review</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body></html>

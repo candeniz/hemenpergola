@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Dashboard - Tablet Optimized</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b5c8df",
+                        "outline": "#74777d",
+                        "primary-fixed": "#d1e4fb",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#ffdcc5",
+                        "inverse-surface": "#2e3132",
+                        "secondary": "#006d37",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary-container": "#007239",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-container": "#7bf8a1",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#4e6073",
+                        "on-surface": "#191c1d",
+                        "surface-container-high": "#e7e8e9",
+                        "on-background": "#191c1d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-fixed": "#301400",
+                        "on-tertiary-container": "#f78b30",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f3f4f5",
+                        "inverse-primary": "#b5c8df",
+                        "tertiary-container": "#612f00",
+                        "on-primary-container": "#96a9be",
+                        "primary": "#162839",
+                        "on-primary-fixed": "#091d2e",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-container-highest": "#e1e3e4",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c4c6cd",
+                        "on-surface-variant": "#43474c",
+                        "on-secondary-fixed": "#00210c",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#7efba4",
+                        "on-secondary-fixed-variant": "#005228",
+                        "surface": "#f8f9fa",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#411d00",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "lg": "48px",
+                        "base": "8px",
+                        "md": "24px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .nav-rail { width: 80px; transition: width 0.3s ease; }
+        .nav-expanded { width: 256px; }
+        .shadow-ambient { box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08); }
+        .hide-text { opacity: 0; pointer-events: none; width: 0; }
+        .nav-expanded .hide-text { opacity: 1; pointer-events: auto; width: auto; transition: opacity 0.3s ease 0.1s; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- Collapsible Side Navigation (Tablet Optimized) -->
+<aside class="bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant dark:border-outline h-screen fixed left-0 top-0 flex flex-col py-unit-xl z-50 nav-rail shadow-ambient" id="sidebar">
+<div class="px-sm flex items-center justify-center lg:justify-start lg:px-md mb-8">
+<button aria-label="Toggle Menu" class="p-2 rounded-full hover:bg-surface-container-high text-primary cursor-pointer transition-colors" id="menu-toggle">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary hide-text ml-3 whitespace-nowrap overflow-hidden">Outdoor Systems</span>
+</div>
+<!-- CTA -->
+<div class="px-sm lg:px-md mb-6">
+<button class="w-full bg-secondary text-on-secondary rounded-lg py-2 px-4 flex items-center justify-center transition-colors hover:bg-on-secondary-container shadow-sm">
+<span class="material-symbols-outlined mr-0 lg:mr-2" style="font-variation-settings: 'FILL' 0;">add</span>
+<span class="font-label-md text-label-md hide-text whitespace-nowrap">New Project</span>
+</button>
+</div>
+<nav class="flex-1 overflow-y-auto w-full">
+<ul class="flex flex-col gap-1 px-2">
+<!-- Active Item -->
+<li>
+<a class="text-primary font-bold bg-primary-container/10 flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full border-l-4 border-primary hover:bg-surface-container-high transition-all h-12 w-full" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Overview</span>
+</a>
+</li>
+<!-- Inactive Items -->
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">architecture</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">My Projects</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent relative" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">request_quote</span>
+<span class="absolute top-2 right-2 lg:right-auto lg:left-8 w-2 h-2 bg-on-tertiary-container rounded-full"></span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Offer Requests</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">mail</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Messages</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">domain</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Saved Companies</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="mt-auto px-2 pb-6 border-t border-outline-variant pt-4">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">help</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Help Center</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant flex items-center gap-unit-md px-unit-lg py-unit-md cursor-pointer rounded-r-full hover:bg-surface-container-high transition-all h-12 w-full border-l-4 border-transparent" href="#">
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-md text-label-md hide-text ml-4 uppercase whitespace-nowrap">Settings</span>
+</a>
+</li>
+</ul>
+<div class="mt-4 flex items-center justify-center lg:justify-start px-3">
+<img class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A small circular avatar placeholder image for the Architectural Firm Logo. Clean corporate style, minimal light gray background with a subtle darker gray geometric icon representing a building or architecture firm. High quality, clear." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3kNRCsF1MOYtSpB3DLAJJcPC4OwBPRO1wLnzoZ1NnQ0Y4u7n7XbyUoN8HJ53yLxoSKZ_6h3nh9YH__luW1Fn13bpogqqa7tEHp3NebqSEczwuKmhTgxrBig53t0-4l93LxPE5VEHvUT0ciXMV56ooIsXvztacxT3FMBsyNM51ruMYQcw_0PnShzx1o7wF3krlMkQ-ztFI5mjK9E9Ufyb0R7ikk_VE1Ck2fzJJwkgRS2UD7rdv8vA0"/>
+<div class="hide-text ml-3 overflow-hidden">
+<p class="font-label-md text-label-md text-on-surface whitespace-nowrap">Sarah Jenkins</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs whitespace-nowrap">Marketplace Hub</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[80px] lg:ml-[256px] transition-all duration-300 ease-in-out p-md lg:p-margin-desktop bg-background min-h-screen">
+<!-- Top App Bar equivalent for Main Content -->
+<header class="flex justify-between items-center mb-md lg:mb-lg">
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">Overview</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Welcome back, Sarah. Here's your landscape.</p>
+</div>
+<div class="flex items-center gap-4">
+<button aria-label="Notifications" class="p-2 rounded-full hover:bg-surface-container transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full border-2 border-background"></span>
+</button>
+</div>
+</header>
+<!-- Metric Cards (Responsive Grid) -->
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-md mb-lg">
+<div class="bg-surface rounded-lg p-md shadow-ambient border border-outline-variant/30 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Projects</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">architecture</span>
+</div>
+<div class="font-display-lg text-display-lg text-primary mt-auto">12</div>
+</div>
+<div class="bg-surface rounded-lg p-md shadow-ambient border border-outline-variant/30 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Pending Offers</span>
+<span class="material-symbols-outlined text-on-tertiary-container" style="font-variation-settings: 'FILL' 0;">request_quote</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-auto">3</div>
+</div>
+<div class="bg-surface rounded-lg p-md shadow-ambient border border-outline-variant/30 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Unread Messages</span>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">mail</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-auto">5</div>
+</div>
+<div class="bg-surface rounded-lg p-md shadow-ambient border border-outline-variant/30 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Saved Firms</span>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">domain</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-auto">24</div>
+</div>
+</section>
+<!-- Project Overview & Activity Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-lg">
+<!-- Main Projects Column -->
+<div class="xl:col-span-2 space-y-md">
+<div class="flex justify-between items-center mb-4 border-b border-outline-variant pb-2">
+<h2 class="font-headline-md text-headline-md font-semibold text-on-surface">Recent Projects</h2>
+<a class="font-label-md text-label-md text-primary hover:underline uppercase" href="#">View All</a>
+</div>
+<!-- Responsive Card List for Projects -->
+<div class="space-y-4">
+<!-- Project Card 1 -->
+<div class="bg-surface rounded-lg shadow-ambient border border-outline-variant/50 overflow-hidden flex flex-col sm:flex-row hover:border-primary-fixed-dim transition-colors cursor-pointer">
+<div class="sm:w-48 h-32 sm:h-auto bg-surface-container relative">
+<img class="w-full h-full object-cover rounded-t-lg sm:rounded-tr-none sm:rounded-l-lg" data-alt="A modern architectural outdoor pavilion structure featuring sleek timber slats and steel framing. Rendered in a bright, clean light-mode aesthetic with realistic lighting and a blue sky background. Highly detailed, professional architecture visualization style, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFo-jH5_U6Div1H2Tg3Ac2CtQ866K2X6FrmOardL5W6UDqwYBU8SWPfxxqhf0_NqVubrI5Qh0y_-I-rbS7BCicsq6VEDANgcOQTUXmehGsbY1AgBERoOME-lxTEHCnkPyHPp7fW2DaBI55K67tDYtXJGmFNWrnU8bYovicX8BTw9fbklVcI-qAmqLFlhKQjwQRiVQZ90lGsIbtxlA3oAgFHd70a48wTbmi2tJOfHj9NWPag_441D9t"/>
+<div class="absolute top-2 left-2 bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-xs font-label-md uppercase backdrop-blur-sm">In Progress</div>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-body-lg font-semibold text-primary mb-1">Riverside Corporate Campus Plaza</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Installation of modular seating and shade structures.</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+<span class="font-label-md text-xs">Due Oct 15</span>
+</div>
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface object-cover" data-alt="A small circular avatar placeholder image for an architect. Clean corporate style, minimal light gray background with a subtle darker gray geometric icon representing a person. High quality, clear." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrBQ2j6xcHIZDsn1TYplQukyJsibqR52mg3Nh9GPwk0kG9eAAsT1hRyz7-dMc19VgcO9mxCq1THgqwQxmOLk3_7IVkYgarLiI0x75kiutJKD2P-XT2mNkaFY7xP6K9jI9JWld7-SQsNcZ7CU00ofU0hYiYti7D_LUwPfDjhaaY0dGzJXEKEm9BJys3CvjwokeINMj2UxuhagEwvvkP3BuN11XtkKivppIM8OINoYi1EjwC1fNu1ad"/>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container flex items-center justify-center font-label-md text-xs text-on-surface-variant">+2</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Project Card 2 -->
+<div class="bg-surface rounded-lg shadow-ambient border border-outline-variant/50 overflow-hidden flex flex-col sm:flex-row hover:border-primary-fixed-dim transition-colors cursor-pointer">
+<div class="sm:w-48 h-32 sm:h-auto bg-surface-container relative">
+<img class="w-full h-full object-cover rounded-t-lg sm:rounded-tr-none sm:rounded-l-lg" data-alt="A high-end residential rooftop terrace design showing modern minimalist outdoor furniture, glass balustrades, and structural steel planters. Rendered in a bright, clean light-mode aesthetic with realistic lighting. Highly detailed, professional architecture visualization style, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzNyNyrxwoFBA8tqYhT7jWtsAhTvpASmNsEB1PeJLZfN95MIQnkwhtl8fX3snKYpmYALjUTx_7QLada7t3siH2ukODw14Ouy5BoZ7bFVtrkFzkpi_I8yqFIkcYz0tDkqUjcf54ZufRYtODDb71CEcMGlUVGvQy-QMN9CbDQ1uYMurreuqEh1yO0LT8J9trYIFOpIf3bWL09T3ygU6FAUZkQeibdl0NiiYWJZjFBMq0mDShaMucFx_q"/>
+<div class="absolute top-2 left-2 bg-on-tertiary-container/10 text-on-tertiary-container border border-on-tertiary-container/20 px-2 py-0.5 rounded text-xs font-label-md uppercase backdrop-blur-sm">Awaiting Proposal</div>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-body-lg font-semibold text-primary mb-1">Highland Residential Rooftop</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Custom fabrication of weathering steel planters and decking.</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">update</span>
+<span class="font-label-md text-xs">Updated 2 days ago</span>
+</div>
+<button class="text-primary font-label-md uppercase hover:underline">Review</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Activity / Offers Column -->
+<div class="space-y-lg">
+<!-- Quick Actions Bento -->
+<div class="bg-primary text-on-primary rounded-xl p-md shadow-ambient relative overflow-hidden group">
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+<h3 class="font-headline-md text-headline-md font-semibold relative z-10 mb-2">Need an estimate?</h3>
+<p class="font-body-sm text-body-sm text-on-primary/80 mb-6 relative z-10 max-w-[200px]">Connect with our premium manufacturing network for custom bids.</p>
+<button class="bg-on-primary text-primary font-label-md uppercase px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors relative z-10">
+                        Request Quote
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+</button>
+</div>
+<!-- Recent Activity Feed -->
+<div class="bg-surface rounded-lg shadow-ambient border border-outline-variant/30 p-md">
+<h3 class="font-headline-md text-body-lg font-semibold text-on-surface mb-4 border-b border-outline-variant pb-2">Recent Activity</h3>
+<ul class="space-y-4">
+<li class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded-full bg-secondary-container/30 text-secondary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">check_circle</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-semibold">Apex Metals</span> accepted your proposal for <span class="text-primary cursor-pointer hover:underline">Riverside Campus</span>.</p>
+<span class="font-label-md text-xs text-on-surface-variant">2 hours ago</span>
+</div>
+</li>
+<li class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded-full bg-primary-container/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">chat_bubble</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">New message from <span class="font-semibold">Elena Rostova</span> regarding material specs.</p>
+<span class="font-label-md text-xs text-on-surface-variant">Yesterday</span>
+</div>
+</li>
+<li class="flex gap-3 items-start">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">description</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface">Invoice #INV-2049 generated for <span class="text-primary cursor-pointer hover:underline">Highland Rooftop</span>.</p>
+<span class="font-label-md text-xs text-on-surface-variant">Oct 10</span>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle sidebar collapse/expand logic for tablet responsiveness
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('menu-toggle');
+            const mainContent = document.querySelector('main');
+            
+            // Check initial screen size to set default state
+            const isDesktop = window.innerWidth >= 1024;
+            if (isDesktop) {
+                sidebar.classList.remove('nav-rail');
+                sidebar.classList.add('nav-expanded');
+                mainContent.classList.remove('ml-[80px]');
+                mainContent.classList.add('lg:ml-[256px]');
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                if (sidebar.classList.contains('nav-rail')) {
+                    sidebar.classList.remove('nav-rail');
+                    sidebar.classList.add('nav-expanded');
+                    mainContent.classList.remove('ml-[80px]');
+                    mainContent.classList.add('ml-[256px]');
+                } else {
+                    sidebar.classList.remove('nav-expanded');
+                    sidebar.classList.add('nav-rail');
+                    mainContent.classList.remove('ml-[256px]', 'lg:ml-[256px]');
+                    mainContent.classList.add('ml-[80px]');
+                }
+            });
+
+            // Handle resize events to auto-collapse on smaller screens
+            window.addEventListener('resize', () => {
+                if (window.innerWidth < 1024 && sidebar.classList.contains('nav-expanded')) {
+                    sidebar.classList.remove('nav-expanded');
+                    sidebar.classList.add('nav-rail');
+                    mainContent.classList.remove('ml-[256px]', 'lg:ml-[256px]');
+                    mainContent.classList.add('ml-[80px]');
+                }
+            });
+        });
+    </script>
+</body></html>

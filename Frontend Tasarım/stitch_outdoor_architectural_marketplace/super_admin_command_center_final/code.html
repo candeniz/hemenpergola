@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Archivault - Super Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#e7e8e9",
+                      "on-tertiary-container": "#f78b30",
+                      "surface-container": "#edeeef",
+                      "surface-variant": "#e1e3e4",
+                      "on-surface": "#191c1d",
+                      "surface-container-highest": "#e1e3e4",
+                      "inverse-primary": "#b5c8df",
+                      "outline": "#74777d",
+                      "on-primary-fixed": "#091d2e",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "primary-fixed-dim": "#b5c8df",
+                      "tertiary-container": "#612f00",
+                      "surface": "#f8f9fa",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "error": "#ba1a1a",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-container": "#7bf8a1",
+                      "surface-tint": "#4e6073",
+                      "secondary": "#006d37",
+                      "surface-dim": "#d9dadb",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "tertiary": "#411d00",
+                      "background": "#f8f9fa",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "on-primary-fixed-variant": "#36485b",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#2c3e50",
+                      "on-secondary-container": "#007239",
+                      "secondary-fixed-dim": "#61de8a",
+                      "secondary-fixed": "#7efba4",
+                      "on-primary": "#ffffff",
+                      "primary": "#162839",
+                      "on-secondary-fixed": "#00210c",
+                      "on-secondary-fixed-variant": "#005228",
+                      "outline-variant": "#c4c6cd",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#43474c",
+                      "on-primary-container": "#96a9be",
+                      "tertiary-fixed": "#ffdcc5",
+                      "primary-fixed": "#d1e4fb",
+                      "on-background": "#191c1d",
+                      "inverse-surface": "#2e3132",
+                      "on-tertiary-fixed": "#301400"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "64px",
+                      "sm": "12px",
+                      "xl": "80px",
+                      "md": "24px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "gutter": "24px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- Admin SideNav -->
+<nav class="bg-surface-container-lowest border-r border-outline-variant flat no shadows fixed left-0 top-0 h-full flex flex-col p-xs gap-xs h-screen w-60 z-50">
+<div class="px-sm py-md border-b border-outline-variant mb-xs">
+<h1 class="font-headline-md text-headline-md text-primary">Super Admin</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">System Control</p>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-xs">
+<a class="flex items-center gap-sm px-sm py-2 bg-primary text-on-primary rounded-sm transition-all duration-150 ease-in-out brightness-95" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span class="font-label-md text-label-md">Manufacturers</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md text-label-md">Customers</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-label-md text-label-md">Requests</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-label-md text-label-md">Product Catalog</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="font-label-md text-label-md">Market Pricing</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+<span class="font-label-md text-label-md">Complaints</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="loyalty">loyalty</span>
+<span class="font-label-md text-label-md">Subscriptions</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+<span class="font-label-md text-label-md">CMS/SEO</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-sm transition-all duration-150 ease-in-out hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="font-label-md text-label-md">Audit Logs</span>
+</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-60 flex-1 p-gutter bg-background min-h-screen">
+<header class="mb-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Command Center</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">System overview and critical metrics for Archivault Marketplace.</p>
+</header>
+<!-- KPIs -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-base mb-lg">
+<div class="bg-surface-container-lowest p-sm border border-outline-variant flex flex-col gap-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Marketplace Revenue</span>
+<span class="font-headline-md text-headline-md text-primary">€14.2M</span>
+<div class="flex items-center text-secondary gap-1 mt-auto">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-label-md text-label-md">+2.4%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm border border-outline-variant flex flex-col gap-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Active Manufacturers</span>
+<span class="font-headline-md text-headline-md text-primary">142</span>
+<div class="flex items-center text-secondary gap-1 mt-auto">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-label-md text-label-md">+5 this month</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm border border-outline-variant flex flex-col gap-xs">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Active Projects</span>
+<span class="font-headline-md text-headline-md text-primary">1,240</span>
+<div class="flex items-center text-secondary gap-1 mt-auto">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-label-md text-label-md">+120 this month</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm border border-error-container bg-error-container/10 flex flex-col gap-xs relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 bg-error h-full"></div>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Pending Verifications</span>
+<span class="font-headline-md text-headline-md text-error">12</span>
+<div class="flex items-center text-error gap-1 mt-auto">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-label-md text-label-md">Action Required</span>
+</div>
+</div>
+</section>
+<!-- Bento Grid for Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Verification Queue -->
+<section class="lg:col-span-1 bg-surface-container-lowest border border-outline-variant flex flex-col">
+<div class="p-sm border-b border-outline-variant flex justify-between items-center bg-surface">
+<h3 class="font-body-lg text-body-lg font-semibold">Verification Queue</h3>
+<button class="text-primary hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto max-h-[400px]">
+<ul class="divide-y divide-outline-variant">
+<li class="p-sm hover:bg-surface-container-low transition-colors flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Structura Steel Co.</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manufacturer Onboarding</p>
+</div>
+<span class="bg-tertiary-container/20 text-tertiary-container px-2 py-1 rounded font-label-md text-[10px]">Pending</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 bg-secondary text-on-secondary font-label-md py-1 rounded hover:opacity-90">Approve</button>
+<button class="flex-1 border border-outline text-on-surface font-label-md py-1 rounded hover:bg-surface-variant">Review</button>
+</div>
+</li>
+<li class="p-sm hover:bg-surface-container-low transition-colors flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Lumina Glassworks</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Certification Update</p>
+</div>
+<span class="bg-tertiary-container/20 text-tertiary-container px-2 py-1 rounded font-label-md text-[10px]">Pending</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 bg-secondary text-on-secondary font-label-md py-1 rounded hover:opacity-90">Approve</button>
+<button class="flex-1 border border-outline text-on-surface font-label-md py-1 rounded hover:bg-surface-variant">Review</button>
+</div>
+</li>
+<li class="p-sm hover:bg-surface-container-low transition-colors flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">EcoTimber Solutions</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Product Catalog Sync</p>
+</div>
+<span class="bg-tertiary-container/20 text-tertiary-container px-2 py-1 rounded font-label-md text-[10px]">Pending</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 bg-secondary text-on-secondary font-label-md py-1 rounded hover:opacity-90">Approve</button>
+<button class="flex-1 border border-outline text-on-surface font-label-md py-1 rounded hover:bg-surface-variant">Review</button>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<!-- Platform Health & System Audit Trail -->
+<div class="lg:col-span-2 flex flex-col gap-gutter">
+<!-- Platform Health -->
+<section class="bg-surface-container-lowest border border-outline-variant p-sm">
+<h3 class="font-body-lg text-body-lg font-semibold mb-sm">Platform Health</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-weight="fill">memory</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Server Load</p>
+<p class="font-headline-md text-headline-md text-on-surface">24%</p>
+<div class="w-full bg-surface-variant h-1 mt-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 24%"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-weight="fill">database</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Database Latency</p>
+<p class="font-headline-md text-headline-md text-on-surface">12ms</p>
+<p class="font-label-md text-[10px] text-secondary">Optimal</p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-weight="fill">api</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">API Health</p>
+<p class="font-headline-md text-headline-md text-on-surface">99.9%</p>
+<p class="font-label-md text-[10px] text-secondary">Uptime</p>
+</div>
+</div>
+</div>
+</section>
+<!-- System Audit Trail -->
+<section class="bg-surface-container-lowest border border-outline-variant flex-1 flex flex-col">
+<div class="p-sm border-b border-outline-variant flex justify-between items-center bg-surface">
+<h3 class="font-body-lg text-body-lg font-semibold">System Audit Trail</h3>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">View All logs</a>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-xs font-label-md text-label-md text-on-surface-variant font-medium">Timestamp</th>
+<th class="p-xs font-label-md text-label-md text-on-surface-variant font-medium">User / Service</th>
+<th class="p-xs font-label-md text-label-md text-on-surface-variant font-medium">Action</th>
+<th class="p-xs font-label-md text-label-md text-on-surface-variant font-medium">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant font-body-sm text-body-sm">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-xs text-on-surface-variant">2024-05-20 14:32:01</td>
+<td class="p-xs font-medium">System_Automator</td>
+<td class="p-xs">Daily Backup Completed</td>
+<td class="p-xs"><span class="text-secondary bg-secondary-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Success</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-xs text-on-surface-variant">2024-05-20 14:15:22</td>
+<td class="p-xs font-medium">admin_johndoe</td>
+<td class="p-xs">Updated Platform Pricing Tiers</td>
+<td class="p-xs"><span class="text-secondary bg-secondary-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Success</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-xs text-on-surface-variant">2024-05-20 13:45:10</td>
+<td class="p-xs font-medium">API_Gateway</td>
+<td class="p-xs">Failed authentication attempt (IP: 192.168.1.1)</td>
+<td class="p-xs"><span class="text-error bg-error-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Failed</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-xs text-on-surface-variant">2024-05-20 12:00:05</td>
+<td class="p-xs font-medium">admin_sarahsmith</td>
+<td class="p-xs">Approved Manufacturer: BuildCorp</td>
+<td class="p-xs"><span class="text-secondary bg-secondary-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Success</span></td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-xs text-on-surface-variant">2024-05-20 11:30:45</td>
+<td class="p-xs font-medium">ElasticSearch_Cluster</td>
+<td class="p-xs">Index Rebuild Triggered</td>
+<td class="p-xs"><span class="text-primary bg-primary-container/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Info</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

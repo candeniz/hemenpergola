@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next
+.next
+out
+next-env.d.ts
+
+# build / test output
+coverage
+*.tsbuildinfo
+
+# env — .env.example is committed, real values never are
+.env
+.env.*
+!.env.example
+
+# editors / os
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# local data volumes
+.docker-data

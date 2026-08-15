@@ -1,0 +1,155 @@
+# 07 — Frontend Architecture
+
+## Source of truth for the UI
+
+`Frontend Tasarım/stitch_outdoor_architectural_marketplace/` — 77 Stitch screens, each a
+folder with `code.html` (static Tailwind CDN markup) and `screen.png`. Plus four
+`DESIGN.md` theme files and `project_sitemap_structure.md`.
+
+Read them as **specification, not source**. The HTML is single-file, CDN-Tailwind,
+light-mode-only, English-copy, with images pointing at expiring `googleusercontent` URLs.
+Nothing there is copied into the app verbatim. What is taken: layout, hierarchy, component
+inventory, states and copy intent. Token extraction is in `22-design-system.md`.
+
+Nine `screen.png` files are placeholders containing the text `<FIFE Image failed to fetch>`
+rather than an image; for those screens `code.html` is the only reference.
+
+## Rendering strategy
+
+| Segment | Strategy | Why |
+|---|---|---|
+| `(public)` | SSR + ISR, tag-revalidated | `SEO-01`; catalogue and profiles must be crawlable |
+| `(customer)` | SSR, dynamic, auth-gated | personal data, never cached |
+| `(manufacturer)` | SSR, dynamic, auth + company-scoped | same |
+| `(admin)` | SSR, dynamic, `noindex` | same |
+
+Server Components by default. `'use client'` only for: wizard step state, comparison
+selection, filters, calendar, uploader, message poller, map picker. If a component does not
+need an event handler or browser API, it stays a Server Component.
+
+## Route map (`/[locale]/...`, locale ∈ `tr` | `en`)
+
+### Public
+
+| Route | Screen |
+|---|---|
+| `/` | `outdoor_systems_public_homepage_final` (canonical), `_responsive_view`, `public_homepage_tablet_view` |
+| `/kategoriler`, `/kategoriler/[slug]` | `marketplace_home_refined_style` (category grid) |
+| `/urunler/[slug]` | `product_detail_bioclimatic_pergola` |
+| `/ureticiler` | `company_comparison_architectural_systems` (directory) |
+| `/ureticiler/[slug]` | `manufacturer_profile_architectural_systems` |
+| `/nasil-calisir`, `/hakkimizda`, `/iletisim`, `/fiyat-rehberi/[slug]` | CMS (`18-cms-seo.md`) |
+| `/giris`, `/kayit`, `/sifremi-unuttum` | `login_outdoor_systems`, `register_outdoor_systems`, `forgot_password_outdoor_systems` |
+| `/dogrulama/email`, `/dogrulama/telefon` | `email_verification_outdoor_systems`, `phone_verification_outdoor_systems` |
+
+Turkish slugs are the canonical public URLs; `en` uses its own slug set. Slug per locale is
+stored on the entity, not translated at runtime.
+
+### Customer
+
+| Route | Screen |
+|---|---|
+| `/hesap` | `customer_dashboard_final` (canonical), `_empty_state`, `_tablet_view`, earlier: `customer_dashboard`, `customer_dashboard_outdoor_systems` |
+| `/hesap/projeler/yeni` (steps 1–10) | `create_project_wizard_refined_style` (canonical), `product_selection_step_1`, `dimensions_area_step_2`, `project_options_step_5`, `project_summary_step_10` |
+| `/hesap/projeler/[id]` | `request_detail_project_aoe_99421` |
+| `/hesap/projeler/[id]/eslesmeler` | `matched_manufacturers_results`, `offer_results_refined_comparison`; loading: `finding_manufacturers_loading_state`, `offer_results_loading_state` |
+| `/hesap/projeler/[id]/karsilastir` | `compare_manufacturers_refined_style` (canonical), `compare_manufacturers` |
+| `/hesap/projeler/[id]/talep` | `manufacturer_selection_confirmation` → `request_success_confirmation` |
+| `/hesap/talepler`, `/hesap/talepler/[id]` | `offer_request_form_arte_outdoor` |
+| `/hesap/mesajlar/[requestId]` | `customer_messages_arte_outdoor` |
+| `/hesap/kayitli-firmalar` | `saved_companies_outdoor_systems` |
+| `/hesap/ayarlar` | — (compose from settings patterns) |
+
+### Manufacturer (`/panel/[companyId]/...`)
+
+| Route | Screen |
+|---|---|
+| `/` | `manufacturer_portal_dashboard_final` (canonical); earlier `manufacturer_admin_dashboard`, `manufacturer_dashboard_arte_outdoor`, `_refined_style`, `_tablet_view` |
+| `/talepler`, `/talepler/[id]` | `offer_requests_manufacturer_portal`, `manufacturer_request_detail_new_lead` (pre-accept), `manufacturer_request_detail` (post-accept) |
+| `/takvim`, `/randevular/[id]` | `manufacturer_project_calendar`, `manufacturer_appointment_detail` |
+| `/urunler` | `manufacturer_product_management` |
+| `/fiyatlandirma` | `manufacturer_pricing_management` |
+| `/hizmet-bolgeleri` | `manufacturer_service_area_management` |
+| `/portfoy` | `manufacturer_portfolio_management` |
+| `/degerlendirmeler` | `manufacturer_reviews_management` |
+| `/ekip` | `manufacturer_team_management` |
+| `/analitik` | `manufacturer_performance_analytics` |
+| `/ayarlar` | `manufacturer_company_settings` |
+
+The two request-detail screens are the **same route in two states**, split by
+`contactDisclosedAt`. Do not build two pages; build one page with a disclosure boundary.
+
+### Admin (`/yonetim/...`)
+
+| Route | Screen |
+|---|---|
+| `/` | `super_admin_command_center_final` (canonical), `super_admin_global_dashboard` |
+| `/ureticiler`, `/ureticiler/[id]` | `super_admin_manufacturer_management`, `super_admin_manufacturer_verification`, `super_admin_manufacturer_verification_detail` |
+| `/musteriler`, `/musteriler/[id]` | `super_admin_customer_management`, `super_admin_customer_detail_profile` |
+| `/talepler` | `super_admin_offer_request_management` |
+| `/katalog` | `super_admin_product_catalog_management` |
+| `/degerlendirmeler`, `/sikayetler` | `super_admin_reviews_moderation`, `super_admin_complaints_disputes` |
+| `/cms` | `super_admin_cms_seo_management` |
+| `/bildirimler` | `super_admin_global_notification_settings` |
+| `/denetim` | `super_admin_audit_logs` |
+| `/metrikler` | `super_admin_platform_metrics_analytics` |
+| `/pazar-fiyatlari` | `super_admin_market_pricing_dashboard` — **admin-only aggregate** (`ADR-006`) |
+
+### Deferred screens — do not build (`ADR-010`)
+
+`super_admin_plan_management`, `super_admin_subscriptions_oversight`,
+`super_admin_invoices_transactions`, `super_admin_configurator_builder`. Designs exist;
+features do not. Leave them out of the navigation entirely rather than shipping dead links.
+
+### System states
+
+`access_denied_permission_required` → `app/[locale]/forbidden.tsx` and the 403 boundary.
+`system_error_price_unavailable` → the pricing-failure state inside the matches page, not a
+separate route (`03-user-flows.md` §Failure paths).
+
+## Component layers
+
+```
+src/components/
+  ui/          shadcn/ui primitives, tokenised to the theme (22-design-system.md)
+  patterns/    ProjectCard, ManufacturerCard, EstimateBand, StatusBadge, StepHeader,
+               ComparisonTable, DataTable, EmptyState, FileDropzone, ConsentCheckbox
+  layouts/     PublicShell, DashboardShell, PortalShell, AdminShell
+```
+
+`patterns/` is where the Stitch screens are actually consumed: each screen decomposes into
+patterns, and a second screen reusing the same pattern must not fork it. Rule: a third
+occurrence of the same markup becomes a pattern component in the same PR.
+
+Density differs by shell, deliberately: `PublicShell` uses the 48/80 px rhythm,
+`PortalShell` and `AdminShell` use the 8/12 px high-density scale. Same tokens, different
+scale selection — see `22-design-system.md` §Density.
+
+## Forms and data flow
+
+- One Zod schema per use case in `modules/*/application/dto`, imported by both the server
+  action and the client form. No duplicated client-side validation rules.
+- `useActionState` + server actions; no client data-fetching library in V1.
+- The wizard persists on each step (`PATCH /projects/{id}`), so state lives in the DB, not in
+  a client store. Client state holds only the current step and unsaved field values.
+- Optimistic UI only for message send and save/unsave company. Anything money- or
+  status-bearing waits for the server.
+
+## i18n
+
+`next-intl`, locales `tr` (default) and `en`, catalogues in `src/i18n/messages/{locale}.json`
+namespaced by module. `I18N-01`: no hardcoded user-facing string. The Stitch screens are in
+English — their copy is the source for `en.json`, and `tr.json` is authored, not
+machine-translated, because pricing and legal wording carries KVKK weight.
+
+Formatting: `Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' })` over
+kuruş ÷ 100 at the edge only. Dates in `Europe/Istanbul` for display, UTC in the DB.
+
+## Accessibility and responsive
+
+The screens supply tablet variants for the three dashboards and the homepage; mobile is
+derived, not designed. Breakpoints follow the design system (600/900/1200). Non-negotiables:
+visible focus rings, real `<label>` associations, 44 px touch targets, AA contrast on the
+deep-slate-on-light palette, keyboard-navigable wizard and comparison table, and
+`prefers-reduced-motion` respected. The screens ship `class="light"` only — dark mode is
+out of scope for V1 and tokens are structured so it stays addable later.

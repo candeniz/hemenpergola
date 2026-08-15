@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product Details - AeroStructure Systems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#61de8a",
+                      "on-surface": "#191c1d",
+                      "on-primary-container": "#96a9be",
+                      "error-container": "#ffdad6",
+                      "inverse-surface": "#2e3132",
+                      "surface-container": "#edeeef",
+                      "on-background": "#191c1d",
+                      "on-surface-variant": "#43474c",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#ffdcc5",
+                      "secondary-container": "#7bf8a1",
+                      "on-tertiary": "#ffffff",
+                      "inverse-primary": "#b5c8df",
+                      "outline-variant": "#c4c6cd",
+                      "on-secondary-container": "#007239",
+                      "on-primary-fixed": "#091d2e",
+                      "surface-container-highest": "#e1e3e4",
+                      "background": "#f8f9fa",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#612f00",
+                      "secondary-fixed": "#7efba4",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "primary": "#162839",
+                      "surface-dim": "#d9dadb",
+                      "on-tertiary-fixed": "#301400",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary-container": "#f78b30",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "primary-container": "#2c3e50",
+                      "secondary": "#006d37",
+                      "surface-container-low": "#f3f4f5",
+                      "on-primary-fixed-variant": "#36485b",
+                      "primary-fixed": "#d1e4fb",
+                      "surface-bright": "#f8f9fa",
+                      "tertiary": "#411d00",
+                      "surface-container-high": "#e7e8e9",
+                      "outline": "#74777d",
+                      "on-secondary-fixed": "#00210c",
+                      "primary-fixed-dim": "#b5c8df",
+                      "surface": "#f8f9fa",
+                      "surface-variant": "#e1e3e4",
+                      "surface-tint": "#4e6073"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "80px",
+                      "sm": "12px",
+                      "margin-desktop": "64px",
+                      "base": "8px",
+                      "xs": "4px",
+                      "lg": "48px",
+                      "margin-mobile": "16px",
+                      "md": "24px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .ambient-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+        body {
+            background-color: #f8f9fa; /* surface color */
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<nav class="bg-surface dark:bg-on-background text-primary dark:text-primary-fixed shadow-sm dark:shadow-none docked full-width top-0 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 sticky z-50 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-md">
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed">AeroStructure</span>
+<div class="hidden md:flex items-center gap-md ml-lg">
+<a class="font-body-md text-body-md text-secondary dark:text-secondary-fixed font-bold border-b-2 border-secondary dark:border-secondary-fixed pb-1 hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors" href="#">Systems</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors" href="#">Projects</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors" href="#">Manufacturers</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors" href="#">Support</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Search bar on left logic represented here visually -->
+<div class="hidden lg:flex items-center bg-surface-container-low border border-outline-variant rounded-full px-sm py-xs">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48 text-on-surface" placeholder="Search structures..." type="text"/>
+</div>
+<button class="bg-secondary text-on-secondary px-md py-xs rounded-lg font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors hidden sm:block">Request Quote</button>
+<div class="flex items-center gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col md:flex-row px-margin-mobile md:px-margin-desktop py-xl gap-xl max-w-[1440px] mx-auto w-full">
+<!-- Left Column: Product Imagery (Functional) -->
+<div class="w-full md:w-3/5 flex flex-col gap-sm">
+<div class="w-full aspect-[4/3] rounded-lg overflow-hidden ambient-shadow bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="A highly detailed architectural visualization of a large-scale structural steel framework set against a clear blue sky. The lighting is bright and natural, highlighting the precision engineering of the joints and beams. The style is hyper-realistic and modern, emphasizing the 'built to last' aesthetic of premium manufacturing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYztkUb_EMAvm9P_scJZvsSJe5AS5ddpzvQYl6aXsCds6-lXZpS4wnaz-5mpihRKw9hZ1mFQyMueYVRQC3hKRqxnHDL5WD2LVBSuFL3yrKj3VWBv7EhZajWMqJhB6FsG9_k0wH7T8rDKxAsqiDFcEBT4eChVbOd2Hc5gZY3L58oJGRNu6Gw1076ckahYX3XXswZZ5tP8r9PHdSUjGlkiA5qJ5iiDKeZ4Ub5Npt-LsMoHF_jmIES7bm"/>
+</div>
+<div class="grid grid-cols-3 gap-sm">
+<div class="aspect-square rounded-lg overflow-hidden ambient-shadow bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="A close-up, macro shot of a heavy-duty industrial bolt connecting two massive steel I-beams. The lighting is studio-quality, emphasizing the metallic texture and the precise structural alignment. The overall mood conveys stability, expertise, and technical precision in a modern, light-mode setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDshv8HHdO1nHtkIYuaQSwZy56JV_ICtm1Sz9y-Bj-FWgoUSVTko2xx6VtYG_MV7CEccjnNNDqmgzgCdMV2SyEiJ6SrfG6GSjqQm68IP8Fjxa4o_sqtiIZekgbKAzEHlhtJjqlr11r0JTtxpY0mjq4WPpsXzryFEtdzC0mrlmwnWZnM9JD3sL4_gk3XKcAlvPlDxiYgKn2jUf2L61PSUWk1H-OkPAVnMPKxq-PLU3TmJdMnvnQPxOIO"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden ambient-shadow bg-surface-container-lowest">
+<img class="w-full h-full object-cover" data-alt="A high-angle view of a sleek, modern architectural installation featuring repetitive geometric structural elements. The scene is bathed in soft, diffused light, creating gentle shadows that add depth to the minimal, corporate design. The palette consists of crisp whites, light grays, and the natural metallic sheen of the materials." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJ6Blc_WfTnMB8_9VxwxMR1BenCSFHtTA-JzKEjoGsUT0u_1E08oqOj72wxHgvpuIaNkkvv6WZvzTo_EqYVuZ54fMlUwdzbVGPPvZrN4A5yUqpAIIz7u-QpZ2fBhhEEaZpmgiZOuQTRXcMouWQNZ_iBQmpHk04hlQW4m13uMfjRq5zoviHBmXKcTMNteLIVINTnb6EDbhtgNUw-XlgE7auVQYBP3TzwRa8ii9UpRlbUX9KFpS-1Rya"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden ambient-shadow bg-surface-container-lowest flex items-center justify-center bg-surface-container-low cursor-pointer hover:bg-surface-variant transition-colors border border-outline-variant">
+<span class="font-label-md text-label-md text-on-surface-variant flex flex-col items-center gap-xs">
+<span class="material-symbols-outlined text-[24px]">view_module</span>
+                        View All
+                    </span>
+</div>
+</div>
+</div>
+<!-- Right Column: Product Details & Error State -->
+<div class="w-full md:w-2/5 flex flex-col gap-lg">
+<!-- Header Info (Functional) -->
+<div class="flex flex-col gap-xs">
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md uppercase tracking-widest">
+<span>Structural Frameworks</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span>Series Alpha</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mt-xs">AeroX Modular Support System</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">High-capacity structural support system designed for heavy industrial applications and commercial architectural installations.</p>
+<div class="flex items-center gap-sm mt-sm">
+<span class="bg-secondary/10 text-on-secondary-container px-sm py-xs rounded-xs font-label-md text-label-md inline-flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        In Stock (Regional Hub)
+                    </span>
+<span class="border border-outline-variant text-on-surface-variant px-sm py-xs rounded-xs font-label-md text-label-md">SKU: AX-MS-9002</span>
+</div>
+</div>
+<hr class="border-outline-variant"/>
+<!-- ERROR STATE: Price Unavailable -->
+<div class="bg-error-container/20 border border-error-container rounded-lg p-md flex flex-col gap-sm ambient-shadow">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-error mt-xs" style="font-variation-settings: 'FILL' 1;">error</span>
+<div class="flex flex-col gap-xs">
+<h3 class="font-headline-md text-headline-md text-on-surface">Pricing Engine Maintenance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">We are currently performing scheduled maintenance on our pricing systems to ensure absolute accuracy for our enterprise clients. Live quoting is temporarily unavailable.</p>
+</div>
+</div>
+<div class="flex gap-sm mt-sm">
+<button class="bg-primary text-on-primary px-md py-sm rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors flex-1 flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+                        Notify Me When Online
+                    </button>
+<button class="border border-primary text-primary px-md py-sm rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors flex-1 flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">search</span>
+                        Back to Search
+                    </button>
+</div>
+</div>
+<!-- Technical Specifications (Functional) -->
+<div class="flex flex-col gap-sm mt-md">
+<h3 class="font-body-lg text-body-lg text-primary font-bold">Technical Specifications</h3>
+<div class="flex flex-col border border-outline-variant rounded-lg overflow-hidden">
+<div class="flex justify-between px-md py-sm border-b border-outline-variant bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant">Load Capacity</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">12,500 lbs / point</span>
+</div>
+<div class="flex justify-between px-md py-sm border-b border-outline-variant bg-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant">Material Finish</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Galvanized Steel</span>
+</div>
+<div class="flex justify-between px-md py-sm border-b border-outline-variant bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant">Certification</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">ISO 9001:2015</span>
+</div>
+<div class="flex justify-between px-md py-sm bg-surface-container-low">
+<span class="font-label-md text-label-md text-on-surface-variant">Warranty</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">25 Year Structural</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-primary dark:bg-on-primary-fixed text-on-primary dark:text-primary-fixed w-full mt-xl grid grid-cols-1 md:grid-cols-4 gap-lg px-margin-mobile md:px-margin-desktop py-xl">
+<div class="flex flex-col gap-sm col-span-1 md:col-span-2">
+<span class="text-headline-md font-headline-md text-on-primary">AeroStructure</span>
+<p class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant mt-sm">Providing engineered stability and structural excellence for premium architectural installations worldwide.</p>
+<p class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant mt-auto pt-lg">© 2024 AeroStructure Systems. Built to Last.</p>
+</div>
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-md text-label-md text-on-primary uppercase tracking-widest mb-xs">Legal &amp; Compliance</h4>
+<a class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant hover:text-on-primary hover:underline transition-all opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant hover:text-on-primary hover:underline transition-all opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+</div>
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-md text-label-md text-on-primary uppercase tracking-widest mb-xs">Corporate</h4>
+<a class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant hover:text-on-primary hover:underline transition-all opacity-80 hover:opacity-100" href="#">Sustainability</a>
+<a class="font-body-sm text-body-sm text-on-primary-container dark:text-on-primary-fixed-variant hover:text-on-primary hover:underline transition-all opacity-80 hover:opacity-100" href="#">Global Offices</a>
+</div>
+</footer>
+</body></html>

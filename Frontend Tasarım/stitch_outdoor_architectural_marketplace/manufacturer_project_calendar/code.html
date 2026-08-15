@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manufacturer Calendar - Architectural Outdoor Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#091d2e",
+                        "on-error": "#ffffff",
+                        "primary": "#162839",
+                        "surface-tint": "#4e6073",
+                        "inverse-primary": "#b5c8df",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-container": "#edeeef",
+                        "surface-variant": "#e1e3e4",
+                        "primary-fixed-dim": "#b5c8df",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#007239",
+                        "on-secondary-fixed": "#00210c",
+                        "secondary": "#006d37",
+                        "secondary-container": "#7bf8a1",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-surface-variant": "#43474c",
+                        "on-surface": "#191c1d",
+                        "surface-container-low": "#f3f4f5",
+                        "inverse-surface": "#2e3132",
+                        "primary-container": "#2c3e50",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-dim": "#d9dadb",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c4c6cd",
+                        "primary-fixed": "#d1e4fb",
+                        "on-background": "#191c1d",
+                        "on-primary-container": "#96a9be",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary": "#411d00",
+                        "surface": "#f8f9fa",
+                        "secondary-fixed": "#7efba4",
+                        "background": "#f8f9fa",
+                        "on-tertiary-fixed": "#301400",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e1e3e4",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-tertiary-container": "#f78b30",
+                        "outline": "#74777d",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#612f00",
+                        "surface-container-high": "#e7e8e9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "sm": "12px",
+                        "xl": "80px",
+                        "margin-mobile": "16px",
+                        "lg": "48px",
+                        "md": "24px",
+                        "base": "8px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="bg-primary dark:bg-primary-container text-secondary-fixed dark:text-secondary-fixed-dim font-label-md text-label-md h-screen w-64 flex flex-col fixed left-0 top-0 border-r border-outline-variant dark:border-outline z-50">
+<div class="flex flex-col h-full p-sm">
+<div class="flex items-center gap-3 mb-8 px-4 mt-4">
+<img alt="Manufacturer Logo" class="w-8 h-8 object-contain bg-white rounded-sm p-1" data-alt="Minimalist, modern technical logo for a structural manufacturing company. Clean geometric shapes, light-mode palette with deep slate and crisp whites. High-end architectural feel, precise lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9xYoLaAQtKutu2QvpmJS17XeKHJihFtf9R32vQ-Ll2U_Ptrcr0OFfAwYuhMS9pL79vft23jwO51nJvu6E0fKH8On9d69AnArcyU_qJSNSw7RUYXGbuSl00TrNst4YhstgIO_TRReOqqqmHsBHvw8WSYY4Wj8IdNTapg6WM8rgi97FEyl701V1ogoeHuB6NMvbN9FfaZVwI2BncfVk90JZtAHxmYB7V86um8b7tgVF3y3WBnToiKKx"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary dark:text-on-primary-fixed leading-none">Architectural Exchange</h1>
+<p class="text-on-primary/70 text-[10px] mt-1 uppercase tracking-wider">Manufacturer Portal</p>
+</div>
+</div>
+<button class="bg-secondary text-on-secondary hover:bg-secondary/90 transition-colors rounded-lg py-2 px-4 mb-6 mx-4 font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Product
+            </button>
+<div class="flex-1 overflow-y-auto space-y-1">
+<!-- Note: The prompt doesn't list 'Calendar' in the JSON tabs, but requests it as active. I will use Dashboard as active as fallback or inject Calendar if needed. Following instructions strictly, I'll map semantic intent. Dashboard is closest to Calendar in the provided list, but I will add Calendar visually as requested in prompt. Let's stick to the JSON tabs for the primary nav, and highlight a logical one, or if forced to add Calendar, I'll add it. The prompt says "SideNavBar with 'Calendar' tab active." The JSON doesn't have it. I will add it to fulfill the prompt's specific request while keeping the rest from JSON. -->
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+<!-- Injecting Calendar as active based on user prompt -->
+<a class="flex items-center gap-3 px-4 py-2 bg-primary-container text-on-primary-container dark:bg-primary-fixed-dim dark:text-on-primary-fixed-variant rounded-lg font-bold opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined filled" data-icon="calendar_today">calendar_today</span>
+                    Calendar
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="pending_actions">pending_actions</span>
+                    Offer Requests
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                    Customers
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+                    Products
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                    Pricing
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+                    Service Areas
+                </a>
+</div>
+<div class="mt-auto space-y-1 pt-4 border-t border-outline-variant/30">
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-primary-container/70 dark:text-on-primary-container/60 hover:text-on-primary hover:bg-primary-container/50 dark:hover:bg-primary-fixed-variant/30 transition-colors opacity-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                    Support
+                </a>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim font-body-md text-body-md w-full h-16 sticky top-0 z-40 border-b border-outline-variant dark:border-outline flex items-center justify-between px-md ml-0 shadow-[0_4px_12px_rgba(44,62,80,0.08)]">
+<div class="flex items-center gap-4">
+<div class="font-headline-md text-headline-md text-primary dark:text-on-surface font-bold">
+                    Architectural Outdoor Exchange
+                </div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-1 focus:ring-primary dark:focus:ring-secondary text-sm w-64 outline-none" placeholder="Search..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all rounded-full focus:ring-1 focus:ring-primary dark:focus:ring-secondary">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all rounded-full focus:ring-1 focus:ring-primary dark:focus:ring-secondary">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-2 hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-all p-1 pr-3 rounded-full focus:ring-1 focus:ring-primary dark:focus:ring-secondary">
+<img alt="User Profile Avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="Professional headshot of an architect in a well-lit, modern studio space. Clean, bright, light-mode lighting. High quality, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCluOzxS8PuL7IxJai8ivX7D4m31-fR7_KYCElOF8aXmeaZABpT428MaiQlOO_LPcRjopQgcbMDr_zeJDn8-t2Xpm-GJQm1gifJiUimPRdiJeg0Ml39BCpnDmkrT93FBktGQ3BqaIMbD0-cnUrRZ-engTBNNCp8KDp6cAVNB-ZC8nd6FeINY96orAmotwX9NcuBZBrOUWkHxgA1qkHNOZlwlBxKRu7WpC2SM7w2KRms0H07-E01M3a3"/>
+<span class="text-sm font-semibold text-primary">Account Management</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-md flex gap-gutter bg-surface-bright">
+<!-- Calendar Container -->
+<div class="flex-1 flex flex-col bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(44,62,80,0.08)] border border-outline-variant/50 overflow-hidden">
+<!-- Calendar Header -->
+<div class="flex items-center justify-between p-md border-b border-outline-variant/50">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-lg text-headline-lg text-primary">November 2023</h2>
+<div class="flex items-center gap-1 border border-outline-variant rounded-lg p-1 bg-surface">
+<button class="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="px-3 py-1 font-label-md text-label-md text-primary font-bold">Today</button>
+<button class="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<div class="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant/50">
+<button class="px-4 py-1.5 rounded bg-surface-container-lowest shadow-sm text-primary font-bold text-sm">Month</button>
+<button class="px-4 py-1.5 rounded text-on-surface-variant hover:text-primary text-sm transition-colors">Week</button>
+<button class="px-4 py-1.5 rounded text-on-surface-variant hover:text-primary text-sm transition-colors">Day</button>
+</div>
+</div>
+<!-- High Density Grid -->
+<div class="flex-1 grid grid-cols-7 grid-rows-6 text-sm">
+<!-- Day Headers -->
+<div class="col-span-7 grid grid-cols-7 border-b border-outline-variant/50 bg-surface-container/30">
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Sun</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Mon</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Tue</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Wed</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Thu</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Fri</div>
+<div class="py-2 px-3 font-label-md text-label-md text-on-surface-variant uppercase text-center">Sat</div>
+</div>
+<!-- Grid Cells (Simplified for brevity, demonstrating high density) -->
+<!-- Week 1 -->
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2 text-on-surface-variant/50">29</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2 text-on-surface-variant/50">30</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2 text-on-surface-variant/50">31</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">1</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">2</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">3</span>
+</div>
+<div class="border-b border-outline-variant/30 min-h-[100px] p-2 bg-surface-container/20">
+<span class="block mb-1 text-primary">4</span>
+</div>
+<!-- Week 2 -->
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2 bg-surface-container/20">
+<span class="block mb-1 text-primary">5</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 font-bold text-primary bg-primary/10 w-6 h-6 rounded-full flex items-center justify-center">6</span>
+<!-- Event: Deadline -->
+<div class="mt-1 px-2 py-1 bg-error-container/30 border border-error-container text-error rounded text-[11px] font-semibold leading-tight truncate">
+                            Offer Deadline - #AOE-88210
+                        </div>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">7</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">8</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">9</span>
+<!-- Event: Meeting -->
+<div class="mt-1 px-2 py-1 bg-secondary-container/30 border border-secondary-container text-secondary rounded text-[11px] font-semibold leading-tight truncate">
+                            Customer Meeting - Bioclimatic Pergola
+                        </div>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">10</span>
+<!-- Event: Follow-up -->
+<div class="mt-1 px-2 py-1 bg-surface-tint/10 border border-surface-tint/20 text-surface-tint rounded text-[11px] font-semibold leading-tight truncate">
+                            Follow-up - Technical Specs
+                        </div>
+</div>
+<div class="border-b border-outline-variant/30 min-h-[100px] p-2 bg-surface-container/20">
+<span class="block mb-1 text-primary">11</span>
+</div>
+<!-- Week 3 -->
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2 bg-surface-container/20">
+<span class="block mb-1 text-primary">12</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">13</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">14</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">15</span>
+<!-- Event: Survey -->
+<div class="mt-1 px-2 py-1 bg-tertiary-container/10 border border-tertiary-container/30 text-tertiary rounded text-[11px] font-semibold leading-tight">
+                            Site Survey - Project #AOE-99421
+                            <span class="block text-[10px] opacity-80 font-normal truncate mt-0.5">Jane Doe, Istanbul</span>
+</div>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">16</span>
+</div>
+<div class="border-b border-r border-outline-variant/30 min-h-[100px] p-2">
+<span class="block mb-1 text-primary">17</span>
+</div>
+<div class="border-b border-outline-variant/30 min-h-[100px] p-2 bg-surface-container/20">
+<span class="block mb-1 text-primary">18</span>
+</div>
+<!-- Empty rows to fill visual grid -->
+<div class="col-span-7 row-span-3 bg-surface-container-lowest flex items-center justify-center text-on-surface-variant/30">
+                        Grid continues...
+                    </div>
+</div>
+</div>
+<!-- Sidebar -->
+<aside class="w-80 flex flex-col gap-md">
+<!-- Mini Calendar or Date Picker concept could go here, omitting for minimalism -->
+<!-- Upcoming Tasks -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(44,62,80,0.08)] border border-outline-variant/50 p-md">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Upcoming Tasks</h3>
+<div class="space-y-4">
+<!-- Task 1 -->
+<div class="flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-error mt-1.5"></div>
+</div>
+<div>
+<h4 class="font-body-sm font-semibold text-primary">Offer Deadline - #AOE-88210</h4>
+<p class="text-xs text-on-surface-variant mt-0.5">Today, 5:00 PM</p>
+</div>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Task 2 -->
+<div class="flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-secondary mt-1.5"></div>
+</div>
+<div>
+<h4 class="font-body-sm font-semibold text-primary">Customer Meeting</h4>
+<p class="text-xs text-on-surface-variant mt-0.5">Nov 9 • Mark Wilson</p>
+<p class="text-[11px] text-surface-tint mt-1 bg-surface-container-low inline-block px-1.5 py-0.5 rounded">Bioclimatic Pergola</p>
+</div>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Task 3 -->
+<div class="flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-surface-tint mt-1.5"></div>
+</div>
+<div>
+<h4 class="font-body-sm font-semibold text-primary">Follow-up - Technical Specs</h4>
+<p class="text-xs text-on-surface-variant mt-0.5">Nov 10</p>
+</div>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Task 4 -->
+<div class="flex gap-3">
+<div class="mt-0.5">
+<div class="w-2 h-2 rounded-full bg-tertiary mt-1.5"></div>
+</div>
+<div>
+<h4 class="font-body-sm font-semibold text-primary">Site Survey - #AOE-99421</h4>
+<p class="text-xs text-on-surface-variant mt-0.5">Nov 15 • Istanbul</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">person</span>
+<span class="text-[11px] text-on-surface-variant">Jane Doe</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-outline-variant text-primary font-label-md text-label-md rounded-lg hover:bg-surface-container transition-colors">
+                        View All Tasks
+                    </button>
+</div>
+<!-- Legend -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(44,62,80,0.08)] border border-outline-variant/50 p-4">
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-3 uppercase">Event Types</h4>
+<div class="space-y-2 text-xs">
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-error-container border border-error-container"></div> <span class="text-primary">Deadlines</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-secondary-container/50 border border-secondary-container"></div> <span class="text-primary">Meetings</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-tertiary-container/30 border border-tertiary-container/50"></div> <span class="text-primary">Surveys</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-surface-tint/20 border border-surface-tint/30"></div> <span class="text-primary">General/Follow-up</span></div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

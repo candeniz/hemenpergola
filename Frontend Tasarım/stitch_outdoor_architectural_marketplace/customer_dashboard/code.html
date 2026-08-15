@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Dashboard - StrucNature</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Montserrat:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-tertiary-fixed": "#301400",
+                        "surface-container-low": "#f3f4f5",
+                        "outline-variant": "#c4c6cd",
+                        "surface-container-highest": "#e1e3e4",
+                        "tertiary-container": "#612f00",
+                        "surface-bright": "#f8f9fa",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#7bf8a1",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#b5c8df",
+                        "on-surface-variant": "#43474c",
+                        "tertiary-fixed": "#ffdcc5",
+                        "primary-fixed": "#d1e4fb",
+                        "tertiary": "#411d00",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-fixed-dim": "#61de8a",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "error-container": "#ffdad6",
+                        "secondary": "#006d37",
+                        "on-surface": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1d",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#d9dadb",
+                        "surface-container": "#edeeef",
+                        "background": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-primary-container": "#96a9be",
+                        "inverse-surface": "#2e3132",
+                        "surface-container-high": "#e7e8e9",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#091d2e",
+                        "surface-variant": "#e1e3e4",
+                        "primary-fixed-dim": "#b5c8df",
+                        "on-secondary-container": "#007239",
+                        "secondary-fixed": "#7efba4",
+                        "on-secondary-fixed": "#00210c",
+                        "surface": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-container": "#f78b30",
+                        "surface-tint": "#4e6073",
+                        "outline": "#74777d",
+                        "primary": "#162839"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "lg": "48px",
+                        "base": "8px",
+                        "md": "24px",
+                        "sm": "12px",
+                        "xs": "4px",
+                        "xl": "80px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "body-sm": ["Inter", "sans-serif"],
+                        "headline-lg": ["Montserrat", "sans-serif"],
+                        "display-lg": ["Montserrat", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-md": ["Montserrat", "sans-serif"],
+                        "headline-lg-mobile": ["Montserrat", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    fontSize: {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen">
+<!-- TopNavBar (Hidden on Mobile, Visible on Desktop) -->
+<nav class="hidden md:flex justify-between items-center w-full px-margin-desktop h-16 max-w-screen-2xl mx-auto shadow-sm dark:shadow-none bg-surface dark:bg-surface-container fixed top-0 w-full z-50">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+            StrucNature
+        </div>
+<div class="flex gap-md h-full items-center">
+<a class="h-full flex items-center text-primary dark:text-primary-fixed-dim border-b-2 border-primary font-bold pb-1 cursor-pointer hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Projects</a>
+<a class="h-full flex items-center text-on-surface-variant dark:text-outline-variant font-medium cursor-pointer hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Solutions</a>
+<a class="h-full flex items-center text-on-surface-variant dark:text-outline-variant font-medium cursor-pointer hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Resources</a>
+</div>
+<div class="flex gap-sm items-center">
+<!-- Search Icon (Right) -->
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">search</span>
+<button class="font-body-md text-body-md text-primary font-medium hover:opacity-80 transition-opacity">Sign In</button>
+<button class="font-body-md text-body-md bg-secondary text-on-secondary px-[16px] py-[8px] rounded-DEFAULT hover:opacity-90 transition-opacity">Get Quote</button>
+</div>
+</nav>
+<!-- Main Content Layout (Desktop: SideNav + Content, Mobile: Full Content) -->
+<div class="flex pt-16 h-[calc(100vh)]">
+<!-- SideNavBar (Hidden on Mobile, Visible on Desktop) -->
+<aside class="hidden md:flex flex-col h-full py-md px-sm bg-surface-container-lowest dark:bg-surface-dim fixed left-0 top-16 h-[calc(100vh-64px)] w-64 border-r border-outline-variant dark:border-outline z-40">
+<div class="mb-lg">
+<!-- Avatar Placeholder if needed, but per JSON just header text -->
+<h2 class="font-headline-md text-headline-md text-primary">Admin Portal</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Technical Operations</p>
+</div>
+<button class="bg-secondary text-on-secondary rounded-lg px-[16px] py-[8px] mb-lg font-body-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Entry
+            </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-sm px-md py-sm mb-xs bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-bold rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Orders</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-md text-label-md">Leads</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 pt-md border-t border-outline-variant">
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm mb-xs text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop bg-background overflow-y-auto w-full">
+<header class="mb-lg">
+<h1 class="font-display-lg text-display-lg text-primary mb-2 hidden md:block">Customer Dashboard</h1>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2 md:hidden">Customer Dashboard</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Welcome back. Here is the overview of your structural projects.</p>
+</header>
+<!-- Grid Layout for Dashboard Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+<!-- Quick Summary Cards -->
+<div class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex flex-col justify-between h-full border border-surface-container">
+<div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Projects</span>
+<span class="material-symbols-outlined text-primary bg-primary-fixed-dim p-2 rounded-full text-[20px]">construction</span>
+</div>
+<p class="font-headline-lg text-headline-lg text-primary">3</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex flex-col justify-between h-full border border-surface-container">
+<div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Unread Messages</span>
+<span class="material-symbols-outlined text-secondary bg-secondary-container p-2 rounded-full text-[20px]">mail</span>
+</div>
+<p class="font-headline-lg text-headline-lg text-primary">5</p>
+</div>
+<a class="font-body-sm text-body-sm text-secondary hover:underline mt-sm inline-flex items-center gap-1" href="#">View Inbox <span class="material-symbols-outlined text-[16px]">arrow_forward</span></a>
+</div>
+<!-- Launch New Project Quick-start -->
+<div class="bg-primary text-on-primary rounded-lg p-md shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex flex-col justify-center items-center h-full cursor-pointer hover:bg-primary-container transition-colors text-center">
+<span class="material-symbols-outlined text-[40px] mb-sm">add_circle</span>
+<h3 class="font-headline-md text-headline-md mb-xs">Launch New Project</h3>
+<p class="font-body-sm text-body-sm text-on-primary-container">Start configuring your next structural installation.</p>
+</div>
+</div>
+<!-- Detailed Progress Tracker (Bento style spanning full width or 2 cols) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Ongoing Project Tracker -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_12px_rgba(44,62,80,0.08)] border border-surface-container">
+<div class="flex justify-between items-center mb-md pb-sm border-b border-surface-container">
+<h2 class="font-headline-md text-headline-md text-primary">Ongoing Installation</h2>
+<span class="bg-secondary/10 text-secondary font-label-md text-label-md px-2 py-1 rounded">In Progress</span>
+</div>
+<div class="flex flex-col md:flex-row gap-lg">
+<!-- Image Area -->
+<div class="md:w-1/3">
+<img class="w-full h-48 object-cover rounded-lg" data-alt="A clean, modern architectural rendering of a structural steel pergola system installed in an outdoor minimalist patio setting. Bright daylight, premium corporate aesthetic, realistic textures, showing precision engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdyG0fz7mNxxzI3TCYuv5_83AlB1s6yr7ZNVgqWa1r93nqeirCBc14XkJ-qJGy9MkxCIKOWkdfeweHNagFvULIVbPH3aL_HimdPP0GjGboKivZ3QjyAF8JrF2g94-qZlbbVtGqmb0uuxktpsIV_ajo_Yeerj8gio5zKeNdcvI2iXLt1Vs_R1yObi6RceRWFFIN8yCu61EIza6ILTSyE9MbmuTxc7It3vzfwhNrOn8E2S_1GU2ht9FO"/>
+</div>
+<!-- Tracker Details -->
+<div class="md:w-2/3 flex flex-col justify-center">
+<h3 class="font-body-lg text-body-lg font-semibold text-primary mb-1">Alpine Ridge Pergola System</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Order #ORD-77492-A</p>
+<!-- Stepper -->
+<div class="relative">
+<div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-surface-container-high -z-10"></div>
+<div class="flex items-start mb-sm gap-md">
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm font-semibold text-primary">Design Approved</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Completed Oct 12</p>
+</div>
+</div>
+<div class="flex items-start mb-sm gap-md">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 z-10 ring-4 ring-background">
+<span class="material-symbols-outlined text-[16px] animate-pulse">pending</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm font-semibold text-primary">Site Survey Scheduled</p>
+<p class="font-label-md text-label-md text-secondary font-medium">Upcoming: Oct 25, 10:00 AM</p>
+</div>
+</div>
+<div class="flex items-start gap-md">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-outline flex items-center justify-center shrink-0 z-10">
+<span class="material-symbols-outlined text-[16px]">precision_manufacturing</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm font-semibold text-outline">Manufacturing Phase</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Saved Companies / Manufacturers List -->
+<div class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_12px_rgba(44,62,80,0.08)] border border-surface-container">
+<h2 class="font-headline-md text-headline-md text-primary mb-md pb-sm border-b border-surface-container">Saved Companies</h2>
+<ul class="space-y-sm">
+<li class="flex items-center gap-sm p-sm hover:bg-surface-container transition-colors rounded-lg cursor-pointer">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center text-primary font-bold">AS</div>
+<div>
+<p class="font-body-sm text-body-sm font-semibold text-primary">Apex Structures</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Premium Steel Framing</p>
+</div>
+</li>
+<li class="flex items-center gap-sm p-sm hover:bg-surface-container transition-colors rounded-lg cursor-pointer">
+<div class="w-10 h-10 rounded bg-surface-variant flex items-center justify-center text-primary font-bold">LT</div>
+<div>
+<p class="font-body-sm text-body-sm font-semibold text-primary">Lumina Timber</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Sustainable Wood Solutions</p>
+</div>
+</li>
+</ul>
+<button class="w-full mt-md py-2 border border-outline rounded-lg text-primary font-body-sm text-body-sm hover:bg-surface-container-low transition-colors">View Directory</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full py-xl bg-primary dark:bg-primary-container z-50 relative">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop max-w-screen-2xl mx-auto">
+<div class="col-span-1 md:col-span-1">
+<h4 class="font-headline-lg text-headline-lg text-on-primary mb-md">StrucNature</h4>
+<p class="text-on-primary-container dark:text-outline-variant font-body-sm text-body-sm">
+                    © 2024 StrucNature Architectural Systems. All rights reserved.
+                </p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-col md:flex-row gap-lg justify-end items-start md:items-center">
+<a class="text-on-primary-container dark:text-outline-variant hover:text-secondary-fixed-dim transition-colors cursor-pointer font-body-sm text-body-sm" href="#">Privacy Policy</a>
+<a class="text-on-primary-container dark:text-outline-variant hover:text-secondary-fixed-dim transition-colors cursor-pointer font-body-sm text-body-sm" href="#">Terms of Service</a>
+<a class="text-on-primary-container dark:text-outline-variant hover:text-secondary-fixed-dim transition-colors cursor-pointer font-body-sm text-body-sm" href="#">Sustainability</a>
+<a class="text-on-primary-container dark:text-outline-variant hover:text-secondary-fixed-dim transition-colors cursor-pointer font-body-sm text-body-sm" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+</body></html>

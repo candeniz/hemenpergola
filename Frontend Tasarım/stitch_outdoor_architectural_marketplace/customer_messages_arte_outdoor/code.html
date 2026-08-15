@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Messaging - Architectural Outdoor Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "primary-fixed": "#d1e4fb",
+                      "surface-container-high": "#e7e8e9",
+                      "background": "#f8f9fa",
+                      "error-container": "#ffdad6",
+                      "on-error": "#ffffff",
+                      "secondary": "#006d37",
+                      "tertiary": "#411d00",
+                      "on-tertiary-container": "#f78b30",
+                      "on-secondary-container": "#007239",
+                      "on-surface": "#191c1d",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-tint": "#4e6073",
+                      "tertiary-container": "#612f00",
+                      "inverse-surface": "#2e3132",
+                      "on-background": "#191c1d",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-secondary-fixed": "#00210c",
+                      "on-surface-variant": "#43474c",
+                      "surface-variant": "#e1e3e4",
+                      "secondary-container": "#7bf8a1",
+                      "outline": "#74777d",
+                      "on-primary": "#ffffff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-container": "#edeeef",
+                      "secondary-fixed-dim": "#61de8a",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#ffdcc5",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#36485b",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-primary-container": "#96a9be",
+                      "surface": "#f8f9fa",
+                      "inverse-primary": "#b5c8df",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#301400",
+                      "primary-container": "#2c3e50",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-primary-fixed": "#091d2e",
+                      "outline-variant": "#c4c6cd",
+                      "primary": "#162839",
+                      "secondary-fixed": "#7efba4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "xs": "4px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "lg": "48px",
+                      "margin-mobile": "16px",
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #e1e3e4;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest text-primary font-headline-md text-headline-md font-body-md text-body-md w-full top-0 sticky border-b border-outline-variant shadow-sm z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-md">
+<span class="text-headline-md font-headline-md font-bold text-primary">Architectural Outdoor Exchange</span>
+<div class="hidden md:flex gap-gutter items-center ml-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Systems</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Architects</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Resources</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Projects</a>
+</div>
+</div>
+<div class="flex items-center gap-gutter">
+<div class="hidden md:flex items-center bg-surface-container-low rounded-full px-4 py-2 border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant mr-2" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="bg-transparent border-none outline-none text-body-md w-48 focus:ring-0 p-0 text-on-surface" placeholder="Search" type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
+                    Get Started
+                </button>
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-all duration-200 p-2 rounded-full cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Area - Split Layout -->
+<main class="flex-1 flex overflow-hidden max-w-7xl w-full mx-auto bg-surface-container-lowest">
+<!-- Sidebar - Conversation List -->
+<aside class="w-1/3 border-r border-outline-variant flex flex-col bg-surface-bright hidden md:flex">
+<div class="p-md border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary mb-sm">Messages</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm focus:outline-none focus:border-primary" placeholder="Search conversations..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Active Conversation -->
+<div class="p-md bg-surface-container-low border-l-4 border-primary cursor-pointer hover:bg-surface-variant transition-colors">
+<div class="flex items-start gap-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist logo for an architectural manufacturer named ARTE Outdoor. The logo features sharp geometric shapes in dark slate and crisp white, conveying technical precision and high-end design, suitable for a light mode professional interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg-QcM73Hqoz8bOkulbTAqS42EL4-xQ6YzRlReLvDznKES8FhyTAgFJlNa-xlWa88_HgWqIY_UA8gnbNANqh7OwC_EGhoJWTAEIYJIF5PwbyVUjHc6M9UgLWv1Qi3WeC7BIMk8eqnZV42MmyjiP6IYiJsfZrLav4CqnVhSxAvGZqH7vLIuD049m-Zs90Tz614JkiZF9mNtL4IcBwvwa1x6rcCp0tXKzbBouIxjh5tOZfPDUQyesuwU"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-md text-label-md text-primary truncate">ARTE Outdoor</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">10:45 AM</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Your final offer is ready to review.</p>
+</div>
+</div>
+</div>
+<!-- Inactive Conversation -->
+<div class="p-md cursor-pointer hover:bg-surface-container-low transition-colors border-b border-outline-variant">
+<div class="flex items-start gap-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A modern, structural logo for Titan Systems. The logo uses stark black and white contrasts with subtle grey accents, representing structural engineering and stability in a minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkwYnmonNH_9608_wxWgnMSILG7Xkj-9nJ36yUj6WA6XuAqpPyoeUcjr7yn68z2fPXXkw-bzY5J35KeohC4uszuO_NsD40tClGQBQXIxBVR_9pdpa-cbYF-Ny513TU0zICM26oCugk5_KpveYXAz_KmvFBLkEKuhgCfIeufIIn8Un9lp71UYDVZNbOVAI8vPPWKjfcM2pmigJNzyIhPBkdRWZrwwNkB-vWtRwqR9OJIst8bPuB9vyo"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-md text-label-md text-on-surface truncate">Titan Systems</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">Yesterday</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">We have reviewed the site plans.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Messaging Area -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest h-full relative">
+<!-- Conversation Header -->
+<header class="p-md border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest z-10 shadow-[0_2px_4px_rgba(44,62,80,0.02)]">
+<div class="flex items-center gap-md">
+<div class="relative">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist logo for an architectural manufacturer named ARTE Outdoor. The logo features sharp geometric shapes in dark slate and crisp white, conveying technical precision and high-end design, suitable for a light mode professional interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxaKZGwUTu0wO6GxE7g8jyoP9YIfQPR7WmvIjDhYwrMjeRYL_nqc3BBL4uG5ZGTYULuQ9mTJbT02bg_CHOLtZ7WkgMBy7-zZlND-7MaBhPUNCgFxes4HU-pJMVF4xnWn9FkptIxxONH4nVNtWU9gEt8rNDidh1wmdqrIsaEyxh1WowZA6HpL6OdDMB0oR3iH626q01B9XHZge0OU60_f7rTl1v0ieE_RV0Tu9Af8DtZaMqd3xLupn6"/>
+</div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary-fixed border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+<div>
+<div class="flex items-center gap-xs">
+<h2 class="font-headline-md text-headline-md-mobile text-primary">ARTE Outdoor</h2>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="font-label-md text-label-md text-on-surface-variant">Verified Manufacturer</span> • Online
+                        </p>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">call</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Message Feed -->
+<div class="flex-1 overflow-y-auto p-md lg:p-lg space-y-md custom-scrollbar bg-surface-bright">
+<!-- System Message -->
+<div class="flex justify-center my-md">
+<span class="bg-surface-container text-on-surface-variant font-label-md text-label-md px-4 py-1.5 rounded-full text-center">
+                        Your request was accepted.
+                    </span>
+</div>
+<!-- Manufacturer Message (Left) -->
+<div class="flex items-end gap-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist logo for an architectural manufacturer named ARTE Outdoor. The logo features sharp geometric shapes in dark slate and crisp white, conveying technical precision and high-end design, suitable for a light mode professional interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZdBTPTmHEGpdl3bo3hWJeKWq_SldrTEI7iCo2SD7PbdAiD-3Wvfo7FyJ4w1b4-bUfOMvVVFJaqf8_jZNXWh7GkvIHAxm_GKOsqdGh4_GiDm35sFzcPhIarYo06OGMr5SBFhGTmLK22H29dHTOl6dNcOzpbPA0Y6DoyxUx8HZ64zx3cvFrRdrvb7nBtD8eVEC1djDVYxqNCwr7g2pbi4KqyurcLB6RXUttI1rpyC0md8WDU5auzZ_g"/>
+</div>
+<div class="max-w-[70%]">
+<div class="bg-surface-container-low text-on-surface rounded-xl rounded-bl-none p-sm border border-outline-variant/50">
+<p class="font-body-md text-body-md">Hello Jane. We have reviewed your initial request for the pergola installation. To proceed, we need to schedule a brief site survey to confirm structural anchor points.</p>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-1 ml-1 block">09:15 AM</span>
+</div>
+</div>
+<!-- Customer Message (Right) -->
+<div class="flex items-end justify-end gap-sm">
+<div class="max-w-[70%] flex flex-col items-end">
+<div class="bg-primary-container text-on-primary rounded-xl rounded-br-none p-sm shadow-[0_2px_8px_rgba(44,62,80,0.1)]">
+<p class="font-body-md text-body-md">Sounds good. I've attached the current site photos and the preliminary technical specs below.</p>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-1 mr-1 block">09:30 AM</span>
+</div>
+</div>
+<!-- Rich Content: Image (Right) -->
+<div class="flex justify-end">
+<div class="max-w-[60%] rounded-xl overflow-hidden shadow-sm border border-outline-variant bg-surface-container-lowest">
+<img class="w-full h-48 object-cover" data-alt="A high-quality architectural photograph of an empty concrete patio space meant for a pergola installation. The image is taken in bright daylight with sharp, clear details, emphasizing structural suitability. The aesthetic is clean, modern, and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCag_t7d8UWNQFjsIZxM8xRunINUCXEq-zEz8yheBn33W3XmkFdc0agVo2nocaCQW9cEDOZti4LGrV_yKlfhhknD8OEAMXCDndEjStNdXmqCv2Fu3_x9wEvdBdBC9uzX4L5spMpfHCC3buA5ESU8Sw5D-A0QUMxC8dOKs1CfvaRBC5ngNtG6saHLLnzo9dehBc7cUNL1_PnjFEmBoMyPIsA135gYWrmc7bpoEK1aLQWi-0D07CnS_Os"/>
+</div>
+</div>
+<!-- Rich Content: PDF Attachment (Right) -->
+<div class="flex justify-end">
+<div class="max-w-[60%] w-72 bg-surface-container-lowest border border-outline-variant rounded-lg p-3 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+<div class="bg-error-container text-on-error-container p-2 rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Technical Specifications.pdf</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">2.4 MB</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">download</span>
+</div>
+</div>
+<!-- System Message -->
+<div class="flex justify-center my-md">
+<span class="bg-surface-container text-on-surface-variant font-label-md text-label-md px-4 py-1.5 rounded-full text-center">
+                        Your survey is scheduled.
+                    </span>
+</div>
+<!-- Manufacturer Message - Appointment Card (Left) -->
+<div class="flex items-end gap-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist logo for an architectural manufacturer named ARTE Outdoor. The logo features sharp geometric shapes in dark slate and crisp white, conveying technical precision and high-end design, suitable for a light mode professional interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU5R0OPSNqfvWsvWi6xXx01hp6KKhHGcFvniZ8iz2pVKRIbBdsy097SHPjnv6FiUhrNGUgE6is_h9f5KiroU2PCK5g43-r9uJCSiHmUlj-rzzaZHETNBQq-McGWXXy90TJj0S33fElwxHFn8f7a0ONVfiiNIcAxlDw6DCYq3ExWRmyaeJ7C-wtBF7dGNMttIC3KF1dzOCJD6qeKwpkcl9tCYZ7ReSCVt-V9jL7F9qmD_T4swhdhz1l"/>
+</div>
+<div class="max-w-[70%]">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)]">
+<div class="bg-surface-container-low px-4 py-3 border-b border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">event</span>
+<h4 class="font-label-md text-label-md text-primary">Site Survey Confirmed</h4>
+</div>
+<div class="p-4 bg-surface-container-lowest">
+<p class="font-headline-md text-headline-md-mobile text-on-surface mb-1">Nov 2, 2024</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">10:00 AM - 12:00 PM</p>
+<button class="w-full py-2 border border-outline text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">calendar_add_on</span>
+                                    Add to Calendar
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Rich Content: Final Offer Alert (Left) -->
+<div class="flex items-end gap-sm mt-lg">
+<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-outline-variant opacity-0">
+<!-- Spacer for alignment -->
+</div>
+<div class="max-w-[70%] w-full">
+<div class="bg-surface-container-lowest border border-primary/20 rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(44,62,80,0.08)] relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">sell</span>
+                                        Final Offer Ready
+                                     </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Review the finalized structural plans and pricing.</p>
+</div>
+<button class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-on-secondary-container transition-colors whitespace-nowrap">
+                                     View Offer
+                                 </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-md bg-surface-container-lowest border-t border-outline-variant z-10">
+<div class="flex items-end gap-sm">
+<button class="p-3 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-full transition-colors flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add_circle</span>
+</button>
+<div class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl flex items-end focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<textarea class="w-full bg-transparent border-none outline-none resize-none py-3 px-4 font-body-md text-body-md text-on-surface focus:ring-0 custom-scrollbar max-h-32 min-h-[48px]" placeholder="Type a message..." rows="1" style="line-height: 24px;"></textarea>
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">sentiment_satisfied</span>
+</button>
+</div>
+<button class="p-3 bg-primary text-on-primary rounded-full hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</body></html>

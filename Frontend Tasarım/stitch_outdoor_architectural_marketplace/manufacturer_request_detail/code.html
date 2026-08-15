@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lead Detail - StrucNature</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary-fixed": "#301400",
+                      "surface-container-low": "#f3f4f5",
+                      "outline-variant": "#c4c6cd",
+                      "surface-container-highest": "#e1e3e4",
+                      "tertiary-container": "#612f00",
+                      "surface-bright": "#f8f9fa",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#7bf8a1",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#b5c8df",
+                      "on-surface-variant": "#43474c",
+                      "tertiary-fixed": "#ffdcc5",
+                      "primary-fixed": "#d1e4fb",
+                      "tertiary": "#411d00",
+                      "inverse-on-surface": "#f0f1f2",
+                      "secondary-fixed-dim": "#61de8a",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "error-container": "#ffdad6",
+                      "secondary": "#006d37",
+                      "on-surface": "#191c1d",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#191c1d",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#d9dadb",
+                      "surface-container": "#edeeef",
+                      "background": "#f8f9fa",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-primary-fixed-variant": "#36485b",
+                      "on-primary-container": "#96a9be",
+                      "inverse-surface": "#2e3132",
+                      "surface-container-high": "#e7e8e9",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed": "#091d2e",
+                      "surface-variant": "#e1e3e4",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-secondary-container": "#007239",
+                      "secondary-fixed": "#7efba4",
+                      "on-secondary-fixed": "#00210c",
+                      "surface": "#f8f9fa",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#2c3e50",
+                      "on-tertiary-container": "#f78b30",
+                      "surface-tint": "#4e6073",
+                      "outline": "#74777d",
+                      "primary": "#162839"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "64px",
+                      "lg": "48px",
+                      "base": "8px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "xs": "4px",
+                      "xl": "80px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "headline-lg": ["Montserrat"],
+                      "display-lg": ["Montserrat"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Montserrat"],
+                      "headline-lg-mobile": ["Montserrat"],
+                      "label-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+             font-variation-settings: 'FILL' 1;
+        }
+        
+        /* High Density Table Overrides */
+        table.high-density th, table.high-density td {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #E9ECEF;
+        }
+        table.high-density tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex bg-surface-container-lowest dark:bg-surface-dim font-label-md text-label-md border-r border-outline-variant dark:border-outline fixed left-0 top-0 h-full w-64 flex flex-col h-full py-md px-sm">
+<div class="mb-lg px-md pt-sm">
+<div class="font-headline-md text-headline-md text-primary mb-sm">StrucNature</div>
+<div class="flex items-center gap-sm mt-md">
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="A small, professional headshot of an administrative user in a modern office setting. The lighting is bright and clear, reflecting a reliable and organized corporate environment. The image is cropped to a perfect circle and focuses on the subject's face, suitable for an admin dashboard avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxOuZKVAhybzZQLcus2_ebz-1ZNY09bh0NiQP34krFcp3_Xsj-KGyfEGIGLRSfhUE6JG50HJ4Z0Wv1Z5D68A8PFwL-yNHwlfba_DUVB5oJW7--AlsE6h2VjqPoQFSrOeeeMzMuoVVZeY4RICyC3OSVQsG3a9Xo5r07OFUckexlR8GJGqO86lX2xmdaTcq032HyBnwZVrE31AsH-Vkx0S_GqWsqxuhZyAvFj5dw4vqlsjqKJBeA4a7O"/>
+<div>
+<div class="text-on-surface font-semibold">Admin Portal</div>
+<div class="text-on-surface-variant text-xs">Technical Operations</div>
+</div>
+</div>
+</div>
+<div class="flex-grow flex flex-col gap-xs">
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                Orders
+            </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+                Inventory
+            </a>
+<a class="bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed font-bold rounded-lg hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="leaderboard" data-weight="fill">leaderboard</span>
+                Leads
+            </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant">
+<button class="bg-secondary text-on-secondary font-label-md py-sm px-md rounded-lg shadow-sm hover:opacity-90 transition-opacity mb-md flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                 New Entry
+             </button>
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                Support
+            </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-inverse-surface transition-all flex items-center gap-sm px-md py-sm rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Sign Out
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 bg-background overflow-y-auto">
+<!-- Sticky Header for Context -->
+<div class="sticky top-0 bg-surface/90 backdrop-blur-md z-40 border-b border-outline-variant px-margin-mobile md:px-md py-sm flex justify-between items-center shadow-[0_4px_12px_rgba(44,62,80,0.04)]">
+<div class="flex items-center gap-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-xs rounded-full hover:bg-surface-container" href="#">
+<span class="material-symbols-outlined">arrow_back</span>
+</a>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary flex items-center gap-sm">
+                        Lead #LD-2409-882
+                        <span class="bg-secondary/10 text-secondary border border-secondary/20 px-xs py-1 rounded font-label-md text-label-md ml-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> New
+                        </span>
+</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Submitted: Oct 12, 2024 • Customer: Aras K.</p>
+</div>
+</div>
+<div class="hidden md:flex gap-sm">
+<button class="border border-primary text-primary hover:bg-surface-container font-label-md py-2 px-md rounded-lg transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                    Schedule Survey
+                </button>
+<button class="bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm font-label-md py-2 px-md rounded-lg transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">send</span>
+                    Send Offer
+                </button>
+</div>
+</div>
+<div class="p-margin-mobile md:p-md max-w-screen-2xl mx-auto space-y-md">
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-md">
+<!-- Left Column: Specs & Location (8 cols) -->
+<div class="xl:col-span-8 space-y-md">
+<!-- Primary Request Details Card -->
+<section class="bg-surface-container-lowest rounded-lg shadow-[0_4px_12px_rgba(44,62,80,0.08)] overflow-hidden border border-outline-variant">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-primary text-[18px]">Project Specifications</h2>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit</span></button>
+</div>
+<div class="p-md grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Product Type</h3>
+<p class="font-body-md text-body-md text-on-surface font-medium">Motorized Pergola System (SkyView Series)</p>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Estimated Dimensions</h3>
+<p class="font-body-md text-body-md text-on-surface font-medium">5.0m (W) x 4.0m (Projection)</p>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Installation Surface</h3>
+<p class="font-body-md text-body-md text-on-surface">Concrete / Existing Deck</p>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Target Timeline</h3>
+<p class="font-body-md text-body-md text-on-surface">Asap (Within 4 weeks)</p>
+</div>
+</div>
+<div class="p-md border-t border-outline-variant bg-surface-bright">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">notes</span> Customer Notes
+                             </h3>
+<p class="font-body-md text-body-md text-on-surface italic text-on-surface-variant">
+                                 "Looking for a durable solution for our restaurant patio. Needs to withstand heavy rain and have integrated LED lighting. We are located near the Bosphorus, so wind resistance is important."
+                             </p>
+</div>
+</section>
+<!-- Location & Map Card -->
+<section class="bg-surface-container-lowest rounded-lg shadow-[0_4px_12px_rgba(44,62,80,0.08)] overflow-hidden border border-outline-variant">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary text-[18px]">Location Details</h2>
+</div>
+<div class="flex flex-col md:flex-row">
+<div class="p-md md:w-1/3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-outline-variant">
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs">Site Address</h3>
+<p class="font-body-md text-body-md text-on-surface font-medium mb-sm">Besiktas, Istanbul<br/>Turkey</p>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-xs mt-sm">Site Type</h3>
+<p class="font-body-md text-body-md text-on-surface">Commercial (Restaurant)</p>
+</div>
+<div class="md:w-2/3 h-64 relative bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist map rendering of Istanbul, Turkey, centered on the Besiktas district near the Bosphorus. The map style should be modern and technical, using light gray tones with a subtle blue tint for the water, matching a corporate administrative dashboard style. A single, sharp pin indicates the specific location." data-location="Istanbul, Turkey" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9ADre2Ksp8wxqInsjgnrqOn01Lj7q4LYX1Kcu0K2IX0aqw-Jfr43f_GbXqs6Gwc0rRhd0lXhdj3NvBGorftudSedWFqEezpZu6VttqHUu1scgdIx0mWckWRNgQzKPLT2aZKv8GuaC5uT_mAxzncOws03Z-eRg8H5vn4MAkinynCM706ZNMphs2Vx08uoyTM__NAp7S5RFjwFjHYLe4EvzrLuZAE7gpowp8wruVHGJ1o701wBNvosQ"/>
+<div class="absolute inset-0 ring-1 ring-inset ring-black/10 pointer-events-none"></div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Context & History (4 cols) -->
+<div class="xl:col-span-4 space-y-md">
+<!-- Customer Contact Card -->
+<section class="bg-surface-container-lowest rounded-lg shadow-[0_4px_12px_rgba(44,62,80,0.08)] overflow-hidden border border-outline-variant p-md">
+<div class="flex items-center gap-md mb-md pb-md border-b border-outline-variant">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md text-headline-md">
+                                 AK
+                             </div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary text-[18px]">Aras K.</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Restaurateur</p>
+</div>
+</div>
+<div class="space-y-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">mail</span>
+<a class="font-body-sm text-body-sm text-primary hover:underline" href="mailto:aras.k@example.com">aras.k@example.com</a>
+</div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">phone</span>
+<span class="font-body-sm text-body-sm text-on-surface">+90 555 012 3456</span>
+</div>
+</div>
+<button class="w-full mt-md border border-outline-variant text-on-surface hover:bg-surface-container font-label-md py-2 rounded-lg transition-colors flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">chat</span> Request More Info
+                         </button>
+</section>
+<!-- Interaction History -->
+<section class="bg-surface-container-lowest rounded-lg shadow-[0_4px_12px_rgba(44,62,80,0.08)] overflow-hidden border border-outline-variant">
+<div class="bg-surface-container-low px-md py-sm border-b border-outline-variant">
+<h2 class="font-headline-md text-headline-md text-primary text-[18px]">Activity Log</h2>
+</div>
+<div class="p-md">
+<div class="relative pl-6 border-l border-outline-variant space-y-md">
+<div class="relative">
+<div class="absolute -left-[31px] bg-secondary-container text-on-secondary-container w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px] font-bold">assignment</span>
+</div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Today, 09:15 AM</div>
+<p class="font-body-sm text-body-sm text-on-surface">Lead received from website form.</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[31px] bg-surface-container-high text-on-surface-variant w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-[12px]">mail</span>
+</div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Today, 09:16 AM</div>
+<p class="font-body-sm text-body-sm text-on-surface text-on-surface-variant">Automated confirmation email sent.</p>
+</div>
+</div>
+<div class="mt-md pt-md border-t border-outline-variant">
+<input class="w-full border-outline-variant rounded-lg font-body-sm text-body-sm focus:ring-primary focus:border-primary" placeholder="Add internal note..." type="text"/>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Mobile Action Bar (Sticky Bottom) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant p-sm flex gap-sm z-50">
+<button class="flex-1 border border-primary text-primary hover:bg-surface-container font-label-md py-2 px-md rounded-lg transition-colors flex justify-center items-center gap-xs">
+                    Survey
+                </button>
+<button class="flex-1 bg-secondary text-on-secondary hover:bg-secondary/90 shadow-sm font-label-md py-2 px-md rounded-lg transition-colors flex justify-center items-center gap-xs">
+                    Offer
+                </button>
+</div>
+<!-- Spacer for mobile action bar -->
+<div class="h-16 md:hidden"></div>
+</div>
+</main>
+</body></html>

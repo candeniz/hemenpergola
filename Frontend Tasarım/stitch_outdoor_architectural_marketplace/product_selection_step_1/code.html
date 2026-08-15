@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Architectural System Selection</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Montserrat:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#524616",
+                      "surface-container-low": "#f0f3ff",
+                      "surface-container": "#e7eefe",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "primary-container": "#064e3b",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "tertiary-container": "#454444",
+                      "surface-variant": "#dce2f3",
+                      "surface": "#f9f9ff",
+                      "secondary-fixed": "#f4e2a2",
+                      "inverse-surface": "#2a313d",
+                      "secondary": "#6b5e2b",
+                      "on-surface-variant": "#404944",
+                      "on-primary-fixed-variant": "#0b513d",
+                      "surface-dim": "#d3daea",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#d7c689",
+                      "background": "#f9f9ff",
+                      "on-tertiary-container": "#b3b1b1",
+                      "primary": "#003527",
+                      "on-primary-container": "#80bea6",
+                      "on-secondary-container": "#716430",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-container-highest": "#dce2f3",
+                      "inverse-primary": "#95d3ba",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#2e2e2e",
+                      "inverse-on-surface": "#ebf1ff",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#95d3ba",
+                      "on-surface": "#151c27",
+                      "surface-bright": "#f9f9ff",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#bfc9c3",
+                      "on-error": "#ffffff",
+                      "primary-fixed": "#b0f0d6",
+                      "secondary-container": "#f4e2a2",
+                      "on-error-container": "#93000a",
+                      "on-primary": "#ffffff",
+                      "outline": "#707974",
+                      "surface-tint": "#2b6954",
+                      "on-secondary-fixed": "#221b00",
+                      "on-background": "#151c27",
+                      "surface-container-high": "#e2e8f8",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-primary-fixed": "#002117"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit-sm": "8px",
+                      "margin-desktop": "64px",
+                      "unit-md": "16px",
+                      "margin-mobile": "20px",
+                      "unit-xl": "48px",
+                      "gutter": "24px",
+                      "unit-lg": "24px",
+                      "unit-xs": "4px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "label-caps": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "display-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-full w-64 hidden md:flex flex-col border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-inverse-surface z-40">
+<!-- Header -->
+<div class="p-unit-lg border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-unit-md mb-unit-lg">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden">
+<img alt="Architect Profile" class="w-full h-full object-cover" data-alt="A sophisticated black and white architectural portrait of a professional architect in a modern minimalist studio setting, high contrast, elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5NimFpckGcuRjuyahW9RCqVJJqQDlOIiFYnDz4IfJhVkAw4nZxEQJeAYboby-siMtAOkFPF-6LqSp5nZOky5R5lWjzZDj7uhlL3gDsRBbQSGrozAfHaPNDNUPfjXIV6DlC9g5ZOl842ZdtTtrN2LpcuMaSeisHw6RdcffQs40GSKTWHQmVIxCjqid7_m9170Kx0WT39ZB0pup98_iZ2yhovA2bR1yn0VmUGAH4j0ay_X0NJQS0jF-"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary truncate">Studio Alpha</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Premium Member</p>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary rounded-lg py-2 px-4 font-label-caps text-label-caps hover:bg-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> Start New Project
+            </button>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col p-unit-md gap-unit-sm flex-grow overflow-y-auto mt-unit-md">
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<!-- Active State: Projects -->
+<a class="flex items-center gap-unit-md px-4 py-3 bg-primary text-on-primary rounded-lg font-bold transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">architecture</span>
+<span class="font-body-md text-body-md">Projects</span>
+</a>
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-body-md text-body-md">Marketplace</span>
+</a>
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">factory</span>
+<span class="font-body-md text-body-md">Manufacturers</span>
+</a>
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+</div>
+<!-- Footer Links -->
+<div class="p-unit-md border-t border-outline-variant dark:border-outline flex flex-col gap-unit-sm">
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-unit-md px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-transform duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 bg-surface min-h-screen pb-margin-desktop">
+<!-- Header & Progress Section -->
+<header class="px-margin-mobile md:px-margin-desktop pt-margin-mobile md:pt-margin-desktop pb-unit-xl max-w-container-max mx-auto">
+<!-- Progress Bar -->
+<div class="mb-unit-xl">
+<div class="flex justify-between items-end mb-unit-sm">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">Step 1 of 10</span>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Select System Architecture</h1>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden sm:block">Configuration Flow</span>
+</div>
+<!-- The Minimalist Progress Track -->
+<div class="h-[2px] w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary transition-all duration-500 ease-out" style="width: 10%;"></div>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                Choose the foundational structure for your project. Each system is engineered for specific climatic and aesthetic requirements.
+            </p>
+</header>
+<!-- Product Grid Section -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+<!-- Card: Bioclimatic Pergola -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A modern minimalist bioclimatic pergola with rotating aluminum louvers, situated on a high-end luxury terrace overlooking a serene landscape. The lighting is bright and natural, emphasizing the clean architectural lines and the pristine white finish of the structure against a clear sky." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6fdwuq6Asn1_pTv5pArpslC0BkdtRTV6zuzgHrC8WHY-8xq-Kpi9UhRLzNpRFfWhctPsJOKi9PM-Q05Rhuo2Dpe0lZfBN10mPSPOAFXklfV5qm5ekuDm74CiYjgB0cUsU8170rJyl9Z2nEoA0r204B7aoJaD0zz3i6gCLIcfvwVDp3TAiCcGUQQw80pdAQc305pwM2PBskCt7PKh0frRlF0HyOXvv623ByDJjIPesyOpd2FICc97W"/>
+<!-- Subtle overlay on hover -->
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Bioclimatic Pergola</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Automated louver system for precise sun and ventilation control.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Pergola -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A sleek, minimalist fixed-roof pergola attached to a contemporary concrete home. The structure features clean geometric profiles in a dark charcoal finish. Soft dappled sunlight filters through nearby trees, creating a calm, high-end architectural mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSdfn4GU_FNWkMgwzz1kiPbLeb_yIWB3u5OZAMCWQeb34gpDfD88RQ_QLVd5eyvUVkKDwDAOkfNOBDJ9EWMlZMtOjjsJfGPmQmN2C6fPcxEo2YYelTmNT1WB1d1DSuUamu7_Lm5tIxcZgewVHGz6LI1_lGUrH-J3CwiQ7GLVNzoaqwjQYoS2Ym2WYyLEMlaD-5rNnH1SoFi0_bvejsOy9qjw77NGg7j91AVhRJAYNQtkAFoJXTgzX_"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Classic Pergola</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Fixed structural framework for integrated shading solutions.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Winter Garden -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A premium glass-enclosed winter garden extension on a modern minimalist house. The structure features ultra-slim aluminum profiles in black, expansive floor-to-ceiling glass panes, and is filled with elegant indoor plants. The lighting is diffused, bright daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaRx4R6ROagFh1xaoQz2ZPe9An-Gj43_Cp1UN_htkvvYTSi71-FmnQUHEutW0eMiKiNBZTi7hGA48j_z3abeNmBrZBVkyyOQQwfAAb9r6y43nAy2lkcGXTv3OEF6CvSaa4QQlS5kWwV4VnP1E-YvhxMAWHcOHUbRd17LFW2ZvgxfALdxhOgG1oIPa8_gRmbQ-dAPawvKEeStGqodaaogzNMeYynZm-eRW4I4IvuAym0_Y4BvxNBRQt"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Winter Garden</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Fully enclosed, thermally broken glass structures for year-round use.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Sliding Glass -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A minimalist architectural detail shot of frameless sliding glass doors separating a luxury living room from an outdoor patio. The focus is on the seamless track and pristine transparency of the glass, emphasizing high-end engineering and a clean, light-filled aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqCByi_rblbtvAjC5KKwmcM13qBmdA4g6Jx2svQgxJmzzJMOqL85Y-EsvjOM6zLhY3Mx-2cE98uwqCqjvkYqCfrlL6WVNto_uUDDS3xRVfL4bm70J9W4UCVz5-38vkPK1cAgzjul28ir52Bn2RORnnA6aZH1Oo1eN41emCfv2Js5PQyIFQ_5SxbJDttdd_b4jvyC_iiPcrCoOh3P7Jt4pvYyQF4z77te1Ab7gk0ZeiKbg1vRXRvwfa"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Sliding Glass</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Minimalist sliding panel systems for seamless indoor-outdoor transition.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Guillotine Glass -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A sophisticated vertically retracting motorized guillotine glass system installed in a modern commercial restaurant facade. The glass panels are partially open, showcasing the clean horizontal lines and robust yet elegant dark metal framing. Soft ambient light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyFhBuuJl8Qt4OvQJhBV_EcdooeLKga-VqZh7ak_9iFUlyXvZ9b-DiycakQfhwNIGF4NyviTa8aHB77QXQ7ZtA5iXmaQ1wPytR8hS2D39eIoeY1dxjs5-sJCRZ_UmDzDexF6l_wkSAu-qPJ1JUGDTc-SU8RTH0JxJlF5sJVLAS4bG1YrHGFCwwS7r3SWJhV3-xAxFewPxEn1AOJxzPwPKbUAf-KkvysHZxozwo9J-KmMHspCWQ6sNh"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Guillotine Glass</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Motorized vertically retracting glass panels acting as balustrade and window.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Awning -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A modern, high-end retractable cassette awning extending over a minimalist wooden deck. The awning fabric is a sophisticated neutral tone, stretched tautly. The housing is sleek and integrated smoothly into the white building facade. High key, sunny lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiSenrS2Sa9RFtB3IYBsBEVugyfnPFuc2fLhWksMaX6EX9USt8dYvg3wEOjSwOL7yyyhZuovV-PoyvQI98XSJ2rsoepioUbSZLfGXdD9H5nL6PB42wg-1yzTPkApNqZiJKOUIddANyPYIk034e-3T1cbQ_YiTiJPRXG5r3VZ_d1eQNt_mRjJ4sP91QLcRKvyuGv2Qk9irLw1mnIJ8EYaPnc7aT7ZVjQxI2GYOVQ0uGWZQnCuPqocoG"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Retractable Awning</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Premium cantilevered fabric shading systems with concealed cassettes.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Card: Zip Screen -->
+<article class="group relative flex flex-col bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden cursor-pointer hover:border-primary-container hover:shadow-sm transition-all duration-300">
+<div class="h-64 overflow-hidden bg-surface-dim relative">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A close-up architectural view of a motorized zip screen blind descending over a large floor-to-ceiling window. The fabric is a high-tech micro-perforated mesh in light grey, held taut by slim, barely visible side channels built into the modern concrete facade." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDB54odX3gGI_qhKUBVuPN8Kjn3_5CJsOeCcpYH-UjDIgzftV5qMhtyuQhsgxEWoyGK7fByBMm5EhEbSb9AzwccMNLNItFh6vA6BpdGrSx13b-EE2E-2KnG2ZNH1Ur9dSz3V-QkTZ8tLvr3xAP5gDHWoHCNdANXkRp7J9h0wV3ukfAfapg6hYE7KkXccLiKcS2mpeboyoY-2WzoDXpq2A3Ubk3LvoOGsZGdL0JZBpWzF7CTYfuz9a92"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="p-unit-lg flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Zip Screen</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Vertical wind-resistant exterior roller blinds for solar control and privacy.</p>
+</div>
+<div class="mt-unit-md flex items-center text-primary font-label-caps text-label-caps opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                            Select System <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+</div>
+</div>
+</article>
+</div>
+<!-- Bottom Actions -->
+<div class="mt-unit-xl pt-unit-lg border-t border-outline-variant flex justify-between items-center">
+<button class="px-6 py-3 border border-outline text-on-surface-variant rounded font-label-caps text-label-caps hover:text-primary hover:border-primary transition-colors">
+                    Cancel Project
+                </button>
+<div class="flex gap-4">
+<!-- Next step button disabled by default until selection -->
+<button class="px-8 py-3 bg-primary-container text-on-primary rounded font-label-caps text-label-caps opacity-50 cursor-not-allowed">
+                        Continue to Specifications
+                    </button>
+</div>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Notification Settings - Architectural Marketplace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e7e8e9",
+                        "primary-fixed-dim": "#b5c8df",
+                        "outline-variant": "#c4c6cd",
+                        "secondary-fixed": "#7efba4",
+                        "primary-fixed": "#d1e4fb",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#36485b",
+                        "secondary": "#006d37",
+                        "outline": "#74777d",
+                        "on-tertiary-container": "#f78b30",
+                        "surface-container": "#edeeef",
+                        "on-error": "#ffffff",
+                        "tertiary": "#411d00",
+                        "surface-dim": "#d9dadb",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#301400",
+                        "inverse-primary": "#b5c8df",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-fixed": "#091d2e",
+                        "on-secondary-fixed": "#00210c",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "tertiary-fixed": "#ffdcc5",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#162839",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-background": "#191c1d",
+                        "surface-tint": "#4e6073",
+                        "on-surface": "#191c1d",
+                        "background": "#f8f9fa",
+                        "on-secondary-container": "#007239",
+                        "on-surface-variant": "#43474c",
+                        "tertiary-container": "#612f00",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#2c3e50",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface": "#f8f9fa",
+                        "secondary-container": "#7bf8a1",
+                        "secondary-fixed-dim": "#61de8a",
+                        "on-primary-container": "#96a9be",
+                        "surface-bright": "#f8f9fa",
+                        "inverse-surface": "#2e3132"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "md": "24px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar (Predicted Component) -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-primary dark:bg-primary border-r border-outline-variant flex flex-col h-full py-base z-50 hidden md:flex">
+<div class="px-gutter mb-lg mt-base">
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary">Architectural Marketplace Logo</h1>
+<p class="font-label-md text-label-md text-on-primary-container mt-xs">Marketplace Authority</p>
+</div>
+<ul class="flex-1 overflow-y-auto w-full">
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">factory</span>
+<span class="font-body-md text-body-md">Manufacturers</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Customers</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">request_quote</span>
+<span class="font-body-md text-body-md">Offer Requests</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md text-body-md">Product Catalog</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Market Pricing</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-body-md text-body-md">Reviews &amp; Disputes</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-primary-fixed-variant hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">loyalty</span>
+<span class="font-body-md text-body-md">Subscriptions</span>
+</a>
+</li>
+<li class="mb-xs px-base">
+<!-- Active State Example (Assuming CMS/SEO is closest contextually to global settings, though arguably it's a generic settings screen. We will highlight CMS/SEO as a placeholder for 'Management') -->
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT bg-primary-container text-on-primary-container border-r-4 border-secondary-fixed hover:bg-primary-container/50 transition-colors cursor-pointer active:opacity-80" href="#">
+<span class="material-symbols-outlined">language</span>
+<span class="font-body-md text-body-md">CMS/SEO</span>
+</a>
+</li>
+</ul>
+<div class="px-gutter mt-auto pt-md border-t border-outline-variant/30">
+<button class="w-full flex justify-center items-center gap-xs px-sm py-sm bg-secondary text-on-secondary rounded-DEFAULT font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">download</span> Export Report
+            </button>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 w-full">
+<!-- TopNavBar (Predicted Component) -->
+<header class="docked full-width top-0 border-b border-outline-variant bg-surface flex justify-between items-center h-16 px-gutter sticky top-0 z-40 w-full md:w-[calc(100%-16rem)] md:ml-64">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md text-primary hidden md:block">Architectural Marketplace</span>
+<span class="material-symbols-outlined text-primary md:hidden cursor-pointer">menu</span>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-xl pr-sm py-xs bg-surface-container rounded-full border-none focus:ring-1 focus:ring-secondary text-body-sm font-body-sm text-on-surface w-64 placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors scale-95 duration-75 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors scale-95 duration-75">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors scale-95 duration-75">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm">
+<img alt="Super Admin Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of an administrative user, simple neutral background, clear lighting, suitable for a corporate dashboard avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCsKexgmd7_q8IZvleTTrpmJENU86ja7HJ5yX4ilwxeyHBZqOZ3m0XKEQDX2uIPbnSVxxrAUTeN6AQLM17k3MmxR8eJXTmkonOjqE3rhMd5aUdhmoA3H_T0zYtqT5kaEf73Y4mtfpOgg0954iAu06K1oSrWm-zwVAKrkEBBmAHwqKXz_YLE20k3N5Xa7FVLjrMvQxAgwvXt0AB6zpBYvLkuT29TSm_XacZiNOjwf2fws4msN0CD9pR"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 p-margin-mobile md:p-gutter lg:p-margin-desktop bg-background overflow-x-hidden">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-md gap-sm">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Global Notification Settings</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Manage multi-channel notification templates and active states.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-base border border-outline text-on-surface font-label-md text-label-md rounded-DEFAULT hover:bg-surface-container-low transition-colors">Discard Changes</button>
+<button class="px-md py-base bg-secondary text-on-secondary font-label-md text-label-md rounded-DEFAULT hover:opacity-90 transition-opacity">Save Configuration</button>
+</div>
+</div>
+<!-- Content Grid: Master / Detail -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Left Column: Template List (Master) -->
+<div class="xl:col-span-4 flex flex-col gap-sm">
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant overflow-hidden flex flex-col max-h-[800px]">
+<div class="p-sm bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface">TEMPLATES</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer">filter_list</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Template Item 1 (Active) -->
+<div class="p-sm border-b border-outline-variant bg-surface-container border-l-4 border-l-secondary-fixed cursor-pointer">
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">New Request</h3>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill" title="Email Active">mail</span>
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill" title="Push Active">notifications</span>
+<span class="material-symbols-outlined text-[16px] text-outline" title="SMS Inactive">sms</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs truncate">Triggered when a customer submits a new architectural offer request.</p>
+</div>
+<!-- Template Item 2 -->
+<div class="p-sm border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer border-l-4 border-l-transparent">
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Request Accepted</h3>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">mail</span>
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">notifications</span>
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">sms</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs truncate">Notifies customer when manufacturer accepts.</p>
+</div>
+<!-- Template Item 3 -->
+<div class="p-sm border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer border-l-4 border-l-transparent">
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Survey Scheduled</h3>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">mail</span>
+<span class="material-symbols-outlined text-[16px] text-outline">notifications</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs truncate">Confirmation of site survey date.</p>
+</div>
+<!-- Template Item 4 -->
+<div class="p-sm border-b border-outline-variant hover:bg-surface-container-low transition-colors cursor-pointer border-l-4 border-l-transparent">
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">New Message</h3>
+<div class="flex gap-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">mail</span>
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">notifications</span>
+<span class="material-symbols-outlined text-[16px] text-secondary icon-fill">chat</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs truncate">Unread message in project channel.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Editor (Detail) -->
+<div class="xl:col-span-8 flex flex-col gap-md">
+<!-- Channel Tabs -->
+<div class="flex gap-sm border-b border-outline-variant pb-xs">
+<button class="px-md py-xs font-label-md text-label-md text-secondary border-b-2 border-secondary font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">mail</span> Email
+                        </button>
+<button class="px-md py-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">notifications</span> Push
+                        </button>
+<button class="px-md py-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">sms</span> SMS
+                        </button>
+<button class="px-md py-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">smartphone</span> In-App
+                        </button>
+</div>
+<!-- Editor Workspace -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-md lg:p-gutter relative shadow-[0_4px_12px_rgba(44,62,80,0.08)]">
+<!-- Header & Toggle -->
+<div class="flex justify-between items-center mb-md pb-sm border-b border-outline-variant/50">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">New Request (Email)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure the email payload for this event.</p>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-md text-label-md text-on-surface-variant">Channel Status</span>
+<!-- Toggle Switch -->
+<div class="w-12 h-6 bg-secondary-fixed rounded-full relative cursor-pointer flex items-center px-1">
+<div class="w-4 h-4 bg-on-secondary-fixed rounded-full absolute right-1 transition-all"></div>
+</div>
+</div>
+</div>
+<!-- Form Area -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Editing Fields -->
+<div class="flex flex-col gap-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Email Subject Line</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-sm py-sm font-body-md text-body-md text-on-surface focus:ring-1 focus:ring-secondary focus:outline-none" type="text" value="New Project Request: {{project_name}}"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs flex justify-between">
+<span>Body Content (HTML/Text)</span>
+<span class="text-secondary cursor-pointer hover:underline">Insert Variable</span>
+</label>
+<div class="border border-outline-variant rounded-DEFAULT overflow-hidden bg-surface-container-lowest flex flex-col">
+<!-- WYSIWYG Toolbar pseudo -->
+<div class="bg-surface-container-low border-b border-outline-variant p-xs flex gap-xs">
+<button class="p-xs text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-xs text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<div class="w-px bg-outline-variant mx-xs"></div>
+<button class="p-xs text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[18px]">link</span></button>
+</div>
+<textarea class="w-full h-48 p-sm border-none focus:ring-0 resize-none font-body-sm text-body-sm text-on-surface font-mono" placeholder="Enter template HTML...">&lt;p&gt;Hello {{customer_name}},&lt;/p&gt;
+&lt;p&gt;We have received your new request for &lt;strong&gt;{{project_name}}&lt;/strong&gt;. Our architectural review team is currently assessing the details.&lt;/p&gt;
+&lt;p&gt;Reference ID: {{project_id}}&lt;/p&gt;</textarea>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Use <code class="bg-surface-container px-1 py-0.5 rounded text-secondary-fixed-dim">{{variable_name}}</code> syntax for dynamic data insertion.</p>
+</div>
+<!-- Variables Helper -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Available Placeholders</label>
+<div class="flex flex-wrap gap-xs">
+<span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed rounded-sm font-label-md text-[10px] cursor-pointer hover:opacity-80">{{customer_name}}</span>
+<span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed rounded-sm font-label-md text-[10px] cursor-pointer hover:opacity-80">{{project_name}}</span>
+<span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed rounded-sm font-label-md text-[10px] cursor-pointer hover:opacity-80">{{project_id}}</span>
+<span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed rounded-sm font-label-md text-[10px] cursor-pointer hover:opacity-80">{{date_submitted}}</span>
+</div>
+</div>
+</div>
+<!-- Preview Pane -->
+<div class="bg-surface-container-low rounded-lg p-sm border border-outline-variant flex flex-col">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-label-md text-label-md text-on-surface-variant">Live Preview</span>
+<div class="flex gap-xs">
+<button class="p-xs bg-surface-container text-on-surface rounded hover:bg-outline-variant transition-colors"><span class="material-symbols-outlined text-[16px]">desktop_windows</span></button>
+<button class="p-xs text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[16px]">smartphone</span></button>
+</div>
+</div>
+<!-- Mock Email Client View -->
+<div class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden shadow-sm flex flex-col">
+<div class="p-sm border-b border-outline-variant bg-surface">
+<div class="text-[12px] text-on-surface-variant mb-1"><span class="font-semibold text-on-surface">From:</span> notifications@archmarket.com</div>
+<div class="text-[12px] text-on-surface-variant mb-1"><span class="font-semibold text-on-surface">To:</span> {{customer_email}}</div>
+<div class="text-[14px] font-semibold text-on-surface mt-xs">New Project Request: Villa Nova Modernization</div>
+</div>
+<div class="p-md font-body-sm text-body-sm text-on-surface bg-surface-container-lowest flex-1">
+<p class="mb-sm">Hello Jane Doe,</p>
+<p class="mb-sm">We have received your new request for <strong>Villa Nova Modernization</strong>. Our architectural review team is currently assessing the details.</p>
+<p class="mb-sm">Reference ID: PRJ-88291-X</p>
+<div class="mt-md pt-sm border-t border-outline-variant/30 text-[10px] text-on-surface-variant text-center">
+                                            Architectural Marketplace Inc. © 2024
+                                        </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

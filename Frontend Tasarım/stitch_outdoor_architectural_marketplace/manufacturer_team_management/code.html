@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Team Management - Structura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#f78b30",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-container": "#edeeef",
+                      "inverse-surface": "#2e3132",
+                      "on-primary-container": "#96a9be",
+                      "background": "#f8f9fa",
+                      "surface-tint": "#4e6073",
+                      "on-background": "#191c1d",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-error-container": "#93000a",
+                      "on-surface-variant": "#43474c",
+                      "tertiary-fixed": "#ffdcc5",
+                      "inverse-primary": "#b5c8df",
+                      "secondary": "#006d37",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#c4c6cd",
+                      "on-primary-fixed": "#091d2e",
+                      "surface": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "outline": "#74777d",
+                      "tertiary-container": "#612f00",
+                      "secondary-fixed": "#7efba4",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-surface": "#191c1d",
+                      "on-tertiary-fixed": "#301400",
+                      "tertiary": "#411d00",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-error": "#ffffff",
+                      "surface-dim": "#d9dadb",
+                      "secondary-container": "#7bf8a1",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed-variant": "#36485b",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#007239",
+                      "primary-container": "#2c3e50",
+                      "primary-fixed": "#d1e4fb",
+                      "surface-bright": "#f8f9fa",
+                      "primary": "#162839",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-secondary-fixed": "#00210c",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "secondary-fixed-dim": "#61de8a",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#e1e3e4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "md": "24px",
+                      "lg": "48px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "xs": "4px",
+                      "sm": "12px",
+                      "xl": "80px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        [data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .table-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+        /* Custom scrollbar for tables */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: theme('colors.surface-container'); 
+            border-radius: theme('borderRadius.DEFAULT');
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant'); 
+            border-radius: theme('borderRadius.DEFAULT');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden flex h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface dark:bg-surface-dim text-primary dark:text-primary-fixed h-screen w-64 fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full py-md px-sm hidden md:flex z-40">
+<!-- Header -->
+<div class="px-sm pb-md border-b border-outline-variant mb-md flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Manufacturer Logo" class="w-full h-full object-cover" data-alt="A minimalist, premium structural engineering firm logo featuring clean geometric lines in deep navy blue (#162839) on a pristine white background. High-quality vector style, crisp edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi2-9gSlgQQXZ61v9KTsErZBFjDIjUWYnCPv_8iunlcfxflGPsgba5RZFKG1lLOEMB0BrTGOisVErw2a-d62nswZwFOU2En-oAVWju0Pee62tYrOgen_H3dvTkTo4Iit3_UC9RDzfR2Z0lD9dlcw6R743JqyOCQFKtSTdfFc3wepLChENBKNqp3W-z6Aq0ruccXTOQsmEnEosG3kMw18kv9LfpES-Al03VORnhzR5JYivs1rVzZdxZ"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary font-bold tracking-tight">Structura</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">System Admin</p>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Technical Portal</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-xs flex-1 overflow-y-auto">
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="pending_actions">pending_actions</span>
+                    Requests
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="architecture">architecture</span>
+                    Products
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="payments">payments</span>
+                    Pricing
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="map">map</span>
+                    Service Areas
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
+                    Calendar
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="folder_special">folder_special</span>
+                    Portfolio
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="reviews">reviews</span>
+                    Reviews
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+                    Analytics
+                </a>
+</li>
+<!-- Active State -->
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-DEFAULT bg-primary-container text-on-primary-container font-bold border-r-4 border-on-secondary-container active:scale-95 duration-150 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="group">group</span>
+                    Team
+                </a>
+</li>
+</ul>
+<!-- CTA -->
+<div class="mt-auto pt-md">
+<button class="w-full bg-secondary text-on-secondary font-label-md text-label-md py-sm px-md rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                 New Request
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-64 w-full md:w-[calc(100%-16rem)]">
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-inverse-surface w-full h-16 border-b border-outline-variant flex justify-between items-center px-md sticky top-0 z-30">
+<!-- Mobile Menu Toggle & Brand (Visible on mobile) -->
+<div class="flex items-center gap-sm md:hidden">
+<button class="text-on-surface-variant p-xs">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="font-headline-md text-headline-md text-primary dark:text-primary-fixed font-bold tracking-tight">Structura</span>
+</div>
+<!-- Search (Left aligned as per JSON) -->
+<div class="hidden md:flex items-center flex-1 max-w-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-lg" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-body-sm text-body-sm text-on-surface focus:ring-1 focus:ring-primary outline-none transition-shadow" placeholder="Search..." type="text"/>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-sm ml-auto">
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high ml-sm cursor-pointer border border-outline-variant overflow-hidden">
+<img alt="User profile management" class="w-full h-full object-cover" data-alt="A professional headshot of a structural engineer in a minimalist office setting. Natural lighting, crisp white shirt, confident expression. High-key lighting, premium corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVk7ovwS0mgBDEtRhOIMMQng6_01lbLXnAjnTtKMl04MbZzD-rlj1omhaHThuHxxoiEEHBw7UL4ODzsUSl40vVYpt-0ftPv4R8EQ-HhuJ1lBrWF4QZwQDlmGefVhknD-lfLyMxFnR1uhpwlHhwz1aD50ZMxe14nR-u4sbQIpMu5m7sM2z5qGxrG_2XqnG6klojsEYxy7RkAosjKNP10OXuAh1X9DjFfx4zHxLAYP3gEqhciddtkB3q"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop bg-background">
+<div class="max-w-7xl mx-auto space-y-lg">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">Team Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">Manage your organizational structure, invite new members, and configure role-based access permissions.</p>
+</div>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md py-sm px-md rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-sm shrink-0 shadow-sm" onclick="document.getElementById('inviteModal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-sm" data-icon="person_add">person_add</span>
+                        Invite New Member
+                    </button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+<!-- Team Members Table (Spans 2 columns) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl table-shadow border border-outline-variant overflow-hidden flex flex-col">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-headline-md text-headline-md text-primary text-[20px]">Current Members</h3>
+<div class="flex items-center gap-xs">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-DEFAULT transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-DEFAULT transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-low/50">
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Member</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Role</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Permissions</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold">Status</th>
+<th class="py-sm px-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant/50">
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="py-sm px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden shrink-0">
+<img alt="Sarah Jenkins" class="w-full h-full object-cover" data-alt="A professional headshot of a female structural engineer. Natural lighting, crisp white shirt, confident expression. High-key lighting, premium corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_fbis-lLxCkFJhXJDNIVopjUp07P4B_LUy1geDZ8kvEPkM-8WaM-ZQwgP4uuAOZYs0bdwtnWErNeeNqCc1U5NCN_Sy_sckdZ8heY4D9-LXJOXI5kdgdbpCO7ffhhhnpDYXpu94KEcCjqML_eHLtN7iVrY1CeI0CGYIjkx5zenDVnVHjKVn_TgtnQup-chg_2TQCu3gvF6lSEHDqz4Q_u0UC1WPu_aeCVbrzN-UeOiD4TfGIpIzefb"/>
+</div>
+<div>
+<div class="font-semibold text-primary">Sarah Jenkins</div>
+<div class="text-on-surface-variant text-xs">sarah.j@structura.com</div>
+</div>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center px-2 py-1 rounded-sm text-[10px] font-semibold bg-primary-container text-on-primary-container uppercase tracking-wider">Admin</span>
+</td>
+<td class="py-sm px-md">
+<div class="flex flex-wrap gap-1">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="pending_actions" title="Requests">pending_actions</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="group" title="Customers">group</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="payments" title="Pricing">payments</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="folder_special" title="Portfolio">folder_special</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="calendar_today" title="Calendar">calendar_today</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="analytics" title="Analytics">analytics</span>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 text-secondary font-medium">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Active
+                                            </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="py-sm px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-xs shrink-0">
+                                                    MK
+                                                </div>
+<div>
+<div class="font-semibold text-primary">Marcus K.</div>
+<div class="text-on-surface-variant text-xs">marcus.k@structura.com</div>
+</div>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center px-2 py-1 rounded-sm text-[10px] font-semibold bg-surface-tint/10 text-surface-tint border border-surface-tint/20 uppercase tracking-wider">Sales</span>
+</td>
+<td class="py-sm px-md">
+<div class="flex flex-wrap gap-1">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="pending_actions" title="Requests">pending_actions</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="group" title="Customers">group</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="payments" title="Pricing">payments</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="folder_special" title="Portfolio">folder_special</span>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 text-secondary font-medium">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Active
+                                            </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="py-sm px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-xs shrink-0">
+                                                    EL
+                                                </div>
+<div>
+<div class="font-semibold text-primary">Elena Rostova</div>
+<div class="text-on-surface-variant text-xs">elena.r@structura.com</div>
+</div>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center px-2 py-1 rounded-sm text-[10px] font-semibold bg-surface-container-high text-on-surface-variant border border-outline-variant uppercase tracking-wider">Field Staff</span>
+</td>
+<td class="py-sm px-md">
+<div class="flex flex-wrap gap-1">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="pending_actions" title="Requests">pending_actions</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="calendar_today" title="Calendar">calendar_today</span>
+</div>
+</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-1 text-on-tertiary-container font-medium">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span> Pending
+                                            </span>
+</td>
+<td class="py-sm px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-sm border-t border-outline-variant bg-surface-container-lowest flex justify-between items-center text-xs text-on-surface-variant">
+<span>Showing 1 to 3 of 12 members</span>
+<div class="flex gap-1">
+<button class="px-2 py-1 border border-outline-variant rounded-sm hover:bg-surface-container-low disabled:opacity-50" disabled="">Prev</button>
+<button class="px-2 py-1 border border-outline-variant rounded-sm hover:bg-surface-container-low">Next</button>
+</div>
+</div>
+</div>
+<!-- Role Permissions Matrix (Side Column) -->
+<div class="bg-surface-container-lowest rounded-xl table-shadow border border-outline-variant p-md flex flex-col h-full">
+<h3 class="font-headline-md text-headline-md text-primary text-[20px] mb-sm border-b border-outline-variant pb-xs">Role Matrix</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Quick reference for standard role capabilities within the portal.</p>
+<div class="space-y-sm flex-1">
+<!-- Admin Matrix -->
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md text-label-md font-bold text-primary">Admin</span>
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="verified_user">verified_user</span>
+</div>
+<p class="text-xs text-on-surface-variant mb-2">Full system access. Can manage team, global settings, and view all data.</p>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">All Modules</span>
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Team Config</span>
+</div>
+</div>
+<!-- Sales Matrix -->
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-surface-tint/60"></div>
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md text-label-md font-bold text-primary">Sales</span>
+<span class="material-symbols-outlined text-surface-tint text-sm" data-icon="point_of_sale">point_of_sale</span>
+</div>
+<p class="text-xs text-on-surface-variant mb-2">Focused on client interactions, pricing, and pipeline management.</p>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Requests</span>
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Pricing</span>
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Portfolio</span>
+</div>
+</div>
+<!-- Field Staff Matrix -->
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-outline-variant"></div>
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-md text-label-md font-bold text-primary">Field Staff</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="construction">construction</span>
+</div>
+<p class="text-xs text-on-surface-variant mb-2">Task-oriented access for viewing assigned requests and calendar events.</p>
+<div class="flex flex-wrap gap-1">
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Assigned Requests</span>
+<span class="px-2 py-0.5 rounded-sm bg-surface-container-low text-[10px] text-on-surface border border-outline-variant/30">Calendar</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Invite Member Modal -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/20 backdrop-blur-sm hidden" id="inviteModal">
+<div class="bg-surface-container-lowest rounded-xl table-shadow border border-outline-variant w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+<!-- Modal Header -->
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Invite New Member</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Send an invitation link to join the Structura portal.</p>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors" onclick="document.getElementById('inviteModal').classList.add('hidden')">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body (Scrollable) -->
+<div class="p-md overflow-y-auto flex-1 space-y-md">
+<!-- Email Input -->
+<div>
+<label class="block font-label-md text-label-md text-primary mb-xs">Email Address *</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-2 px-3 font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-shadow" placeholder="colleague@company.com" type="email"/>
+</div>
+<!-- Role Selection -->
+<div>
+<label class="block font-label-md text-label-md text-primary mb-sm">Assign Role</label>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-sm">
+<!-- Role Card: Admin -->
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="role" type="radio" value="admin"/>
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest peer-checked:border-secondary peer-checked:bg-secondary/5 peer-checked:ring-1 peer-checked:ring-secondary transition-all h-full flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-xs text-2xl" data-icon="shield_person">shield_person</span>
+<span class="font-label-md text-label-md font-bold text-primary block">Admin</span>
+<span class="text-[10px] text-on-surface-variant mt-1">Full access control</span>
+<div class="absolute top-2 right-2 w-4 h-4 rounded-full border border-outline-variant peer-checked:border-secondary peer-checked:bg-secondary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-on-secondary text-[12px] opacity-0 peer-checked:opacity-100" data-icon="check">check</span>
+</div>
+</div>
+</label>
+<!-- Role Card: Sales -->
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="role" type="radio" value="sales"/>
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest peer-checked:border-secondary peer-checked:bg-secondary/5 peer-checked:ring-1 peer-checked:ring-secondary transition-all h-full flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-xs text-2xl" data-icon="trending_up">trending_up</span>
+<span class="font-label-md text-label-md font-bold text-primary block">Sales</span>
+<span class="text-[10px] text-on-surface-variant mt-1">Client &amp; pipeline focus</span>
+<div class="absolute top-2 right-2 w-4 h-4 rounded-full border border-outline-variant peer-checked:border-secondary peer-checked:bg-secondary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-on-secondary text-[12px] opacity-0 peer-checked:opacity-100" data-icon="check">check</span>
+</div>
+</div>
+</label>
+<!-- Role Card: Field Staff -->
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="role" type="radio" value="field"/>
+<div class="border border-outline-variant rounded-lg p-sm bg-surface-container-lowest peer-checked:border-secondary peer-checked:bg-secondary/5 peer-checked:ring-1 peer-checked:ring-secondary transition-all h-full flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-xs text-2xl" data-icon="engineering">engineering</span>
+<span class="font-label-md text-label-md font-bold text-primary block">Field Staff</span>
+<span class="text-[10px] text-on-surface-variant mt-1">Task &amp; schedule view</span>
+<div class="absolute top-2 right-2 w-4 h-4 rounded-full border border-outline-variant peer-checked:border-secondary peer-checked:bg-secondary flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-on-secondary text-[12px] opacity-0 peer-checked:opacity-100" data-icon="check">check</span>
+</div>
+</div>
+</label>
+</div>
+</div>
+<!-- Granular Permissions (Toggle Group) -->
+<div>
+<label class="block font-label-md text-label-md text-primary mb-sm">Custom Permissions <span class="font-normal text-xs text-on-surface-variant ml-2">(Overrides standard role defaults)</span></label>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg divide-y divide-outline-variant/50">
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="pending_actions">pending_actions</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Manage Requests</div>
+<div class="text-[11px] text-on-surface-variant">View, edit, and assign service requests.</div>
+</div>
+</div>
+<input checked="" class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="group">group</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Manage Customers</div>
+<div class="text-[11px] text-on-surface-variant">Access client database and contact details.</div>
+</div>
+</div>
+<input checked="" class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="payments">payments</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Manage Pricing</div>
+<div class="text-[11px] text-on-surface-variant">Modify rates, generate quotes, and view margins.</div>
+</div>
+</div>
+<input checked="" class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="folder_special">folder_special</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Manage Portfolio</div>
+<div class="text-[11px] text-on-surface-variant">Upload project photos and update public gallery.</div>
+</div>
+</div>
+<input class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Manage Calendar</div>
+<div class="text-[11px] text-on-surface-variant">Schedule installations and site visits.</div>
+</div>
+</div>
+<input checked="" class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-sm cursor-pointer hover:bg-surface-container-low/30 transition-colors">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="analytics">analytics</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">View Analytics</div>
+<div class="text-[11px] text-on-surface-variant">Access performance dashboards and reports.</div>
+</div>
+</div>
+<input class="w-4 h-4 text-secondary border-outline-variant rounded focus:ring-secondary checked:bg-secondary" type="checkbox"/>
+</label>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="p-md border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-sm">
+<button class="px-md py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors" onclick="document.getElementById('inviteModal').classList.add('hidden')">Cancel</button>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md py-2 px-md rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                    Send Invitation
+                </button>
+</div>
+</div>
+</div>
+<!-- Script for custom checkbox logic (visual update based on role) -->
+<script>
+        // Simple script to handle modal clicking outside to close
+        document.getElementById('inviteModal').addEventListener('click', function(e) {
+            if(e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    </script>
+</body></html>

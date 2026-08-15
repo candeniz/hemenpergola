@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Project Creation - Final Summary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#524616",
+                    "surface-container-low": "#f0f3ff",
+                    "surface-container": "#e7eefe",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "primary-container": "#064e3b",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "tertiary-container": "#454444",
+                    "surface-variant": "#dce2f3",
+                    "surface": "#f9f9ff",
+                    "secondary-fixed": "#f4e2a2",
+                    "inverse-surface": "#2a313d",
+                    "secondary": "#6b5e2b",
+                    "on-surface-variant": "#404944",
+                    "on-primary-fixed-variant": "#0b513d",
+                    "surface-dim": "#d3daea",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#d7c689",
+                    "background": "#f9f9ff",
+                    "on-tertiary-container": "#b3b1b1",
+                    "primary": "#003527",
+                    "on-primary-container": "#80bea6",
+                    "on-secondary-container": "#716430",
+                    "tertiary-fixed": "#e5e2e1",
+                    "surface-container-highest": "#dce2f3",
+                    "inverse-primary": "#95d3ba",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#2e2e2e",
+                    "inverse-on-surface": "#ebf1ff",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#95d3ba",
+                    "on-surface": "#151c27",
+                    "surface-bright": "#f9f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#bfc9c3",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#b0f0d6",
+                    "secondary-container": "#f4e2a2",
+                    "on-error-container": "#93000a",
+                    "on-primary": "#ffffff",
+                    "outline": "#707974",
+                    "surface-tint": "#2b6954",
+                    "on-secondary-fixed": "#221b00",
+                    "on-background": "#151c27",
+                    "surface-container-high": "#e2e8f8",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "on-primary-fixed": "#002117"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit-sm": "8px",
+                    "margin-desktop": "64px",
+                    "unit-md": "16px",
+                    "margin-mobile": "20px",
+                    "unit-xl": "48px",
+                    "gutter": "24px",
+                    "unit-lg": "24px",
+                    "unit-xs": "4px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "display-lg": [
+                            "Montserrat"
+                    ],
+                    "label-caps": [
+                            "Montserrat"
+                    ],
+                    "body-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "display-lg-mobile": [
+                            "Montserrat"
+                    ],
+                    "body-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "body-sm": [
+                            "Hanken Grotesk"
+                    ],
+                    "label-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-md": [
+                            "Montserrat"
+                    ],
+                    "headline-lg": [
+                            "Montserrat"
+                    ]
+            },
+            "fontSize": {
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface fixed top-0 w-full z-50 border-b border-outline-variant dark:border-outline flat no shadows">
+<div class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="font-display-lg text-headline-md tracking-tighter text-primary dark:text-primary-fixed-dim">
+                ARCHITECTURA
+            </div>
+<div class="hidden"></div>
+<div class="flex gap-unit-md items-center">
+<button class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors duration-200 scale-95 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors duration-200 scale-95 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Layout -->
+<div class="flex-1 flex pt-16 h-full">
+<!-- SideNavBar (Suppressed for transactional flow, but included structural shell for completeness if needed. Hiding it per rules for transactional) -->
+<nav aria-hidden="true" class="hidden"></nav>
+<!-- Canvas -->
+<main class="flex-1 max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-unit-xl pb-32 md:pb-unit-xl">
+<div class="mb-unit-xl flex flex-col gap-unit-sm">
+<p class="font-label-caps text-label-caps text-primary tracking-widest">STEP 10 / 10</p>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Review &amp; Finalize</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Please review your project specifications before submitting for manufacturer offers. Ensure all technical details and attachments are correct.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Specs -->
+<div class="lg:col-span-8 flex flex-col gap-unit-xl">
+<!-- Section: Core Specifications -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg flex flex-col gap-unit-lg">
+<div class="flex items-center gap-unit-sm border-b border-outline-variant pb-unit-sm">
+<span class="material-symbols-outlined text-primary" data-icon="architecture">architecture</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Core Specifications</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+<div class="flex flex-col gap-unit-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PRODUCT TYPE</span>
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Bioclimatic Pergola</span>
+</div>
+<div class="flex flex-col gap-unit-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PROJECT TYPE</span>
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Villa Project</span>
+</div>
+<div class="flex flex-col gap-unit-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant">INSTALLATION</span>
+<span class="font-body-lg text-body-lg text-on-surface font-medium">Wall Mounted</span>
+</div>
+<div class="flex flex-col gap-unit-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant">DIMENSIONS</span>
+<span class="font-body-lg text-body-lg text-on-surface font-medium">5000mm x 4000mm (20 m²)</span>
+</div>
+</div>
+</section>
+<!-- Section: Options & Extras -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg flex flex-col gap-unit-lg">
+<div class="flex items-center gap-unit-sm border-b border-outline-variant pb-unit-sm">
+<span class="material-symbols-outlined text-primary" data-icon="tune">tune</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Options &amp; Upgrades</h2>
+</div>
+<div class="flex flex-wrap gap-unit-sm">
+<div class="bg-surface-container border border-outline-variant rounded px-unit-md py-unit-sm flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Integrated LED Lighting</span>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded px-unit-md py-unit-sm flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Smart Home Integration</span>
+</div>
+</div>
+</section>
+<!-- Section: Attachments -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg flex flex-col gap-unit-lg">
+<div class="flex items-center gap-unit-sm border-b border-outline-variant pb-unit-sm">
+<span class="material-symbols-outlined text-primary" data-icon="attachment">attachment</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Technical Attachments</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-unit-md">
+<!-- File Card -->
+<div class="border border-outline-variant rounded-lg p-unit-sm flex items-center gap-unit-md hover:border-primary transition-colors cursor-pointer group">
+<div class="bg-surface-dim p-unit-sm rounded text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-body-md text-body-md text-on-surface truncate">site_plan_v2.pdf</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">2.4 MB</p>
+</div>
+<button class="text-on-surface-variant hover:text-error p-1">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<button class="w-full border border-dashed border-primary/30 rounded-lg p-unit-md flex flex-col items-center justify-center gap-unit-xs hover:bg-surface-container transition-colors text-primary">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span class="font-body-md text-body-md">Add additional files</span>
+</button>
+</section>
+</div>
+<!-- Right Column: Visual Preview & Actions -->
+<div class="lg:col-span-4 flex flex-col gap-unit-lg">
+<!-- Visual Reference -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="bg-surface-dim p-unit-sm border-b border-outline-variant">
+<p class="font-label-caps text-label-caps text-on-surface-variant text-center">TECHNICAL REFERENCE</p>
+</div>
+<div class="relative w-full aspect-video bg-white">
+<img alt="Technical wireframe of a bioclimatic pergola with dimensions 5000mm width, 4000mm projection, and 2800mm height." class="w-full h-full object-contain p-unit-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK4Y0JDjm8hfLoiVj_9kgNyJSARL2owWidM7PksLMLXrfiVp7qqePcpdZjRn1DisoCQEiSZlz-NasSkcOntN2prn2y0Q_ZBl5qmmOeOzAQmlymdFBPTHgdmspXUAgAJu9NWbQ82wRWQWBX-ohC9vCDS6pBxl331FoVT1ebwp3iOF6KTvhLWuL14ovE-CFL0rBFm36nWMVzeyUnVp8VOAfNgOCCxFod4y5oS4wqCI7CJdcWPXVI84Px"/>
+</div>
+</div>
+<!-- Actions Panel (Desktop) -->
+<div class="hidden md:flex flex-col gap-unit-md bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg sticky top-24">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-unit-sm">Submitting will send this project to our network of verified manufacturers for precise quotes.</p>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps rounded px-unit-lg py-unit-md w-full hover:bg-primary-container transition-colors flex items-center justify-center gap-unit-sm">
+                            GET OFFERS
+                            <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="bg-tertiary text-on-tertiary font-label-caps text-label-caps rounded px-unit-lg py-unit-md w-full hover:bg-tertiary-container transition-colors flex items-center justify-center gap-unit-sm">
+                            SAVE AS DRAFT
+                            <span class="material-symbols-outlined text-sm" data-icon="save">save</span>
+</button>
+<button class="border border-outline-variant text-on-surface font-label-caps text-label-caps rounded px-unit-lg py-unit-md w-full hover:bg-surface-container transition-colors">
+                            BACK TO EDIT
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="bg-surface dark:bg-inverse-surface fixed bottom-0 w-full z-50 md:hidden border-t border-outline-variant shadow-sm">
+<div class="flex justify-around items-center h-20 px-margin-mobile">
+<button class="text-on-surface-variant active:bg-surface-container-highest scale-98 transition-transform flex flex-col items-center gap-1 p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-caps text-label-caps text-[10px]">Back</span>
+</button>
+<button class="text-on-surface-variant active:bg-surface-container-highest scale-98 transition-transform flex flex-col items-center gap-1 p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="save">save</span>
+<span class="font-label-caps text-label-caps text-[10px]">Save Draft</span>
+</button>
+<button class="bg-primary text-on-primary rounded-full px-6 py-2 active:bg-surface-container-highest scale-98 transition-transform flex flex-col items-center gap-1">
+<span class="material-symbols-outlined" data-icon="check">check</span>
+<span class="font-label-caps text-label-caps text-[10px]">Get Offers</span>
+</button>
+</div>
+</nav>
+</body></html>

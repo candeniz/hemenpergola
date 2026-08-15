@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Admin Market Pricing Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#191c1d",
+                        "primary": "#162839",
+                        "on-surface-variant": "#43474c",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "outline-variant": "#c4c6cd",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-container": "#7bf8a1",
+                        "surface": "#f8f9fa",
+                        "on-tertiary-container": "#f78b30",
+                        "inverse-primary": "#b5c8df",
+                        "on-primary-fixed": "#091d2e",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-error": "#ffffff",
+                        "primary-container": "#2c3e50",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed": "#ffdcc5",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#b5c8df",
+                        "on-tertiary-fixed": "#301400",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005228",
+                        "primary-fixed": "#d1e4fb",
+                        "secondary": "#006d37",
+                        "on-secondary-fixed": "#00210c",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-fixed": "#7efba4",
+                        "on-primary-container": "#96a9be",
+                        "outline": "#74777d",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#612f00",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "inverse-surface": "#2e3132",
+                        "tertiary": "#411d00",
+                        "surface-dim": "#d9dadb",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#007239",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-tint": "#4e6073",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-fixed-variant": "#36485b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "48px",
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "margin-desktop": "64px",
+                        "sm": "12px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+        .ambient-shadow { box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08); }
+        .low-contrast-outline { border: 1px solid #E9ECEF; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">Market Pricing Intel</span>
+</div>
+<div class="flex items-center gap-4 text-primary">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed-dim transition-colors duration-200" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed-dim transition-colors duration-200" data-icon="settings">settings</span>
+<div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden">
+<img alt="Super Admin Avatar" class="w-full h-full object-cover" data-alt="A small, professional headshot of an administrative user in a corporate setting, well-lit with soft natural light, against a clean white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5ESRcwDTABE0iDLvBey2Sw_mf8NzPC7YYYOizphN05fJGEroPYWkKKVylV6tgGapBOgQtNYHU85hhQZMPlbSM3hNk_Vhp1bSyb75zdU57OKE7ea7c1GIb7V97zqsvE725ycJJgOgkLy3OU1OJl_s_5ycDLjkq4wczvpWk2TvMz9oY-ikS_pynh-uu7f27n99LVCT05NwIAxYCD00BEMLjKWs__gF55jaistNPM3WNMqvgOOuIBNnX"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col p-base bg-surface-container-low border-r border-outline-variant font-label-md text-label-md z-40 hidden md:flex">
+<div class="mb-lg px-2">
+<div class="font-headline-md text-headline-md text-primary font-bold">Super Admin</div>
+<div class="text-on-surface-variant text-body-sm mt-1">Market Oversight</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 bg-secondary-container text-on-secondary-container rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span>Price Trends</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="location_city">location_city</span>
+<span>City Benchmarks</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+<span>Anomaly Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span>Manufacturer Data</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span>History</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-2">
+<button class="w-full bg-secondary text-on-secondary py-2 rounded-lg font-bold mb-4">Export Report</button>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="list_alt">list_alt</span>
+<span>Logs</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="pt-16 md:pl-64 min-h-screen">
+<div class="p-margin-mobile md:p-gutter max-w-7xl mx-auto space-y-md">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary font-bold">Market Pricing Intel</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Monitor median pricing, regional trends, and manufacturer integrity across the marketplace.</p>
+</div>
+<div class="flex flex-wrap gap-3">
+<select class="bg-surface-container-lowest low-contrast-outline rounded-lg px-4 py-2 font-label-md text-label-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Bioclimatic Pergola</option>
+</select>
+<select class="bg-surface-container-lowest low-contrast-outline rounded-lg px-4 py-2 font-label-md text-label-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option>All Cities</option>
+</select>
+<select class="bg-surface-container-lowest low-contrast-outline rounded-lg px-4 py-2 font-label-md text-label-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Last 30 Days</option>
+</select>
+</div>
+</section>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-md">
+<!-- Market Summary Card -->
+<div class="xl:col-span-1 bg-surface-container-lowest rounded-lg ambient-shadow p-6 flex flex-col justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-4">Bioclimatic Pergola</h2>
+<div class="font-display-lg text-display-lg text-primary font-bold mb-2">₺9,100 <span class="text-body-lg text-on-surface-variant font-normal">/ m²</span></div>
+<div class="text-on-surface-variant text-body-sm font-label-md">Market Median</div>
+<div class="flex gap-4 mt-4">
+<div>
+<span class="text-on-surface-variant text-body-sm block">Low</span>
+<span class="font-body-md text-body-md font-bold">₺7,800</span>
+</div>
+<div>
+<span class="text-on-surface-variant text-body-sm block">High</span>
+<span class="font-body-md text-body-md font-bold">₺11,400</span>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<div class="flex items-center gap-2 text-secondary font-label-md text-label-md mb-2">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>4.2% from last month</span>
+</div>
+<div class="h-24 w-full bg-surface-container-low rounded flex items-end overflow-hidden border-b border-l border-outline-variant p-2">
+<!-- Placeholder for line chart -->
+<div class="w-1/6 h-1/4 bg-primary-fixed opacity-50 ml-1 rounded-t"></div>
+<div class="w-1/6 h-2/4 bg-primary-fixed opacity-60 ml-1 rounded-t"></div>
+<div class="w-1/6 h-1/3 bg-primary-fixed opacity-70 ml-1 rounded-t"></div>
+<div class="w-1/6 h-2/3 bg-primary-fixed opacity-80 ml-1 rounded-t"></div>
+<div class="w-1/6 h-3/4 bg-primary-fixed opacity-90 ml-1 rounded-t"></div>
+<div class="w-1/6 h-full bg-primary ml-1 rounded-t"></div>
+</div>
+</div>
+</div>
+<!-- Regional Pricing Table -->
+<div class="xl:col-span-2 bg-surface-container-lowest rounded-lg low-contrast-outline overflow-hidden">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low">
+<h3 class="font-headline-md text-headline-md text-primary">Regional Benchmarks</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm">
+<thead class="bg-surface-container-lowest border-b border-outline-variant text-on-surface-variant font-label-md text-label-md">
+<tr>
+<th class="p-4 font-semibold">City</th>
+<th class="p-4 font-semibold">Area</th>
+<th class="p-4 font-semibold">Median Price</th>
+<th class="p-4 font-semibold">Change</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4 font-medium text-primary">Istanbul</td>
+<td class="p-4 text-on-surface-variant">Beşiktaş</td>
+<td class="p-4 font-bold">₺10,200</td>
+<td class="p-4 text-error font-medium flex items-center gap-1"><span class="material-symbols-outlined text-sm">arrow_upward</span> +2.1%</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4 font-medium text-primary">Ankara</td>
+<td class="p-4 text-on-surface-variant">Çankaya</td>
+<td class="p-4 font-bold">₺8,900</td>
+<td class="p-4 text-secondary font-medium flex items-center gap-1"><span class="material-symbols-outlined text-sm">arrow_downward</span> -0.5%</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4 font-medium text-primary">Izmir</td>
+<td class="p-4 text-on-surface-variant">Urla</td>
+<td class="p-4 font-bold">₺9,400</td>
+<td class="p-4 text-on-surface-variant font-medium flex items-center gap-1"><span class="material-symbols-outlined text-sm">remove</span> 0.0%</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4 font-medium text-primary">Antalya</td>
+<td class="p-4 text-on-surface-variant">Muratpaşa</td>
+<td class="p-4 font-bold">₺9,800</td>
+<td class="p-4 text-error font-medium flex items-center gap-1"><span class="material-symbols-outlined text-sm">arrow_upward</span> +1.8%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Pricing Anomaly Alerts -->
+<section class="mt-lg">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-error text-xl">warning</span>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Critical Pricing Anomalies</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+<!-- Alert Item 1 -->
+<div class="bg-surface-container-lowest border border-error-container rounded-lg p-4 flex flex-col shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<h4 class="font-body-md text-body-md font-bold text-primary">Apex Systems</h4>
+<span class="bg-error-container text-on-error-container font-label-md text-xs px-2 py-1 rounded">Potential Anomaly</span>
+</div>
+<div class="space-y-2 mb-4 font-body-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span>Listed Price:</span>
+<span class="font-bold text-error">₺4,200 / m²</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant pb-2">
+<span>Market Median:</span>
+<span>₺9,100 / m²</span>
+</div>
+<div class="flex justify-between pt-1">
+<span>Deviation:</span>
+<span class="font-bold text-error">-53.8%</span>
+</div>
+</div>
+<button class="mt-auto w-full bg-surface-container border border-outline text-primary py-2 rounded-lg font-label-md hover:bg-surface-container-highest transition-colors">Review Manufacturer</button>
+</div>
+<!-- Alert Item 2 -->
+<div class="bg-surface-container-lowest border border-error-container rounded-lg p-4 flex flex-col shadow-sm">
+<div class="flex justify-between items-start mb-3">
+<h4 class="font-body-md text-body-md font-bold text-primary">Elite Structurals</h4>
+<span class="bg-error-container text-on-error-container font-label-md text-xs px-2 py-1 rounded">Potential Anomaly</span>
+</div>
+<div class="space-y-2 mb-4 font-body-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span>Listed Price:</span>
+<span class="font-bold text-error">₺15,800 / m²</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant pb-2">
+<span>Market Median:</span>
+<span>₺9,100 / m²</span>
+</div>
+<div class="flex justify-between pt-1">
+<span>Deviation:</span>
+<span class="font-bold text-error">+73.6%</span>
+</div>
+</div>
+<button class="mt-auto w-full bg-surface-container border border-outline text-primary py-2 rounded-lg font-label-md hover:bg-surface-container-highest transition-colors">Review Manufacturer</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

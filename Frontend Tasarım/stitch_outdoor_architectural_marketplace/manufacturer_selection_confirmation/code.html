@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manufacturer Selected - Structura</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "tertiary-fixed": "#ffdcc5",
+                      "on-secondary-container": "#007239",
+                      "outline": "#74777d",
+                      "surface-container": "#edeeef",
+                      "on-primary-fixed-variant": "#36485b",
+                      "primary-container": "#2c3e50",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#96a9be",
+                      "background": "#f8f9fa",
+                      "primary-fixed": "#d1e4fb",
+                      "on-surface-variant": "#43474c",
+                      "secondary-fixed": "#7efba4",
+                      "surface-tint": "#4e6073",
+                      "surface-variant": "#e1e3e4",
+                      "inverse-surface": "#2e3132",
+                      "secondary-container": "#7bf8a1",
+                      "tertiary-container": "#612f00",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "tertiary": "#411d00",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "on-background": "#191c1d",
+                      "surface-container-high": "#e7e8e9",
+                      "on-secondary-fixed": "#00210c",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-tertiary-container": "#f78b30",
+                      "primary": "#162839",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#d9dadb",
+                      "outline-variant": "#c4c6cd",
+                      "on-surface": "#191c1d",
+                      "on-secondary-fixed-variant": "#005228",
+                      "surface-bright": "#f8f9fa",
+                      "secondary": "#006d37",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed": "#301400",
+                      "secondary-fixed-dim": "#61de8a",
+                      "surface-container-lowest": "#ffffff",
+                      "surface": "#f8f9fa",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f3f4f5",
+                      "inverse-primary": "#b5c8df",
+                      "on-primary-fixed": "#091d2e",
+                      "error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "48px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "xl": "80px",
+                      "sm": "12px",
+                      "margin-desktop": "64px",
+                      "md": "24px",
+                      "base": "8px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Montserrat"],
+                      "display-lg": ["Montserrat"],
+                      "headline-lg": ["Montserrat"],
+                      "headline-lg-mobile": ["Montserrat"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+        .ambient-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col items-center justify-center p-margin-mobile md:p-margin-desktop">
+<!-- Content Canvas - Transactional page, no nav shell -->
+<main class="w-full max-w-2xl mx-auto">
+<!-- Header -->
+<header class="text-center mb-lg">
+<h1 class="font-display-lg text-display-lg text-primary mb-sm">You selected ARTE Outdoor.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Review your project configuration before sending your request.</p>
+</header>
+<!-- Main Card -->
+<section class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant p-md md:p-lg">
+<!-- Company Info -->
+<div class="flex items-center gap-gutter pb-md border-b border-surface-variant mb-md">
+<div class="w-16 h-16 rounded bg-surface-container-low flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-display-lg text-primary" data-icon="factory">factory</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md text-outline mb-xs">SELECTED COMPANY</h2>
+<p class="font-headline-md text-headline-md text-primary">ARTE Outdoor</p>
+</div>
+</div>
+<!-- Project Details Bento -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-lg">
+<!-- Project Name -->
+<div class="bg-surface-container-low p-sm rounded">
+<span class="font-label-md text-label-md text-outline block mb-xs">PROJECT</span>
+<span class="font-body-md text-body-md text-on-surface">Residential Terrace Pergola</span>
+</div>
+<!-- Product -->
+<div class="bg-surface-container-low p-sm rounded">
+<span class="font-label-md text-label-md text-outline block mb-xs">PRODUCT</span>
+<span class="font-body-md text-body-md text-on-surface">Bioclimatic Pergola</span>
+</div>
+<!-- Area -->
+<div class="bg-surface-container-low p-sm rounded">
+<span class="font-label-md text-label-md text-outline block mb-xs">AREA</span>
+<span class="font-body-md text-body-md text-on-surface">20 m²</span>
+</div>
+<!-- Price -->
+<div class="bg-surface-container-low p-sm rounded border border-primary-fixed">
+<span class="font-label-md text-label-md text-primary block mb-xs">ESTIMATED PRICE</span>
+<span class="font-headline-md text-headline-md text-primary">₺218,000 – ₺231,000</span>
+</div>
+</div>
+<!-- Options -->
+<div class="mb-lg">
+<span class="font-label-md text-label-md text-outline block mb-sm">OPTIONS SELECTED</span>
+<div class="flex flex-wrap gap-sm">
+<span class="px-sm py-xs bg-surface-container-high rounded text-on-surface font-body-sm text-body-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="lightbulb">lightbulb</span>
+                        Integrated LED Lighting
+                    </span>
+<span class="px-sm py-xs bg-surface-container-high rounded text-on-surface font-body-sm text-body-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="air">air</span>
+                        Wind Sensors
+                    </span>
+</div>
+</div>
+<!-- Call to Action -->
+<div class="bg-primary-container text-on-primary-container p-md rounded-lg flex flex-col md:flex-row items-center justify-between gap-md">
+<p class="font-body-md text-body-md text-on-primary text-center md:text-left">
+                    Send your project details to this company and request an offer.
+                </p>
+<button class="bg-secondary text-on-secondary px-lg py-sm rounded-lg font-label-md text-label-md whitespace-nowrap hover:bg-on-secondary-container transition-colors duration-200">
+                    Continue
+                </button>
+</div>
+<div class="text-center mt-md">
+<button class="text-outline font-label-md text-label-md hover:text-on-surface transition-colors duration-200">
+                    Cancel Request
+                </button>
+</div>
+</section>
+</main>
+</body></html>

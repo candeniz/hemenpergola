@@ -1,0 +1,268 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Request Success - Architectural Outdoor Exchange</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#e1e3e4",
+                      "on-secondary-fixed": "#00210c",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary-fixed-variant": "#36485b",
+                      "primary-container": "#2c3e50",
+                      "tertiary": "#411d00",
+                      "surface-bright": "#f8f9fa",
+                      "surface-tint": "#4e6073",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-variant": "#e1e3e4",
+                      "on-secondary-container": "#007239",
+                      "on-surface-variant": "#43474c",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#612f00",
+                      "on-primary-container": "#96a9be",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#f78b30",
+                      "outline-variant": "#c4c6cd",
+                      "inverse-primary": "#b5c8df",
+                      "inverse-surface": "#2e3132",
+                      "secondary-fixed": "#7efba4",
+                      "on-primary-fixed": "#091d2e",
+                      "on-surface": "#191c1d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "secondary-fixed-dim": "#61de8a",
+                      "surface": "#f8f9fa",
+                      "secondary-container": "#7bf8a1",
+                      "primary": "#162839",
+                      "surface-container": "#edeeef",
+                      "surface-container-low": "#f3f4f5",
+                      "tertiary-fixed": "#ffdcc5",
+                      "primary-fixed-dim": "#b5c8df",
+                      "primary-fixed": "#d1e4fb",
+                      "surface-dim": "#d9dadb",
+                      "background": "#f8f9fa",
+                      "on-background": "#191c1d",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#74777d",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#005228",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "secondary": "#006d37"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "80px",
+                      "margin-desktop": "64px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "lg": "48px",
+                      "sm": "12px",
+                      "md": "24px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col antialiased">
+<!-- TopNavBar: Suppressed per shell visibility rules (Linear/Transactional/Success Screen) -->
+<main class="flex-grow flex items-center justify-center p-margin-mobile md:p-margin-desktop w-full max-w-7xl mx-auto">
+<div class="w-full max-w-3xl bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant p-lg md:p-xl flex flex-col items-center text-center">
+<div class="mb-gutter text-secondary">
+<span class="material-symbols-outlined text-[80px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface mb-xs">Your request has been sent.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-xl max-w-xl">We'll notify you when the company responds.</p>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md text-left w-full">Transparent Process</h3><div class="w-full bg-surface rounded-lg p-md mb-xl text-left border border-outline-variant shadow-sm">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Request Details</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Company</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">ARTE Outdoor<span class="inline-flex items-center gap-xs ml-xs text-secondary text-label-md"><span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>Verified</span></p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Project</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Bioclimatic Pergola (Residential Terrace)</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Technical Review</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Technical Review</p>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Site Survey</p>
+<p class="font-body-md text-body-md text-on-surface font-semibold">Site Survey</p>
+</div>
+<div><p class="font-label-md text-label-md text-on-surface-variant uppercase">Final Quote</p><p class="font-body-md text-body-md text-on-surface font-semibold">Final Quote</p></div><div><p class="font-label-md text-label-md text-on-surface-variant uppercase">Price Reference</p><p class="font-body-md text-body-md text-on-surface font-semibold">Saved in Dashboard</p></div></div>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md text-left w-full">Transparent Process</h3><div class="w-full mb-xl">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between w-full relative">
+<div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-outline-variant -z-10 -translate-y-1/2"></div>
+<div class="flex flex-row md:flex-col items-center relative bg-surface-container-lowest md:px-sm z-10 mb-md md:mb-0">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary mb-0 md:mb-xs mr-sm md:mr-0 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface">Request Sent</p>
+</div>
+<div class="flex flex-row md:flex-col items-center relative bg-surface-container-lowest md:px-sm z-10 mb-md md:mb-0 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface-variant border-2 border-outline-variant flex items-center justify-center text-on-surface-variant mb-0 md:mb-xs mr-sm md:mr-0">
+<span class="material-symbols-outlined text-[16px]">pending</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Technical Review</p>
+</div>
+<div class="flex flex-row md:flex-col items-center relative bg-surface-container-lowest md:px-sm z-10 mb-md md:mb-0 opacity-40">
+<div class="w-8 h-8 rounded-full bg-surface-variant border-2 border-outline-variant flex items-center justify-center text-on-surface-variant mb-0 md:mb-xs mr-sm md:mr-0">
+<span class="material-symbols-outlined text-[16px]">architecture</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Site Survey</p>
+</div>
+<div class="flex flex-row md:flex-col items-center relative bg-surface-container-lowest md:px-sm z-10 opacity-40">
+<div class="w-8 h-8 rounded-full bg-surface-variant border-2 border-outline-variant flex items-center justify-center text-on-surface-variant mb-0 md:mb-xs mr-sm md:mr-0">
+<span class="material-symbols-outlined text-[16px]">description</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Final Quote</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-gutter w-full sm:w-auto">
+<button class="bg-secondary text-on-secondary font-label-md text-label-md py-sm px-md rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center w-full sm:w-auto">
+                    View My Request
+                </button>
+<button class="bg-transparent border border-primary-container text-primary-container font-label-md text-label-md py-sm px-md rounded-lg hover:bg-surface-container-low transition-colors flex items-center justify-center w-full sm:w-auto">
+                    Back to Dashboard
+                </button>
+</div>
+</div>
+</main>
+<footer class="bg-primary dark:bg-on-primary-fixed w-full mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter px-margin-desktop py-xl w-full max-w-7xl mx-auto text-on-primary dark:text-on-primary-fixed-variant">
+<div class="col-span-1 md:col-span-2 lg:col-span-4 mb-lg">
+<span class="text-headline-md font-headline-md text-on-primary">Architectural Outdoor Exchange</span>
+</div>
+<div class="flex flex-col gap-base">
+<a class="font-body-sm text-body-sm font-label-md text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Technical Specifications</a>
+<a class="font-body-sm text-body-sm font-label-md text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Structural Guides</a>
+</div>
+<div class="flex flex-col gap-base">
+<a class="font-body-sm text-body-sm font-label-md text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Manufacturer Support</a>
+<a class="font-body-sm text-body-sm font-label-md text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Privacy Policy</a>
+</div>
+<div class="flex flex-col gap-base">
+<a class="font-body-sm text-body-sm font-label-md text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-colors cursor-pointer" href="#">Contact Engineering</a>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-4 mt-lg border-t border-on-primary-container/20 pt-lg text-center md:text-left">
+<p class="font-body-sm text-body-sm text-on-primary-container opacity-80">© 2024 Architectural Outdoor Exchange. Built for permanence.</p>
+</div>
+<div><p class="font-label-md text-label-md text-on-surface-variant uppercase">Est. Response Time</p><p class="font-body-md text-body-md text-on-surface font-semibold">Within 24-48 Hours</p></div><div><p class="font-label-md text-label-md text-on-surface-variant uppercase">Price Reference</p><p class="font-body-md text-body-md text-on-surface font-semibold">Saved in Dashboard</p></div></div>
+</footer>
+
+
+</body></html>

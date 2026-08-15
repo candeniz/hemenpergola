@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manufacturer Management</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#00210c",
+                    "on-primary-container": "#96a9be",
+                    "on-primary-fixed-variant": "#36485b",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#f78b30",
+                    "on-surface": "#191c1d",
+                    "outline-variant": "#c4c6cd",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#4e6073",
+                    "on-tertiary-fixed": "#301400",
+                    "inverse-primary": "#b5c8df",
+                    "on-secondary-fixed-variant": "#005228",
+                    "surface-dim": "#d9dadb",
+                    "on-primary-fixed": "#091d2e",
+                    "surface-variant": "#e1e3e4",
+                    "surface": "#f8f9fa",
+                    "primary-fixed": "#d1e4fb",
+                    "secondary-fixed-dim": "#61de8a",
+                    "secondary-fixed": "#7efba4",
+                    "inverse-on-surface": "#f0f1f2",
+                    "on-secondary-container": "#007239",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "primary": "#162839",
+                    "background": "#f8f9fa",
+                    "tertiary-fixed": "#ffdcc5",
+                    "on-primary": "#ffffff",
+                    "outline": "#74777d",
+                    "primary-container": "#2c3e50",
+                    "surface-container-low": "#f3f4f5",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#191c1d",
+                    "primary-fixed-dim": "#b5c8df",
+                    "tertiary-container": "#612f00",
+                    "surface-container-highest": "#e1e3e4",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "error": "#ba1a1a",
+                    "secondary": "#006d37",
+                    "inverse-surface": "#2e3132",
+                    "surface-container": "#edeeef",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#411d00",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#43474c",
+                    "surface-bright": "#f8f9fa",
+                    "surface-container-high": "#e7e8e9",
+                    "secondary-container": "#7bf8a1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "80px",
+                    "xs": "4px",
+                    "margin-desktop": "64px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "lg": "48px",
+                    "base": "8px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Montserrat"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Montserrat"],
+                    "label-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Montserrat"],
+                    "headline-md": ["Montserrat"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-surface-dim font-body-md text-body-md h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col h-full py-md px-sm z-20">
+<div class="mb-lg px-sm pt-sm">
+<h1 class="font-display-lg text-display-lg font-bold text-primary dark:text-primary-fixed mb-xs text-xl">Admin Portal</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Architectural Marketplace</p>
+</div>
+<button class="bg-secondary text-on-secondary rounded-lg px-md py-sm mb-lg mx-sm font-label-md flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors">
+<span class="material-symbols-outlined text-sm">add</span> New Entry
+        </button>
+<ul class="flex flex-col gap-1 flex-grow overflow-y-auto">
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm text-secondary dark:text-secondary-fixed font-bold border-r-4 border-secondary bg-surface-container-high/50 cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">factory</span>
+<span>Manufacturers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span>Verification</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span>Orders</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span>Logistics</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant dark:text-surface-variant hover:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors cursor-pointer duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto pt-md border-t border-outline-variant/50">
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-sm py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+<div class="mt-md flex items-center gap-3 px-sm">
+<img alt="Super Admin Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A small, professional avatar photo of a super admin user in a corporate setting. The lighting is bright and clean, typical of a modern office environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTsJR_zTY-OJ9SB1F9nLu8p5iLeQvWxMLKRAXw7QneGvAWZHHaV4eJH7D07EVTX27wqmcsXWkw9GWbKf8lyIN4SetQdCfuoC3G5c79c0buEYIwcc3bzAcWznFU3R9KCEogIoc4kPAWJ8xIsmrzOPKDsGlMLpYJ9YxdyPQ3UcM7Y9_1It-1atXswG9eR__SKcfjGdszsOWAWMv1PcTqIhuoLKGpVUzbAuiBtwk3HFwwRE3ts5XJZksl"/>
+<div class="flex flex-col">
+<span class="font-label-md text-primary">Admin User</span>
+</div>
+</div>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-dim font-label-md text-label-md fixed top-0 right-0 w-[calc(100%-16rem)] z-10 border-b border-outline-variant dark:border-outline flex justify-between items-center h-16 px-md ml-64">
+<div class="flex items-center gap-md w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full pl-9 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="font-headline-md text-headline-md font-semibold text-primary dark:text-primary-fixed hidden lg:block absolute left-1/2 -translate-x-1/2">
+            Marketplace Admin
+        </div>
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-150 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-150 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">mail</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors duration-150 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-md w-full max-w-[1600px] mx-auto min-h-screen">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-md gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-xs">Manufacturer Management</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="font-bold text-primary">1,248</span> Total Manufacturers
+                </p>
+</div>
+<button class="border border-primary text-primary px-4 py-2 rounded-lg font-label-md hover:bg-surface-container-high transition-colors flex items-center gap-2 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-sm">download</span>
+                Export CSV
+            </button>
+</div>
+<!-- Filters & Search Bar Area -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-sm mb-md flex flex-col xl:flex-row gap-md justify-between items-start xl:items-center shadow-[0_4px_12px_rgba(44,62,80,0.08)]">
+<!-- Segmented Controls -->
+<div class="flex p-1 bg-surface-container-low rounded-lg w-full xl:w-auto overflow-x-auto">
+<button class="px-4 py-2 rounded font-label-md bg-surface-container-lowest text-primary shadow-sm border border-outline-variant whitespace-nowrap">All</button>
+<button class="px-4 py-2 rounded font-label-md text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50 whitespace-nowrap transition-colors">Verified (892)</button>
+<button class="px-4 py-2 rounded font-label-md text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50 whitespace-nowrap transition-colors flex items-center gap-1">Pending <span class="bg-tertiary-fixed text-tertiary-container px-1.5 py-0.5 rounded text-[10px]">12</span></button>
+<button class="px-4 py-2 rounded font-label-md text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50 whitespace-nowrap transition-colors">Suspended (34)</button>
+<button class="px-4 py-2 rounded font-label-md text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest/50 whitespace-nowrap transition-colors">Rejected (310)</button>
+</div>
+<!-- Search & Filters -->
+<div class="flex gap-sm w-full xl:w-auto">
+<div class="relative flex-grow xl:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm focus:outline-none focus:border-primary" placeholder="Search by name or owner..." type="text"/>
+</div>
+<div class="relative">
+<select class="appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg pl-4 pr-10 py-2 font-body-sm focus:outline-none focus:border-primary text-on-surface w-40 xl:w-48 cursor-pointer">
+<option value="">All Categories</option>
+<option value="stone">Stone &amp; Masonry</option>
+<option value="wood">Timber &amp; Wood</option>
+<option value="glass">Architectural Glass</option>
+<option value="metal">Structural Metal</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- High Density Data Table -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse whitespace-nowrap">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant font-label-md text-on-surface-variant">
+<th class="px-sm py-3 font-semibold w-12">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</th>
+<th class="px-sm py-3 font-semibold">Company</th>
+<th class="px-sm py-3 font-semibold">Owner</th>
+<th class="px-sm py-3 font-semibold">Location</th>
+<th class="px-sm py-3 font-semibold">Main Products</th>
+<th class="px-sm py-3 font-semibold text-right">Metrics</th>
+<th class="px-sm py-3 font-semibold text-center">Status</th>
+<th class="px-sm py-3 font-semibold w-12"></th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-on-surface divide-y divide-outline-variant/50">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-sm py-3 align-middle">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded border border-outline-variant bg-surface overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+<img alt="Apex Metals" class="w-full h-full object-contain" data-alt="A minimalist logo for a premium structural metal manufacturer. Clean lines, monochromatic gray and black tones, professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmCWiuMQwd9GhbS-geKkFS-Il8pSnDN_3S8nCV2m2IYqYaS_253V2XJOada8ezTaD25PLGb3IkZNI9KhJqenf2ifrG5y4rhzSktk9yNG9LzMySX-RH1O7k-o7pwvFZjasyfEuApxhnRoq_aEHn8v1GDvOb8T9WIZycMzdrqUzACk1nxEMKoeoz19cOsGCx6TrhZDE0tpn9SoB4-sd0nTqq-R_y5QprD8lpUj-XCjg--z6uVeHbUY7U"/>
+</div>
+<div>
+<p class="font-semibold text-primary">Apex Structural Metals</p>
+<p class="text-xs text-on-surface-variant">ID: MNF-8821</p>
+</div>
+</div>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Sarah Jenkins</p>
+<p class="text-xs text-on-surface-variant">sarah@apexmetals.com</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Chicago, IL</p>
+<p class="text-xs text-on-surface-variant">United States</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex gap-1 flex-wrap w-48">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Steel Beams</span>
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Cladding</span>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px] text-tertiary-container" style="font-variation-settings: 'FILL' 1;">star</span>
+                                        4.9 (128)
+                                    </div>
+<p class="text-[10px] text-on-surface-variant">45 Proj / 12 Req</p>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-center">
+<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-secondary-container text-on-secondary-container">
+                                    Verified
+                                </span>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-sm py-3 align-middle">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded border border-outline-variant bg-surface overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-outline-variant text-xl">image</span>
+</div>
+<div>
+<p class="font-semibold text-primary">Verde Timber Co.</p>
+<p class="text-xs text-on-surface-variant">ID: MNF-8902</p>
+</div>
+</div>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Marcus Thorne</p>
+<p class="text-xs text-on-surface-variant">m.thorne@verdetimber.ca</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Vancouver, BC</p>
+<p class="text-xs text-on-surface-variant">Canada</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex gap-1 flex-wrap w-48">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Reclaimed Wood</span>
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Panels</span>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-xs font-medium text-on-surface-variant">
+                                        --
+                                    </div>
+<p class="text-[10px] text-on-surface-variant">0 Proj / 0 Req</p>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-center">
+<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-tertiary-fixed text-tertiary-container border border-tertiary-fixed-dim/30">
+                                    Pending
+                                </span>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-sm py-3 align-middle">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded border border-outline-variant bg-surface overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+<img alt="Lumina Glassworks" class="w-full h-full object-contain" data-alt="A clean, geometric logo for an architectural glass manufacturer. Incorporating light blues and transparent effects on a white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjL0xMQncAdo4_5O7sufdFug5veoyT9Wu4aDCIoWmS542YeF25TS34Q9xO_mGt8dRdQuIYgSjUS7OpLVNlg4gQ_qYMhZC5CgSXjtmU7iCjskvrhHo0hcb_BBGOhdBBz_NRbFgWaZwoTL_2O1VnBvTe8eYTUvRF9C3O5xyjCsrlSpert7Bna5f-a9o68PMJ4P8GzP_-M3Ft6eqwlh0RxV649h0Ve-7PN3Wbfp-IExBegVxTlAWDLZY8"/>
+</div>
+<div>
+<p class="font-semibold text-primary">Lumina Glassworks</p>
+<p class="text-xs text-on-surface-variant">ID: MNF-7743</p>
+</div>
+</div>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Elena Rostova</p>
+<p class="text-xs text-on-surface-variant">elena@luminaglass.com</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<p class="font-medium">Berlin</p>
+<p class="text-xs text-on-surface-variant">Germany</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex gap-1 flex-wrap w-48">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Smart Glass</span>
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-[10px] font-medium">Curtain Walls</span>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px] text-tertiary-container" style="font-variation-settings: 'FILL' 1;">star</span>
+                                        4.7 (89)
+                                    </div>
+<p class="text-[10px] text-on-surface-variant">112 Proj / 54 Req</p>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-center">
+<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-secondary-container text-on-secondary-container">
+                                    Verified
+                                </span>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 (Suspended Example) -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group bg-error-container/10">
+<td class="px-sm py-3 align-middle">
+<input class="rounded border-outline-variant text-secondary focus:ring-secondary w-4 h-4 cursor-pointer" type="checkbox"/>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded border border-outline-variant bg-surface overflow-hidden flex-shrink-0 flex items-center justify-center p-1 opacity-60">
+<span class="material-symbols-outlined text-outline-variant text-xl">domain_disabled</span>
+</div>
+<div>
+<p class="font-semibold text-on-surface-variant">StoneCraft Heritage</p>
+<p class="text-xs text-on-surface-variant">ID: MNF-6511</p>
+</div>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-on-surface-variant">
+<p class="font-medium">David Chen</p>
+<p class="text-xs">d.chen@stonecraftheritage.co.uk</p>
+</td>
+<td class="px-sm py-3 align-middle text-on-surface-variant">
+<p class="font-medium">London</p>
+<p class="text-xs">United Kingdom</p>
+</td>
+<td class="px-sm py-3 align-middle">
+<div class="flex gap-1 flex-wrap w-48">
+<span class="bg-surface-container border border-outline-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-medium">Limestone</span>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-right text-on-surface-variant">
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-1 text-xs font-medium">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                                        3.2 (14)
+                                    </div>
+<p class="text-[10px]">8 Proj / 2 Req</p>
+</div>
+</td>
+<td class="px-sm py-3 align-middle text-center">
+<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-error-container text-on-error-container border border-error/20">
+                                    Suspended
+                                </span>
+</td>
+<td class="px-sm py-3 align-middle text-right">
+<button class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container-high transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="bg-surface-container-lowest border-t border-outline-variant px-sm py-3 flex items-center justify-between">
+<span class="font-body-sm text-sm text-on-surface-variant">Showing 1 to 10 of 1,248 entries</span>
+<div class="flex gap-2">
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="px-3 py-1 rounded font-body-sm text-sm bg-primary-fixed text-on-primary-fixed font-medium">1</button>
+<button class="px-3 py-1 rounded font-body-sm text-sm text-on-surface-variant hover:bg-surface-container-high">2</button>
+<button class="px-3 py-1 rounded font-body-sm text-sm text-on-surface-variant hover:bg-surface-container-high">3</button>
+<span class="px-2 py-1 text-on-surface-variant">...</span>
+<button class="px-3 py-1 rounded font-body-sm text-sm text-on-surface-variant hover:bg-surface-container-high">125</button>
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

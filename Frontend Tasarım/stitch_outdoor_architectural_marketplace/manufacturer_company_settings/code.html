@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Company Settings - Apex Systems</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b5c8df",
+                        "on-tertiary-container": "#f78b30",
+                        "inverse-surface": "#2e3132",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-tint": "#4e6073",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-variant": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "outline": "#74777d",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface-dim": "#d9dadb",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-fixed": "#301400",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006d37",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-error": "#ffffff",
+                        "surface": "#f8f9fa",
+                        "tertiary-container": "#612f00",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#96a9be",
+                        "inverse-primary": "#b5c8df",
+                        "tertiary": "#411d00",
+                        "secondary-fixed": "#7efba4",
+                        "outline-variant": "#c4c6cd",
+                        "surface-bright": "#f8f9fa",
+                        "primary": "#162839",
+                        "secondary-container": "#7bf8a1",
+                        "on-secondary-container": "#007239",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-surface-variant": "#43474c",
+                        "on-secondary-fixed": "#00210c",
+                        "background": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-secondary-fixed-variant": "#005228",
+                        "surface-container-high": "#e7e8e9",
+                        "primary-fixed": "#d1e4fb",
+                        "on-primary-fixed-variant": "#36485b",
+                        "on-primary-fixed": "#091d2e",
+                        "on-surface": "#191c1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "md": "24px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "xs": "4px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom Scrollbar for sleek UI */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9fa;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c6cd;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #74777d;
+        }
+        
+        /* Ambient Shadow */
+        .ambient-shadow {
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-full flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline bg-surface dark:bg-inverse-surface hidden md:flex flex-col py-lg px-sm z-20">
+<div class="mb-8 px-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed mb-1">Apex Systems</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+                Verified Manufacturer
+            </p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="pending_actions">pending_actions</span>
+<span>Requests</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="inventory_2">inventory_2</span>
+<span>Products</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="payments">payments</span>
+<span>Pricing</span>
+</a>
+<!-- Active -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-secondary dark:text-secondary-fixed-dim border-r-4 border-secondary dark:border-secondary-fixed-dim font-bold bg-secondary-container/10 font-label-md text-label-md scale-[0.98] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings" data-weight="fill">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<div class="mt-auto px-4">
+<button class="w-full bg-secondary text-on-secondary rounded-lg py-3 px-4 font-label-md text-label-md font-semibold hover:bg-on-secondary-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Add New Product
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full ml-0 md:ml-64 relative w-full">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-gutter h-xl border-b border-outline-variant dark:border-outline bg-surface dark:bg-inverse-surface z-10 sticky top-0">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md text-primary dark:text-primary-fixed">Company Settings</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center bg-surface-container-low rounded-lg px-3 py-2 border border-outline-variant">
+<span class="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm p-0 w-48 text-on-surface placeholder:text-outline" placeholder="Search settings..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary transition-colors p-2 rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-outline-variant ml-2 cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a female architect or project manager in her 30s. She is smiling confidently, wearing a tailored navy blazer over a crisp white shirt. The background is a brightly lit, modern design studio with subtle blueprints and architectural models out of focus. High-key lighting, bright, clean corporate aesthetic, modern minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8H1_G1Va9P3ATFSB5vGGj2Np8Gi5EX6SHriLXe74atDBHYPjuwA7I_TpnnBOQf6KaiJLIDNze5pCVN50A8N3HQFDrc5-KefTbkWOAeKaGLEbRNJMGwJlgtGwaHeBsJrr8TQK5rnG5JQuRveCGhkIu7ewzLhe3f0aOc7JCNeSf-8vZM0gsSsl_3NxFi3hlnRmeo3hXrqXkb3rtswVAoT2PXvhQ7gHj1dX2WBByHizB04cvHtFK8TI1"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-gutter lg:p-margin-desktop bg-surface-container-lowest">
+<div class="max-w-5xl mx-auto flex flex-col gap-md lg:gap-lg pb-xl">
+<!-- Section 1: Public Profile -->
+<section class="bg-surface-bright rounded-xl border border-outline-variant ambient-shadow overflow-hidden">
+<div class="px-6 py-5 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center">
+<div>
+<h3 class="font-headline-md text-body-lg font-semibold text-primary">Public Profile</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manage your brand identity and how customers see you on the exchange.</p>
+</div>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Left Col: Images -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<!-- Logo -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Company Logo (1:1)</label>
+<div class="w-32 h-32 rounded-lg border-2 border-dashed border-outline-variant flex flex-col items-center justify-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden">
+<span class="material-symbols-outlined text-outline group-hover:text-primary mb-2 text-[32px]">image</span>
+<span class="font-label-md text-label-md text-outline group-hover:text-primary">Upload</span>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">edit</span>
+</div>
+<img alt="Company Logo" class="absolute inset-0 w-full h-full object-cover" data-alt="A clean, minimalist vector logo design featuring geometric intersecting steel beams forming an abstract 'A'. The logo is deep navy blue and bright orange on a pure white background. Sharp, precise, modern corporate branding style, high-resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALNplK_jGzzp2JKrEQ_5D9u8CTFt_dOR_922Rsa_RTAfS5Z6dA_caPLTHx6Ee3F_iD8-gd_crnQSBf4SaE-1NOIsduENI4757E97xCl8KUxMlgbFGW7LtdNEjgVO9WZadRw6OYDseWqVk0TR28umlH0bD77ribR-_AxLcwhz_dykVCvfHXMxnysOnu2f5sCjX6gLnxN1S6U2rF7LE5OkoszQiroXOXFDXt_RHcBQrrZvJ2iY3WrijF"/>
+</div>
+<p class="text-[11px] text-outline mt-2">Recommended size: 400x400px. JPG, PNG or SVG.</p>
+</div>
+<!-- Cover Image -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-2">Cover Image (16:9)</label>
+<div class="w-full aspect-video rounded-lg border-2 border-dashed border-outline-variant flex flex-col items-center justify-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden">
+<img alt="Cover Image" class="absolute inset-0 w-full h-full object-cover" data-alt="A high-end architectural photograph of a modern outdoor plaza featuring sleek concrete benches, stainless steel planters, and structural glass canopies. Shot during golden hour with warm, diffused lighting. The style is hyper-realistic, pristine, and structurally focused, emphasizing premium materials and clean lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWNK0OtUqK1k-NzJtH5-Zuv93zv7JWCdvm-b8faAGrWbQsd2Hd0VhGHFCEGoJHdGXv4CdGdPDaVYzYYx8ABvrHKqtxiZiYmmUYW2TC5NB20KZAhXwn9vAZvgO-DQ8LUPeSIzr0bPhqCMEZ2xPSDps5yNPvLQD3rb_2gfNbDAk6CxdsxZIW2huNNgM9k7gpX7xfUy_hyzRQfuuMHZNHVgOGQTDTK-c7ylclx0LtRRI-ufZwOxQmNx-0"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-10">
+<span class="material-symbols-outlined text-white mr-2">edit</span>
+<span class="font-label-md text-label-md text-white">Change Cover</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Col: Form Fields -->
+<div class="md:col-span-8 flex flex-col gap-5">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="companyName">Company Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 text-body-md font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="companyName" type="text" value="Apex Systems"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="taxId">Tax ID / Registration No.</label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-DEFAULT px-3 py-2 text-body-md font-body-md text-on-surface-variant cursor-not-allowed" id="taxId" readonly="" type="text" value="TR-8492011"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="tagline">Tagline</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 text-body-md font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="tagline" type="text" value="Precision Engineered Outdoor Solutions"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="description">Company Description</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 text-body-md font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-shadow resize-none" id="description" rows="5">Apex Systems specializes in the design and manufacturing of high-grade architectural outdoor furniture and structural components. With over 15 years of experience supplying major commercial developments across Europe and Asia, we pride ourselves on utilizing premium materials including marine-grade stainless steel, FSC-certified hardwoods, and ultra-high-performance concrete.</textarea>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="website">Website Link</label>
+<div class="flex">
+<span class="inline-flex items-center px-3 rounded-l-DEFAULT border border-r-0 border-outline-variant bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">
+                                        https://
+                                    </span>
+<input class="flex-1 bg-surface-container-lowest border border-outline-variant rounded-r-DEFAULT px-3 py-2 text-body-md font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" id="website" type="text" value="www.apex-systems.eu"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Persistent Action Bar -->
+<div class="border-t border-outline-variant bg-surface px-margin-mobile md:px-gutter py-4 sticky bottom-0 z-10 flex justify-end gap-4 ambient-shadow">
+<button class="px-4 py-2 border border-outline text-primary font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors">
+                Cancel
+            </button>
+<button class="px-6 py-2 bg-primary text-on-primary font-label-md text-label-md font-bold rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm">
+                Save Changes
+            </button>
+</div>
+</div>
+</body></html>

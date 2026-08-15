@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Offer Request Management - Super Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#43474c",
+                      "primary-fixed-dim": "#b5c8df",
+                      "primary": "#162839",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "tertiary": "#411d00",
+                      "tertiary-container": "#612f00",
+                      "surface-container-high": "#e7e8e9",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "surface-dim": "#d9dadb",
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary-container": "#96a9be",
+                      "on-surface": "#191c1d",
+                      "inverse-surface": "#2e3132",
+                      "secondary-fixed-dim": "#61de8a",
+                      "surface-variant": "#e1e3e4",
+                      "surface": "#f8f9fa",
+                      "secondary-fixed": "#7efba4",
+                      "tertiary-fixed": "#ffdcc5",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-tint": "#4e6073",
+                      "on-error": "#ffffff",
+                      "secondary": "#006d37",
+                      "outline": "#74777d",
+                      "surface-bright": "#f8f9fa",
+                      "on-primary-fixed-variant": "#36485b",
+                      "surface-container-highest": "#e1e3e4",
+                      "surface-container": "#edeeef",
+                      "primary-container": "#2c3e50",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-secondary-container": "#007239",
+                      "outline-variant": "#c4c6cd",
+                      "background": "#f8f9fa",
+                      "surface-container-low": "#f3f4f5",
+                      "secondary-container": "#7bf8a1",
+                      "on-tertiary-container": "#f78b30",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "on-secondary-fixed": "#00210c",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "primary-fixed": "#d1e4fb",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#b5c8df",
+                      "on-primary-fixed": "#091d2e",
+                      "on-secondary-fixed-variant": "#005228"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "base": "8px",
+                      "margin-desktop": "64px",
+                      "lg": "48px",
+                      "xl": "80px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for high-density tables */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9fa;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c6cd;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #74777d;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background flex min-h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 flex flex-col bg-primary dark:bg-primary-container shadow-sm p-sm gap-base shrink-0 z-20 relative">
+<div class="flex items-center gap-sm px-sm py-md">
+<span class="material-symbols-outlined text-[32px] text-on-primary">architecture</span>
+<div>
+<h1 class="font-headline-md text-headline-md text-on-primary">Admin Panel</h1>
+<p class="font-body-sm text-body-sm text-primary-fixed-dim">Super User</p>
+</div>
+</div>
+<div class="px-sm pb-sm">
+<button class="w-full bg-secondary text-on-secondary font-label-md text-label-md py-sm rounded-lg hover:bg-on-secondary-container transition-colors flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">add</span> Generate Report
+            </button>
+</div>
+<ul class="flex flex-col gap-xs flex-grow overflow-y-auto">
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg bg-on-primary-fixed-variant text-on-primary font-bold transition-all" href="#">
+<span class="material-symbols-outlined">request_quote</span>
+<span class="font-label-md text-label-md">Offer Requests</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">factory</span>
+<span class="font-label-md text-label-md">Manufacturers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">User Management</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-md text-label-md">Audit Log</span>
+</a>
+</li>
+</ul>
+<ul class="flex flex-col gap-xs pt-sm border-t border-primary-container">
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary-fixed-dim hover:text-on-primary hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-grow flex flex-col h-screen overflow-hidden bg-background">
+<!-- TopNavBar -->
+<header class="w-full h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-md shrink-0 z-10 relative shadow-[0_4px_12px_rgba(44,62,80,0.08)]">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">Marketplace Admin</span>
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-xl pr-sm py-xs w-64 rounded bg-surface-container-low border border-outline-variant text-body-sm font-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant" placeholder="Search requests..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:bg-surface-container-high p-xs rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-xs rounded-full transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-sm cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="Super Admin Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate system administrator in a brightly lit modern office setting. The lighting is soft and flattering, casting gentle shadows. The style is highly realistic and corporate, prioritizing clarity and professional presentation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACtf55BGt5fjoOlboGmbNZgumAAuFbsc693UP06TGgXkcD1g6BWPMEHldbeRJ2tLrssur2EBtP_du_4wcRqFivZAsNcHYOmC9vJKKVssXJiE-wp3mvZCV09BhqpjWLs3O7yZB3d_h1mhZtNJmzDovOo87T9vDvomgEhoFsizVHG6s6LUhpVSBEnybTCq_8AeNj26RUEfsIcruJsDeALJ7_8tK4DP_yQRTfYXKU2Ymz2Ea-owYeUDYu"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-grow flex overflow-hidden relative">
+<!-- Left Data View -->
+<div class="flex-grow flex flex-col min-w-0 bg-surface">
+<!-- Page Header & Filters -->
+<div class="p-md border-b border-outline-variant shrink-0 bg-surface-container-lowest">
+<div class="flex justify-between items-end mb-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-xs">Offer Request Management</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">8,422 Total Requests found</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-sm py-xs border border-outline-variant rounded flex items-center gap-xs font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[16px]">download</span> Export
+                            </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="flex gap-sm overflow-x-auto pb-xs snap-x">
+<select class="border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm bg-surface-container-lowest focus:border-primary shrink-0 snap-start min-w-[140px]">
+<option value="">Customer</option>
+<option value="john">John Doe</option>
+</select>
+<select class="border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm bg-surface-container-lowest focus:border-primary shrink-0 snap-start min-w-[140px]">
+<option value="">Manufacturer</option>
+<option value="abc">ABC Structures</option>
+</select>
+<select class="border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm bg-surface-container-lowest focus:border-primary shrink-0 snap-start min-w-[140px]">
+<option value="">Product</option>
+<option value="pergola">Bioclimatic Pergola</option>
+</select>
+<select class="border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm bg-surface-container-lowest focus:border-primary shrink-0 snap-start min-w-[140px]">
+<option value="">City</option>
+<option value="london">London</option>
+</select>
+<select class="border border-outline-variant rounded px-sm py-xs font-body-sm text-body-sm bg-surface-container-lowest focus:border-primary shrink-0 snap-start min-w-[140px]">
+<option value="">Status</option>
+<option value="draft">Draft</option>
+</select>
+<button class="px-sm py-xs border border-outline-variant rounded flex items-center gap-xs font-body-sm text-body-sm bg-surface-container-lowest hover:bg-surface-container-low shrink-0 snap-start">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span> Date Range
+                        </button>
+<button class="px-sm py-xs flex items-center gap-xs font-label-md text-label-md text-primary shrink-0 snap-start hover:underline">
+                            Clear Filters
+                        </button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="flex-grow overflow-auto p-md bg-surface-container-lowest">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead>
+<tr class="border-b-2 border-surface-variant font-label-md text-label-md text-on-surface-variant">
+<th class="py-sm px-xs font-semibold">Request ID</th>
+<th class="py-sm px-xs font-semibold">Customer</th>
+<th class="py-sm px-xs font-semibold">Manufacturer</th>
+<th class="py-sm px-xs font-semibold">Product</th>
+<th class="py-sm px-xs font-semibold">City</th>
+<th class="py-sm px-xs font-semibold">Status</th>
+<th class="py-sm px-xs font-semibold">Date</th>
+<th class="py-sm px-xs font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<!-- Active Row -->
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors bg-primary-fixed/20 cursor-pointer">
+<td class="py-sm px-xs font-medium text-primary">#AOE-99421</td>
+<td class="py-sm px-xs">Emma Thompson</td>
+<td class="py-sm px-xs">LouverTech Ltd</td>
+<td class="py-sm px-xs">Bioclimatic Pergola</td>
+<td class="py-sm px-xs">Manchester</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-fixed/20 text-on-secondary-fixed-variant font-label-md text-[10px] border border-secondary-fixed-dim/30">Survey Scheduled</span>
+</td>
+<td class="py-sm px-xs text-on-surface-variant">Oct 24, 2023</td>
+<td class="py-sm px-xs text-right">
+<button class="p-xs text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Standard Rows -->
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="py-sm px-xs font-medium text-primary">#AOE-99420</td>
+<td class="py-sm px-xs">Marcus Wright</td>
+<td class="py-sm px-xs">AluBuild Systems</td>
+<td class="py-sm px-xs">Glass Veranda</td>
+<td class="py-sm px-xs">London</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center px-2 py-1 rounded bg-primary-fixed/30 text-on-primary-fixed-variant font-label-md text-[10px] border border-primary-fixed-dim/30">Requested</span>
+</td>
+<td class="py-sm px-xs text-on-surface-variant">Oct 24, 2023</td>
+<td class="py-sm px-xs text-right">
+<button class="p-xs text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="py-sm px-xs font-medium text-primary">#AOE-99419</td>
+<td class="py-sm px-xs">Sarah Jenkins</td>
+<td class="py-sm px-xs">Outdoor Innovations</td>
+<td class="py-sm px-xs">Awning System</td>
+<td class="py-sm px-xs">Bristol</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center px-2 py-1 rounded bg-tertiary-fixed/30 text-on-tertiary-fixed-variant font-label-md text-[10px] border border-tertiary-fixed-dim/30">Offer Sent</span>
+</td>
+<td class="py-sm px-xs text-on-surface-variant">Oct 23, 2023</td>
+<td class="py-sm px-xs text-right">
+<button class="p-xs text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="py-sm px-xs font-medium text-primary">#AOE-99418</td>
+<td class="py-sm px-xs">David Lee</td>
+<td class="py-sm px-xs">LouverTech Ltd</td>
+<td class="py-sm px-xs">Bioclimatic Pergola</td>
+<td class="py-sm px-xs">Leeds</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-highest text-on-surface font-label-md text-[10px] border border-outline-variant/30">Draft</span>
+</td>
+<td class="py-sm px-xs text-on-surface-variant">Oct 23, 2023</td>
+<td class="py-sm px-xs text-right">
+<button class="p-xs text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer opacity-70">
+<td class="py-sm px-xs font-medium text-primary">#AOE-99417</td>
+<td class="py-sm px-xs">Helen Carter</td>
+<td class="py-sm px-xs">Skyline Canopies</td>
+<td class="py-sm px-xs">Carport</td>
+<td class="py-sm px-xs">Birmingham</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center px-2 py-1 rounded bg-error-container/50 text-on-error-container font-label-md text-[10px] border border-error/30">Declined</span>
+</td>
+<td class="py-sm px-xs text-on-surface-variant">Oct 22, 2023</td>
+<td class="py-sm px-xs text-right">
+<button class="p-xs text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Request Detail Drawer (Active Right Side) -->
+<aside class="w-[400px] border-l border-outline-variant bg-surface-container-lowest flex flex-col shrink-0 shadow-[-4px_0_12px_rgba(44,62,80,0.05)] z-20 overflow-y-auto">
+<!-- Drawer Header -->
+<div class="p-md border-b border-surface-variant bg-surface-container-lowest sticky top-0 z-10 flex justify-between items-start">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<h3 class="font-headline-md text-headline-md text-primary">Request #AOE-99421</h3>
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-fixed/20 text-on-secondary-fixed-variant font-label-md text-[10px] border border-secondary-fixed-dim/30">Survey Scheduled</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Created Oct 24, 2023 • 10:45 AM</p>
+</div>
+<button class="text-outline hover:text-primary p-xs rounded hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-md flex flex-col gap-md">
+<!-- Actions -->
+<div class="flex flex-wrap gap-xs">
+<button class="flex-1 py-xs px-sm border border-primary text-primary font-label-md text-label-md rounded hover:bg-primary-fixed/20 transition-colors flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">support_agent</span> Message
+                        </button>
+<button class="flex-1 py-xs px-sm border border-outline-variant text-on-surface font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">swap_horiz</span> Reassign
+                        </button>
+</div>
+<!-- Customer Info Card -->
+<div class="border border-surface-variant rounded-lg p-sm bg-surface">
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Customer Info</h4>
+<div class="flex items-start gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-headline-md shrink-0">
+                                ET
+                            </div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-primary">Emma Thompson</p>
+<p class="font-body-sm text-body-sm text-on-surface flex items-center gap-xs mt-xs"><span class="material-symbols-outlined text-[16px] text-outline">mail</span> emma.t@example.com</p>
+<p class="font-body-sm text-body-sm text-on-surface flex items-center gap-xs mt-xs"><span class="material-symbols-outlined text-[16px] text-outline">call</span> +44 7700 900077</p>
+<p class="font-body-sm text-body-sm text-on-surface flex items-center gap-xs mt-xs"><span class="material-symbols-outlined text-[16px] text-outline">location_on</span> Manchester, UK</p>
+</div>
+</div>
+</div>
+<!-- Project Specs Card -->
+<div class="border border-surface-variant rounded-lg p-sm bg-surface">
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Project Specs</h4>
+<div class="grid grid-cols-2 gap-y-sm gap-x-md font-body-sm text-body-sm">
+<div>
+<p class="text-on-surface-variant text-[11px] uppercase">Product Type</p>
+<p class="font-medium text-on-surface">Bioclimatic Pergola</p>
+</div>
+<div>
+<p class="text-on-surface-variant text-[11px] uppercase">Size Estimate</p>
+<p class="font-medium text-on-surface">24m²</p>
+</div>
+<div>
+<p class="text-on-surface-variant text-[11px] uppercase">Color Finish</p>
+<p class="font-medium text-on-surface">Anthracite Grey</p>
+</div>
+<div>
+<p class="text-on-surface-variant text-[11px] uppercase">Add-ons</p>
+<p class="font-medium text-on-surface">Integrated LED</p>
+</div>
+<div class="col-span-2">
+<p class="text-on-surface-variant text-[11px] uppercase">Assigned Manufacturer</p>
+<p class="font-medium text-primary flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">factory</span> LouverTech Ltd</p>
+</div>
+</div>
+</div>
+<!-- Timeline / Audit Log -->
+<div>
+<div class="flex justify-between items-center mb-sm">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Timeline</h4>
+<button class="text-primary font-label-md text-label-md hover:underline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">download</span> Export Log
+                             </button>
+</div>
+<div class="relative pl-sm before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-variant space-y-md">
+<!-- Timeline Item -->
+<div class="relative pl-md">
+<div class="absolute left-[-5px] top-1 w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest"></div>
+<p class="font-label-md text-label-md text-primary">Survey Scheduled</p>
+<p class="font-body-sm text-body-sm text-on-surface mt-xs">LouverTech Ltd scheduled a site survey for Oct 28, 2023.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-xs">Today, 2:15 PM</p>
+</div>
+<!-- Timeline Item -->
+<div class="relative pl-md">
+<div class="absolute left-[-5px] top-1 w-3 h-3 rounded-full bg-surface-variant border-2 border-surface-container-lowest"></div>
+<p class="font-label-md text-label-md text-on-surface">Viewed by Manufacturer</p>
+<p class="font-body-sm text-body-sm text-on-surface mt-xs">Request details accessed by Mike (LouverTech Ltd).</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-xs">Yesterday, 11:30 AM</p>
+</div>
+<!-- Timeline Item -->
+<div class="relative pl-md">
+<div class="absolute left-[-5px] top-1 w-3 h-3 rounded-full bg-surface-variant border-2 border-surface-container-lowest"></div>
+<p class="font-label-md text-label-md text-on-surface">Request Created</p>
+<p class="font-body-sm text-body-sm text-on-surface mt-xs">Customer submitted initial request via Marketplace.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[11px] mt-xs">Oct 24, 2023, 10:45 AM</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

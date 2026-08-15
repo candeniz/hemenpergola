@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ArchSystem Admin - Product Catalog</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#7bf8a1",
+                        "tertiary-container": "#612f00",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#d1e4fb",
+                        "on-secondary-fixed": "#00210c",
+                        "primary-container": "#2c3e50",
+                        "on-tertiary-container": "#f78b30",
+                        "tertiary": "#411d00",
+                        "surface-container": "#edeeef",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed": "#091d2e",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-surface": "#191c1d",
+                        "secondary": "#006d37",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-primary-container": "#96a9be",
+                        "secondary-fixed-dim": "#61de8a",
+                        "surface": "#f8f9fa",
+                        "background": "#f8f9fa",
+                        "outline-variant": "#c4c6cd",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface-variant": "#43474c",
+                        "outline": "#74777d",
+                        "on-secondary-container": "#007239",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-background": "#191c1d",
+                        "inverse-primary": "#b5c8df",
+                        "surface-bright": "#f8f9fa",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#36485b",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#301400",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f3f4f5",
+                        "secondary-fixed": "#7efba4",
+                        "on-secondary-fixed-variant": "#005228",
+                        "primary-fixed-dim": "#b5c8df",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#4e6073",
+                        "primary": "#162839"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "md": "24px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "lg": "48px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "xl": "80px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Montserrat"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md flex h-screen overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-surface-container-low dark:bg-surface-container text-secondary dark:text-secondary-fixed font-label-md text-label-md font-body-sm text-body-sm fixed left-0 top-0 h-full flex flex-col w-64 overflow-y-auto pt-xl pb-md px-sm z-40 border-r border-outline-variant dark:border-outline shadow-none">
+<div class="mb-lg px-sm">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">SA</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim leading-none">Super Admin</h1>
+<p class="font-body-sm text-on-surface-variant leading-tight">Precision Control</p>
+</div>
+</div>
+</div>
+<button class="mb-md mx-sm bg-secondary text-on-secondary rounded-lg py-sm px-md flex items-center justify-center gap-xs font-label-md shadow-sm hover:bg-on-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            Generate Report
+        </button>
+<ul class="flex flex-col gap-xs flex-1">
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-surface-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-secondary-container dark:text-secondary-fixed bg-secondary-container dark:bg-on-secondary-fixed-variant font-semibold hover:bg-surface-container-high dark:hover:bg-surface-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+                    Inventory
+                </a>
+</li>
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-surface-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+                    Manufacturers
+                </a>
+</li>
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high hover:bg-surface-container-high dark:hover:bg-surface-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                    Orders
+                </a>
+</li>
+</ul>
+<div class="mt-auto pt-md border-t border-outline-variant">
+<ul class="flex flex-col gap-xs">
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                        Sign Out
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col h-full bg-surface">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-margin-desktop py-xs z-50 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline shadow-none font-display-lg text-display-lg font-headline-md text-headline-md font-body-md text-body-md text-primary dark:text-primary-fixed-dim">
+<div class="flex items-center gap-md w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-sm top-1/2 transform -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-[40px] pr-sm py-[8px] bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-colors" placeholder="Search catalog..." type="text"/>
+</div>
+</div>
+<div class="flex-1 flex justify-center text-center">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">ArchSystem Admin</h1>
+</div>
+<div class="flex items-center justify-end gap-md w-1/3 text-on-surface-variant">
+<button class="hover:bg-surface-container-low p-2 rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-low p-2 rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="font-label-md text-label-md hover:bg-surface-container-low px-sm py-xs rounded transition-colors cursor-pointer active:opacity-80">Help</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant">
+<img alt="Administrator Profile Avatar" class="w-full h-full object-cover" data-alt="A clean, minimalist abstract geometric pattern in light grays and whites, resembling a sleek architectural floor plan or structural diagram, serving as a subtle profile avatar placeholder for a technical admin dashboard. Soft, even studio lighting. Premium corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv3hfBNbp3WJop6G_hhC61R_squ8TbfFH6fdyUfenPf4IosN_i1O-gmSVMdGMgEUDrXeHAYRT_Uf7tsvNo7ZXpIPt6TotRTgI0vvDH6leN7Lj0oo4yLauPEf2cnz2K76RNgzh-o6ifeVgw2MS3dYyteUTs5xJ9e809flD0YyJQmbP9rc0bNOBqQ1ckhv2rCPpkwHXf-Efudrq-Ph3mf64jxq3bdXA-KBNScONcwxog-xe0b6nFhLAt"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-margin-desktop space-y-lg">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary mb-xs">Product Catalog</h2>
+<p class="font-body-md text-on-surface-variant">Manage inventory categories, structural products, and technical specifications.</p>
+</div>
+<div class="flex gap-sm">
+<button class="border border-outline text-primary px-md py-sm rounded-lg font-label-md hover:bg-surface-container-lowest transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filters
+                    </button>
+<button class="bg-secondary text-on-secondary px-md py-sm rounded-lg font-label-md hover:bg-on-secondary-container transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Add New Category
+                    </button>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Main Content Area (Categories & Products) -->
+<div class="col-span-12 lg:col-span-8 space-y-lg">
+<!-- Categories Section (Bento style) -->
+<section>
+<h3 class="font-headline-md text-headline-md text-primary mb-md">System Categories</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-sm">
+<!-- Category Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-sm transition-shadow group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 right-0 p-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+<div class="w-12 h-12 bg-surface-container-low rounded flex items-center justify-center mb-sm text-primary">
+<span class="material-symbols-outlined text-[24px]">view_agenda</span>
+</div>
+<h4 class="font-label-md text-label-md text-primary mb-xs uppercase tracking-wider">Pergola Systems</h4>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md font-bold text-primary">24</span>
+<span class="bg-secondary/10 text-secondary-fixed-dim font-label-md text-[10px] px-2 py-1 rounded">Active</span>
+</div>
+</div>
+<!-- Category Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-sm transition-shadow group cursor-pointer relative overflow-hidden ring-1 ring-secondary">
+<div class="absolute top-0 right-0 p-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+<div class="w-12 h-12 bg-surface-container-low rounded flex items-center justify-center mb-sm text-primary">
+<span class="material-symbols-outlined text-[24px]">grid_view</span>
+</div>
+<h4 class="font-label-md text-label-md text-primary mb-xs uppercase tracking-wider">Glass Facades</h4>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md font-bold text-primary">18</span>
+<span class="bg-secondary/10 text-secondary-fixed-dim font-label-md text-[10px] px-2 py-1 rounded">Active</span>
+</div>
+</div>
+<!-- Category Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md hover:shadow-sm transition-shadow group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 right-0 p-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+<div class="w-12 h-12 bg-surface-container-low rounded flex items-center justify-center mb-sm text-primary">
+<span class="material-symbols-outlined text-[24px]">wb_sunny</span>
+</div>
+<h4 class="font-label-md text-label-md text-primary mb-xs uppercase tracking-wider">Awning Structures</h4>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md font-bold text-primary">42</span>
+<span class="bg-surface-container-highest text-on-surface-variant font-label-md text-[10px] px-2 py-1 rounded">2 Drafts</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Products High-Density Table -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col h-[500px]">
+<div class="p-sm border-b border-outline-variant bg-surface flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<h3 class="font-label-md text-label-md text-primary uppercase">Products: Glass Facades</h3>
+<span class="bg-surface-container-highest text-on-surface-variant rounded-full px-2 py-0.5 text-[10px]">18 Items</span>
+</div>
+<button class="text-secondary font-label-md text-label-md flex items-center gap-xs hover:underline">
+<span class="material-symbols-outlined text-[16px]">add</span> Add Product
+                            </button>
+</div>
+<div class="overflow-auto flex-1">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface border-b border-outline-variant font-label-md text-label-md text-on-surface-variant z-10">
+<tr>
+<th class="py-2 px-sm font-semibold w-10"></th>
+<th class="py-2 px-sm font-semibold">SKU / Model</th>
+<th class="py-2 px-sm font-semibold">Base Price</th>
+<th class="py-2 px-sm font-semibold">Variants</th>
+<th class="py-2 px-sm font-semibold">Status</th>
+<th class="py-2 px-sm text-right font-semibold">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-primary divide-y divide-outline-variant/50">
+<!-- Row 1 (Selected) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-primary-fixed/20">
+<td class="py-2 px-sm text-center">
+<div class="w-8 h-8 bg-surface-container rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up, high-quality rendering of a structural glass facade bracket system. Minimalist background, stark lighting highlighting the brushed steel texture. Technical architectural visualization style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpr97yBwWniZeKPdGY7dOnWXk8T1nEx6sq_b0v7Ebx98eDr2T_h7V-8L0ATkb35w9al6YIjjAbyXcQvXtqlqMDfbSatlH8XPMfLGS_NFJzm0oaceBw4II2BOFq-hOctKtDavat_vDB_4JDZc94-RrarCLSiAgOH6j7z6wNsgVCpY-troirKYGZRx97MdsP09VOrwgjckLxyB7dilMEyhUGhR0RkRJsDMmJYb3GlWY5-MPPDBIIdjQM"/>
+</div>
+</td>
+<td class="py-2 px-sm">
+<div class="font-semibold">AeroGlass V1</div>
+<div class="text-[11px] text-on-surface-variant">GF-AG-01</div>
+</td>
+<td class="py-2 px-sm font-mono text-[13px]">$1,200/m²</td>
+<td class="py-2 px-sm"><span class="bg-surface-container-high px-2 py-1 rounded text-[11px]">4 Options</span></td>
+<td class="py-2 px-sm">
+<div class="flex items-center gap-xs text-secondary-fixed-dim">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+<span class="text-[11px]">Active</span>
+</div>
+</td>
+<td class="py-2 px-sm text-right">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-sm text-center">
+<div class="w-8 h-8 bg-surface-container rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist 3D render of a frameless sliding glass door track system. Crisp white studio background, highlighting the extruded aluminum profile. Structural engineering visualization." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxOfyUWpINv9i_GyswIGSw9aq9n22alA9XPgHuB86UCvWrswE0PlrznUtlPbh0C4d3IUsszejax2NdyoCyiWVxYyJPo9gipek_LqkfM8A698LjJfEBnpsrdSmz5UqCdOYV9zK1dlvMalUkwazgyJKoty0uSeGXmmCTygINssH5h1bBHF5rzy3g_CIMq38MVBR4SkVHV4ZJawfgb5Uq8wQzizDhdAWucOHopRsqvvPt9N651baFN3Qz"/>
+</div>
+</td>
+<td class="py-2 px-sm">
+<div class="font-semibold">SlideTech Max</div>
+<div class="text-[11px] text-on-surface-variant">GF-SM-02</div>
+</td>
+<td class="py-2 px-sm font-mono text-[13px]">$850/m²</td>
+<td class="py-2 px-sm"><span class="bg-surface-container-high px-2 py-1 rounded text-[11px]">12 Options</span></td>
+<td class="py-2 px-sm">
+<div class="flex items-center gap-xs text-secondary-fixed-dim">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+<span class="text-[11px]">Active</span>
+</div>
+</td>
+<td class="py-2 px-sm text-right">
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Technical Detail Panel (Variants & Options) -->
+<div class="col-span-12 lg:col-span-4">
+<aside class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md h-full flex flex-col">
+<div class="mb-md border-b border-outline-variant pb-sm flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">AeroGlass V1</h3>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Technical Specifications</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-sm py-xs rounded font-label-md text-[11px] hover:opacity-90">Save Changes</button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-md pr-2">
+<!-- Detail Group -->
+<div class="space-y-sm">
+<h4 class="font-label-md text-[11px] text-outline uppercase tracking-wider flex items-center gap-xs border-b border-outline-variant/30 pb-1">
+<span class="material-symbols-outlined text-[14px]">straighten</span> Dimensions
+                                </h4>
+<div class="grid grid-cols-2 gap-sm">
+<div>
+<label class="block font-label-md text-[10px] text-on-surface-variant mb-1">Max Height (mm)</label>
+<input class="w-full bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-mono focus:border-secondary focus:ring-1 focus:ring-secondary" type="number" value="3200"/>
+</div>
+<div>
+<label class="block font-label-md text-[10px] text-on-surface-variant mb-1">Max Width (mm)</label>
+<input class="w-full bg-surface border border-outline-variant rounded px-2 py-1 text-body-sm font-mono focus:border-secondary focus:ring-1 focus:ring-secondary" type="number" value="1500"/>
+</div>
+</div>
+</div>
+<!-- Detail Group -->
+<div class="space-y-sm">
+<h4 class="font-label-md text-[11px] text-outline uppercase tracking-wider flex items-center gap-xs border-b border-outline-variant/30 pb-1 mt-md">
+<span class="material-symbols-outlined text-[14px]">palette</span> Finish Options
+                                </h4>
+<div class="space-y-2">
+<div class="flex items-center justify-between bg-surface-container-low p-2 rounded border border-outline-variant/50">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-sm bg-[#2C2C2C] border border-outline"></div>
+<span class="font-body-sm text-[13px]">Anthracite Grey</span>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">+ $0.00</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-2 rounded border border-outline-variant/50">
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 rounded-sm bg-[#E0E0E0] border border-outline"></div>
+<span class="font-body-sm text-[13px]">Brushed Aluminum</span>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">+ $45.00/m²</span>
+</div>
+<button class="w-full py-1 border border-dashed border-outline text-outline text-[11px] font-label-md rounded hover:bg-surface-container-low transition-colors">
+                                        + Add Finish Variant
+                                    </button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</main>
+</body></html>

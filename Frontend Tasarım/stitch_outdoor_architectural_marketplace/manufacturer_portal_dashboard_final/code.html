@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Archivault - Manufacturer Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e7e8e9",
+                        "on-tertiary-container": "#f78b30",
+                        "surface-container": "#edeeef",
+                        "surface-variant": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-primary": "#b5c8df",
+                        "outline": "#74777d",
+                        "on-primary-fixed": "#091d2e",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "primary-fixed-dim": "#b5c8df",
+                        "tertiary-container": "#612f00",
+                        "surface": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f5",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#7bf8a1",
+                        "surface-tint": "#4e6073",
+                        "secondary": "#006d37",
+                        "surface-dim": "#d9dadb",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "tertiary": "#411d00",
+                        "background": "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "on-primary-fixed-variant": "#36485b",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2c3e50",
+                        "on-secondary-container": "#007239",
+                        "secondary-fixed-dim": "#61de8a",
+                        "secondary-fixed": "#7efba4",
+                        "on-primary": "#ffffff",
+                        "primary": "#162839",
+                        "on-secondary-fixed": "#00210c",
+                        "on-secondary-fixed-variant": "#005228",
+                        "outline-variant": "#c4c6cd",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#43474c",
+                        "on-primary-container": "#96a9be",
+                        "tertiary-fixed": "#ffdcc5",
+                        "primary-fixed": "#d1e4fb",
+                        "on-background": "#191c1d",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed": "#301400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "64px",
+                        "sm": "12px",
+                        "xl": "80px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "lg": "48px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="flex bg-background text-on-background font-body-md min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface-container dark:bg-surface-container-high h-screen w-64 left-0 bg-surface-container-low dark:bg-surface-dim shadow-sm dark:shadow-none fixed left-0 top-0 h-full flex flex-col p-sm gap-xs z-50">
+<div class="px-md py-lg border-b border-outline-variant mb-md">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Manufacturer Hub</h1>
+<p class="font-label-md text-label-md text-on-surface-variant mt-xs">Premium Partner</p>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container font-bold rounded-lg transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">pending_actions</span>
+<span class="font-label-md text-label-md">Requests</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Pricing</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-md text-label-md">Service Areas</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-label-md text-label-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant rounded-lg hover:bg-surface-variant dark:hover:bg-inverse-surface transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant">
+<div class="flex items-center gap-md px-md">
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="A macro shot of a precise, brushed steel architectural connection detail. The lighting is crisp and technical, highlighting the high-quality finish and structural integrity. Minimalist, light mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJVPtLzo9K3vydVaKeYXp14Xl74Z1P7x81SYwtADVDdrQ1AaYziA2rJCufBhk_e8OaGE27t3N-FB6sHF4cugVpFozkcobfhgMSvC4_cWTh1PGKyjfEl_IwOl6yZi0N_roLV1vn5yeu6mwrvB4s5HK2OXL5urZ715sw3rfOxQC3Id-HavKdkaj3Y5cUcDLK0Gfc-zBnSHt8-7NK5V0A9QhDH9iv1IXWkKmjnYTzqTWMVf9MciH6WBed"/>
+<div>
+<p class="font-label-md text-label-md font-bold">ARTE Outdoor</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Profile Settings</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="ml-64 flex-1 p-margin-desktop bg-background min-h-screen">
+<!-- Header -->
+<header class="mb-lg flex justify-between items-end">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-xs">Overview</p>
+<h2 class="font-headline-lg text-headline-lg text-primary">Good morning, ARTE Outdoor.</h2>
+</div>
+<div class="flex gap-md">
+<button class="bg-surface text-on-surface border border-outline px-md py-sm rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors shadow-sm">
+                    Download Report
+                </button>
+</div>
+</header>
+<!-- KPIs -->
+<section class="grid grid-cols-5 gap-base mb-lg">
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">New Requests</p>
+<p class="font-headline-lg text-headline-lg text-primary">12</p>
+<p class="font-body-sm text-body-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +3 this week
+                </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Accepted</p>
+<p class="font-headline-lg text-headline-lg text-primary">45</p>
+<p class="font-body-sm text-body-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +12% MoM
+                </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Site Surveys</p>
+<p class="font-headline-lg text-headline-lg text-primary">8</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">schedule</span> Pending action
+                </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Offers Sent</p>
+<p class="font-headline-lg text-headline-lg text-primary">32</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">mail</span> 4 awaiting reply
+                </p>
+</div>
+<div class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<p class="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Won Projects</p>
+<p class="font-headline-lg text-headline-lg text-primary">18</p>
+<p class="font-body-sm text-body-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">workspace_premium</span> +2 this month
+                </p>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Pipeline Visualization -->
+<section class="lg:col-span-2 bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant flex flex-col">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
+<h3 class="font-headline-md text-headline-md text-primary">Conversion Pipeline</h3>
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="flex-1 flex flex-col justify-center gap-sm">
+<!-- Funnel Representation -->
+<div class="relative w-full h-12 bg-surface-container rounded-sm overflow-hidden flex items-center px-md group">
+<div class="absolute left-0 top-0 h-full bg-primary-fixed opacity-20 w-[100%] transition-all"></div>
+<span class="font-label-md text-label-md relative z-10 w-1/3">Inquiry (115)</span>
+<div class="flex-1"></div>
+<span class="font-label-md text-label-md text-right relative z-10">100%</span>
+</div>
+<div class="relative w-[85%] ml-[7.5%] h-12 bg-surface-container rounded-sm overflow-hidden flex items-center px-md group">
+<div class="absolute left-0 top-0 h-full bg-secondary-fixed opacity-40 w-[60%] transition-all"></div>
+<span class="font-label-md text-label-md relative z-10 w-1/3">Qualification (69)</span>
+<div class="flex-1"></div>
+<span class="font-label-md text-label-md text-right relative z-10">60%</span>
+</div>
+<div class="relative w-[70%] ml-[15%] h-12 bg-surface-container rounded-sm overflow-hidden flex items-center px-md group">
+<div class="absolute left-0 top-0 h-full bg-tertiary-fixed opacity-60 w-[45%] transition-all"></div>
+<span class="font-label-md text-label-md relative z-10 w-1/3">Proposal (31)</span>
+<div class="flex-1"></div>
+<span class="font-label-md text-label-md text-right relative z-10">45%</span>
+</div>
+<div class="relative w-[50%] ml-[25%] h-12 bg-surface-container rounded-sm overflow-hidden flex items-center px-md group">
+<div class="absolute left-0 top-0 h-full bg-secondary opacity-20 w-[26%] transition-all"></div>
+<span class="font-label-md text-label-md relative z-10 w-1/3">Closed Won (18)</span>
+<div class="flex-1"></div>
+<span class="font-label-md text-label-md text-right relative z-10">26%</span>
+</div>
+</div>
+</section>
+<!-- Quick Actions / Upcoming -->
+<section class="bg-surface-container-lowest p-md rounded-lg shadow-sm border border-outline-variant">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
+<h3 class="font-headline-md text-headline-md text-primary">Pending Actions</h3>
+</div>
+<div class="flex flex-col gap-sm">
+<div class="p-sm bg-error-container rounded-sm border-l-4 border-error flex items-start gap-sm">
+<span class="material-symbols-outlined text-error mt-xs">warning</span>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-error-container">Survey Overdue</p>
+<p class="font-body-sm text-body-sm text-on-error-container">Project #4092 - Smith Residence</p>
+</div>
+</div>
+<div class="p-sm bg-surface-container rounded-sm border-l-4 border-secondary flex items-start gap-sm">
+<span class="material-symbols-outlined text-secondary mt-xs">edit_document</span>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Contract Signature</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Oakwood Development Phase 2</p>
+</div>
+</div>
+<div class="p-sm bg-surface-container rounded-sm border-l-4 border-primary flex items-start gap-sm">
+<span class="material-symbols-outlined text-primary mt-xs">forum</span>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Client Message</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Regarding material spec changes.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Recent Requests Table -->
+<section class="mt-gutter bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant overflow-hidden">
+<div class="flex justify-between items-center p-md border-b border-outline-variant">
+<h3 class="font-headline-md text-headline-md text-primary">Recent Requests</h3>
+<button class="font-label-md text-label-md text-primary hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">ID</th>
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Client</th>
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Project Type</th>
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Date</th>
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="p-sm font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-sm font-label-md text-label-md">REQ-9042</td>
+<td class="p-sm font-bold">Lumina Architects</td>
+<td class="p-sm text-on-surface-variant">Commercial Facade</td>
+<td class="p-sm text-on-surface-variant">Oct 24, 2024</td>
+<td class="p-sm">
+<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-2 py-1 rounded-sm font-label-md text-[10px] uppercase">New</span>
+</td>
+<td class="p-sm text-right">
+<button class="text-primary hover:text-primary-fixed-dim"><span class="material-symbols-outlined text-[20px]">arrow_forward</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-sm font-label-md text-label-md">REQ-9041</td>
+<td class="p-sm font-bold">Elena Rodriguez</td>
+<td class="p-sm text-on-surface-variant">Residential Pergola</td>
+<td class="p-sm text-on-surface-variant">Oct 23, 2024</td>
+<td class="p-sm">
+<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded-sm font-label-md text-[10px] uppercase">Under Review</span>
+</td>
+<td class="p-sm text-right">
+<button class="text-primary hover:text-primary-fixed-dim"><span class="material-symbols-outlined text-[20px]">arrow_forward</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-sm font-label-md text-label-md">REQ-9038</td>
+<td class="p-sm font-bold">Apex Development</td>
+<td class="p-sm text-on-surface-variant">Public Park Installation</td>
+<td class="p-sm text-on-surface-variant">Oct 21, 2024</td>
+<td class="p-sm">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-1 rounded-sm font-label-md text-[10px] uppercase">Awaiting Survey</span>
+</td>
+<td class="p-sm text-right">
+<button class="text-primary hover:text-primary-fixed-dim"><span class="material-symbols-outlined text-[20px]">arrow_forward</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-sm font-label-md text-label-md">REQ-9035</td>
+<td class="p-sm font-bold">Horizon Builders</td>
+<td class="p-sm text-on-surface-variant">Corporate Campus</td>
+<td class="p-sm text-on-surface-variant">Oct 19, 2024</td>
+<td class="p-sm">
+<span class="bg-surface-container text-on-surface-variant px-2 py-1 rounded-sm font-label-md text-[10px] uppercase">Offer Sent</span>
+</td>
+<td class="p-sm text-right">
+<button class="text-primary hover:text-primary-fixed-dim"><span class="material-symbols-outlined text-[20px]">arrow_forward</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</body></html>

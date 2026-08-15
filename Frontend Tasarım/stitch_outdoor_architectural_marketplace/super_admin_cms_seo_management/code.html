@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Portal - CMS &amp; SEO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-primary": "#b5c8df",
+                      "surface-container-highest": "#e1e3e4",
+                      "primary-fixed-dim": "#b5c8df",
+                      "on-surface": "#191c1d",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#96a9be",
+                      "on-primary-fixed": "#091d2e",
+                      "on-tertiary-fixed": "#301400",
+                      "surface-tint": "#4e6073",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#43474c",
+                      "on-primary-fixed-variant": "#36485b",
+                      "primary": "#162839",
+                      "error": "#ba1a1a",
+                      "surface-container": "#edeeef",
+                      "error-container": "#ffdad6",
+                      "on-secondary-container": "#007239",
+                      "secondary": "#006d37",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "on-secondary-fixed-variant": "#005228",
+                      "tertiary-fixed-dim": "#ffb783",
+                      "background": "#f8f9fa",
+                      "primary-container": "#2c3e50",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#c4c6cd",
+                      "on-background": "#191c1d",
+                      "on-error-container": "#93000a",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-variant": "#e1e3e4",
+                      "on-error": "#ffffff",
+                      "primary-fixed": "#d1e4fb",
+                      "secondary-container": "#7bf8a1",
+                      "tertiary-fixed": "#ffdcc5",
+                      "tertiary": "#411d00",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#612f00",
+                      "secondary-fixed-dim": "#61de8a",
+                      "secondary-fixed": "#7efba4",
+                      "on-tertiary-container": "#f78b30",
+                      "outline": "#74777d",
+                      "on-secondary-fixed": "#00210c",
+                      "surface": "#f8f9fa",
+                      "surface-dim": "#d9dadb",
+                      "inverse-surface": "#2e3132",
+                      "surface-container-high": "#e7e8e9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "sm": "12px",
+                      "xl": "80px",
+                      "lg": "48px",
+                      "margin-desktop": "64px",
+                      "margin-mobile": "16px",
+                      "xs": "4px",
+                      "md": "24px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar for high-density tables */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9fa; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c6cd; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #74777d; 
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-container-lowest text-primary dark:text-inverse-primary font-label-md text-label-md h-screen w-64 flex-col flex-shrink-0 border-r border-outline-variant dark:border-outline fixed inset-y-0 left-0 z-50 flex flex-col hidden md:flex">
+<div class="p-6 border-b border-outline-variant">
+<h1 class="font-display-lg text-headline-md text-primary dark:text-inverse-primary tracking-tight">Admin Portal</h1>
+<p class="text-on-surface-variant mt-1">Architectural Marketplace</p>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<ul class="space-y-1 px-3">
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">factory</span>
+                        Manufacturers
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">group</span>
+                        Customers
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">request_quote</span>
+                        Offer Requests
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                        Product Catalog
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">payments</span>
+                        Market Pricing
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">gavel</span>
+                        Reviews &amp; Disputes
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">subscriptions</span>
+                        Subscriptions
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg font-bold cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-weight="fill">settings_applications</span>
+                        CMS/SEO
+                    </a>
+</li>
+</ul>
+</div>
+<div class="p-4 border-t border-outline-variant">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">history</span>
+                        Logs
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors rounded-lg cursor-pointer active:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined">logout</span>
+                        Logout
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 w-full h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim text-primary dark:text-inverse-primary font-label-md text-label-md w-full h-16 flex items-center sticky top-0 border-b border-outline-variant dark:border-outline z-40 px-gutter justify-between">
+<div class="flex items-center flex-1 max-w-md relative">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-DEFAULT focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-body-sm transition-all text-on-surface" placeholder="Search pages, components, or metadata..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all cursor-pointer active:scale-95 p-2 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all cursor-pointer active:scale-95 p-2 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all cursor-pointer active:scale-95 p-2 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden border border-outline-variant ml-2">
+<img alt="Administrator Avatar" class="w-full h-full object-cover" data-alt="A small, professional avatar portrait of an administrator in a modern office setting. High quality, clear lighting, neutral background, reflecting an architectural or technical professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRTzZerJ6S3N1Jl7dkzNekdFqiUuTR9_8pdRrXWqX6wzfoUKsb8ktrP5FuAwyYh4eP0KigHvCsiFRTZ0kv5jfxWfVs9lTKngTVoLNCKxRNkiNKj_3LKK7ZWM-AjRslQRRjdbFSTTDUvLV_IVXsyZjIc2cW-MEFn-hGBlIyv-qlO_1RKw4ieAMm1btCLAZDYbvnkVHy84-5aX1BxXE2OSWr5XlMZjL2dSKvS8V7gvHnn5t47WkTcf79"/>
+</div>
+</div>
+</header>
+<!-- Canvas Area -->
+<main class="flex-1 overflow-y-auto bg-background p-6">
+<!-- Page Header -->
+<div class="mb-6">
+<h2 class="font-headline-lg text-headline-lg text-primary">Content Management &amp; SEO</h2>
+<p class="text-body-md text-on-surface-variant mt-2">Manage site structure, global metadata, and page layouts.</p>
+</div>
+<!-- Tab Navigation -->
+<div class="border-b border-outline-variant mb-6">
+<nav aria-label="Tabs" class="-mb-px flex space-x-8">
+<a class="border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline-variant whitespace-nowrap py-4 px-1 border-b-2 font-label-md text-label-md transition-colors" href="#">
+                        Homepage Sections
+                    </a>
+<a class="border-primary text-primary whitespace-nowrap py-4 px-1 border-b-2 font-label-md text-label-md font-bold" href="#">
+                        City &amp; Product Pages
+                    </a>
+<a class="border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline-variant whitespace-nowrap py-4 px-1 border-b-2 font-label-md text-label-md transition-colors" href="#">
+                        Blog &amp; Price Guides
+                    </a>
+<a class="border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline-variant whitespace-nowrap py-4 px-1 border-b-2 font-label-md text-label-md transition-colors" href="#">
+                        Manufacturer SEO
+                    </a>
+</nav>
+</div>
+<!-- Bento Grid Layout for Active Tab content -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100vh-280px)] min-h-[600px]">
+<!-- Left Panel: Page List Table (Takes up 7 columns on xl) -->
+<div class="xl:col-span-7 bg-surface rounded-lg border border-outline-variant shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex flex-col overflow-hidden">
+<!-- Table Header Actions -->
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">auto_awesome_mosaic</span>
+<h3 class="font-headline-md text-body-lg font-semibold text-primary">Managed Pages</h3>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-surface text-on-surface-variant border border-outline-variant rounded-DEFAULT font-label-md text-label-md hover:bg-surface-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+                                Filter
+                            </button>
+<button class="px-4 py-2 bg-secondary text-on-secondary rounded-DEFAULT font-label-md text-label-md hover:bg-on-secondary-container transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                                New Page
+                            </button>
+</div>
+</div>
+<!-- High-Density Table -->
+<div class="flex-1 overflow-auto">
+<table class="min-w-full divide-y divide-outline-variant">
+<thead class="bg-surface-container-low sticky top-0 z-10">
+<tr>
+<th class="px-4 py-3 text-left font-label-md text-label-md text-on-surface-variant uppercase tracking-wider w-1/2" scope="col">Page Title &amp; Path</th>
+<th class="px-4 py-3 text-left font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" scope="col">Type</th>
+<th class="px-4 py-3 text-left font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" scope="col">Status</th>
+<th class="px-4 py-3 text-left font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" scope="col">Index</th>
+</tr>
+</thead>
+<tbody class="bg-surface divide-y divide-outline-variant">
+<!-- Row 1 (Selected) -->
+<tr class="hover:bg-primary-fixed transition-colors cursor-pointer bg-primary-fixed-dim bg-opacity-20">
+<td class="px-4 py-3 whitespace-nowrap">
+<div class="flex items-center">
+<div class="ml-2">
+<div class="text-body-sm font-semibold text-on-surface">Bioclimatic Pergola - Istanbul</div>
+<div class="text-label-md text-on-surface-variant mt-0.5">/products/bioclimatic-pergola/istanbul</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container text-on-surface-variant">City Product</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#e6f4ea] text-[#1e8e3e]">Published</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary">check_circle</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer">
+<td class="px-4 py-3 whitespace-nowrap">
+<div class="flex items-center">
+<div class="ml-2">
+<div class="text-body-sm font-medium text-on-surface">Glass Systems - London</div>
+<div class="text-label-md text-on-surface-variant mt-0.5">/products/glass-systems/london</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container text-on-surface-variant">City Product</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#e6f4ea] text-[#1e8e3e]">Published</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary">check_circle</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer">
+<td class="px-4 py-3 whitespace-nowrap">
+<div class="flex items-center">
+<div class="ml-2">
+<div class="text-body-sm font-medium text-on-surface">Retractable Awnings - Berlin</div>
+<div class="text-label-md text-on-surface-variant mt-0.5">/products/retractable-awnings/berlin</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container text-on-surface-variant">City Product</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#fef7e0] text-[#b06000]">Draft</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-outline">cancel</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer">
+<td class="px-4 py-3 whitespace-nowrap">
+<div class="flex items-center">
+<div class="ml-2">
+<div class="text-body-sm font-medium text-on-surface">Winter Gardens - Paris</div>
+<div class="text-label-md text-on-surface-variant mt-0.5">/products/winter-gardens/paris</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container text-on-surface-variant">City Product</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#e6f4ea] text-[#1e8e3e]">Published</span>
+</td>
+<td class="px-4 py-3 whitespace-nowrap text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary">check_circle</span>
+</td>
+</tr>
+<!-- Add more empty rows for structure if needed -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer">
+<td class="px-4 py-3 whitespace-nowrap"><div class="h-5 bg-surface-container-high rounded w-3/4"></div></td>
+<td class="px-4 py-3 whitespace-nowrap"><div class="h-5 bg-surface-container-high rounded w-1/2"></div></td>
+<td class="px-4 py-3 whitespace-nowrap"><div class="h-5 bg-surface-container-high rounded w-1/2"></div></td>
+<td class="px-4 py-3 whitespace-nowrap"><div class="h-5 bg-surface-container-high rounded w-6 rounded-full"></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Panel: SEO & Metadata Editor (Takes up 5 columns on xl) -->
+<div class="xl:col-span-5 flex flex-col gap-6">
+<!-- Editor Card -->
+<div class="bg-surface rounded-lg border border-outline-variant shadow-[0_4px_12px_rgba(44,62,80,0.08)] flex-1 overflow-y-auto">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center sticky top-0 z-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">edit_document</span>
+<h3 class="font-headline-md text-body-lg font-semibold text-primary">SEO &amp; Metadata Editor</h3>
+</div>
+<span class="text-label-md text-on-surface-variant">Editing: Bioclimatic Pergola...</span>
+</div>
+<div class="p-6 space-y-6">
+<!-- Index Toggle -->
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-DEFAULT bg-surface-bright">
+<div>
+<h4 class="font-label-md text-body-sm font-semibold text-on-surface">Search Engine Visibility</h4>
+<p class="text-label-md text-on-surface-variant mt-1">Allow search engines to index this page.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-md font-semibold text-on-surface-variant">Noindex</span>
+<!-- Toggle Switch Component -->
+<button aria-checked="true" class="bg-secondary relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2" role="switch" type="button">
+<span aria-hidden="true" class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+<span class="text-label-md font-semibold text-secondary">Index</span>
+</div>
+</div>
+<!-- Form Fields -->
+<div class="space-y-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="url-slug">URL Slug</label>
+<div class="flex rounded-DEFAULT shadow-sm">
+<span class="inline-flex items-center rounded-l-DEFAULT border border-r-0 border-outline-variant bg-surface-container-low px-3 text-on-surface-variant text-body-sm">
+                                            /products/bioclimatic-pergola/
+                                        </span>
+<input class="block w-full min-w-0 flex-1 rounded-none rounded-r-DEFAULT border-outline-variant focus:border-primary focus:ring-primary sm:text-sm text-body-sm px-3 py-2 border" id="url-slug" name="url-slug" type="text" value="istanbul"/>
+</div>
+</div>
+<div>
+<div class="flex justify-between">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="meta-title">Meta Title</label>
+<span class="text-label-md text-on-surface-variant">58/60</span>
+</div>
+<input class="block w-full rounded-DEFAULT border-outline-variant focus:border-primary focus:ring-primary sm:text-sm text-body-sm px-3 py-2 border" id="meta-title" name="meta-title" type="text" value="Premium Bioclimatic Pergolas in Istanbul | Top Manufacturers"/>
+<p class="mt-1 text-label-md text-on-surface-variant">The title displayed in search engine results.</p>
+</div>
+<div>
+<div class="flex justify-between">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="meta-desc">Meta Description</label>
+<span class="text-label-md text-on-surface-variant">142/160</span>
+</div>
+<textarea class="block w-full rounded-DEFAULT border-outline-variant focus:border-primary focus:ring-primary sm:text-sm text-body-sm px-3 py-2 border" id="meta-desc" name="meta-desc" rows="3">Discover the best bioclimatic pergolas in Istanbul. Compare top structural architectural manufacturers, request quotes, and find pricing guides.</textarea>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="canonical-url">Canonical URL (Optional)</label>
+<input class="block w-full rounded-DEFAULT border-outline-variant focus:border-primary focus:ring-primary sm:text-sm text-body-sm px-3 py-2 border" id="canonical-url" name="canonical-url" placeholder="https://example.com/original-page" type="text"/>
+</div>
+</div>
+<!-- Save Actions -->
+<div class="pt-4 border-t border-outline-variant flex justify-end gap-3">
+<button class="px-4 py-2 bg-surface text-on-surface-variant border border-outline-variant rounded-DEFAULT font-label-md text-label-md hover:bg-surface-container transition-colors" type="button">Discard</button>
+<button class="px-4 py-2 bg-secondary text-on-secondary rounded-DEFAULT font-label-md text-label-md hover:bg-on-secondary-container transition-colors" type="button">Save Changes</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

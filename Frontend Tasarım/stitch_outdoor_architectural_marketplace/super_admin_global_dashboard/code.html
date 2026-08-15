@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Admin Control Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b5c8df",
+                        "on-tertiary-container": "#f78b30",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#411d00",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "surface-bright": "#f8f9fa",
+                        "surface-container-low": "#f3f4f5",
+                        "background": "#f8f9fa",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "surface-tint": "#4e6073",
+                        "primary": "#162839",
+                        "on-background": "#191c1d",
+                        "on-tertiary-fixed": "#301400",
+                        "primary-container": "#2c3e50",
+                        "on-secondary-fixed": "#00210c",
+                        "on-secondary-fixed-variant": "#005228",
+                        "on-surface": "#191c1d",
+                        "on-secondary-container": "#007239",
+                        "surface-variant": "#e1e3e4",
+                        "secondary": "#006d37",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#43474c",
+                        "on-primary-fixed": "#091d2e",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdcc5",
+                        "secondary-fixed-dim": "#61de8a",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-primary-container": "#96a9be",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface": "#f8f9fa",
+                        "outline-variant": "#c4c6cd",
+                        "primary-fixed": "#d1e4fb",
+                        "inverse-primary": "#b5c8df",
+                        "surface-dim": "#d9dadb",
+                        "tertiary-container": "#612f00",
+                        "outline": "#74777d",
+                        "surface-container-high": "#e7e8e9",
+                        "on-primary-fixed-variant": "#36485b",
+                        "secondary-fixed": "#7efba4",
+                        "secondary-container": "#7bf8a1",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#edeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "16px",
+                        "lg": "48px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased flex w-full min-h-screen">
+<!-- Shared Component: SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col py-md px-sm bg-surface dark:bg-surface-dim border-r border-outline-variant z-40 hidden md:flex">
+<div class="px-sm mb-md flex flex-col gap-1">
+<div class="w-12 h-12 rounded bg-surface-container-high border border-outline-variant overflow-hidden flex-shrink-0 mb-2">
+<img alt="Manufacturer Logo" class="w-full h-full object-cover" data-alt="Minimalist abstract geometric logo for a structural engineering firm, deep slate and subtle white accents, pristine and technical corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMmmRZcQAeNDfomn9NzG9c7tnaj0Mj4P8qsjJ-hh6X1Yx3XjzE4XUks7FDzFBJofer_X3MwbEsU98z1PM6imwqyWJJQWGwTuSrCI0TKmy4GIQpae5AQXq4un8S7uaVXOpcy7JaDVxmsT2ZV3WAQC-rqqNsV4gTshwDAnPDqunEbgTqlDRwel6t6m_MerrN36LjHOrxysl7iHgKPYbGFeZUMWZCM1yl5fEGEj_ZlAZbj3AHZBeGHRCg"/>
+</div>
+<h2 class="text-headline-md font-headline-md text-primary">System Admin</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Technical Portal</p>
+</div>
+<button class="bg-primary text-on-primary rounded-lg py-sm px-md font-label-md text-label-md mb-md hover:bg-primary-container hover:text-on-primary-container transition-colors mx-sm">
+            New Request
+        </button>
+<nav class="flex flex-col gap-1 overflow-y-auto pr-2 pb-md flex-1">
+<a class="bg-primary-container text-on-primary-container font-bold border-r-4 border-on-secondary-container flex items-center gap-3 px-sm py-2 rounded-l cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+<span class="font-label-md text-label-md">Requests</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">architecture</span>
+<span class="font-label-md text-label-md">Products</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+<span class="font-label-md text-label-md">Pricing</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">map</span>
+<span class="font-label-md text-label-md">Service Areas</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">folder_special</span>
+<span class="font-label-md text-label-md">Portfolio</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">reviews</span>
+<span class="font-label-md text-label-md">Reviews</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-3 px-sm py-2 rounded cursor-pointer active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-md text-label-md">Team</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 min-w-0">
+<!-- Shared Component: TopNavBar -->
+<header class="w-full h-16 bg-surface-container-lowest dark:bg-inverse-surface border-b border-outline-variant flex justify-between items-center px-md sticky top-0 z-30">
+<!-- Brand Area -->
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded cursor-pointer active:opacity-80 flex items-center justify-center">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="text-headline-md font-headline-md text-primary dark:text-primary-fixed">Structura</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2 bg-surface-container-high cursor-pointer">
+<img alt="User profile management" class="w-full h-full object-cover" data-alt="Professional headshot of a technical system administrator wearing a dark minimal jacket, looking slightly off-camera against a bright white architectural studio background, well lit, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaLXicT8fTOLP0-bF2emW346yrMY4ahNHU-cx2op6vC9FQ37ThNTYNNTITxXt-7rYtKnwaXXvtidUJcTweTKjbqXy65z1KMWS1U7vaQsKnxbO9g_QBIFMeQJIjCNqhrSPe2-FOB1A74XaQ6x7X4J4h9ji4GplJP4C-3roCTgD2hiA6C6D-IE5MYkxzZo00SWdHCb6hG3WnpYSg36IDZOG8A3rDWdAvi7s4LbNDpqDB_Y53hGIuITqD"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<main class="flex-1 p-4 md:p-6 lg:p-8 flex flex-col gap-6 max-w-[1600px] w-full mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Super Admin Control Center</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Real-time overview of marketplace infrastructure and activity.</p>
+</div>
+<div class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded px-3 py-1.5 w-fit">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                    System Online
+                </div>
+</div>
+<!-- Global KPIs (High Density Grid) -->
+<section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col gap-1">
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Marketplace Revenue</div>
+<div class="font-headline-md text-headline-md text-primary">€14.2M</div>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-secondary font-medium">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                        +12% MoM
+                    </div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col gap-1">
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Active Manufacturers</div>
+<div class="font-headline-md text-headline-md text-primary">142</div>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">hourglass_empty</span>
+                        8 pending
+                    </div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col gap-1">
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Active Projects</div>
+<div class="font-headline-md text-headline-md text-primary">1,240</div>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">architecture</span>
+                        Across 12 regions
+                    </div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col gap-1 relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1 h-full bg-error"></div>
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Pending Verifications</div>
+<div class="font-headline-md text-headline-md text-primary">12</div>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-error font-medium">
+                        Requires action
+                    </div>
+</div>
+<!-- KPI 5 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex flex-col gap-1">
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Open Complaints</div>
+<div class="font-headline-md text-headline-md text-primary">4</div>
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-tertiary-container font-medium">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+                        Elevated priority
+                    </div>
+</div>
+</section>
+<!-- Main Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<!-- Left Column (Span 2) -->
+<div class="xl:col-span-2 flex flex-col gap-6">
+<!-- Platform Health -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-headline-md text-[18px] font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">memory</span>
+                                Platform Health
+                            </h2>
+<button class="text-primary hover:bg-surface-container-low px-3 py-1 rounded text-label-md font-label-md border border-outline-variant transition-colors">
+                                View Logs
+                            </button>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">Server Load (Core)</span>
+<span class="font-body-sm text-body-sm text-primary font-medium">34%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[34%] rounded-full"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant mt-1">Normal operating parameters</span>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">Database Latency</span>
+<span class="font-body-sm text-body-sm text-primary font-medium">12ms</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[15%] rounded-full"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant mt-1">Optimal read/write speeds</span>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">API Health</span>
+<span class="font-body-sm text-body-sm text-primary font-medium">99.99%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[99%] rounded-full"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant mt-1">No dropped requests (1h)</span>
+</div>
+</div>
+</section>
+<!-- Revenue Analytics -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col min-h-[380px]">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-headline-md text-[18px] font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">bar_chart</span>
+                                Revenue Analytics
+                            </h2>
+<div class="flex gap-2">
+<select class="text-label-md font-label-md border-outline-variant rounded bg-surface text-primary py-1 pl-3 pr-8 focus:ring-primary focus:border-primary">
+<option>Last 30 Days</option>
+<option>This Quarter</option>
+<option>YTD</option>
+</select>
+</div>
+</div>
+<div class="p-6 flex-1 flex flex-col relative">
+<!-- High-end placeholder for a sophisticated chart -->
+<div class="w-full h-full min-h-[280px] bg-cover bg-center rounded border border-surface-container-high" data-alt="A clean, highly professional digital line chart visualization showing an upward financial trend, utilizing subtle shades of deep slate blue and structural grays against a pure white background. Minimalist grid lines, technical data points, conveying institutional stability and growth without unnecessary decoration." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCuedh3-FKwmlBOp73aGMV28ylu_P-a2RenmqrBJQIpoiIfHO4be8Hzl_EtfuFdxRXTMSBKLRIjrg0aBrB3OFHV1vonimYQdpk7zHbDemNjNwLQBj9m_54Lk-MSDBYgcP-LyDJiyxAE853v97GYNS5xv-3ejXMJ6ncPdtOldHTrZR3MYbIDVVvWX3zNOUoKVUWf30nsyZv5ILoQaYU4Wv1dM3IGp2tZNFaEhKB5l_YxDHiah98h5bdm')"></div>
+<!-- Overlay legend -->
+<div class="absolute bottom-10 left-10 flex gap-6 bg-surface-container-lowest/90 backdrop-blur border border-outline-variant p-3 rounded">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-sm bg-primary-container"></div>
+<span class="font-label-md text-label-md text-primary">Commissions</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-sm bg-secondary"></div>
+<span class="font-label-md text-label-md text-primary">Subscriptions</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column (Span 1) -->
+<div class="flex flex-col gap-6">
+<!-- Verification Queue -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col h-[400px]">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-headline-md text-[18px] font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+                                Verification Queue
+                            </h2>
+</div>
+<div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
+<!-- Queue Item -->
+<div class="p-3 hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-md text-label-md text-primary">Apex Outdoor Systems</div>
+<div class="font-body-sm text-[11px] text-on-surface-variant">Submitted: 2 hours ago</div>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 rounded">Tier 1</span>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-secondary text-on-secondary py-1.5 rounded text-label-md font-label-md hover:bg-opacity-90 transition-opacity">Approve</button>
+<button class="flex-1 bg-surface text-primary border border-outline-variant py-1.5 rounded text-label-md font-label-md hover:bg-surface-container-high transition-colors">Review</button>
+</div>
+</div>
+<hr class="border-outline-variant mx-3"/>
+<!-- Queue Item -->
+<div class="p-3 hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-md text-label-md text-primary">Lumina Landscapes GmbH</div>
+<div class="font-body-sm text-[11px] text-on-surface-variant">Submitted: 5 hours ago</div>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] uppercase font-bold px-2 py-1 rounded">Tier 2</span>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-secondary text-on-secondary py-1.5 rounded text-label-md font-label-md hover:bg-opacity-90 transition-opacity">Approve</button>
+<button class="flex-1 bg-surface text-primary border border-outline-variant py-1.5 rounded text-label-md font-label-md hover:bg-surface-container-high transition-colors">Review</button>
+</div>
+</div>
+<hr class="border-outline-variant mx-3"/>
+<!-- Queue Item -->
+<div class="p-3 hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<div class="font-label-md text-label-md text-primary">Structura Nord AB</div>
+<div class="font-body-sm text-[11px] text-on-surface-variant">Submitted: 1 day ago</div>
+</div>
+<span class="bg-error-container text-on-error-container text-[10px] uppercase font-bold px-2 py-1 rounded">Flagged</span>
+</div>
+<div class="flex gap-2">
+<button class="w-full bg-surface text-error border border-error py-1.5 rounded text-label-md font-label-md hover:bg-error hover:text-on-error transition-colors">Resolve Flag</button>
+</div>
+</div>
+</div>
+<div class="p-3 border-t border-outline-variant text-center">
+<a class="text-label-md font-label-md text-primary hover:underline" href="#">View all 12 pending</a>
+</div>
+</section>
+<!-- Geographic Distribution -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col overflow-hidden">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-headline-md text-[18px] font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">public</span>
+                                Regional Volume
+                            </h2>
+</div>
+<div class="relative w-full h-[240px] bg-surface-container">
+<img alt="Geographic Distribution Map" class="w-full h-full object-cover opacity-80" data-alt="A minimalist, monochromatic structural map of Europe, featuring subtle dot-grid patterns and highlighting key metropolitan areas with clean geometric nodes in deep slate blue and crisp white. High contrast, professional, corporate geographic data visualization." data-location="Europe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgL6g5gx9k-FWsJ71qWhB1GLiElwckYv3PeEQ4IWmFMcqNbw82qKaht1RxHGgt_QkngzRhyfyBVPrHj658iHudARCH6bist7jS2BCWISVFJzXYx6OZnkftTScvl1rwXFeQJCDT_4Fay4WSApbMJ7MBOldrcfunXj_p8WEwo3fTNHft_lMqCpPOni4A1XeXQBWX8Rtwt9BvpZVkku5ImQWVS5UCRrksdrwNTqZoIn63uv1bBNUrw9Se"/>
+<!-- UI Overlay for Top Regions -->
+<div class="absolute bottom-0 left-0 w-full bg-surface-container-lowest/95 border-t border-outline-variant p-3 flex justify-between items-center">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary">DACH Region</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant">Highest growth (+18%)</span>
+</div>
+<div class="font-label-md text-label-md text-primary">45% Vol</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Full Width Section: Recent Activity Log -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded flex flex-col mt-2">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-headline-md text-[18px] font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">history</span>
+                        System Audit Trail
+                    </h2>
+<div class="flex gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="text-body-sm font-body-sm border-outline-variant rounded bg-surface text-primary py-1.5 pl-9 pr-3 focus:ring-primary focus:border-primary w-64" placeholder="Search logs..." type="text"/>
+</div>
+</div>
+</div>
+<!-- Data Table (High Density) -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-bright">
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant font-semibold">Timestamp</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant font-semibold">Event Type</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant font-semibold">Description</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant font-semibold">Actor</th>
+<th class="py-3 px-4 font-label-md text-label-md text-on-surface-variant font-semibold text-right">Status</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-primary divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4 whitespace-nowrap text-on-surface-variant">Oct 24, 14:32:01</td>
+<td class="py-3 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-medium tracking-wide border border-outline-variant">VERIFICATION</span>
+</td>
+<td class="py-3 px-4">Admin approved Apex Systems registration</td>
+<td class="py-3 px-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">admin_panel_settings</span>
+                                    S.Admin #01
+                                </td>
+<td class="py-3 px-4 text-right">
+<span class="text-secondary font-medium flex items-center justify-end gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> Success</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4 whitespace-nowrap text-on-surface-variant">Oct 24, 14:15:22</td>
+<td class="py-3 px-4">
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded text-[11px] font-medium tracking-wide border border-error">COMPLAINT</span>
+</td>
+<td class="py-3 px-4">New complaint filed by User #9921 regarding Project TX-88</td>
+<td class="py-3 px-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">person</span>
+                                    System (Auto)
+                                </td>
+<td class="py-3 px-4 text-right">
+<span class="text-on-tertiary-container font-medium flex items-center justify-end gap-1"><span class="material-symbols-outlined text-[14px]">info</span> Logged</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4 whitespace-nowrap text-on-surface-variant">Oct 24, 13:45:00</td>
+<td class="py-3 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-medium tracking-wide border border-outline-variant">SYSTEM_MAINT</span>
+</td>
+<td class="py-3 px-4">Automated database backup completed</td>
+<td class="py-3 px-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">smart_toy</span>
+                                    Cron_Daemon
+                                </td>
+<td class="py-3 px-4 text-right">
+<span class="text-secondary font-medium flex items-center justify-end gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> Success</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-4 whitespace-nowrap text-on-surface-variant">Oct 24, 12:10:45</td>
+<td class="py-3 px-4">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-medium tracking-wide border border-outline-variant">CONFIG_UPDATE</span>
+</td>
+<td class="py-3 px-4">Modified commission rate logic for Tier 3 manufacturers</td>
+<td class="py-3 px-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">admin_panel_settings</span>
+                                    S.Admin #02
+                                </td>
+<td class="py-3 px-4 text-right">
+<span class="text-secondary font-medium flex items-center justify-end gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> Success</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</body></html>

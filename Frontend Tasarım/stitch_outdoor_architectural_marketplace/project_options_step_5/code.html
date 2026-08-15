@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Options - Configurator - Studio Alpha</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Hanken+Grotesk:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#524616",
+                      "surface-container-low": "#f0f3ff",
+                      "surface-container": "#e7eefe",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "primary-container": "#064e3b",
+                      "on-tertiary-fixed-variant": "#474746",
+                      "tertiary-container": "#454444",
+                      "surface-variant": "#dce2f3",
+                      "surface": "#f9f9ff",
+                      "secondary-fixed": "#f4e2a2",
+                      "inverse-surface": "#2a313d",
+                      "secondary": "#6b5e2b",
+                      "on-surface-variant": "#404944",
+                      "on-primary-fixed-variant": "#0b513d",
+                      "surface-dim": "#d3daea",
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#d7c689",
+                      "background": "#f9f9ff",
+                      "on-tertiary-container": "#b3b1b1",
+                      "primary": "#003527",
+                      "on-primary-container": "#80bea6",
+                      "on-secondary-container": "#716430",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-container-highest": "#dce2f3",
+                      "inverse-primary": "#95d3ba",
+                      "on-tertiary": "#ffffff",
+                      "tertiary": "#2e2e2e",
+                      "inverse-on-surface": "#ebf1ff",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#95d3ba",
+                      "on-surface": "#151c27",
+                      "surface-bright": "#f9f9ff",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#bfc9c3",
+                      "on-error": "#ffffff",
+                      "primary-fixed": "#b0f0d6",
+                      "secondary-container": "#f4e2a2",
+                      "on-error-container": "#93000a",
+                      "on-primary": "#ffffff",
+                      "outline": "#707974",
+                      "surface-tint": "#2b6954",
+                      "on-secondary-fixed": "#221b00",
+                      "on-background": "#151c27",
+                      "surface-container-high": "#e2e8f8",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-primary-fixed": "#002117"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "unit-sm": "8px",
+                      "margin-desktop": "64px",
+                      "unit-md": "16px",
+                      "margin-mobile": "20px",
+                      "unit-xl": "48px",
+                      "gutter": "24px",
+                      "unit-lg": "24px",
+                      "unit-xs": "4px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Montserrat"],
+                      "label-caps": ["Montserrat"],
+                      "body-md": ["Hanken Grotesk"],
+                      "display-lg-mobile": ["Montserrat"],
+                      "body-lg": ["Hanken Grotesk"],
+                      "body-sm": ["Hanken Grotesk"],
+                      "label-md": ["Hanken Grotesk"],
+                      "headline-md": ["Montserrat"],
+                      "headline-lg": ["Montserrat"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #e5e7eb;
+            border-radius: 20px;
+        }
+        
+        /* Option Card Styles */
+        .option-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-card:hover {
+            border-color: #064e3b;
+            box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.05);
+        }
+        .option-card.selected {
+            border-color: #064e3b;
+            background-color: #f0fdf4;
+            box-shadow: 0 4px 6px -1px rgba(6, 78, 59, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex antialiased">
+<!-- Top App Bar (Mobile) -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-margin-mobile md:hidden">
+<div class="font-display-lg-mobile text-headline-md tracking-tighter text-primary">ARCHITECTURA</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 scale-95 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 scale-95 active:opacity-80">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Side Nav Bar (Desktop) -->
+<nav class="fixed left-0 top-0 h-full w-64 hidden md:flex flex-col bg-surface-container-low border-r border-outline-variant p-unit-md gap-unit-sm z-40">
+<div class="mb-8 mt-4 px-4">
+<h1 class="font-display-lg text-headline-md text-primary tracking-tighter">Studio Alpha</h1>
+<p class="font-body-sm text-on-surface-variant mt-1">Premium Member</p>
+</div>
+<div class="flex-grow flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-on-primary font-bold shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+<span class="font-body-md text-body-md">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-body-md text-body-md">Marketplace</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span class="font-body-md text-body-md">Manufacturers</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+</div>
+<div class="mt-auto mb-4">
+<button class="w-full bg-primary-container text-on-primary-container font-label-caps text-label-caps py-3 rounded-lg border border-primary-container hover:bg-primary hover:text-white transition-colors uppercase">
+                Start New Project
+            </button>
+</div>
+<div class="border-t border-outline-variant pt-4 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+<span class="font-body-md text-body-md">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 pt-16 md:pt-0 pb-24 md:pb-0 h-screen overflow-y-auto custom-scrollbar bg-background">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-unit-xl">
+<!-- Breadcrumbs & Progress -->
+<div class="mb-unit-xl">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md mb-4">
+<span>Projects</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span>Configurator</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Step 5: Options</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg mb-2">Select Optional Features</h2>
+<p class="font-body-md text-on-surface-variant max-w-2xl">Customize your architectural structure with high-end additions for comfort, automation, and climate control.</p>
+<!-- Progress Bar -->
+<div class="mt-8 flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 50%;"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">STEP 5 OF 10</span>
+</div>
+</div>
+<!-- Options Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-unit-md mb-unit-xl">
+<!-- Motor Option -->
+<div class="option-card bg-surface rounded-xl border border-outline-variant p-6 cursor-pointer flex flex-col items-start relative h-full">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="electric_bolt" data-weight="fill">electric_bolt</span>
+</div>
+<h3 class="font-headline-md text-body-lg mb-2">Motor Automation</h3>
+<p class="font-body-sm text-on-surface-variant mb-4 flex-grow">Integrated tubular motor for silent operation. Compatible with major home automation protocols.</p>
+<div class="mt-auto w-full flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">+ $450.00</span>
+<div class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center toggle-indicator">
+<!-- Checkmark goes here when selected -->
+</div>
+</div>
+</div>
+<!-- LED Option (Selected Example) -->
+<div class="option-card selected bg-surface rounded-xl border border-primary p-6 cursor-pointer flex flex-col items-start relative h-full">
+<div class="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center mb-4 text-white">
+<span class="material-symbols-outlined" data-icon="lightbulb" data-weight="fill">lightbulb</span>
+</div>
+<h3 class="font-headline-md text-body-lg mb-2 text-primary">Integrated LED Lighting</h3>
+<p class="font-body-sm text-on-surface-variant mb-4 flex-grow">Dimmable LED strips embedded within the structural profiles. Warm white (2700K) or tunable.</p>
+<div class="mt-auto w-full flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-primary">+ $850.00</span>
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center toggle-indicator">
+<span class="material-symbols-outlined text-white text-sm" data-icon="check">check</span>
+</div>
+</div>
+</div>
+<!-- Zip Screen Option -->
+<div class="option-card bg-surface rounded-xl border border-outline-variant p-6 cursor-pointer flex flex-col items-start relative h-full">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="blinds">blinds</span>
+</div>
+<h3 class="font-headline-md text-body-lg mb-2">Zip Screen Blinds</h3>
+<p class="font-body-sm text-on-surface-variant mb-4 flex-grow">Motorized vertical screens for sun protection and privacy. Wind resistant up to 120km/h.</p>
+<div class="mt-auto w-full flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">From $1,200.00</span>
+<div class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center toggle-indicator"></div>
+</div>
+</div>
+<!-- Sliding Glass Option -->
+<div class="option-card bg-surface rounded-xl border border-outline-variant p-6 cursor-pointer flex flex-col items-start relative h-full">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="sensor_window">sensor_window</span>
+</div>
+<h3 class="font-headline-md text-body-lg mb-2">Sliding Glass System</h3>
+<p class="font-body-sm text-on-surface-variant mb-4 flex-grow">Frameless sliding glass panels for enclosing the structure while maintaining panoramic views.</p>
+<div class="mt-auto w-full flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface-variant">From $2,500.00</span>
+<div class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center toggle-indicator"></div>
+</div>
+</div>
+</div>
+<!-- Navigation Actions -->
+<div class="flex justify-between items-center pt-8 border-t border-outline-variant mt-12 hidden md:flex">
+<button class="px-6 py-3 border border-tertiary text-tertiary font-label-caps text-label-caps rounded hover:bg-surface-container transition-colors uppercase">
+                    Back to Layout
+                </button>
+<div class="flex gap-4">
+<button class="px-6 py-3 bg-transparent text-primary font-label-caps text-label-caps rounded hover:bg-surface-container-low transition-colors uppercase">
+                        Save Draft
+                    </button>
+<button class="px-8 py-3 bg-primary text-white font-label-caps text-label-caps rounded hover:bg-primary-container transition-colors uppercase shadow-sm">
+                        Continue to Finishes
+                    </button>
+</div>
+</div>
+<!-- Spacer for mobile nav -->
+<div class="h-20 md:hidden"></div>
+</div>
+</main>
+<!-- Bottom Nav Bar (Mobile) -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-surface border-t border-outline-variant shadow-sm flex justify-around items-center h-20 px-margin-mobile">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant active:bg-surface-container-highest p-2 rounded-lg scale-98 transition-transform">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-caps text-[10px] uppercase">Back</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant active:bg-surface-container-highest p-2 rounded-lg scale-98 transition-transform">
+<span class="material-symbols-outlined" data-icon="save">save</span>
+<span class="font-label-caps text-[10px] uppercase">Save Draft</span>
+</button>
+<button class="flex flex-col items-center gap-1 bg-primary text-on-primary rounded-full px-6 py-2 scale-98 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+<span class="font-label-caps text-[10px] uppercase">Next Step</span>
+</button>
+</nav>
+<script>
+        // Simple interaction for option cards
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                
+                const indicator = this.querySelector('.toggle-indicator');
+                const price = this.querySelector('span.font-label-caps');
+                const title = this.querySelector('h3');
+                const iconContainer = this.querySelector('.w-12.h-12');
+                
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('border-outline-variant');
+                    this.classList.add('border-primary', 'bg-[#f0fdf4]');
+                    
+                    indicator.classList.remove('border-2', 'border-outline');
+                    indicator.classList.add('bg-primary');
+                    indicator.innerHTML = '<span class="material-symbols-outlined text-white text-sm" data-icon="check">check</span>';
+                    
+                    price.classList.remove('text-on-surface-variant');
+                    price.classList.add('text-primary');
+                    
+                    title.classList.add('text-primary');
+                    
+                    iconContainer.classList.remove('bg-surface-container-low', 'text-primary');
+                    iconContainer.classList.add('bg-primary-container', 'text-white');
+                } else {
+                    this.classList.add('border-outline-variant');
+                    this.classList.remove('border-primary', 'bg-[#f0fdf4]');
+                    
+                    indicator.classList.add('border-2', 'border-outline');
+                    indicator.classList.remove('bg-primary');
+                    indicator.innerHTML = '';
+                    
+                    price.classList.add('text-on-surface-variant');
+                    price.classList.remove('text-primary');
+                    
+                    title.classList.remove('text-primary');
+                    
+                    iconContainer.classList.add('bg-surface-container-low', 'text-primary');
+                    iconContainer.classList.remove('bg-primary-container', 'text-white');
+                }
+            });
+        });
+    </script>
+</body></html>

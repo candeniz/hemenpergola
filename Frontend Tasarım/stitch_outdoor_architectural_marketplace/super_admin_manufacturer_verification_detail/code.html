@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Admin - Manufacturer Verification</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b5c8df",
+                    "secondary-fixed": "#7efba4",
+                    "on-primary-fixed-variant": "#36485b",
+                    "outline-variant": "#c4c6cd",
+                    "surface": "#f8f9fa",
+                    "surface-container-high": "#e7e8e9",
+                    "surface-dim": "#d9dadb",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#162839",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "surface-container": "#edeeef",
+                    "inverse-primary": "#b5c8df",
+                    "secondary": "#006d37",
+                    "on-secondary-container": "#007239",
+                    "surface-tint": "#4e6073",
+                    "secondary-fixed-dim": "#61de8a",
+                    "inverse-on-surface": "#f0f1f2",
+                    "primary-container": "#2c3e50",
+                    "on-tertiary-fixed": "#301400",
+                    "on-error-container": "#93000a",
+                    "on-primary-container": "#96a9be",
+                    "tertiary-container": "#612f00",
+                    "surface-container-low": "#f3f4f5",
+                    "surface-bright": "#f8f9fa",
+                    "on-tertiary-container": "#f78b30",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#e1e3e4",
+                    "on-secondary-fixed-variant": "#005228",
+                    "inverse-surface": "#2e3132",
+                    "tertiary-fixed": "#ffdcc5",
+                    "outline": "#74777d",
+                    "secondary-container": "#7bf8a1",
+                    "on-surface-variant": "#43474c",
+                    "on-secondary-fixed": "#00210c",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "error": "#ba1a1a",
+                    "on-background": "#191c1d",
+                    "on-surface": "#191c1d",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d1e4fb",
+                    "on-error": "#ffffff",
+                    "tertiary": "#411d00",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#091d2e",
+                    "background": "#f8f9fa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "xs": "4px",
+                    "lg": "48px",
+                    "base": "8px",
+                    "margin-desktop": "64px"
+            },
+            "fontFamily": {
+                    "display-lg": [
+                            "Montserrat"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Montserrat"
+                    ],
+                    "headline-md": [
+                            "Montserrat"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Montserrat"
+                    ]
+            },
+            "fontSize": {
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface antialiased flex h-full overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col w-64 h-full fixed left-0 top-0 overflow-y-auto pt-xl pb-md px-sm z-40 bg-surface-container-low border-r border-outline-variant">
+<div class="mb-lg px-sm">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Super Admin</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Precision Control</p>
+</div>
+<div class="flex-1 flex flex-col gap-xs">
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">dashboard</span>
+<span class="font-body-sm text-body-sm">Dashboard</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">inventory_2</span>
+<span class="font-body-sm text-body-sm">Inventory</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-secondary-container bg-secondary-container font-semibold transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">factory</span>
+<span class="font-body-sm text-body-sm">Manufacturers</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">shopping_cart</span>
+<span class="font-body-sm text-body-sm">Orders</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Procurement</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">monitoring</span>
+<span class="font-body-sm text-body-sm">Analytics</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-xs border-t border-outline-variant pt-sm">
+<button class="w-full bg-primary text-on-primary rounded-lg py-xs px-sm font-label-md text-label-md flex items-center justify-center gap-xs hover:bg-primary-container transition-colors">
+                 Generate Report
+             </button>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all mt-sm" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">contact_support</span>
+<span class="font-body-sm text-body-sm">Support</span>
+</a>
+<a class="group flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all" href="#">
+<span class="material-symbols-outlined font-label-md text-label-md">logout</span>
+<span class="font-body-sm text-body-sm">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 h-full overflow-y-auto md:ml-64 bg-background">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin-desktop py-xs z-50 bg-surface border-b border-outline-variant sticky top-0 md:px-lg px-margin-mobile">
+<div class="flex items-center gap-md">
+<!-- Mobile Menu Toggle (Visible only on mobile) -->
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="font-headline-md text-headline-md font-bold text-primary hidden md:block">ArchSystem Admin</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-[36px] pr-sm py-xs rounded-full border border-outline-variant bg-surface-container-lowest text-body-sm font-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Search..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-xs rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-xs rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low px-sm py-xs rounded-full transition-colors cursor-pointer active:opacity-80">
+                    Help
+                </button>
+<img class="w-8 h-8 rounded-full object-cover border border-outline-variant cursor-pointer" data-alt="A professional headshot of a female administrator with glasses, looking confident and approachable, set against a clean, modern, light grey architectural background, well-lit with soft natural light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_0Wg1PqSPyjhljcSkMterHsHZjw1NLF9rZCjhTIgb0DRzeSKdXm85oS0CIAR9xliYr0MX-s7yGjYVSquY1EWDr5-vq-j2Mpu16n6oEp39u2gIZiuFWinkNTNgq_vdwhiyBnzLwLwCxrn4rKiZZ7F-NDfLFbCKqHiSjWS3ILG74mDYdq5dLtKTI0PsIiWgtbwL-R6d0Ogr_DXQFBffIYEzU--Q2JRvbMzffmE5rNIlSVjhZLWcgGpx"/>
+</div>
+</header>
+<div class="p-margin-mobile md:p-gutter max-w-[1400px] mx-auto">
+<!-- Page Header & Action Bar -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
+<div>
+<div class="flex items-center gap-sm mb-xs">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">Manufacturer Verification</h2>
+<span class="bg-surface-container-high text-on-surface-variant px-sm py-[2px] rounded-sm font-label-md text-label-md border border-outline-variant">Pending Review</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Reviewing: <span class="font-semibold text-primary">Titan Structural Systems</span></p>
+</div>
+<div class="flex flex-wrap gap-sm w-full md:w-auto">
+<button class="flex-1 md:flex-none px-sm py-xs rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                        Suspend
+                    </button>
+<button class="flex-1 md:flex-none px-sm py-xs rounded-lg border border-primary text-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors">
+                        Request Info
+                    </button>
+<button class="flex-1 md:flex-none px-sm py-xs rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error-container transition-colors">
+                        Reject
+                    </button>
+<button class="flex-1 md:flex-none px-sm py-xs rounded-lg bg-secondary text-on-secondary font-label-md text-label-md hover:bg-on-secondary-container transition-colors shadow-sm">
+                        Approve
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout for Details -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-gutter mb-lg">
+<!-- Left Column (Company & Contact) -->
+<div class="xl:col-span-1 flex flex-col gap-gutter">
+<!-- Company Info Card -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-md">
+<div class="flex items-center gap-sm mb-md border-b border-outline-variant pb-sm">
+<span class="material-symbols-outlined text-primary">domain</span>
+<h3 class="font-headline-md text-headline-md text-primary">Company &amp; Tax</h3>
+</div>
+<div class="flex flex-col gap-md">
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Legal Name</label>
+<p class="font-body-md text-body-md text-on-surface">Titan Structural Systems LLC</p>
+</div>
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Tax ID / EIN</label>
+<p class="font-body-md text-body-md text-on-surface font-mono">98-7654321</p>
+</div>
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Registration Date</label>
+<p class="font-body-md text-body-md text-on-surface">Oct 14, 2012</p>
+</div>
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Business Type</label>
+<p class="font-body-md text-body-md text-on-surface">C-Corporation (Manufacturer)</p>
+</div>
+</div>
+</div>
+<!-- Contact Info Card -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-md">
+<div class="flex items-center gap-sm mb-md border-b border-outline-variant pb-sm">
+<span class="material-symbols-outlined text-primary">contact_mail</span>
+<h3 class="font-headline-md text-headline-md text-primary">Contact &amp; Address</h3>
+</div>
+<div class="flex flex-col gap-md">
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Official Address</label>
+<p class="font-body-md text-body-md text-on-surface">4500 Industrial Pkwy<br/>Building B, Suite 100<br/>Chicago, IL 60607</p>
+</div>
+<div>
+<label class="font-label-md text-label-md text-outline block mb-xs">Website</label>
+<a class="font-body-md text-body-md text-primary hover:underline" href="#">www.titanstructural.com</a>
+</div>
+<div class="bg-surface-container-low p-sm rounded border border-outline-variant">
+<label class="font-label-md text-label-md text-outline block mb-xs">Primary Contact</label>
+<p class="font-body-md text-body-md text-on-surface font-semibold">David Chen</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-[16px]">mail</span> d.chen@titanstructural.com
+                                </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-[16px]">call</span> +1 (312) 555-0198
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Documents & History) -->
+<div class="xl:col-span-2 flex flex-col gap-gutter">
+<!-- Documents Card -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-md flex-1">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">description</span>
+<h3 class="font-headline-md text-headline-md text-primary">Document Review</h3>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">4 Documents Uploaded</span>
+</div>
+<!-- High Density Table for Admin -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="py-sm px-xs font-label-md text-label-md text-outline font-semibold">Document Name</th>
+<th class="py-sm px-xs font-label-md text-label-md text-outline font-semibold">Upload Date</th>
+<th class="py-sm px-xs font-label-md text-label-md text-outline font-semibold">Status</th>
+<th class="py-sm px-xs font-label-md text-label-md text-outline font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-error text-[18px]">picture_as_pdf</span> Business License
+                                        </td>
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface-variant">Nov 12, 2023</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-sm bg-secondary/10 text-secondary font-label-md text-label-md border border-secondary/20">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Verified
+                                            </span>
+</td>
+<td class="py-sm px-xs text-right">
+<button class="font-label-md text-label-md text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-error text-[18px]">picture_as_pdf</span> ISO 9001 Certificate
+                                        </td>
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface-variant">Nov 12, 2023</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-sm bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Pending
+                                            </span>
+</td>
+<td class="py-sm px-xs text-right">
+<button class="font-label-md text-label-md text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-error text-[18px]">picture_as_pdf</span> Quality Assurance Manual
+                                        </td>
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface-variant">Nov 14, 2023</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-sm bg-surface-container-high text-on-surface-variant font-label-md text-label-md border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Pending
+                                            </span>
+</td>
+<td class="py-sm px-xs text-right">
+<button class="font-label-md text-label-md text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface flex items-center gap-xs">
+<span class="material-symbols-outlined text-error text-[18px]">picture_as_pdf</span> Insurance Policy
+                                        </td>
+<td class="py-sm px-xs font-body-sm text-body-sm text-on-surface-variant">Nov 14, 2023</td>
+<td class="py-sm px-xs">
+<span class="inline-flex items-center gap-xs px-xs py-[2px] rounded-sm bg-secondary/10 text-secondary font-label-md text-label-md border border-secondary/20">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Verified
+                                            </span>
+</td>
+<td class="py-sm px-xs text-right">
+<button class="font-label-md text-label-md text-primary hover:underline">View</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Verification History Card -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-md">
+<div class="flex items-center gap-sm mb-md border-b border-outline-variant pb-sm">
+<span class="material-symbols-outlined text-primary">history</span>
+<h3 class="font-headline-md text-headline-md text-primary">Verification History</h3>
+</div>
+<div class="relative border-l border-outline-variant ml-[11px] pl-md space-y-md">
+<div class="relative">
+<div class="absolute -left-[29px] top-1 w-[22px] h-[22px] bg-surface-container-lowest border-2 border-primary rounded-full flex items-center justify-center">
+<div class="w-[8px] h-[8px] bg-primary rounded-full"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">Manual audit started by <span class="font-semibold">Admin #01</span></p>
+<p class="font-label-md text-label-md text-outline mt-xs">Nov 15, 2023 • 09:42 AM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[29px] top-1 w-[22px] h-[22px] bg-surface-container-lowest border-2 border-outline-variant rounded-full"></div>
+<p class="font-body-sm text-body-sm text-on-surface">Additional documents (QA Manual, Insurance) uploaded by <span class="font-semibold">David Chen</span></p>
+<p class="font-label-md text-label-md text-outline mt-xs">Nov 14, 2023 • 03:15 PM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[29px] top-1 w-[22px] h-[22px] bg-surface-container-lowest border-2 border-error text-error rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">priority_high</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">Admin #01 requested more information regarding missing QA Manual.</p>
+<p class="font-label-md text-label-md text-outline mt-xs">Nov 13, 2023 • 11:20 AM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[29px] top-1 w-[22px] h-[22px] bg-surface-container-lowest border-2 border-outline-variant rounded-full"></div>
+<p class="font-body-sm text-body-sm text-on-surface">Initial registration and documents submitted by <span class="font-semibold">Sarah Jenkins</span></p>
+<p class="font-label-md text-label-md text-outline mt-xs">Nov 12, 2023 • 02:30 PM</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
