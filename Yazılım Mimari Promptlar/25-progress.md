@@ -610,6 +610,87 @@ comment contains `*/`, which closed the comment and turned the rest of the file 
 syntax errors that pointed at unrelated lines. Cost about ten minutes of reading the wrong
 part of the file. Written as `modules/<name>/infrastructure` now.
 
+### 2026-08-15 — Non-negotiable 9 and its lint rule. **0.5 and 0.17 not started: Docker still unavailable.**
+
+This session began from "virtualization is enabled and the machine has been restarted".
+Neither is true yet, and the instruction for that case was to stop rather than work around
+it for a fourth time. So: 0.5 (geography seed) and 0.17 (seed profiles) are **not started**.
+Both are entirely database work. The phase table is unchanged.
+
+#### Why the answer is "not rebooted" rather than "rebooted but still broken"
+
+The Windows System event log is unambiguous. `Microsoft-Windows-Kernel-General` records
+boot as event 12 and shutdown as 13:
+
+```
+15.08.2026 15:10:36  12  operating system started
+15.08.2026 15:10:25  13  operating system shutting down
+15.08.2026 01:04:48  12  operating system started
+```
+
+**There is no boot event after 15:10 on 15 August.** Uptime is 7 h 30 m and
+`LastBootUpTime` is still `15.08.2026 15:10:35` — the same value recorded in the previous
+entry, hours ago. Alongside that, `systeminfo` still reports
+`Virtualization Enabled In Firmware: No`, `VirtualizationFirmwareEnabled` is `False`, and
+`docker compose up -d` fails with `failed to connect to the docker API at
+npipe:////./pipe/docker_engine`.
+
+Two things to check, in order:
+
+1. **The restart did not happen.** Fast Startup is on (`HiberbootEnabled = 1`), so
+   "Shut down" then power on resumes a saved kernel and neither writes a boot event nor
+   re-reads firmware. Use **Restart** from the Start menu, or `shutdown /r /t 0`.
+2. **The firmware setting may not have been saved.** On this machine (Intel i5-6200U,
+   OEM laptop firmware) the option is usually *Intel Virtualization Technology* under
+   Configuration or Security, and it needs an explicit Save & Exit — F10 on most of these.
+
+After the restart, the one command that settles it:
+
+```bash
+systeminfo | findstr /C:"Virtualization Enabled In Firmware"   # expect: Yes
+```
+
+Then the eight-item list in the previous entry runs unchanged.
+
+#### What was done — the one item with no database dependency
+
+**`CLAUDE.md` non-negotiable 9**, and a lint rule that enforces it.
+
+Nothing under `src/app` may import configuration or an application service at module scope.
+Next evaluates a route's module graph while collecting page data — build time — so a static
+import of anything that reads `env` or builds the Prisma client at load makes `pnpm build`
+require production secrets again. That bug shipped twice (`/dev` layout, then
+`/api/health`), and both times it was invisible locally because a developer always has a
+`.env`. The CI build job deliberately has none, which is what caught it each time; the rule
+is what stops it from being caught a third time.
+
+Banned under `src/app/**`: `@/shared/config/env` and `@/modules/*/application/**`.
+Deliberately not banned: `@/shared/config/env.client`, whose values are `NEXT_PUBLIC_*` and
+are inlined at build time, so evaluating it during the build is correct.
+
+Proven, not asserted: `test/fixtures/boundary/app-imports-env-at-module-scope.tsx` is the
+exact shape that shipped twice, and `test/module-boundary.test.ts` lints it and expects both
+errors. Seven new tests cover the fixture, each banned specifier, the dynamic import that is
+the actual fix, the `env.client` exemption, and the fact that `instrumentation.ts` — which
+*must* import `env` at module scope, since it is the startup hook — is unaffected.
+
+| Check | Result |
+|---|---|
+| `typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 |
+| unit tests | **192** (was 185) |
+| `pnpm exec playwright test` | exit 0 — 7 passed, 22 skipped |
+| `pnpm build` with no `.env` | exit 0 |
+| rule 9 fixture | 2 errors, both naming module scope |
+| integration stage | still fails on the Docker daemon, as it should |
+
+#### Still owed, unchanged from the previous entry
+
+The eight-item Docker verification list · Q8 · 0.5 · 0.17 · the Phase 0 gate.
+
+Phase 0's remaining work is now exactly: prove the container stack, seed geography, seed
+the three profiles, and close the gate. All four need a database and nothing else blocks
+them.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

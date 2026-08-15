@@ -155,6 +155,30 @@ export default tseslint.config(
                 'No database client in app/. Call an application service (05-system-architecture.md §Shape).',
             },
             {
+              /*
+               * CLAUDE.md non-negotiable 9. Next evaluates a route's module graph while
+               * collecting page data — at build time — so a *static* import of anything
+               * that reads `env` or builds the Prisma client at module load makes
+               * `pnpm build` need production secrets again.
+               *
+               * `env.client.ts` is not here: its values are `NEXT_PUBLIC_*`, which Next
+               * inlines at build time, so evaluating it during the build is correct.
+               *
+               * The fix at a call site is `await import(...)` inside the handler or the
+               * component, not an exception to this rule.
+               */
+              group: [
+                '@/shared/config/env',
+                '**/shared/config/env',
+                '@/modules/*/application/*',
+                '@/modules/*/application/**',
+                '**/modules/*/application/*',
+                '**/modules/*/application/**',
+              ],
+              message:
+                'Do not import configuration or an application service at module scope in app/ — Next evaluates it at build time and the build stops being secret-free (CLAUDE.md non-negotiable 9). Use `await import(...)` inside the handler instead.',
+            },
+            {
               group: ['@/modules/*/infrastructure/**', '**/modules/*/infrastructure/**'],
               message:
                 'No repository or adapter in app/. Call the module’s application service instead.',

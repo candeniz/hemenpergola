@@ -46,6 +46,13 @@ thing to build: `21-development-roadmap.md` for its scope and gate,
    (`22-design-system.md`).
 8. **Contact data is disclosed only on acceptance**, with consent, a `ContactDisclosure`
    row, an audit entry and a notification (`19-security-and-kvkk.md`).
+9. **Nothing under `src/app` imports configuration or the database at module scope.**
+   Next evaluates a route's module graph while collecting page data — at *build* time — so
+   a static `import` of anything that reads `env` or constructs the Prisma client makes
+   `pnpm build` require production secrets again, undoing
+   `23-deployment-and-environments.md` §Configuration. Use `await import(...)` inside the
+   handler or component instead. This has now cost two bugs (`/dev` layout, `/api/health`);
+   it is a lint error, and the CI build job runs with no `.env` so it stays findable.
 
 ## Do not build these
 
