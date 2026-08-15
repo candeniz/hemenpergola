@@ -1,10 +1,16 @@
 # pnpm 11 reads settings from here, not from the "pnpm" field in package.json.
 # (`onlyBuiltDependencies` was removed in v11 and replaced by `allowBuilds`.)
 #
-# Dependency postinstall scripts are blocked by default. These two are allowed
-# deliberately, and nothing else is:
+# Dependency postinstall scripts are blocked by default. Only these are allowed:
 #   sharp         — image processing used by next/image at build and runtime
 #   unrs-resolver — native resolver behind eslint-config-next's import plugin
+#
+# Denied deliberately — both are optional native accelerations with working JS
+# fallbacks, and 19-security-and-kvkk.md §Dependencies says allow only what is needed:
+#   @parcel/watcher — faster file watching for Tailwind's dev watcher
+#   @swc/core       — Next ships its own SWC binary; this copy is transitive
 allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
   sharp: true
   unrs-resolver: true

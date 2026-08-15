@@ -1,0 +1,276 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/*
+ * Design tokens — 22-design-system.md §Tokens, theme "Architectural Outdoor Exchange"
+ * (ADR-012).
+ *
+ * Tailwind 4 has no `theme.extend` and no `tailwind.config.ts`: `@theme` *is* the config,
+ * and it emits every entry as a CSS custom property while generating the matching
+ * utilities. So the doc's "CSS custom properties consumed by Tailwind" is satisfied by one
+ * block rather than two files that must agree.
+ *
+ * Raw palette names live here. Application code uses the semantic names in
+ * §Semantic mapping below — never `bg-primary-container`, always `bg-panel`, etc.
+ */
+
+@theme {
+  /* ---- Palette · raw roles ------------------------------------------------ */
+  --color-primary: #162839;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2c3e50;
+  --color-on-primary-container: #96a9be;
+
+  --color-secondary: #006d37;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #7bf8a1;
+  --color-on-secondary-container: #007239;
+
+  --color-tertiary: #411d00;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #612f00;
+  --color-on-tertiary-container: #f78b30;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-background: #f8f9fa;
+  --color-on-background: #191c1d;
+  --color-surface: #f8f9fa;
+  --color-on-surface: #191c1d;
+  --color-surface-variant: #e1e3e4;
+  --color-on-surface-variant: #43474c;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-container-highest: #e1e3e4;
+  --color-surface-dim: #d9dadb;
+  --color-surface-bright: #f8f9fa;
+
+  --color-outline: #74777d;
+  --color-outline-variant: #c4c6cd;
+  --color-inverse-surface: #2e3132;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-inverse-primary: #b5c8df;
+  --color-surface-tint: #4e6073;
+
+  /* The `*-fixed` family: tonally uniform light containers with dark text. This is what
+     the `_final` screens use for status badges — see §Semantic mapping. */
+  --color-primary-fixed: #d1e4fb;
+  --color-primary-fixed-dim: #b5c8df;
+  --color-on-primary-fixed: #091d2e;
+  --color-on-primary-fixed-variant: #36485b;
+  --color-secondary-fixed: #7efba4;
+  --color-secondary-fixed-dim: #61de8a;
+  --color-on-secondary-fixed: #00210c;
+  --color-on-secondary-fixed-variant: #005228;
+  --color-tertiary-fixed: #ffdcc5;
+  --color-tertiary-fixed-dim: #ffb783;
+  --color-on-tertiary-fixed: #301400;
+  --color-on-tertiary-fixed-variant: #713700;
+
+  /* ---- Typography --------------------------------------------------------- */
+  /* Families are injected by next/font in layout.tsx; these read those variables. */
+  --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-icon: var(--font-material-symbols);
+
+  --text-display-lg: 3rem; /* 48 / 56, -0.02em, Montserrat 700 */
+  --text-display-lg--line-height: 3.5rem;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+
+  --text-headline-lg: 2rem; /* 32 / 40, Montserrat 600 */
+  --text-headline-lg--line-height: 2.5rem;
+  --text-headline-lg--font-weight: 600;
+
+  --text-headline-lg-mobile: 1.5rem; /* 24 / 32 */
+  --text-headline-lg-mobile--line-height: 2rem;
+  --text-headline-lg-mobile--font-weight: 600;
+
+  --text-headline-md: 1.5rem; /* 24 / 32, Montserrat 600 */
+  --text-headline-md--line-height: 2rem;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 1.125rem; /* 18 / 28, Inter 400 */
+  --text-body-lg--line-height: 1.75rem;
+
+  --text-body-md: 1rem; /* 16 / 24, Inter 400 */
+  --text-body-md--line-height: 1.5rem;
+
+  --text-body-sm: 0.875rem; /* 14 / 20, Inter 400 — smallest text on any control */
+  --text-body-sm--line-height: 1.25rem;
+
+  --text-label-md: 0.75rem; /* 12 / 16, +0.05em, Inter 600, uppercase */
+  --text-label-md--line-height: 1rem;
+  --text-label-md--letter-spacing: 0.05em;
+  --text-label-md--font-weight: 600;
+
+  /* ---- Spacing ------------------------------------------------------------ */
+  --spacing-xs: 4px;
+  --spacing-base: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 24px;
+  --spacing-lg: 48px;
+  --spacing-xl: 80px;
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 64px;
+  --spacing-row: 44px; /* dense table row, also the minimum touch target (Rule 4) */
+
+  /* ---- Radius · DESIGN.md scale wins (ADR-012) ---------------------------- */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ---- Elevation · exactly one shadow ------------------------------------- */
+  --shadow-ambient: 0 4px 12px rgb(22 40 57 / 0.08);
+
+  /* ---- Breakpoints -------------------------------------------------------- */
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 900px;
+  --breakpoint-lg: 1200px;
+
+  /* ---- Container ---------------------------------------------------------- */
+  --container-page: 1200px;
+  /* Side drawer: fixed on desktop, capped so it never covers the whole phone screen. */
+  --container-drawer: 20rem;
+  --container-drawer-max: 85vw;
+}
+
+/*
+ * Semantic aliases — 22-design-system.md §Semantic mapping.
+ *
+ * These are the ONLY colour names application code may use. They are declared in a second
+ * `@theme` block so the utilities exist (`bg-panel`, `text-muted`, `border-divider`) while
+ * the raw role names above stay available to this file and to /dev/tokens only.
+ */
+@theme {
+  --color-page: var(--color-background);
+  --color-on-page: var(--color-on-surface);
+  --color-panel: var(--color-surface-container-lowest);
+  --color-panel-subtle: var(--color-surface-container-low);
+  --color-on-panel: var(--color-on-surface);
+  --color-muted: var(--color-on-surface-variant);
+
+  --color-action: var(--color-primary);
+  --color-on-action: var(--color-on-primary);
+  --color-confirm: var(--color-secondary);
+  --color-on-confirm: var(--color-on-secondary);
+  --color-destructive: var(--color-error);
+  --color-on-destructive: var(--color-on-error);
+
+  /* Rule 5 finding: `outline-variant` measures 1.62:1 against the page and cannot carry a
+     control boundary (WCAG 1.4.11 wants 3:1). `divider` stays decorative; `control-border`
+     is the one that identifies an input, and it uses `outline` at 4.26:1. */
+  --color-divider: var(--color-outline-variant);
+  --color-control-border: var(--color-outline);
+
+  /* Status badges — the `*-fixed` family, taken from the `_final` screens (ADR-012).
+     Uniformly light backgrounds with dark text; every pair measures ≥ 7:1. */
+  --color-status-new: var(--color-secondary-fixed);
+  --color-on-status-new: var(--color-on-secondary-fixed-variant);
+  --color-status-progress: var(--color-primary-fixed);
+  --color-on-status-progress: var(--color-on-primary-fixed-variant);
+  --color-status-waiting: var(--color-tertiary-fixed);
+  --color-on-status-waiting: var(--color-on-tertiary-fixed-variant);
+  --color-status-neutral: var(--color-surface-container-high);
+  --color-on-status-neutral: var(--color-on-surface-variant);
+  --color-status-cancelled: var(--color-error-container);
+  --color-on-status-cancelled: var(--color-on-error-container);
+}
+
+@layer base {
+  html {
+    /* 22 Rule 7 — motion is never the only signal. */
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-on-page);
+    font-family: var(--font-body);
+    font-size: var(--text-body-md);
+    line-height: var(--text-body-md--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+
+  /* 22 Rule 3 — visible focus ring everywhere: 2px primary, 2px offset. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+@layer components {
+  /* Material Symbols Outlined, weight 400, FILL 0 (22 §Component base).
+     The font itself is loaded by next/font in layout.tsx. */
+  .icon {
+    font-family: var(--font-icon);
+    font-weight: 400;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  .icon-dense {
+    font-size: 20px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 20;
+  }
+
+  /* Inside a control that is itself only 20px — a checkbox tick, a select indicator. */
+  .icon-inline {
+    font-size: 16px;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 20;
+  }
+}

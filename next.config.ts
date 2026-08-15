@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 // The env parse deliberately does NOT run here. 23-deployment-and-environments.md
 // §Configuration says a bad variable fails *startup*, not the build, and §Runtime builds
@@ -40,4 +41,7 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/** Wires `src/i18n/request.ts` into the server components request pipeline. */
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
+
+export default withNextIntl(nextConfig)

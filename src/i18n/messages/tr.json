@@ -1,0 +1,117 @@
+{
+  "brand": {
+    "name": "'{brand}'",
+    "tagline": "Dış mekân mimari sistemleri pazaryeri"
+  },
+  "common": {
+    "loading": "Yükleniyor…",
+    "error": "Bir şeyler ters gitti",
+    "errorBody": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
+    "empty": "Henüz kayıt yok",
+    "forbidden": "Bu sayfaya erişim yetkiniz yok",
+    "notFound": "Sayfa bulunamadı",
+    "retry": "Tekrar dene",
+    "cancel": "Vazgeç",
+    "save": "Kaydet",
+    "close": "Kapat",
+    "search": "Ara",
+    "menu": "Menü",
+    "language": "Dil",
+    "skipToContent": "İçeriğe geç"
+  },
+  "nav": {
+    "public": {
+      "products": "Ürünler",
+      "howItWorks": "Nasıl çalışır",
+      "manufacturers": "Üreticiler",
+      "projects": "Projeler",
+      "signIn": "Giriş yap",
+      "contactSales": "Bize ulaşın"
+    },
+    "customer": {
+      "section": "Hesabım",
+      "dashboard": "Panel",
+      "projects": "Projelerim",
+      "requests": "Taleplerim",
+      "messages": "Mesajlar",
+      "savedCompanies": "Kayıtlı firmalar",
+      "settings": "Ayarlar"
+    },
+    "manufacturer": {
+      "section": "Üretici portalı",
+      "dashboard": "Panel",
+      "requests": "Talepler",
+      "calendar": "Takvim",
+      "products": "Ürünler",
+      "pricing": "Fiyatlandırma",
+      "serviceAreas": "Hizmet bölgeleri",
+      "portfolio": "Portföy",
+      "reviews": "Değerlendirmeler",
+      "team": "Ekip",
+      "analytics": "Analitik",
+      "settings": "Ayarlar"
+    },
+    "admin": {
+      "section": "Yönetim",
+      "dashboard": "Komuta merkezi",
+      "manufacturers": "Üreticiler",
+      "customers": "Müşteriler",
+      "requests": "Teklif talepleri",
+      "catalog": "Katalog",
+      "reviews": "Değerlendirmeler",
+      "complaints": "Şikâyetler",
+      "cms": "İçerik ve SEO",
+      "notifications": "Bildirim ayarları",
+      "audit": "Denetim kaydı",
+      "metrics": "Metrikler",
+      "marketPricing": "Pazar fiyatları"
+    }
+  },
+  "home": {
+    "heroTitle": "Projeniz için doğru dış mekân sistemini bulun.",
+    "heroBody": "Bioklimatik pergolalar, cam sistemleri ve teknik dış mekân çözümleri — ölçülerinize göre hesaplanmış fiyatlarla, doğrulanmış üreticilerden.",
+    "heroCta": "Teklif al",
+    "categoriesTitle": "Ne arıyorsunuz?"
+  },
+  "status": {
+    "pending": "Yeni",
+    "accepted": "Kabul edildi",
+    "surveyScheduled": "Keşif planlandı",
+    "surveyCompleted": "Keşif tamamlandı",
+    "offerSent": "Teklif gönderildi",
+    "offerAccepted": "Teklif kabul edildi",
+    "won": "Kazanıldı",
+    "declined": "Reddedildi",
+    "expired": "Süresi doldu",
+    "lost": "Kaybedildi",
+    "cancelled": "İptal edildi"
+  },
+  "shell": {
+    "placeholderUser": "Örnek Kullanıcı",
+    "placeholderCompany": "Örnek Üretici A.Ş.",
+    "placeholderNotice": "Oturum açma Faz 1'de gelir; bu bilgiler yer tutucudur.",
+    "notifications": "Bildirimler",
+    "account": "Hesap"
+  },
+  "dev": {
+    "tokensTitle": "Tasarım token'ları",
+    "tokensBody": "22-design-system.md §Tokens'ın canlı hâli. Bu sayfa yalnızca geliştirme ortamında açılır.",
+    "palette": "Palet",
+    "semantic": "Anlamsal isimler",
+    "statusBadges": "Durum rozetleri",
+    "typography": "Tipografi ölçeği",
+    "spacing": "Boşluk",
+    "radius": "Köşe yarıçapı",
+    "elevation": "Yükseklik",
+    "icons": "İkonlar",
+    "contrast": "Kontrast denetimi",
+    "contrastBody": "Her ön plan/arka plan çifti WCAG 2.1 AA'ya karşı hesaplanır: normal metin için 4.5:1, büyük metin ve arayüz sınırları için 3:1.",
+    "pass": "Geçti",
+    "fail": "Kaldı",
+    "ratio": "Oran",
+    "pair": "Çift",
+    "requirement": "Eşik",
+    "uiTitle": "Arayüz galerisi",
+    "uiBody": "Her primitive, her varyant ve durumuyla. Render edilmeyen bir yeniden stillendirme doğrulanamaz."
+  }
+}

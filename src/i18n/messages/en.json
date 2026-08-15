@@ -1,0 +1,117 @@
+{
+  "brand": {
+    "name": "'{brand}'",
+    "tagline": "Outdoor architectural systems marketplace"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "errorBody": "The action could not be completed. Please try again.",
+    "empty": "Nothing here yet",
+    "forbidden": "You do not have permission to view this page",
+    "notFound": "Page not found",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "search": "Search",
+    "menu": "Menu",
+    "language": "Language",
+    "skipToContent": "Skip to content"
+  },
+  "nav": {
+    "public": {
+      "products": "Products",
+      "howItWorks": "How It Works",
+      "manufacturers": "Manufacturers",
+      "projects": "Projects",
+      "signIn": "Sign In",
+      "contactSales": "Contact Sales"
+    },
+    "customer": {
+      "section": "My account",
+      "dashboard": "Dashboard",
+      "projects": "My projects",
+      "requests": "My requests",
+      "messages": "Messages",
+      "savedCompanies": "Saved companies",
+      "settings": "Settings"
+    },
+    "manufacturer": {
+      "section": "Manufacturer portal",
+      "dashboard": "Dashboard",
+      "requests": "Offer requests",
+      "calendar": "Calendar",
+      "products": "Products",
+      "pricing": "Pricing",
+      "serviceAreas": "Service areas",
+      "portfolio": "Portfolio",
+      "reviews": "Reviews",
+      "team": "Team",
+      "analytics": "Analytics",
+      "settings": "Settings"
+    },
+    "admin": {
+      "section": "Administration",
+      "dashboard": "Command center",
+      "manufacturers": "Manufacturers",
+      "customers": "Customers",
+      "requests": "Offer requests",
+      "catalog": "Catalogue",
+      "reviews": "Reviews",
+      "complaints": "Complaints",
+      "cms": "Content and SEO",
+      "notifications": "Notification settings",
+      "audit": "Audit log",
+      "metrics": "Metrics",
+      "marketPricing": "Market pricing"
+    }
+  },
+  "home": {
+    "heroTitle": "Find the right outdoor system for your project.",
+    "heroBody": "Discover premium pergolas, structural glass systems, and technical outdoor enclosures engineered for precision and built to last.",
+    "heroCta": "Get Offers",
+    "categoriesTitle": "What are you looking for?"
+  },
+  "status": {
+    "pending": "New",
+    "accepted": "Accepted",
+    "surveyScheduled": "Awaiting Survey",
+    "surveyCompleted": "Survey Completed",
+    "offerSent": "Offer Sent",
+    "offerAccepted": "Offer Accepted",
+    "won": "Won",
+    "declined": "Declined",
+    "expired": "Expired",
+    "lost": "Lost",
+    "cancelled": "Cancelled"
+  },
+  "shell": {
+    "placeholderUser": "Example User",
+    "placeholderCompany": "Example Manufacturer Ltd.",
+    "placeholderNotice": "Sign-in arrives in Phase 1; these details are placeholders.",
+    "notifications": "Notifications",
+    "account": "Account"
+  },
+  "dev": {
+    "tokensTitle": "Design tokens",
+    "tokensBody": "22-design-system.md §Tokens, rendered. This page is development-only.",
+    "palette": "Palette",
+    "semantic": "Semantic names",
+    "statusBadges": "Status badges",
+    "typography": "Type scale",
+    "spacing": "Spacing",
+    "radius": "Radius",
+    "elevation": "Elevation",
+    "icons": "Icons",
+    "contrast": "Contrast audit",
+    "contrastBody": "Every foreground/background pair is measured against WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large text and user-interface boundaries.",
+    "pass": "Pass",
+    "fail": "Fail",
+    "ratio": "Ratio",
+    "pair": "Pair",
+    "requirement": "Threshold",
+    "uiTitle": "UI gallery",
+    "uiBody": "Every primitive, in every variant and state. A restyle that is never rendered cannot be verified."
+  }
+}

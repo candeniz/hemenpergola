@@ -230,6 +230,108 @@ accepts. No flag, no warning, both green.
   weakens nothing: the guard is a compile-time one and is proven by the build probe above,
   not by a unit test.
 
+### 2026-08-15 — Phase 0 tasks 0.9, 0.10, 0.11, 0.12, 0.13 (commit `P0.9-0.13`)
+
+Taken out of numeric order on purpose: 0.4–0.8 need a database and Docker is still blocked
+(Q8). These five need none. Together they close the *"an empty page renders in both locales
+through the real shells"* half of the Phase 0 gate; the pipeline half still needs 0.14.
+**The Phase 0 row is not moved** — 0.4–0.8 and 0.14–0.17 are untouched.
+
+**0.9 — tokens.** Full palette, type scale, spacing, radius, the single shadow and the
+600/900/1200 breakpoints in `globals.css`. `ADR-012`'s radius scale, not the screen configs.
+Semantic aliases are a second `@theme` block; components never see a raw role name.
+
+**0.10 — fonts and icons.** Montserrat 600/700 and Inter 400/500/600 via `next/font/google`
+with `latin` + `latin-ext`, so nothing reaches Google at runtime and Turkish glyphs never
+fall back. Material Symbols Outlined self-hosted and subsetted.
+
+**0.11 — primitives.** All 23 from `22` §Component base, plus `Icon`. Restyled centrally;
+no colour is decided at a call site. `/dev/ui` renders every one with its variants and
+states.
+
+**0.12 — shells.** `PublicShell` and `DashboardShell` on the comfortable scale (1200px
+container, 64px margins, 48/80 rhythm); `PortalShell` and `AdminShell` on the dense one
+(full width, 24px gutters, 8/12 rhythm, 44px rows). Nav labels are message keys. The four
+`ADR-010`/`ADR-008` screens appear nowhere in navigation.
+
+**0.13 — i18n.** `tr` unprefixed at the root, `en` prefixed, catalogues namespaced by
+module. `{brand}` is now a message key rather than a literal.
+
+#### Evidence
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 |
+| tests | **125 passed** (was 22) |
+| `/`, `/en`, `/hesap`, `/en/hesap`, `/panel`, `/en/panel`, `/yonetim`, `/en/yonetim`, `/dev/tokens`, `/en/dev/tokens`, `/dev/ui` | all **HTTP 200**, correct `lang`, correct language in `<h1>` |
+| build output | 15 static pages, every route prerendered for both locales |
+| contrast audit | **24 audited pairs, 24 pass**; 2 decorative pairs shown with ratios |
+| touch targets at 375px | 65 interactive elements, **0 under 44px**, no horizontal overflow |
+| focus ring | `rgb(22,40,57)` = `primary`, 2px, 2px offset, on `:focus-visible` only |
+| icon font | 9.8 KB subset vs 696 KB full — **98.6% smaller** |
+| hex literal / arbitrary value / bare JSX string fixture | 4 lint errors, exit 1 |
+
+#### Findings
+
+**1 · The badge palette in `22` was wrong, and the screens already knew.** Asked to check
+whether `PENDING`→`tertiary-container` and `ACCEPTED`→`secondary-container` can share a
+table column: they cannot. `primary-container` (`#2c3e50`) and `tertiary-container`
+(`#612f00`) are dark chips; `secondary-container` (`#7bf8a1`) is a light one. Not a contrast
+failure — all three clear 4.5:1 (4.53 / 4.55 / 4.56) — a tonal one.
+`manufacturer_portal_dashboard_final` uses the **`*-fixed`** family instead
+(`bg-secondary-fixed` + `text-on-secondary-fixed-variant`, `bg-primary-fixed`,
+`bg-tertiary-fixed`, `bg-surface-container`), which is uniformly light-on-dark-text and
+measures ≥ 7.2:1 throughout. `ADR-012` → screens win. `22` §Semantic mapping rewritten; no
+new colour invented.
+
+**2 · `22` Rule 5 pointed at the wrong pair.** `on-surface-variant` on
+`surface-container-low`, named there as "most likely to fail", is **8.49:1**. The actual
+failure is not text at all: **`outline-variant` is 1.61:1**, under the 3:1 that WCAG 1.4.11
+requires of a boundary identifying a control. `divider` and `control-border` are now
+separate semantic names — the faint one may separate rows, the other outlines inputs
+(`outline`, 4.25:1). Rule 5 rewritten.
+
+**3 · `22` contradicted itself on button height.** §Component base says 40px; Rule 4 says
+44px minimum touch target. On a phone those cannot both hold. Resolved: 44px below `sm`,
+40px from `sm` up (36px dense), same for inputs and selects; checkbox, radio and switch keep
+their drawn size and get a 44px `::before` hit area. Written into `22`.
+
+**4 · Tailwind is on 4.3.3, so `22`'s `theme.extend` was a v3 description.** v4 has no
+`tailwind.config.ts`; `@theme` in CSS is the config and emits the custom properties
+directly. `22` §Tokens corrected, as `CLAUDE.md` §Definition of done requires. Note that
+`26-execution-plan.md` row 0.9 still names `tailwind.config.ts` as an artefact — that file
+does not and should not exist.
+
+**5 · tailwind-merge was silently deleting the type scale.** `cn('text-body-sm',
+'text-muted')` returned `'text-muted'`: `text-body-sm` looks like a colour, so tailwind-merge
+treated the two as conflicting and dropped the size. Every component that sets a size and a
+colour in one call — nearly all of them — was losing its font size invisibly. Custom spacing
+had the milder version: `cn('px-md','px-sm')` kept both and let stylesheet order decide.
+Fixed by declaring the token scales through `extendTailwindMerge`; `utils.test.ts` pins the
+vocabulary to `globals.css`. This is the one that would have been hardest to find later.
+
+**6 · Two bugs the browser found that no unit test would have.** The middleware matcher was
+written `'.*\..*'` instead of `'.*\\..*'`; in a JS string that collapses to "any path with
+two or more characters", so every unprefixed Turkish route fell out of the middleware and
+404'd while `/` kept working — locale routing looked fine. And `{brand}` as a message value
+is parsed by ICU as a variable placeholder, which threw `FORMATTING_ERROR` in
+`generateMetadata`; it needs escaping as `'{brand}'`.
+
+#### Assumptions
+
+1. `/dev/*` lives under `[locale]` so there is a single root layout. It is gated on
+   `APP_ENV === 'production'` → `notFound()`.
+2. `react/jsx-no-literals` is disabled for `src/app/**/dev/**` only. Those pages render
+   token names, variant names and hex values verbatim; translating them would defeat the
+   page. It is the only exception in the lint config.
+3. shadcn/ui primitives are hand-written into `src/components/ui` in shadcn's shape rather
+   than generated by its CLI, because the CLI writes its own palette and icon library
+   (lucide) which would then have to be stripped — and `22` says do not mix icon sets.
+   `components.json` is present and points at the semantic tokens so `shadcn add` still
+   works.
+4. Route stubs exist only for the four shell landing pages. The Turkish slug map in `07`
+   §Route map arrives with the pages themselves, phase by phase.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
