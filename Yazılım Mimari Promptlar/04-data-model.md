@@ -36,6 +36,31 @@ migration.
   that. Adding a Turkish-sorted column later means adding the clause, never changing the
   cluster.
 
+## PostGIS and Prisma
+
+Prisma has no `geography` type. Rather than trading `ADR-002` away for the convenience of a
+type the ORM understands, spatial columns are declared as
+`Unsupported("geography(Point, 4326)")` and handled deliberately (`ADR-015`):
+
+| Concern | Where it lives |
+|---|---|
+| Column declaration | `prisma/schema.prisma`, as `Unsupported` |
+| GiST index | hand-written in the migration SQL — Prisma cannot index a type it cannot model |
+| Every read and write | `src/shared/geo` only, via `$queryRaw` |
+
+`shared/geo` is the **only** file in the application allowed to write PostGIS SQL. That is
+what makes `ADR-002`'s real rule — no Haversine in application code — structural instead of
+cultural: a JavaScript distance function cannot use the GiST index, so it turns every match
+run into a full scan.
+
+Two traps the wrapper exists to absorb: `ST_MakePoint` takes **(longitude, latitude)**,
+which is the reverse of how it is said aloud, and `geography` distances are **metres** while
+service areas are configured in kilometres.
+
+Consequence to plan around: a spatial column cannot be selected, filtered or included
+through the Prisma client. `CompanyContact.point`, `City.point` and `District.point` follow
+this pattern today; `ServiceArea.centerPoint` follows it in Phase 3.
+
 ## Identity and tenancy
 
 ```

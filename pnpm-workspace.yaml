@@ -2,15 +2,22 @@
 # (`onlyBuiltDependencies` was removed in v11 and replaced by `allowBuilds`.)
 #
 # Dependency postinstall scripts are blocked by default. Only these are allowed:
-#   sharp         — image processing used by next/image at build and runtime
-#   unrs-resolver — native resolver behind eslint-config-next's import plugin
+#   sharp                   — image processing used by next/image at build and runtime
+#   unrs-resolver           — native resolver behind eslint-config-next's import plugin
+#   prisma, @prisma/engines — the query engine binary; Prisma cannot run without it
 #
-# Denied deliberately — both are optional native accelerations with working JS
-# fallbacks, and 19-security-and-kvkk.md §Dependencies says allow only what is needed:
-#   @parcel/watcher — faster file watching for Tailwind's dev watcher
-#   @swc/core       — Next ships its own SWC binary; this copy is transitive
+# Denied deliberately — all optional native accelerations with working fallbacks, and
+# 19-security-and-kvkk.md §Dependencies says allow only what is needed:
+#   @parcel/watcher                — faster file watching for Tailwind's dev watcher
+#   @swc/core                      — Next ships its own SWC binary; this copy is transitive
+#   cpu-features, ssh2, protobufjs — testcontainers' Docker transport
 allowBuilds:
   '@parcel/watcher': false
+  '@prisma/engines': true
   '@swc/core': false
+  cpu-features: false
+  prisma: true
+  protobufjs: false
   sharp: true
+  ssh2: false
   unrs-resolver: true

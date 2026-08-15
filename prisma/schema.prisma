@@ -1,0 +1,471 @@
+// Implementation of `04-data-model.md`. That document is the contract; this file must not
+// drift from it. Change the document first, then this schema, then a migration.
+//
+// Migration granularity: one migration per phase, named for it (ADR-014). This is
+// migration 1 — Phase 0. It carries identity, tenancy, geography, the cross-cutting
+// tables, and every deferred ADR-010 table. Catalogue, project, pricing, matching, offer,
+// messaging, review and content tables arrive with their own phases.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis, pg_trgm]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums — Postgres enums, except catalogue concepts which are rows (CAT-01).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum GlobalRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Locale {
+  tr
+  en
+}
+
+enum CompanyRole {
+  OWNER
+  ADMIN
+  SALES
+  VIEWER
+}
+
+enum CompanyStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ConsentType {
+  CONTACT_SHARING
+  MARKETING
+  TERMS
+}
+
+enum FileOwnerType {
+  PROJECT
+  COMPANY_DOCUMENT
+  PORTFOLIO
+  COMPANY_LOGO
+  COMPANY_COVER
+  CMS
+  OFFER_ATTACHMENT
+}
+
+enum VirusScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+}
+
+// Deferred (ADR-010) — the enums their tables need, so the tables are never touched again.
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Identity and tenancy — 04 §Identity and tenancy
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  emailVerifiedAt DateTime?
+  phone           String?
+  phoneVerifiedAt DateTime?
+  passwordHash    String?
+  globalRole      GlobalRole @default(CUSTOMER)
+  status          UserStatus @default(ACTIVE)
+  locale          Locale     @default(tr)
+  fullName        String?
+  deletedAt       DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships CompanyMembership[]
+  consents    Consent[]
+  auditLogs   AuditLog[]          @relation("AuditActor")
+  uploads     File[]              @relation("FileUploader")
+
+  @@index([deletedAt])
+  @@index([globalRole, status])
+}
+
+// Auth.js v5 tables. Shapes are dictated by the adapter, not by 04.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Company {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  legalName       String
+  /// Turkish sort order — 04 §Conventions. The cluster stays C.
+  displayName     String
+  taxNumber       String?
+  about           String?
+  logoId          String?
+  coverId         String?
+  status          CompanyStatus @default(PENDING)
+  verifiedAt      DateTime?
+  rejectionReason String?
+  foundedYear     Int?
+  employeeRange   String?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  memberships   CompanyMembership[]
+  documents     CompanyDocument[]
+  contact       CompanyContact?
+  auditLogs     AuditLog[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  leadCredits   LeadCredit[]
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model CompanyMembership {
+  id         String      @id @default(cuid())
+  userId     String
+  companyId  String
+  role       CompanyRole
+  invitedAt  DateTime    @default(now())
+  acceptedAt DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId, role])
+  @@index([userId])
+}
+
+model CompanyDocument {
+  id         String         @id @default(cuid())
+  companyId  String
+  type       String
+  fileId     String
+  status     DocumentStatus @default(PENDING)
+  reviewedBy String?
+  reviewedAt DateTime?
+  note       String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  file    File    @relation(fields: [fileId], references: [id])
+
+  @@index([companyId, status])
+  @@index([fileId])
+}
+
+model CompanyContact {
+  id          String   @id @default(cuid())
+  companyId   String   @unique
+  phone       String?
+  email       String?
+  website     String?
+  addressLine String?
+  cityId      String?
+  districtId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  /// PostGIS `geography(Point, 4326)`. Prisma has no native geography type, so this is
+  /// `Unsupported`: it is created and indexed in migration SQL, and every read goes
+  /// through `src/shared/geo` with `$queryRaw`. See 04 §PostGIS and Prisma.
+  point Unsupported("geography(Point, 4326)")?
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  city     City?     @relation(fields: [cityId], references: [id])
+  district District? @relation(fields: [districtId], references: [id])
+
+  @@index([cityId])
+  @@index([districtId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Geography — 04 §Matching and service areas. Seeded in task 0.5.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model City {
+  id        String   @id @default(cuid())
+  /// Turkish sort order — 04 §Conventions.
+  name      String
+  plateCode Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  point Unsupported("geography(Point, 4326)")?
+
+  districts       District[]
+  companyContacts CompanyContact[]
+
+  @@index([name])
+}
+
+model District {
+  id        String   @id @default(cuid())
+  cityId    String
+  /// Turkish sort order — 04 §Conventions.
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  point Unsupported("geography(Point, 4326)")?
+
+  city            City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  companyContacts CompanyContact[]
+
+  @@unique([cityId, name])
+  @@index([cityId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cross-cutting — 04 §Messaging, reviews, media, content (the platform-wide tables)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model File {
+  id              String          @id @default(cuid())
+  key             String          @unique
+  bucket          String
+  mime            String
+  sizeBytes       Int
+  width           Int?
+  height          Int?
+  ownerType       FileOwnerType
+  ownerId         String
+  uploadedBy      String?
+  virusScanStatus VirusScanStatus @default(PENDING)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  uploader         User?             @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
+  companyDocuments CompanyDocument[]
+
+  @@index([ownerType, ownerId])
+  @@index([uploadedBy])
+  @@index([virusScanStatus])
+}
+
+model Consent {
+  id          String      @id @default(cuid())
+  userId      String
+  type        ConsentType
+  /// The exact version of the text shown. 19 §Consent: consent is not a checkbox that
+  /// vanishes after submit.
+  textVersion String
+  grantedAt   DateTime    @default(now())
+  revokedAt   DateTime?
+  ip          String
+  userAgent   String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+model AuditLog {
+  id           String     @id @default(cuid())
+  actorUserId  String?
+  actorRole    String
+  companyId    String?
+  entityType   String
+  entityId     String
+  action       String
+  before       Json?
+  after        Json?
+  reason       String?
+  ip           String
+  userAgent    String
+  createdAt    DateTime   @default(now())
+
+  actor   User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([companyId, createdAt])
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deferred — modelled, not built (ADR-010, ADR-014)
+//
+// No service, no route, no UI in V1. They ship here so later migrations are additive
+// and nobody re-litigates the decision in Phase 7. Money is integer kuruş (ADR-005) —
+// migration 1 is the only place money appears, and the rule is applied here once.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Plan {
+  id        String          @id @default(cuid())
+  code      String          @unique
+  name      String
+  priceKurus Int
+  interval  BillingInterval
+  features  Json
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  companyId          String
+  planId             String
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAt           DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([companyId, status])
+  @@index([planId])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  companyId      String
+  subscriptionId String?
+  amountKurus    Int
+  status         PaymentStatus @default(PENDING)
+  provider       String
+  providerRef    String?
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status])
+  @@index([subscriptionId])
+}
+
+model LeadCredit {
+  id             String   @id @default(cuid())
+  companyId      String
+  delta          Int
+  reason         String
+  offerRequestId String?
+  createdAt      DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, createdAt])
+}
+
+model ConfiguratorQuestion {
+  id        String   @id @default(cuid())
+  productId String
+  key       String
+  sortOrder Int      @default(0)
+  payload   Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, sortOrder])
+}
+
+model ConfiguratorRule {
+  id        String   @id @default(cuid())
+  productId String
+  kind      String
+  payload   Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+}

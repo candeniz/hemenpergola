@@ -2,15 +2,17 @@
 /**
  * The integration stage of the pipeline (`23` §Pipeline, `20` §Pipeline).
  *
- * Nothing to run today: integration tests need a database, and Prisma arrives in task 0.4.
- * A job that quietly passes with nothing in it is worse than no job — it reads green and
- * proves nothing. So this script decides between three outcomes and says which:
+ * Three outcomes, and the middle one is the reason this script exists rather than a plain
+ * `pnpm test:integration`:
  *
- *   no schema                     → skip, with the reason printed
- *   schema, but no integration    → FAIL. The moment 0.4 lands, this turns red and stays
- *     tests                         red until the tests it implies are written. That is the
- *                                   point: CI opens the stage by itself.
- *   schema and tests              → run them
+ *   no schema                  → skip, printing the reason and the phase that opens it
+ *   schema, but no integration → FAIL. A database with no tests against it is a gap, not a
+ *     tests                      pass, and the stage opens itself the moment 0.4 lands.
+ *   schema and tests           → run them
+ *
+ * As of Phase 0 task 0.4 the schema exists, so this stage runs for real. It needs Docker;
+ * a failure to reach the daemon is reported as a failure rather than skipped, because
+ * "the runner has no Docker" is a CI configuration bug and silence would hide it.
  */
 import { existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -37,10 +39,7 @@ const tests = TEST_DIRS.flatMap(findIntegrationTests)
 if (!hasSchema) {
   console.log('integration: SKIPPED')
   console.log(`  reason   : ${SCHEMA} does not exist yet`)
-  console.log('  blocked  : Phase 0 task 0.4 (Prisma + migration 1), which needs Docker')
-  console.log(
-    '  see      : 25-progress.md Q8 — virtualization is disabled in this machine’s firmware',
-  )
+  console.log('  blocked  : Phase 0 task 0.4 (Prisma + migration 1)')
   console.log('  when 0.4 lands, this stage fails until integration tests exist. By design.')
   process.exit(0)
 }
@@ -56,6 +55,8 @@ if (tests.length === 0) {
   process.exit(1)
 }
 
-console.log(`integration: running ${tests.length} file(s)`)
-const result = spawnSync('pnpm', ['vitest', 'run', ...tests], { stdio: 'inherit', shell: true })
+console.log(`integration: running ${tests.length} file(s) against a PostGIS container`)
+for (const test of tests) console.log(`  · ${test}`)
+
+const result = spawnSync('pnpm', ['run', 'test:integration'], { stdio: 'inherit', shell: true })
 process.exit(result.status ?? 1)

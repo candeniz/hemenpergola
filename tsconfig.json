@@ -12,15 +12,17 @@
     "isolatedModules": true,
     "incremental": true,
     "noEmit": true,
-
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-
     "types": ["node"],
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
@@ -34,5 +36,11 @@
     "*.config.ts",
     "*.config.mts"
   ],
-  "exclude": ["node_modules", ".next", "Frontend Tasarım", "Yazılım Mimari Promptlar"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "Frontend Tasarım",
+    "Yazılım Mimari Promptlar",
+    "test/fixtures/boundary"
+  ]
 }

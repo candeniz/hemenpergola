@@ -72,11 +72,22 @@ const ENV_BOUNDARY_FILES = [
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',
   'e2e/**/*.ts',
+  // The integration harness must hand the container's URL to the Prisma CLI as an env
+  // var; the typed env describes the application's database, not an ephemeral one.
+  'test/integration/**/*.ts',
 ]
 
 export default tseslint.config(
   {
-    ignores: ['node_modules/**', '.next/**', 'next-env.d.ts', 'coverage/**', ...REFERENCE_DIRS],
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'next-env.d.ts',
+      'coverage/**',
+      // A deliberate boundary violation, linted on purpose by test/module-boundary.test.ts.
+      'test/fixtures/boundary/**',
+      ...REFERENCE_DIRS,
+    ],
   },
 
   ...compat.extends('next/core-web-vitals'),
@@ -111,6 +122,52 @@ export default tseslint.config(
   {
     files: ENV_BOUNDARY_FILES,
     rules: { 'no-restricted-syntax': 'off' },
+  },
+
+  /**
+   * The module boundary (`05-system-architecture.md` §Shape, `CLAUDE.md` non-negotiable 2).
+   *
+   * `app/` is presentation. It may call application services and nothing below them: no
+   * Prisma, no repositories, no domain internals. The rule exists because the violation is
+   * invisible in review — a page that queries the database directly looks perfectly normal
+   * and skips every permission assertion in `12` §Authorization.
+   *
+   * Proven by `test/module-boundary.test.ts`, which lints a committed fixture and expects
+   * the error. A rule nobody has watched fail is decoration.
+   */
+  {
+    files: ['src/app/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@prisma/client',
+              message:
+                'No Prisma in app/. Pages, layouts, server actions and route handlers call application services only (05-system-architecture.md §Shape).',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@/shared/db', '@/shared/db/*', '**/shared/db', '**/shared/db/*'],
+              message:
+                'No database client in app/. Call an application service (05-system-architecture.md §Shape).',
+            },
+            {
+              group: ['@/modules/*/infrastructure/**', '**/modules/*/infrastructure/**'],
+              message:
+                'No repository or adapter in app/. Call the module’s application service instead.',
+            },
+            {
+              group: ['@/modules/*/domain/**', '**/modules/*/domain/**'],
+              message:
+                'No domain internals in app/. The application layer is the only entry point (05-system-architecture.md §Shape).',
+            },
+          ],
+        },
+      ],
+    },
   },
 
   /**

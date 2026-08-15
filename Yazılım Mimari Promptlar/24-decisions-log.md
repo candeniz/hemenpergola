@@ -200,3 +200,69 @@ persistence (`10-project-configurator.md`).
 **Consequences.** Fewer perceived steps on mobile, where drop-off happens, without losing any
 field the matching and pricing engines need. Resuming works because state is in the database,
 not the client.
+
+---
+
+## ADR-014 — One migration per phase; the deferred tables ship in migration 1
+
+**Context.** `26-execution-plan.md` §Phase 0 proposed a migration granularity and asked for
+an ADR if it was adopted. It is.
+
+Two questions were open. How finely should migrations be cut — per table, per PR, per
+phase? And when do the `ADR-010` tables (`Plan`, `Subscription`, `Payment`, `LeadCredit`,
+`ConfiguratorQuestion`, `ConfiguratorRule`) enter the schema, given they have no service, no
+route and no UI in V1?
+
+**Decision.**
+
+1. **One migration per phase, named for it.** Migration 1 is `phase0_foundation`.
+2. **The deferred tables ship in migration 1** and are never touched again.
+
+**Consequences.**
+
+A phase-sized migration is reviewable as a unit and matches how the work is planned, so
+"what does this phase change in the database" has a single answer. It also matches
+`23-deployment-and-environments.md` §Migrations: expand → migrate → contract *within* a
+release, which is easier to hold when a release is a phase.
+
+Shipping the deferred tables now is the whole point of modelling them. Later migrations stay
+additive, and — the part that matters — nobody re-litigates `ADR-010` in Phase 7 because the
+tables are already there and visibly unused. The cost is six tables that no code touches.
+
+Migration 1's scope, from `04-data-model.md`: the PostGIS and `pg_trgm` extensions, the
+Auth.js v5 tables, §Identity and tenancy in full, `City`/`District`, `PlatformSetting`,
+`AuditLog`, `Consent`, `File`, and §Deferred in full. Catalogue, project, pricing, matching,
+offer, messaging, review and content tables are **not** in it; they arrive with their phases.
+
+**Reverses if.** A phase turns out to need a destructive change mid-flight and cannot wait
+for the next one. That is a reason to cut a second migration inside the phase, not to
+abandon the granularity.
+
+---
+
+## ADR-015 — PostGIS lives behind `src/shared/geo`, not in the modules
+
+**Context.** `ADR-002` requires real spatial queries at the database level. Prisma has no
+`geography` type, so those columns cannot be expressed in the schema or queried through the
+client — they need `$queryRaw`. The question is where that raw SQL is allowed to live.
+
+**Decision.** Spatial columns are `Unsupported("geography(Point, 4326)")` in
+`prisma/schema.prisma`; their GiST indexes are hand-written in the migration; and **every
+spatial read and write goes through `src/shared/geo`**, which is the only file in the
+application permitted to write PostGIS SQL.
+
+**Consequences.**
+
+`ADR-002`'s real rule — *no Haversine in application code* — becomes structural rather than
+cultural. A developer who needs a distance finds a function that already exists and uses the
+index; the alternative is writing raw SQL in a module, which is visible in review precisely
+because nothing else does it.
+
+`shared/geo` also owns the two things that are easy to get wrong once and then copy:
+`ST_MakePoint` takes **(longitude, latitude)**, the reverse of how it is spoken, and
+`geography` distances are metres while service areas are configured in kilometres.
+
+The cost is that spatial columns are invisible to the Prisma client, so they cannot be
+selected, filtered or included through it. Phase 3 follows the same pattern when
+`ServiceArea.centerPoint` arrives: `Unsupported` column, GiST index in the migration,
+containment query as a function in `shared/geo`.

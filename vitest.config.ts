@@ -9,7 +9,14 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts', 'test/**/*.{test,spec}.ts'],
     // The reference folders are committed material, not source (CLAUDE.md §Layout).
-    exclude: ['node_modules/**', '.next/**', 'Frontend Tasarım/**', 'Yazılım Mimari Promptlar/**'],
+    exclude: [
+      'node_modules/**',
+      '.next/**',
+      'Frontend Tasarım/**',
+      'Yazılım Mimari Promptlar/**',
+      // Integration tests are their own pipeline stage and need a container.
+      'test/integration/**',
+    ],
     // A valid environment, so importing modules that parse env at load does not throw.
     // Tests that need a broken environment build it explicitly.
     env: { ...VALID_ENV },

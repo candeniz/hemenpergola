@@ -455,6 +455,161 @@ They carry `data-contrast-sample` and are excluded from the axe run; every other
 active on that page, and the page's own table plus `design-tokens.test.ts` report those
 pairs more precisely than axe can.
 
+### 2026-08-15 — Phase 0 tasks 0.4, 0.6, 0.7, 0.8 and the code half of 0.15 (commit `P0.4+0.6-0.8+0.15`)
+
+**Docker is still not available, so this entry is split into what is verified and what is
+written but unproven.** The phase table row does not move; 0.5 and 0.17 are untouched.
+
+#### The blocker, re-measured
+
+The task began from "virtualization is enabled, Docker should work now". It is not, and the
+evidence is threefold:
+
+| Signal | Value |
+|---|---|
+| `systeminfo` → Hyper-V Requirements | `Virtualization Enabled In Firmware: No` |
+| `Win32_Processor.VirtualizationFirmwareEnabled` | `False` |
+| `Win32_ComputerSystem.HypervisorPresent` | `False` |
+| `LastBootUpTime` | **2026-08-15 15:10** — before this session started |
+| `docker info` | `failed to connect to the docker API at npipe:////./pipe/docker_engine` |
+| `pnpm test:integration` | `Error: Could not find a working container runtime strategy` |
+
+The uptime is the interesting one: the machine has not restarted, so whatever was changed in
+firmware has not been read yet. **Fast Startup is enabled** (`HiberbootEnabled = 1`), which
+means "Shut down" then power on resumes a hibernated kernel and does *not* re-initialise
+firmware settings — only **Restart** does. That is the likeliest explanation and the first
+thing to try.
+
+**After restarting, this is the list:**
+
+```bash
+docker compose up -d && docker compose ps
+docker exec pergola-postgres psql -U pergola -d pergola -c "select postgis_version();"
+docker exec pergola-postgres psql -U pergola -d pergola -c "show lc_collate;"
+docker compose logs minio-init                 # "bucket pergola-local ready"
+pnpm exec prisma migrate deploy                # migration 1, on an empty database
+pnpm exec prisma migrate diff --from-migrations prisma/migrations \
+  --to-schema prisma/schema.prisma --shadow-database-url "$DATABASE_URL" --exit-code
+pnpm test:integration                          # 21 tests
+curl -s localhost:3000/api/health | jq         # three checks
+docker stop pergola-postgres && curl -si localhost:3000/api/health | head -1   # expect 503
+```
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck` · `lint` · `test` · `build` · `format:check` | all exit 0 |
+| unit tests | **185** (was 142) |
+| `pnpm exec playwright test` | exit 0 — 7 passed, 22 skipped |
+| `pnpm build` with **no `.env`** | exit 0 |
+| `prisma validate` | schema valid |
+| `prisma migrate diff --from-empty` | generated 516 lines; 30 more hand-written |
+| money rounding, incl. **negative half** | 19 tests — `Math.round(-0.5)` is `-0`, ours is `-1` |
+| `Result` / `DomainError` | 11 tests — all seven kinds, all seven status mappings |
+| `ActorContext` | 11 tests — shape, route-derived `companyId`, IP precedence |
+| module boundary rule | **7 tests**, fixture-driven: 4 violations reported, allowed imports clean, rule inert outside `app/` |
+| integration stage | **no longer SKIPPED** — it finds the schema, lists 2 test files, runs them, and fails on the Docker daemon |
+
+#### Not verified — needs the restart
+
+`docker compose up -d` and its four checks · `prisma migrate deploy` on an empty database ·
+`prisma migrate diff` being empty (the `23` §Pipeline release gate) · the GiST index existing
+in `pg_indexes` · the 21 integration tests · `/api/health` returning its three checks and
+dropping to 503 when Postgres stops.
+
+The integration tests are written against exactly those claims, so the restart converts them
+from assertions into evidence in one command.
+
+#### 0.4 — Prisma and migration 1
+
+`ADR-014` written and accepted: one migration per phase, `ADR-010`'s deferred tables in
+migration 1. Migration 1 is `phase0_foundation` — extensions, Auth.js tables, §Identity and
+tenancy in full, `City`/`District`, `PlatformSetting`, `AuditLog`, `Consent`, `File`, and all
+six deferred tables. Catalogue, project, pricing, matching, offer, messaging, review and
+content are **not** in it.
+
+Thirty lines of the migration are hand-written because Prisma cannot express them: the three
+`COLLATE "tr-TR-x-icu"` columns, the three GiST indexes, the partial unique index that
+enforces one `OWNER` per company, and the trigram index for directory search.
+
+**`ADR-015` — PostGIS lives behind `src/shared/geo`.** Spatial columns are `Unsupported`,
+their indexes are in migration SQL, and `shared/geo` is the only file allowed to write
+PostGIS SQL. That is what makes `ADR-002`'s real rule — no Haversine in application code —
+structural rather than cultural: a JavaScript distance cannot use a GiST index, so it turns
+every match run into a full scan. The wrapper also absorbs the two things everyone gets
+wrong once: `ST_MakePoint` is **(longitude, latitude)**, and `geography` distances are
+metres while service areas are configured in kilometres. `04` §PostGIS and Prisma records
+the pattern for Phase 3's `ServiceArea`.
+
+**Prisma 7 is a bigger change than a version bump.** Connection URLs moved out of
+`schema.prisma` into `prisma.config.ts`, and the client now requires a driver adapter
+(`@prisma/adapter-pg`) rather than a URL. Both are wired; the adapter reads `DATABASE_URL`
+through the typed env, so the database address is still validated at startup with everything
+else.
+
+#### 0.6 — `src/shared/`
+
+`result/` is `05` §Errors verbatim — seven kinds, named constructors so a typo cannot
+produce a valid-looking error that no adapter matches, and the status mapping in one place.
+
+`money/` is integer kuruş with **half-away-from-zero** rounding. The trap the prompt names is
+real and now has a test: `Math.round` rounds towards `+∞`, so `Math.round(-0.5)` is `-0` and
+`Math.round(-1.5)` is `-1`. Discounts and regional adjustments produce negative
+intermediates (`08` §Algorithm steps 6–7), so using `Math.round` would bias every negative
+half by one kuruş in the platform's favour — silently, and only on the boundary. Percentages
+are carried as integer basis points so a percentage never adds a second rounding site.
+
+`db/` holds the client, the transaction helper and the soft-delete extension. Two details
+worth keeping: the extension applies to **reads only** on the three models `04` names — an
+update targeting a soft-deleted row should fail loudly rather than no-op — and
+`TransactionClient` is *inferred from the extended client* rather than taken from
+`Prisma.TransactionClient`, because `$extends` changes the shape and the stock type silently
+loses the extension inside a transaction.
+
+`geo/` is the PostGIS boundary described above.
+
+#### 0.7 — `ActorContext`
+
+`05` §ActorContext verbatim, anonymous-only. Two things Phase 1 must not reshape are already
+right: the signature is `(request, params)`, and **`companyId` comes from the route**. A
+"current company" in the session would let one tab rewrite another tab's scope and would
+delay membership revocation until token expiry (`12` §Context resolution).
+
+#### 0.8 — module boundary
+
+`app/**` may not import `@prisma/client`, `@/shared/db`, `modules/*/infrastructure` or
+`modules/*/domain`. `26` suggests a committed fixture that fails CI on purpose; a
+permanently-red pipeline is ignored within a week, so the fixture is committed and
+`test/module-boundary.test.ts` runs ESLint programmatically and asserts the four errors. The
+rule is proven and CI stays green while it is obeyed.
+
+#### 0.15 — harness and `/api/health`
+
+Testcontainers harness: one `postgis/postgis:16-3.4` container per run created with
+`--locale=C` to match production, migrations applied by `prisma migrate deploy` — the same
+command production runs, so a migration that only works via `db push` fails here — and every
+test wrapped in a transaction that is rolled back via a sentinel throw.
+
+`/api/health` checks database connectivity, the latest applied row in `_prisma_migrations`,
+and storage reachability, each bounded by a 3 s timeout. A container that is up but
+unmigrated reports degraded rather than serving traffic.
+
+#### Findings
+
+**1 · The same build-time coupling reappeared, and the same guard caught it.**
+`/api/health` imported the health service at module scope; Next evaluates that while
+collecting page data, so `pnpm build` demanded a full `.env` again. Identical to the `/dev`
+layout regression in the previous entry. Fixed the same way — dynamic import inside the
+handler. **This is now twice.** The pattern is worth stating as a rule: *a file under
+`src/app` must not import anything that touches `env` or Prisma at module scope.* The CI
+build job having no `.env` is what makes it findable; without that it would have shipped.
+
+**2 · A block comment terminated itself.** `modules/*/infrastructure` inside a `/** */`
+comment contains `*/`, which closed the comment and turned the rest of the file into
+syntax errors that pointed at unrelated lines. Cost about ten minutes of reading the wrong
+part of the file. Written as `modules/<name>/infrastructure` now.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -466,7 +621,7 @@ pairs more precisely than axe can.
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
-| Q8 | **Development machine cannot run containers.** Virtualization is disabled in BIOS/UEFI (`systeminfo`: `Virtualization Enabled In Firmware: No`), so Docker Desktop cannot start and the local Postgres/MinIO stack has never been up. Not a question of design — it needs someone at the machine. | **Phase 0 task 0.3 evidence, and all of 0.4 onward**: Prisma, migrations, seeds and every integration test need a database | none. Enable VT-x/AMD SVM in firmware and reboot, or move development to a machine that already has Docker |
+| Q8 | **Development machine still cannot run containers — NOT yet resolved.** Docker Desktop is installed (CLI 29.7.2) but no daemon is reachable. `systeminfo` still reports `Virtualization Enabled In Firmware: No`, `Win32_Processor.VirtualizationFirmwareEnabled` is still `False`, and `LastBootUpTime` is 2026-08-15 15:10 — **the machine has not restarted since before the firmware change was reported**. Fast Startup (`HiberbootEnabled = 1`) is on, so a *Shut down* + power on does not re-read firmware settings; only **Restart** does. | **Phase 0 tasks 0.3, 0.5, 0.17, and the database half of 0.4 and 0.15.** Everything that does not need a live database is done and verified. | none. **Restart** (not shut down), confirm `systeminfo` reports `Virtualization Enabled In Firmware: Yes`, start Docker Desktop once, then run the verification list in the log entry below |
 
 ## Known deviations from the brief
 
