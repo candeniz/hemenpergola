@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
+// The brand name is Q1 in 25-progress.md and has five undecided candidates. Its
+// documented default is a `{brand}` placeholder everywhere, swapped once — so no
+// candidate name is hardcoded here. Becomes an i18n key in task 0.13.
 export const metadata: Metadata = {
-  title: 'Outdoor Systems Marketplace',
+  title: '{brand}',
   description: 'Phase 0 foundation.',
 }
 

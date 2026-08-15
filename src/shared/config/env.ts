@@ -1,3 +1,7 @@
+// Importing this module from a client component is a build error, not a runtime one.
+// Client-visible configuration lives in `env.client.ts`.
+import 'server-only'
+
 import { z } from 'zod'
 
 /**
@@ -7,8 +11,11 @@ import { z } from 'zod'
  * Two rules this file exists to enforce:
  *
  *  1. A missing or malformed variable **fails startup**. `parseServerEnv` runs when this
- *     module is loaded, and `next.config.ts` imports it, so `next dev`, `next build` and
- *     `next start` all throw before doing any work. There is no silent default and no
+ *     module is loaded, and `src/instrumentation.ts` loads it from Next's `register()`
+ *     hook, so `next dev` and `next start` throw before serving anything. `next build`
+ *     does not run `register()`, and deliberately so: one image is built without
+ *     production secrets and started many times with them
+ *     (`23-deployment-and-environments.md` §Runtime). There is no silent default and no
  *     escape hatch.
  *  2. No secret is reachable through a `NEXT_PUBLIC_*` variable. That is enforced by the
  *     type system below, not by review: `defineServerVars` types any `NEXT_PUBLIC_`-prefixed
@@ -171,11 +178,8 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
   return result.data
 }
 
-if (typeof window !== 'undefined') {
-  throw new Error(
-    'src/shared/config/env.ts is server-only. Import env.client.ts from client components.',
-  )
-}
-
-/** Parsed at module load: importing this module is what makes startup fail. */
+/**
+ * Parsed at module load. `src/instrumentation.ts` imports this module in its `register()`
+ * hook, which is what turns a bad variable into a failed startup.
+ */
 export const env: ServerEnv = parseServerEnv(process.env)

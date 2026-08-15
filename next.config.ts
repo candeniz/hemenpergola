@@ -1,15 +1,16 @@
 import type { NextConfig } from 'next'
 
-// Importing the env module runs the Zod parse at startup. A missing or malformed
-// variable throws here — before `next dev`, `next build` or `next start` does any
-// work. See 23-deployment-and-environments.md §Configuration.
-import './src/shared/config/env'
+// The env parse deliberately does NOT run here. 23-deployment-and-environments.md
+// §Configuration says a bad variable fails *startup*, not the build, and §Runtime builds
+// one image that later runs as web and as worker — production secrets do not exist at
+// image-build time. The parse runs from `src/instrumentation.ts`, which Next calls once
+// per server process.
 
 /**
  * Reference material that is committed but is not source
  * (CLAUDE.md §Layout). Kept out of the build, the trace and the dev watcher.
  */
-const REFERENCE_DIRS = ['Frontend Tasarım', 'Yazılım Mimari Promptlar', 'Prompt'] as const
+const REFERENCE_DIRS = ['Frontend Tasarım', 'Yazılım Mimari Promptlar'] as const
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,

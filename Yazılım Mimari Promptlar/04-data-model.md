@@ -16,6 +16,25 @@ migration.
   rows (`CAT-01`).
 - Every foreign key is indexed. Every list query has a covering index; if a query needs one
   that does not exist, add it in the same PR.
+- **Collation is C at the cluster, Turkish only where a human reads the order.** The
+  database is created with `--locale=C`: byte-order comparison, stable indexes, and no
+  locale surprises in the things that must compare exactly — emails, slugs, tokens, tax
+  numbers, enum-like strings. Columns that a Turkish reader sorts by carry an explicit
+  column collation:
+
+  | Column | Collation |
+  |---|---|
+  | `City.name` | `COLLATE "tr-TR-x-icu"` |
+  | `District.name` | `COLLATE "tr-TR-x-icu"` |
+  | `Company.displayName` | `COLLATE "tr-TR-x-icu"` |
+
+  Why not a `tr_TR` cluster: in Turkish collation `I` lower-cases to `ı`, not `i`. A
+  cluster-wide Turkish locale would therefore make `USER@X.COM` and `user@x.com` compare as
+  different strings, and `İSTANBUL` and `istanbul` slugs diverge — it silently breaks
+  case-insensitive email lookup, slug uniqueness and every identifier comparison in the
+  system. Sorting a city list correctly is worth one `COLLATE` clause; it is not worth
+  that. Adding a Turkish-sorted column later means adding the clause, never changing the
+  cluster.
 
 ## Identity and tenancy
 

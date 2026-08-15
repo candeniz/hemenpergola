@@ -11,11 +11,16 @@ const compat = new FlatCompat({ baseDirectory: __dirname })
 /** Committed reference material, never linted and never imported (CLAUDE.md §Layout). */
 const REFERENCE_DIRS = ['Frontend Tasarım/**', 'Yazılım Mimari Promptlar/**', 'Prompt/**']
 
-/** The only files allowed to touch `process.env` directly. */
+/**
+ * The only files allowed to touch `process.env` directly. `instrumentation.ts` is on the
+ * list because it must branch on `NEXT_RUNTIME` *before* the typed env exists — it is the
+ * hook that creates it.
+ */
 const ENV_BOUNDARY_FILES = [
   'src/shared/config/env.ts',
   'src/shared/config/env.client.ts',
   'src/shared/config/env.test.ts',
+  'src/instrumentation.ts',
   'vitest.config.ts',
 ]
 

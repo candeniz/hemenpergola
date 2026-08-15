@@ -12,7 +12,6 @@
     "isolatedModules": true,
     "incremental": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true,
 
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -35,5 +34,5 @@
     "*.config.ts",
     "*.config.mts"
   ],
-  "exclude": ["node_modules", ".next", "Frontend Tasarım", "Yazılım Mimari Promptlar", "Prompt"]
+  "exclude": ["node_modules", ".next", "Frontend Tasarım", "Yazılım Mimari Promptlar"]
 }

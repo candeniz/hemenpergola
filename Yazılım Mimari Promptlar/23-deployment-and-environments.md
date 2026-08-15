@@ -57,6 +57,12 @@ Rules that keep deploys reversible:
 - No destructive migration in the same release as the code that stops using the column.
 - Every migration is tested against a staging copy of production-sized data before release.
 - PostGIS extension and indexes are created in migrations, not by hand on the server.
+- **The production database is created with the same locale as every other environment:
+  `--locale=C --encoding=UTF8`.** Collation is a create-time property of the cluster, so
+  getting it wrong is not a migration away from being fixed — it is a dump, recreate and
+  restore. Turkish-sorted columns carry their own `COLLATE "tr-TR-x-icu"`
+  (`04-data-model.md` §Conventions); the cluster itself stays byte-order. Verify on any new
+  database before the first migration runs: `SHOW lc_collate;` must report `C`.
 
 Rollback: redeploy the previous image. Because migrations are expand-only within a release,
 the previous image still runs against the new schema. A migration that breaks this rule

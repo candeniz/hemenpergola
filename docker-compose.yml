@@ -12,7 +12,13 @@ services:
       POSTGRES_USER: pergola
       POSTGRES_PASSWORD: pergola
       POSTGRES_DB: pergola
-      # Deterministic collation, so index ordering matches production.
+      # C locale for the cluster: byte-order collation, which is what emails, slugs and
+      # identifiers need. Turkish text that has to sort as a Turkish reader expects gets an
+      # explicit per-column `COLLATE "tr-TR-x-icu"` instead — see 04-data-model.md
+      # §Conventions for which columns and why the cluster is not tr_TR.
+      #
+      # This is only "the same as production" if production is created the same way.
+      # 23-deployment-and-environments.md §Migrations records that as a requirement.
       POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
     ports:
       - '5432:5432'

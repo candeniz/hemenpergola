@@ -172,6 +172,64 @@ docker compose logs minio-init                           # "bucket pergola-local
 **Nothing here contradicts a document.** `26` §Phase 0 rows 0.1–0.3 are implemented as
 written; the only divergence is that 0.3's evidence could not be produced on this hardware.
 
+### 2026-08-15 — Phase 0 review fixes (commit `P0.1-0.3 düzeltmeleri`)
+
+Six review findings on 0.1–0.3. No new scope, nothing from 0.4.
+
+**1 · No brand name in code.** `package.json` name is `marketplace`; the page title, the
+`<h1>` and the `metadata.title` are the literal `{brand}` placeholder, which is Q1's
+documented default rather than one of its five undecided candidates. Task 0.13 binds it to
+an i18n key.
+
+**2 · Env validation moved from build to startup.** `next.config.ts` no longer imports the
+env module. `src/instrumentation.ts` does, from Next's `register()` hook, which runs once
+per server process and never during `next build`. This is what `23` §Configuration actually
+requires ("fails **startup**"), and it is the only version compatible with `23` §Runtime:
+one image is built without production secrets and started many times with them. No bypass
+flag was added — the fix is the right hook, not an escape hatch.
+
+**3 · `import 'server-only'`** replaces the runtime `typeof window` throw in `env.ts`. The
+violation is now a compile error rather than something a user discovers.
+
+**4 · The compose comment no longer states an assumption as fact.** The cluster stays
+`--locale=C`; the comment says why and admits it only matches production if production is
+created the same way. The collation rule is now written down in `04-data-model.md`
+§Conventions (`City.name`, `District.name`, `Company.displayName` get
+`COLLATE "tr-TR-x-icu"`; the cluster does not, because Turkish collation lower-cases `I` to
+`ı` and would break email, slug and identifier comparison), and `23` §Migrations now
+requires the production database to be created with the same locale, with
+`SHOW lc_collate;` as the check.
+
+**5 · `Prompt/` removed** from the `tsconfig.json` exclude list and from `REFERENCE_DIRS` in
+`next.config.ts`. It is a disposable copy, not a reference directory.
+
+**6 · `allowImportingTsExtensions` removed.** The `.ts` specifier in `vitest.config.ts`
+became `.js`, which TypeScript resolves to the `.ts` source and Vite's native config loader
+accepts. No flag, no warning, both green.
+
+**Evidence** (re-run from a clean `.next`, `pnpm install --frozen-lockfile` first):
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck` · `lint` · `test` · `build` · `format:check` | all **exit 0**, 22 tests |
+| `pnpm build` with **no `.env` file at all** | **exit 0** — the build no longer needs secrets |
+| `pnpm start`, still no `.env` | server refuses to prepare, every request **500**, all 15 required variables listed |
+| `pnpm dev` with `AUTH_SECRET` deleted | **does not bind at all** — `curl` gets connection refused; error names `AUTH_SECRET` |
+| `pnpm dev` with a valid `.env` | **HTTP 200**, `lang="tr"`, `<title>{brand}</title>` |
+| client component importing `env.ts` → `pnpm build` | **fails**: `You're importing a component that needs "server-only"`, with the import trace |
+
+**Two things worth knowing about the new startup path:**
+
+- `next start` with a bad environment does **not** exit the process; Next reports
+  `Failed to prepare server` and answers every request with a 500. A TCP-only health check
+  would call that container healthy. The HTTP `/api/health` endpoint from task 0.15 is what
+  makes this safe in production, and it now has a second reason to exist. `next dev` is
+  stricter — it never opens the port.
+- `server-only` throws on import outside a bundler that sets the `react-server` export
+  condition, so Vitest needed `test.alias` pointing at `test/stubs/server-only.ts`. That
+  weakens nothing: the guard is a compile-time one and is proven by the build probe above,
+  not by a unit test.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
