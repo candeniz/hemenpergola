@@ -521,5 +521,27 @@
     "photoCount": "{count} photos",
     "uploading": "Uploading…",
     "uploadFailed": "Upload failed"
+  },
+  "wizard": {
+    "startTitle": "Describe your project",
+    "startSubtitle": "Enter your dimensions and preferences, and we will show you manufacturers who work in your area with estimated price ranges. You can start without an account.",
+    "chooseProduct": "Configure this",
+    "noProducts": "There are no configurable products right now.",
+    "progressLabel": "Wizard progress",
+    "basis": {
+      "AREA_M2": "Priced by square metre",
+      "LENGTH_M": "Priced by metre",
+      "UNIT": "Priced per unit"
+    },
+    "stage": {
+      "PRODUCT": "Product",
+      "SPECS": "Technical details",
+      "REVIEW": "Review"
+    },
+    "stageState": {
+      "complete": "completed",
+      "current": "current step",
+      "upcoming": "not yet reached"
+    }
   }
 }

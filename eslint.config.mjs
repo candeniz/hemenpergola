@@ -54,6 +54,60 @@ const COLOUR_UTILITIES = [
 
 const RAW_TOKEN_PATTERN = `(?:^|["'\\s:])(?:[a-z0-9-]+(?:\\[[^\\]]*\\])?:)*(?:${COLOUR_UTILITIES.join('|')})-(?:${rawPaletteTokens().join('|')})(?![a-z0-9-])`
 
+/**
+ * `no-restricted-imports` only sees **static** `import` declarations. `await import('...')`
+ * is an `ImportExpression` and slips straight past it — which is how
+ * `hizmet-bolgeleri/page.tsx` called `prisma.city.findMany` from `app/` for a whole phase
+ * without the pipeline noticing.
+ *
+ * The distinction that matters, and the reason this is not simply "ban dynamic imports too":
+ *
+ *   **Non-negotiable 9 is about *timing*.** It bans evaluating `env` or an application
+ *   service at *module scope*, because Next walks the module graph at build time. A dynamic
+ *   import is the **prescribed fix** there — the module is evaluated when the request runs.
+ *   Those specifiers must stay dynamically importable.
+ *
+ *   **The layering rules are about *dependency*.** `app/` may not reach Prisma, a
+ *   repository or a domain internal — and deferring *when* it reaches them changes nothing.
+ *   A dynamic import there is the same violation, merely invisible.
+ *
+ * So the layering groups get a syntax rule as well, and the timing group does not.
+ *
+ * Matches `import('x')` and `await import('x')` with a literal specifier. A computed
+ * specifier (`import(someVariable)`) is not matched and cannot be — that is a documented
+ * hole, and one nobody reaches by accident.
+ */
+function bannedDynamicImport(patterns, message) {
+  const alternatives = patterns
+    .map((pattern) => pattern.replaceAll('/', '\\/').replaceAll('*', '[^\'"]*'))
+    .join('|')
+
+  return {
+    selector: `ImportExpression > Literal[value=/^(?:${alternatives})$/]`,
+    message,
+  }
+}
+
+/** The layering bans, as dynamic-import selectors. Shared by the config and its fixtures. */
+export const DYNAMIC_LAYERING_BANS = [
+  bannedDynamicImport(
+    ['@prisma/client'],
+    'No Prisma in app/, statically or dynamically. Pages, layouts, server actions and route handlers call application services only (05-system-architecture.md §Shape). Deferring the import defers nothing: the layer is still crossed.',
+  ),
+  bannedDynamicImport(
+    ['@/shared/db', '@/shared/db/*', '**/shared/db', '**/shared/db/*'],
+    'No database client in app/, statically or dynamically. Call an application service (05-system-architecture.md §Shape).',
+  ),
+  bannedDynamicImport(
+    ['@/modules/*/infrastructure/**', '**/modules/*/infrastructure/**'],
+    'No repository or adapter in app/, statically or dynamically. Call the module’s application service instead.',
+  ),
+  bannedDynamicImport(
+    ['@/modules/*/domain/**', '**/modules/*/domain/**'],
+    'No domain internals in app/, statically or dynamically. The application layer is the only entry point (05-system-architecture.md §Shape).',
+  ),
+]
+
 /** Committed reference material, never linted and never imported (CLAUDE.md §Layout). */
 const REFERENCE_DIRS = ['Frontend Tasarım/**', 'Yazılım Mimari Promptlar/**', 'Prompt/**']
 
@@ -222,6 +276,11 @@ export default tseslint.config(
           ],
         },
       ],
+
+      // The same four layering bans again, this time for `await import(...)` — see
+      // `bannedDynamicImport` above for why non-negotiable 9's group is deliberately absent
+      // from this list.
+      'no-restricted-syntax': ['error', ...DYNAMIC_LAYERING_BANS],
     },
   },
 

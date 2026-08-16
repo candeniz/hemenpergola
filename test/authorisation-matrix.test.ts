@@ -374,6 +374,14 @@ describe('every service method has a matrix entry', () => {
       'matching.removeServiceArea',
       'matching.companiesCoveringPoint',
       'matching.listCities',
+      'matching.listDistricts',
+      // Phase 4 · the configurator
+      'catalog.listConfigurableProducts',
+      'platform.dashboardCounts',
+      'project.createProject',
+      'project.getProject',
+      'project.patchStep',
+      'project.validateProject',
       // 3.7
       'portfolio.listPortfolio',
       'portfolio.createPortfolioItem',
@@ -397,6 +405,34 @@ describe('every service method has a matrix entry', () => {
       'media.fileUrl',
     ]) {
       expect(methods, method).toContain(method)
+    }
+  })
+
+  it('scopes every project method by ownership, carrying both identities', () => {
+    /*
+     * `02` §Customer permissions: *"A customer needs no permission catalogue: authorisation
+     * is ownership plus state."* So there is deliberately **no** `PROJECT_*` permission, and
+     * a project method declaring `kind: 'permission'` would mean somebody invented one.
+     *
+     * `scopedBy` must name **both** identities. `04` §Project sets exactly one of
+     * `customerId` / `anonymousKey`, and 4.5 makes the anonymous half real — a method scoped
+     * only by `userId` would have to be found and widened then, and the matrix is the most
+     * copied mechanism in this project.
+     *
+     * The claim this shape makes is also different from the company-scoped one: reaching
+     * another customer's project answers `NOT_FOUND`, not `FORBIDDEN`, because ownership is
+     * in the `where` clause and the row never comes back. The integration suite proves the
+     * behaviour; this asserts the declaration.
+     */
+    const projectMethods = registeredMethods().filter((meta) => meta.service === 'project')
+
+    expect(projectMethods.length).toBeGreaterThanOrEqual(4)
+
+    for (const meta of projectMethods) {
+      expect(meta.authorisation.kind).toBe('customer-owned')
+
+      const spec = meta.authorisation as { kind: 'customer-owned'; scopedBy: readonly string[] }
+      expect([...spec.scopedBy].sort()).toEqual(['anonymousKey', 'userId'])
     }
   })
 
@@ -464,9 +500,21 @@ describe('every service method has a matrix entry', () => {
     /** The company's offer over the catalogue — theirs to edit, not the platform's. */
     const COMPANY_OWNED = new Set(['listCompanyProducts', 'setCompanyProduct', 'setCompanyOptions'])
 
+    /**
+     * Public reads of the catalogue. `ADR-021` put the configurator on a public path, so the
+     * product list it renders is reachable without a session — the same rows the public
+     * catalogue already shows.
+     *
+     * Named rather than pattern-matched: "anything called list* may be anonymous" would let
+     * the next admin list slip out silently, which is the failure this whole test exists for.
+     */
+    const PUBLIC_READ = new Set(['listConfigurableProducts'])
+
     const platformOwned = registeredMethods().filter(
       (meta) =>
-        (meta.service === 'catalog' && !COMPANY_OWNED.has(meta.method)) ||
+        (meta.service === 'catalog' &&
+          !COMPANY_OWNED.has(meta.method) &&
+          !PUBLIC_READ.has(meta.method)) ||
         meta.service === 'platform' ||
         meta.service === 'audit' ||
         (meta.service === 'company' && VERIFICATION.has(meta.method)),
@@ -477,6 +525,19 @@ describe('every service method has a matrix entry', () => {
         .filter((meta) => meta.authorisation.kind !== 'admin')
         .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`),
     ).toEqual([])
+
+    /*
+     * The public read must be anonymous *and* must stay a read. An anonymous method that
+     * could write would be the worst outcome of this exception, so the name is asserted as
+     * well as the kind.
+     */
+    const publicRead = registeredMethods().filter(
+      (meta) => meta.service === 'catalog' && PUBLIC_READ.has(meta.method),
+    )
+
+    expect(publicRead).toHaveLength(1)
+    expect(publicRead[0]?.authorisation.kind).toBe('anonymous')
+    expect(publicRead.every((meta) => meta.method.startsWith('list'))).toBe(true)
 
     // And the company-owned three are *not* admin, or a manufacturer cannot say what they
     // sell. Both directions, so neither list can quietly swallow the other.
@@ -519,7 +580,7 @@ describe('every service method has a matrix entry', () => {
     // And the count is not zero, which is how this test would pass while measuring nothing.
     // 18 from Phase 1; 15 catalogue, 2 settings, 7 verification and 2 audit from Phase 2;
     // 5 profile, 3 offer, 4 service area, 5 portfolio and 3 media from Phase 3.
-    expect(registered.size).toBeGreaterThanOrEqual(72)
+    expect(registered.size).toBeGreaterThanOrEqual(80)
   })
 
   it('declares an authorisation spec for every registered method', async () => {

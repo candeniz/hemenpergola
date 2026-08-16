@@ -138,6 +138,7 @@ Project(id, customerId?, anonymousKey?, productId, status: DRAFT|READY|SUBMITTED
         projectType: NEW_BUILD|RENOVATION,
         installationType: WALL_MOUNTED|FREESTANDING|ROOF|OTHER,
         cityId, districtId, addressNote?, point geography(Point)?,
+        pointPrecision: EXACT|DISTRICT|CITY?,
         timing: ASAP|M1_3|M3_6|PLANNING, budgetHintKurus?, note?, deletedAt)
 ProjectAttributeValue(id, projectId, attributeId, optionId?, numberValue?, boolValue?, textValue?)
 ProjectAttachment(id, projectId, fileId, kind: PHOTO|DOCUMENT, sortOrder)
@@ -145,6 +146,25 @@ ProjectAttachment(id, projectId, fileId, kind: PHOTO|DOCUMENT, sortOrder)
 
 Dimensions are stored in **millimetres as integers**; `areaM2` is derived and stored for
 query and indexing purposes only. Exactly one of `customerId` / `anonymousKey` is set.
+
+`point` is **resolved when the step is saved**, not when matching runs. If the customer gave no
+map pin it is filled from the district centroid, so a `READY` project never has a null point.
+
+The alternative — `COALESCE(project.point, district.point)` at match time — is quietly worse.
+GiST skips nulls for these operators and `ST_DWithin(..., NULL, ...)` returns `NULL`, so every
+radius service area would fail to match. The symptom is "no results"; the cause is invisible,
+and it would be hunted in Phase 5.
+
+`pointPrecision` records which it was. `09` §Explainability requires telling the customer the
+match was made on their district, and that sentence cannot be written without knowing whether
+the point is exact.
+
+**The symmetry is an intention, not yet a fact.** The `Geocoder` port computes the same
+`precision` for a service-area centre (`ADR-019`), but `ServiceArea` does not persist it — it
+stores `centerLabel` and discards the precision. So today a radius comparison has one end that
+knows its own accuracy and one end that does not. The column is cheap to add in Phase 5's
+migration, which `ADR-014` opens anyway; until then, do not write code that assumes a
+`ServiceArea` can report how its centre was obtained.
 
 ## Pricing
 

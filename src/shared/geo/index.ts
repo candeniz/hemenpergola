@@ -81,7 +81,7 @@ export async function distanceMetres(from: Point, to: Point): Promise<number> {
 
 /** Writes a point onto a row whose column Prisma cannot see. */
 export async function setPoint(
-  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea',
+  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea' | 'Project',
   id: string,
   point: Point,
 ): Promise<void> {
@@ -96,7 +96,7 @@ export async function setPoint(
 
 /** Reads a point back. `null` when the row has none. */
 export async function getPoint(
-  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea',
+  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea' | 'Project',
   id: string,
 ): Promise<Point | null> {
   const relation = Prisma.raw(`"${table}"`)

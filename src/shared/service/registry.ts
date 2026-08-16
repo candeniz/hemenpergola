@@ -36,6 +36,33 @@ export type AuthorisationSpec =
    * (`12` §Authorization rule 2). `describe` says which row is being scoped.
    */
   | { kind: 'owner'; describe: string }
+  /**
+   * **Customer-owned**, the third ownership shape — `02` §Customer permissions:
+   * *"A customer needs no permission catalogue: authorisation is ownership plus state."*
+   * There is deliberately no `PROJECT_*` permission; there is a row and who owns it.
+   *
+   * The claim this shape makes is **different from the company-scoped one**, and that
+   * difference is the reason it is its own variant rather than a `describe` string:
+   *
+   *   reaching a company-scoped thing from the wrong company  → `FORBIDDEN`
+   *   reaching a customer-owned thing from the wrong customer → **`NOT_FOUND`**
+   *
+   * The second follows from `12` §Authorization rule 2. Ownership lives in the `where`
+   * clause — `where: { id, customerId: actor.userId }` — so the row simply does not come
+   * back. Returning `FORBIDDEN` would require fetching it first and comparing, which is the
+   * post-fetch comparison `CLAUDE.md` non-negotiable 3 bans, and it would confirm the row
+   * exists to somebody who does not own it.
+   *
+   * `scopedBy` carries **both** identities because `04` §Project says *exactly one of*
+   * `customerId` / `anonymousKey` is set. An anonymous visitor configuring a draft is, for
+   * projects, a **legitimate actor** — the first place in the product where that is true, and
+   * a break from the assumption every earlier surface made.
+   */
+  | {
+      kind: 'customer-owned'
+      describe: string
+      scopedBy: readonly ('userId' | 'anonymousKey')[]
+    }
   /** Global admin only. */
   | { kind: 'admin' }
   /** Requires a signed-in user and nothing more (e.g. "list my own companies"). */

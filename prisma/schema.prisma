@@ -130,6 +130,7 @@ model User {
   uploads       File[]              @relation("FileUploader")
   authTokens    AuthToken[]
   refreshTokens RefreshToken[]
+  projects      Project[]
 
   @@index([deletedAt])
   @@index([globalRole, status])
@@ -300,6 +301,7 @@ model City {
   serviceAreas               ServiceArea[]
   portfolioItems             PortfolioItem[]
   priceBookRegionAdjustments PriceBookRegionAdjustment[]
+  projects                   Project[]
 
   @@index([point], type: Gist, map: "City_point_gist")
   @@index([name])
@@ -319,6 +321,7 @@ model District {
   companyContacts            CompanyContact[]
   serviceAreas               ServiceArea[]
   priceBookRegionAdjustments PriceBookRegionAdjustment[]
+  projects                   Project[]
 
   @@unique([cityId, name])
   @@index([point], type: Gist, map: "District_point_gist")
@@ -344,12 +347,13 @@ model File {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  uploader         User?             @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
-  companyDocuments CompanyDocument[]
-  seoOgImages      Seo[]
+  uploader           User?               @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
+  companyDocuments   CompanyDocument[]
+  seoOgImages        Seo[]
   // Phase 3 · migration 4
-  portfolioPhotos  PortfolioPhoto[]
-  variants         FileVariant[]
+  portfolioPhotos    PortfolioPhoto[]
+  variants           FileVariant[]
+  projectAttachments ProjectAttachment[]
 
   @@index([ownerType, ownerId])
   @@index([uploadedBy])
@@ -693,6 +697,7 @@ model Product {
   companyProducts CompanyProduct[]
   portfolioItems  PortfolioItem[]
   priceBookItems  PriceBookItem[]
+  projects        Project[]
 
   @@index([categoryId, sortOrder])
   @@index([isActive])
@@ -746,9 +751,10 @@ model ProductAttribute {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product      Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  translations ProductAttributeTranslation[]
-  options      ProductOption[]
+  product       Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  translations  ProductAttributeTranslation[]
+  projectValues ProjectAttributeValue[]
+  options       ProductOption[]
 
   @@unique([productId, key])
   @@index([productId, sortOrder])
@@ -787,6 +793,7 @@ model ProductOption {
   translations          ProductOptionTranslation[]
   companyProductOptions CompanyProductOption[]
   priceBookOptionPrices PriceBookOptionPrice[]
+  projectValues         ProjectAttributeValue[]
 
   @@unique([attributeId, value])
   @@index([attributeId, sortOrder])
@@ -1128,4 +1135,154 @@ model PriceCalculation {
   @@index([companyId, calculatedAt])
   @@index([priceBookId])
   @@index([actorUserId, calculatedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Projects — migration 6, Phase 4 (`04-data-model.md` §Project,
+// `10-project-configurator.md`)
+//
+// The configurator's output: a project complete enough to match and price.
+// Dimensions are **millimetres as integers**; `areaM2` is derived and stored for
+// query and indexing only — the customer never types it (`10` §Field specifics).
+//
+// **Exactly one of `customerId` / `anonymousKey` is set.** Prisma cannot express
+// that, so it is a CHECK constraint in the migration: the invariant is the
+// difference between a draft that belongs to somebody and a draft that belongs to
+// everybody.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  DRAFT
+  READY
+  SUBMITTED
+  CLOSED
+}
+
+enum ProjectType {
+  NEW_BUILD
+  RENOVATION
+}
+
+enum InstallationType {
+  WALL_MOUNTED
+  FREESTANDING
+  ROOF
+  OTHER
+}
+
+enum ProjectTiming {
+  ASAP
+  M1_3
+  M3_6
+  PLANNING
+}
+
+/// How `Project.point` was obtained. Mirrors the `precision` the `Geocoder` port returns for
+/// service areas (`ADR-019`), so both ends of a radius comparison describe their own accuracy
+/// the same way — `09` §Explainability needs it to say the match was made on the district.
+enum PointPrecision {
+  EXACT
+  DISTRICT
+  CITY
+}
+
+enum AttachmentKind {
+  PHOTO
+  DOCUMENT
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  customerId   String?
+  /// The anonymous draft's owner: an httpOnly cookie value, 30-day TTL (`10` §Anonymous
+  /// drafts). Indexed because `POST /projects/{id}/claim` looks projects up by it.
+  anonymousKey String?
+  productId    String
+  status       ProjectStatus @default(DRAFT)
+  title        String?
+
+  /// Outer-to-outer, millimetres, integers (`ADR-005`'s sibling rule for measurements:
+  /// a float dimension is a rounding argument nobody can win).
+  widthMm  Int?
+  depthMm  Int?
+  heightMm Int?
+  /// Derived from `widthMm × depthMm`. Stored for query and indexing only.
+  areaM2   Float?
+  quantity Int    @default(1)
+
+  projectType      ProjectType?
+  installationType InstallationType?
+
+  cityId         String?
+  districtId     String?
+  addressNote    String?
+  point          Unsupported("geography(Point, 4326)")?
+  /// Never null once `point` is set. Resolved at save time, not at match time: a null point
+  /// makes `ST_DWithin` return NULL and GiST skip the row, so radius areas silently miss.
+  pointPrecision PointPrecision?
+
+  timing          ProjectTiming?
+  budgetHintKurus Int?
+  note            String?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  customer    User?                   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  product     Product                 @relation(fields: [productId], references: [id], onDelete: Restrict)
+  city        City?                   @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  district    District?               @relation(fields: [districtId], references: [id], onDelete: SetNull)
+  values      ProjectAttributeValue[]
+  attachments ProjectAttachment[]
+
+  /// `04` §Indexes. The GiST index arrives with the table rather than with Phase 5's
+  /// matching, because an index added later is an index somebody adds by hand in production.
+  @@index([point], type: Gist, map: "Project_point_gist")
+  @@index([customerId, status])
+  @@index([anonymousKey])
+  @@index([deletedAt])
+}
+
+/**
+ * One answer to one attribute. The value column used depends on the attribute's
+ * `inputType`; `optionId` is a reference rather than a copied label so a deactivated option
+ * still renders (`10` §Admin authoring).
+ */
+model ProjectAttributeValue {
+  id          String   @id @default(cuid())
+  projectId   String
+  attributeId String
+  optionId    String?
+  numberValue Float?
+  boolValue   Boolean?
+  textValue   String?
+
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  attribute ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Restrict)
+  option    ProductOption?   @relation(fields: [optionId], references: [id], onDelete: Restrict)
+
+  /// One answer per attribute. A `MULTISELECT` attribute is the exception and is modelled as
+  /// several rows, so the constraint is on `(projectId, attributeId, optionId)`.
+  @@unique([projectId, attributeId, optionId])
+  @@index([projectId])
+  @@index([attributeId])
+}
+
+/**
+ * Task 4.6, second half. The table ships now so migration 6 is the whole phase.
+ */
+model ProjectAttachment {
+  id        String         @id @default(cuid())
+  projectId String
+  fileId    String
+  kind      AttachmentKind
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  file    File    @relation(fields: [fileId], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, fileId])
+  @@index([projectId, sortOrder])
 }

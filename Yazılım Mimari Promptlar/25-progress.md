@@ -45,7 +45,7 @@ proven — not when the code is written.
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
-| 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
+| 4 | Project configurator | **🟡 in progress · 5/9** | a customer walks the wizard to READY and it survives a restart |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
@@ -1982,6 +1982,88 @@ design-system change and this was a screen.
 - **Q1, Q3, Q10, Q11–Q20** unchanged. **Q11–Q18 are now answerable** — `27-d3-pilot-guide.md`
   phrases each as a question and the pilot account is seeded.
 
+### 2026-08-16 — Phase 4 in progress · interim checkpoint (commit `P4 wip · sihirbaz iskeleti`)
+
+**Not a finished half.** This entry exists so a fresh session does not have to re-derive the
+decisions below from the diff. The tree is green — 932 unit tests, lint, typecheck — and the
+commit is a safety point, not a deliverable.
+
+#### Done
+
+- **Q21 closed and generalised.** `no-restricted-imports` cannot see `await import(...)`, so
+  three phases of layering violations were invisible. Four were found:
+  `hizmet-bolgeleri/page.tsx` and `yonetim/page.tsx` (both counted rows straight off Prisma
+  from `app/`), and the two `/api/dev` routes (reached `notification/infrastructure`).
+  Layering bans now also match `ImportExpression`; **non-negotiable 9's group deliberately
+  does not**, because there a dynamic import is the prescribed fix. Two-way fixtures prove
+  static fails, dynamic fails, and rule 9's legitimate dynamic import still passes.
+  Documented hole: a computed specifier (`import(someVariable)`) cannot be matched.
+- **`shared/dev-outbox`** — the dev mailbox/outbox buffer moved out of `notification` rather
+  than being exempted. It was duplicated across both adapters; one implementation now, and
+  `app/` imports `shared/` legitimately. Zero exemptions still holds.
+- **`kind: 'customer-owned'`** in the service registry, the third ownership shape.
+  **No `PROJECT_*` permissions** — `02` §Customer permissions is explicit that a customer needs
+  none. `scopedBy: ['userId', 'anonymousKey']` carries both identities from the start so 4.5
+  needs no reshaping. Its claim differs from the company-scoped one: wrong customer →
+  `NOT_FOUND`, not `FORBIDDEN`, because ownership is in the `where` clause.
+- **Migration 6**: `Project`, `ProjectAttributeValue`, `ProjectAttachment`; a CHECK constraint
+  for `04`'s "exactly one of `customerId` / `anonymousKey`"; GiST on `point` plus btree
+  `(customerId, status)` and `anonymousKey`; Turkish collation. `Project` was already in
+  `SOFT_DELETE_MODELS` from Phase 0.
+- **`pointPrecision`** added to `04` §Project and migration 6 (regenerated, not supplemented —
+  `ADR-014` holds). The point is resolved **when the location step is saved**, from the pin or
+  the district centroid. Resolving at match time instead would make `ST_DWithin(..., NULL, ...)`
+  return `NULL` and GiST skip the row: every radius area silently misses, symptom "no
+  results", cause invisible until Phase 5.
+- **Domain**: `steps.ts` (three stages / ten steps as data, per-step Zod schemas, derived
+  area — no schema accepts `areaM2`), `readiness.ts` (every issue carries its step *and*
+  stage; a hidden attribute is never required), `status.ts`, and `isAttributeVisible` placed
+  beside `validateShowIf` so `showIf` has one home.
+- **`status.ts` fixed two review-found bugs at the cause.** Status was written from two sites
+  with two guards that had drifted: validating a `SUBMITTED` project reported `READY` while
+  the database said otherwise, and validating a `CLOSED` one resurrected it. One transition
+  function now, and `validate` returns the **persisted** status.
+- **`ADR-021`** — the configurator is public. `07` had it at `/hesap/projeler/yeni` under an
+  auth-gated segment while `10` §Anonymous drafts says a visitor configures without an
+  account. Moved to `/proje/yeni` → `/proje/[id]`. Keeping the URL and exempting it from the
+  gate was rejected: a path under `/hesap` that needs no account lies to the reader and to the
+  middleware matcher.
+- **`(public-owner)` route group**, and this is the part worth not re-deriving. `ADR-021`
+  inherited a second contradiction: `07` §Rendering strategy calls `(public)` ISR-cacheable,
+  and the configurator carries personal data. `noindex` does not help — it governs indexing,
+  not caching. A segment-level `revalidate`, or a Phase 8 ISR sweep assuming `(public)` is
+  safe, would serve one customer's project to another. The split is now a **route group whose
+  layout sets `force-dynamic`**, and `scripts/check-dynamic-routes.mjs` enumerates that
+  directory against Next's real `prerender-manifest.json` — not a list of route names, which
+  the second half would outgrow the moment it adds `POST /claim`.
+- Services: `project.{createProject,getProject,patchStep,validateProject}`,
+  `catalog.listConfigurableProducts` (`anonymous` by design, `why` names `ADR-021`),
+  `matching.listCities` / `listDistricts`, `platform.dashboardCounts`. Actions in
+  `app/actions/project.ts`. `WizardStepper` and `ProductChooser`.
+- Matrix extended: the four project methods assert `customer-owned` **and** both identities;
+  `catalog` gained a third category (public read) asserted in both directions.
+
+#### Not done — the rest of the half
+
+`/proje/[id]` wizard page and its step forms; `/api/v1` route handlers; the `/dev/ui` gallery
+entry for `WizardStepper` (**all three stages across completed/current/upcoming**, not one
+snapshot); unit tests for `steps` and `readiness` and for both callers of
+`isAttributeVisible` agreeing; integration tests (soft-delete proof, the point-resolution
+pair, wrong customer → `NOT_FOUND`); wiring `check-dynamic-routes.mjs` into the build stage;
+`core-flow`'s first two steps un-skipped — **with the URL updated to `/proje/yeni`**, because
+they were written before `ADR-021` and a skipped test can carry a stale URL for years.
+
+#### Findings so far
+
+**`yonetim/page.tsx` had been reading Prisma from `app/` since Phase 2.** Not cunning — nobody
+had looked, and no rule could see it.
+
+**The "everything in `catalog` is admin" matrix rule needed a third category**, exactly as it
+needed a second in Phase 3. Public reads are now named explicitly and asserted to be reads.
+
+**Regenerating a migration with a hand-written tail duplicates statements.** Reassembling
+migration 6 left a second `ProjectAttachment_fileId_fkey`; caught and removed, worth knowing.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2006,6 +2088,7 @@ design-system change and this was a screen.
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
 | Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
 | Q21 | `src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`? | nothing today; a second violation is one careless page away | Extend the rule and fix the page in the first Phase 4 commit that touches `app/`. |
+| Q22 | Is district-centroid precision good enough for the **proximity score**? `ADR-019` argues centroid precision is sufficient, and that argument is sound for containment — `ST_DWithin` is a boolean. `09` §Scoring gives proximity 25/100 as a *continuous* function of distance normalised over the radius, where a centroid-grade error moves the ranking rather than being rounded away. Also: `ServiceArea` computes a `precision` and discards it, so one end of the comparison cannot report its own accuracy. | Phase 5 ranking — wrong order is invisible and unfalsifiable from the outside | Score proximity in bands rather than continuously, and add `precision` to `ServiceArea` in Phase 5's migration. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

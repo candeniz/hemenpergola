@@ -20,7 +20,7 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
 } from './dto'
-import type { z } from 'zod'
+import { z } from 'zod'
 import type { seoSchema } from './dto'
 
 type SeoInput = z.infer<typeof seoSchema>
@@ -646,3 +646,53 @@ export const catalogService = {
 } satisfies Record<string, { meta: unknown }>
 
 export type CatalogActor = ActorContext
+
+export const listConfigurableProductsSchema = z.object({ locale: z.enum(['tr', 'en']) })
+export type ListConfigurableProductsInput = z.infer<typeof listConfigurableProductsSchema>
+
+export type ConfigurableProduct = {
+  productId: string
+  name: string
+  categoryName: string
+  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
+}
+
+/**
+ * The products a visitor may configure — the wizard's first two steps (`10` §Step structure).
+ *
+ * `anonymous` by design, not by omission: `ADR-021` puts the configurator on a public path so
+ * a visitor can reach it without an account, and this is the read that page performs. It
+ * exposes exactly what the public catalogue already shows.
+ */
+export const listConfigurableProducts = serviceMethod<
+  ListConfigurableProductsInput,
+  { products: ConfigurableProduct[] }
+>(
+  'catalog',
+  'listConfigurableProducts',
+  {
+    kind: 'anonymous',
+    why: 'ADR-021 makes the configurator public; this lists the same active products the public catalogue does',
+  },
+  async (actor, input) => {
+    void actor
+
+    const products = await prisma.product.findMany({
+      where: { isActive: true, category: { isActive: true } },
+      include: {
+        translations: { where: { locale: input.locale } },
+        category: { include: { translations: { where: { locale: input.locale } } } },
+      },
+      orderBy: { sortOrder: 'asc' },
+    })
+
+    return ok({
+      products: products.map((product) => ({
+        productId: product.id,
+        name: product.translations[0]?.name ?? product.id,
+        categoryName: product.category.translations[0]?.name ?? '',
+        basisType: product.basisType,
+      })),
+    })
+  },
+)

@@ -30,16 +30,22 @@ export default async function AdminDashboardPage({
   const { locale } = await params
   setRequestLocale(locale)
 
-  const [t, { prisma }] = await Promise.all([
+  const [t, { dashboardCounts }, { resolveActor }, { headers }] = await Promise.all([
     getTranslations('admin.commandCenter'),
-    import('@/shared/db'),
+    import('@/modules/platform/application/settings-service'),
+    import('@/shared/context/actor'),
+    import('next/headers'),
   ])
 
-  const [pendingManufacturers, categories, products] = await Promise.all([
-    prisma.company.count({ where: { status: 'PENDING' } }),
-    prisma.category.count(),
-    prisma.product.count({ where: { isActive: true } }),
-  ])
+  const requestHeaders = await headers()
+  const actor = await resolveActor({ headers: { get: (name: string) => requestHeaders.get(name) } })
+
+  // Through the service, not through Prisma. This page counted rows directly since Phase 2 —
+  // a non-negotiable 2 violation the lint rule could not see, because the import was dynamic.
+  const counts = await dashboardCounts(actor, {})
+  const { pendingManufacturers, catalogCategories, catalogProducts } = counts.ok
+    ? counts.value
+    : { pendingManufacturers: 0, catalogCategories: 0, catalogProducts: 0 }
 
   const queues: Tile[] = [
     { labelKey: 'pendingManufacturers', value: pendingManufacturers, href: '/yonetim/ureticiler' },
@@ -51,8 +57,8 @@ export default async function AdminDashboardPage({
   ]
 
   const health: Tile[] = [
-    { labelKey: 'catalogCategories', value: categories, href: '/yonetim/katalog' },
-    { labelKey: 'catalogProducts', value: products, href: '/yonetim/katalog' },
+    { labelKey: 'catalogCategories', value: catalogCategories, href: '/yonetim/katalog' },
+    { labelKey: 'catalogProducts', value: catalogProducts, href: '/yonetim/katalog' },
   ]
 
   return (

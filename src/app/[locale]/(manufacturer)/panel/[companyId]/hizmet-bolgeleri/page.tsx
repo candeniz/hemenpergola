@@ -23,11 +23,10 @@ export default async function ServiceAreaPage({
   const { locale, companyId } = await params
   setRequestLocale(locale)
 
-  const [t, { listServiceAreas }, { resolveActor }, { prisma }] = await Promise.all([
+  const [t, { listServiceAreas, listCities, listDistricts }, { resolveActor }] = await Promise.all([
     getTranslations('supply'),
     import('@/modules/matching/application/service-area-service'),
     import('@/shared/context/actor'),
-    import('@/shared/db'),
   ])
 
   const { headers } = await import('next/headers')
@@ -37,14 +36,18 @@ export default async function ServiceAreaPage({
     { companyId },
   )
 
-  const [areas, cities, districts] = await Promise.all([
+  // Q21, closed. These were `prisma.city.findMany` / `prisma.district.findMany` — a
+  // non-negotiable 2 violation hidden behind a dynamic import.
+  const [areas, cityResult, districtResult] = await Promise.all([
     listServiceAreas(actor, { companyId }),
-    prisma.city.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    prisma.district.findMany({
-      select: { id: true, cityId: true, name: true },
-      orderBy: { name: 'asc' },
-    }),
+    listCities(actor, { companyId }),
+    listDistricts(actor, { companyId }),
   ])
+
+  const cities = cityResult.ok
+    ? cityResult.value.cities.map((city) => ({ id: city.cityId, name: city.name }))
+    : []
+  const districts = districtResult.ok ? districtResult.value.districts : []
 
   return (
     <PortalShell title={t('areasTitle')}>

@@ -458,6 +458,24 @@ The largest district in Turkey is tens of kilometres across, so the worst case i
 also bounded, visible, and fixed by the manufacturer entering coordinates. What it is not is
 a reason to take on a vendor before a single manufacturer has drawn a service area.
 
+**Scope of this argument: containment, not ranking.**
+
+The reasoning above holds for *"is this project inside this service area?"* because
+`ST_DWithin` returns a boolean — an error of a few kilometres against a radius a manufacturer
+chose in multiples of ten changes the answer only for projects sitting almost exactly on the
+edge.
+
+It does **not** automatically hold for scoring. `09-manufacturer-matching.md` §Scoring gives
+proximity 25 points out of 100 and derives them from the distance normalised over the radius —
+a *continuous* function of the same number. There, a district-centroid error is not rounded
+away by a threshold; it moves the score, and with it the order manufacturers appear in.
+
+Read as written before this paragraph, someone would conclude "precision does not matter",
+which is half true and is the more expensive half to get wrong. **Whether centroid-grade
+precision is good enough for the proximity score is an open question owned by Phase 5** —
+Q22 in `25-progress.md`. If the answer is no, the options are ranking proximity in bands
+rather than continuously, or resolving an exact point for scored projects only.
+
 **Consequences.**
 
 Phase 3 waits on no procurement decision, which was the point of putting Q4 in the calendar.
@@ -521,3 +539,50 @@ now more specific than it was; the test file says why in full.
 **Reverses if.** The pilot shows manufacturers reliably create inverting books and ignore the
 warning. Then marginal-band discounts become the model and `08` §Algorithm changes with an
 `ENGINE_VERSION` bump.
+
+---
+
+## ADR-021 — The configurator is a public route; the account wall stands at "get offers"
+
+**Context.** Two documents contradicted each other and both were load-bearing.
+
+`07-frontend-architecture.md` §Route map put the wizard at `/hesap/projeler/yeni`, and
+§Rendering strategy defines the `(customer)` segment as *"SSR, dynamic, **auth-gated**"*.
+`10-project-configurator.md` §Anonymous drafts says *"A visitor can configure without an
+account"*, and puts the wall between *configure* and *get offers* — deliberately, because that
+is the point in the funnel where intent is highest.
+
+Both cannot hold. Under an auth-gated segment an anonymous visitor cannot reach the wizard at
+all, and task 4.5 would have to move it — a **public URL change in the same phase**, which
+`18-cms-seo.md` §URLs treats as a cost rather than a detail.
+
+**Decision.** The wizard moves to a public path.
+
+| Route | Segment | Auth |
+|---|---|---|
+| `/proje/yeni` | `(public)` | none — creates a draft and redirects |
+| `/proje/[id]` | `(public)` | none — ownership is the project's own, by session **or** anonymous key |
+| `/hesap/projeler`, `/hesap/projeler/[id]` | `(customer)` | auth-gated, unchanged |
+
+Route segments stay Turkish under both locales (`/en/proje/yeni`), as every other segment
+does; `ADR-017`'s per-locale slug sets are for **content** slugs — categories, products, CMS
+pages — not for route segments. `ADR-018` keeps `tr` unprefixed.
+
+**Why not keep the URL and exempt it from the gate.** A path under `/hesap` that does not
+require an account lies twice: to a reader who infers the rule from the segment, and to the
+middleware matcher, which would need a carve-out that every later change has to preserve. The
+segment name is the documentation; an exception inside it makes the name false.
+
+**Consequences.**
+
+- The funnel matches the routing: configuring is public, and the wall is where `10` wants it.
+- 4.5 adds anonymous drafts **without moving a URL**, because the URL is already public.
+- `/proje/[id]` is not auth-gated, so authorisation is entirely the project's own ownership —
+  `customerId` **or** `anonymousKey`, in the `where` clause, answering `NOT_FOUND` to anyone
+  else. That is the shape `registry.ts`'s `customer-owned` variant was built for.
+- The page is `noindex`: it is a form, not content, and `SEO-01` wants the catalogue crawled,
+  not draft configurations.
+
+**Reverses if.** Anonymous drafts are dropped from V1 entirely. Then the wizard can move back
+under `(customer)` and the wall moves up the funnel — which is a product decision, not a
+routing one.

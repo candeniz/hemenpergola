@@ -141,3 +141,42 @@ export const settingsService = { listSettings, updateSetting } satisfies Record<
   string,
   { meta: unknown }
 >
+
+export const dashboardCountsSchema = z.object({})
+export type DashboardCountsInput = z.infer<typeof dashboardCountsSchema>
+
+export type DashboardCounts = {
+  pendingManufacturers: number
+  catalogCategories: number
+  catalogProducts: number
+}
+
+/**
+ * The counters on `super_admin_command_center`.
+ *
+ * A service method rather than three `prisma.count` calls in the page: `CLAUDE.md`
+ * non-negotiable 2 says `app/` calls application services and nothing below them, and the
+ * dashboard had been doing it the other way since Phase 2 — through a dynamic import, which
+ * is why the lint rule never saw it.
+ *
+ * Admin-only, like everything else on this surface. The counts are aggregates over the whole
+ * platform, so there is no ownership to scope by; the permission *is* the boundary.
+ */
+export const dashboardCounts = serviceMethod<DashboardCountsInput, DashboardCounts>(
+  'platform',
+  'dashboardCounts',
+  { kind: 'admin' },
+  async (actor, input) => {
+    void input
+    const allowed = requireAdmin(actor)
+    if (!allowed.ok) return err(allowed.error)
+
+    const [pendingManufacturers, catalogCategories, catalogProducts] = await Promise.all([
+      prisma.company.count({ where: { status: 'PENDING' } }),
+      prisma.category.count(),
+      prisma.product.count({ where: { isActive: true } }),
+    ])
+
+    return ok({ pendingManufacturers, catalogCategories, catalogProducts })
+  },
+)

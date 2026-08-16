@@ -521,5 +521,27 @@
     "photoCount": "{count} fotoğraf",
     "uploading": "Yükleniyor…",
     "uploadFailed": "Yükleme başarısız"
+  },
+  "wizard": {
+    "startTitle": "Projenizi tarif edin",
+    "startSubtitle": "Ölçüleri ve tercihlerinizi girin; size bölgenizde çalışan üreticileri ve tahmini fiyat aralıklarını gösterelim. Hesap açmadan başlayabilirsiniz.",
+    "chooseProduct": "Bunu yapılandır",
+    "noProducts": "Şu anda yapılandırılabilir ürün yok.",
+    "progressLabel": "Sihirbaz ilerlemesi",
+    "basis": {
+      "AREA_M2": "Metrekare üzerinden",
+      "LENGTH_M": "Metre üzerinden",
+      "UNIT": "Adet üzerinden"
+    },
+    "stage": {
+      "PRODUCT": "Ürün",
+      "SPECS": "Teknik detaylar",
+      "REVIEW": "Özet"
+    },
+    "stageState": {
+      "complete": "tamamlandı",
+      "current": "şu anki adım",
+      "upcoming": "henüz gelmedi"
+    }
   }
 }

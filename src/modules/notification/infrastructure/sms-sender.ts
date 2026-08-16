@@ -1,10 +1,7 @@
 import 'server-only'
 
-import { appendFileSync, readFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-
 import { env } from '@/shared/config/env'
+import { recentDevMessages, recordDevMessage } from '@/shared/dev-outbox'
 
 /**
  * The `SmsSender` port (`05-system-architecture.md` §Ports and adapters).
@@ -33,33 +30,16 @@ export type SmsSender = {
  * handler that reads. That cost two rounds of intermittent failures in Phase 1; this is the
  * version that worked.
  */
-const RECENT_LIMIT = 50
-
-function outboxPath(): string {
-  return join(tmpdir(), 'pergola-dev-sms.jsonl')
-}
-
+/** The dev record, so `/api/dev/outbox` can read an OTP. See `shared/dev-outbox`. */
 export function recentSms(): readonly Sms[] {
-  try {
-    return readFileSync(outboxPath(), 'utf8')
-      .split('\n')
-      .filter((line) => line.trim() !== '')
-      .slice(-RECENT_LIMIT)
-      .map((line) => JSON.parse(line) as Sms)
-  } catch {
-    return []
-  }
+  return recentDevMessages<Sms>('sms')
 }
 
 /** Prints the code. The only way to complete an OTP flow while Q3 is open. */
 export const logSmsSender: SmsSender = {
   name: 'log',
   async send(message) {
-    try {
-      appendFileSync(outboxPath(), `${JSON.stringify(message)}\n`, 'utf8')
-    } catch (error) {
-      console.error('[sms] could not record to the dev outbox', error)
-    }
+    recordDevMessage('sms', message)
 
     console.info(`─── sms ─── to ${message.to}: ${message.text}`)
   },

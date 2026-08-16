@@ -14,9 +14,10 @@
 export const dynamic = 'force-dynamic'
 
 export async function GET(): Promise<Response> {
-  const [{ env }, { recentSms }] = await Promise.all([
+  // `shared/dev-outbox`, not `notification/infrastructure` — see the mailbox route.
+  const [{ env }, { recentDevMessages }] = await Promise.all([
     import('@/shared/config/env'),
-    import('@/modules/notification/infrastructure/sms-sender'),
+    import('@/shared/dev-outbox'),
   ])
 
   if (env.APP_ENV === 'production' || env.SMS_PROVIDER !== 'log') {
@@ -24,7 +25,7 @@ export async function GET(): Promise<Response> {
   }
 
   return Response.json({
-    data: recentSms().map((message) => ({
+    data: recentDevMessages<{ to: string; text: string }>('sms').map((message) => ({
       to: message.to,
       text: message.text,
       // The code is what a caller wants; extracting it here saves every reader a regex.

@@ -18,10 +18,31 @@ rather than an image; for those screens `code.html` is the only reference.
 
 | Segment | Strategy | Why |
 |---|---|---|
-| `(public)` | SSR + ISR, tag-revalidated | `SEO-01`; catalogue and profiles must be crawlable |
+| `(public)` · content | SSR + ISR, tag-revalidated | `SEO-01`; catalogue and profiles must be crawlable |
+| `(public-owner)` | SSR, **dynamic, never cached** | `ADR-021` put the configurator here so a visitor can configure without an account. It carries personal data — dimensions, location, notes, attachments — so it is exactly as uncacheable as `(customer)`. See below |
 | `(customer)` | SSR, dynamic, auth-gated | personal data, never cached |
 | `(manufacturer)` | SSR, dynamic, auth + company-scoped | same |
 | `(admin)` | SSR, dynamic, `noindex` | same |
+
+### `(public)` is not uniform — the configurator is the exception
+
+`ADR-021` moved `/proje/yeni` and `/proje/[id]` into `(public)` so that an anonymous visitor
+can configure. That makes the segment name a poor guide to caching, and the failure mode is
+silent:
+
+- `noindex` does **not** help. It turns off indexing; it says nothing about caching.
+- A segment-level `revalidate` added under `(public)`, or a Phase 8 ISR sweep that treats
+  `(public)` as safe by definition, would serve **one customer's project to another**.
+
+So the split is a **route group**, `src/app/[locale]/(public-owner)/`, whose layout sets
+`export const dynamic = 'force-dynamic'` for everything inside it. Parentheses keep it out of
+the URL, so `/proje/yeni` is unchanged.
+
+`scripts/check-dynamic-routes.mjs` enumerates that directory and asserts against the real
+build output that every route in it is dynamic — not a list of route names, which the second
+half of Phase 4 would have outgrown the moment it added `POST /claim`. Adding a route to the
+group cannot forget the guarantee; adding one outside it is a statement that it carries no
+personal data.
 
 Server Components by default. `'use client'` only for: wizard step state, comparison
 selection, filters, calendar, uploader, message poller, map picker. If a component does not
@@ -42,6 +63,7 @@ need an event handler or browser API, it stays a Server Component.
 | `/giris`, `/kayit`, `/sifre-sifirla` | `login_outdoor_systems`, `register_outdoor_systems`, `forgot_password_outdoor_systems` |
 | `/sifre-yenile?token=` | the reset-completion step; no Stitch screen, composed from the same card |
 | `/eposta-dogrula?token=`, `/telefon-dogrula` | `email_verification_outdoor_systems`, `phone_verification_outdoor_systems` |
+| `/proje/yeni`, `/proje/[id]` (3 stages, 10 steps) | `create_project_wizard_refined_style` (canonical), `product_selection_step_1`, `dimensions_area_step_2`, `project_options_step_5`, `project_summary_step_10` — **public by `ADR-021`**: a visitor configures without an account and the wall stands at "get offers" (`10` §Anonymous drafts) |
 | `/yetkisiz` | `access_denied_permission_required` as a landable route — see §System states |
 
 Turkish slugs are the canonical public URLs; `en` uses its own slug set. Slug per locale is
@@ -66,7 +88,7 @@ the names are equally arbitrary, and the omissions were the real defect.
 | Route | Screen |
 |---|---|
 | `/hesap` | `customer_dashboard_final` (canonical), `_empty_state`, `_tablet_view`, earlier: `customer_dashboard`, `customer_dashboard_outdoor_systems` |
-| `/hesap/projeler/yeni` (steps 1–10) | `create_project_wizard_refined_style` (canonical), `product_selection_step_1`, `dimensions_area_step_2`, `project_options_step_5`, `project_summary_step_10` |
+| `/hesap/projeler` | the customer’s own list (`customer_dashboard_final`) |
 | `/hesap/projeler/[id]` | `request_detail_project_aoe_99421` |
 | `/hesap/projeler/[id]/eslesmeler` | `matched_manufacturers_results`, `offer_results_refined_comparison`; loading: `finding_manufacturers_loading_state`, `offer_results_loading_state` |
 | `/hesap/projeler/[id]/karsilastir` | `compare_manufacturers_refined_style` (canonical), `compare_manufacturers` |

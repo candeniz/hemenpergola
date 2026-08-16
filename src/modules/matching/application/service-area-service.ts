@@ -336,3 +336,32 @@ export const listCities = serviceMethod<
     return ok({ cities: cities.map((city) => ({ cityId: city.id, name: city.name })) })
   },
 )
+
+export const listDistrictsSchema = z.object({ companyId: z.string().min(1) })
+export type ListDistrictsInput = z.infer<typeof listDistrictsSchema>
+
+/**
+ * The districts, for the same screens `listCities` serves. Separate rather than nested in
+ * the city payload: 974 rows is one query either way, and a screen that only needs provinces
+ * should not carry them.
+ */
+export const listDistricts = serviceMethod<
+  ListDistrictsInput,
+  { districts: { id: string; cityId: string; name: string }[] }
+>(
+  'matching',
+  'listDistricts',
+  { kind: 'permission', permission: PERMISSIONS.MEMBER_READ },
+  async (actor, input) => {
+    void input
+    const allowed = authorize(actor, PERMISSIONS.MEMBER_READ)
+    if (!allowed.ok) return err(allowed.error)
+
+    const districts = await prisma.district.findMany({
+      select: { id: true, cityId: true, name: true },
+      orderBy: { name: 'asc' },
+    })
+
+    return ok({ districts })
+  },
+)

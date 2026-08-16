@@ -139,3 +139,48 @@ export function validateShowIf(
 
   return []
 }
+
+/**
+ * The answers so far, keyed by attribute **key** — the same key `showIfAttributeKey` names.
+ *
+ * A string, because that is what a form field yields and what `ProductOption.value` stores.
+ * A boolean attribute answers `'true'` / `'false'`; a select answers its option value.
+ */
+export type AnswersByKey = Readonly<Record<string, string | null | undefined>>
+
+/**
+ * Is this attribute shown, given the answers so far?
+ *
+ * This is the **runtime** half of `showIf`, and it lives here rather than in `project/`
+ * because it is the same rule as `validateShowIf` seen from the other end: that function
+ * checks an admin's authored dependency is well-formed, this one evaluates it. Splitting them
+ * across two modules would mean "what `showIf` means" had two homes and eventually two
+ * answers.
+ *
+ * `10-project-configurator.md` §Validation requires the client and the server to evaluate
+ * **from the same data in the same way**, so both call this. A wizard that hid a field the
+ * server then demanded, or showed one the server ignored, is the failure this prevents.
+ *
+ * One level, no chaining (`ADR-008`) — `validateShowIf` is what guarantees the parent is not
+ * itself conditional, so this function does not need to recurse and deliberately does not.
+ */
+export function isAttributeVisible(
+  attribute: { showIfAttributeKey: string | null; showIfValue: string | null },
+  answers: AnswersByKey,
+): boolean {
+  const key = attribute.showIfAttributeKey
+  if (key === null || key === '') return true
+
+  const answer = answers[key]
+  if (answer === null || answer === undefined) return false
+
+  /*
+   * An empty `showIfValue` means "shown when the parent has any answer at all". Treating it
+   * as "shown when the parent equals the empty string" would make the attribute permanently
+   * invisible, which is the kind of bug an admin reports as "my field disappeared".
+   */
+  const expected = attribute.showIfValue
+  if (expected === null || expected === '') return answer !== ''
+
+  return answer === expected
+}

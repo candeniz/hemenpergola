@@ -22,6 +22,11 @@ const BUILD_TIME_FIXTURE = fileURLToPath(
 )
 const buildTimeFixtureSource = readFileSync(BUILD_TIME_FIXTURE, 'utf8')
 
+const DYNAMIC_FIXTURE = fileURLToPath(
+  new URL('./fixtures/boundary/app-imports-layers-dynamically.tsx', import.meta.url),
+)
+const dynamicFixtureSource = readFileSync(DYNAMIC_FIXTURE, 'utf8')
+
 /**
  * Lint the fixture *as if* it lived under `src/app`, which is where the rule applies. The
  * fixture cannot actually live there — it would be a route and it imports modules that do
@@ -38,6 +43,16 @@ const eslint = new ESLint({ cwd: process.cwd() })
  */
 function isBoundaryRule(ruleId: string | null): boolean {
   return ruleId === 'no-restricted-imports' || ruleId === '@typescript-eslint/no-restricted-imports'
+}
+
+/**
+ * The dynamic half of the layering bans is a `no-restricted-syntax` rule, because no
+ * import-based rule can see an `ImportExpression`. Kept separate from `isBoundaryRule` so a
+ * test asserting "the static rule fired" cannot be satisfied by the dynamic one, or the two
+ * halves would stop being independently provable.
+ */
+function isDynamicBoundaryRule(ruleId: string | null): boolean {
+  return ruleId === 'no-restricted-syntax'
 }
 
 async function lintAsAppFile(source: string) {
@@ -281,5 +296,95 @@ describe('server actions: the same file, static and dynamic', () => {
     )
 
     expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toHaveLength(1)
+  })
+})
+
+/**
+ * The gap Q21 closed.
+ *
+ * `no-restricted-imports` sees static `import` declarations and nothing else, so
+ * `await import('@/shared/db')` inside `app/` passed the pipeline for three phases. Four real
+ * violations were living behind that shape when the rule was finally written.
+ *
+ * Both directions are asserted here, and both matter:
+ *
+ *   a **layering** ban must fire whether the import is static or dynamic — deferring *when*
+ *   the layer is crossed does not stop it being crossed;
+ *
+ *   **non-negotiable 9** must *not*, because there the dynamic import is the prescribed fix.
+ *   A rule that banned both would leave no legal way to call a service from a route handler.
+ */
+describe('layering bans catch dynamic imports too', () => {
+  it('reports all four in the dynamic fixture', async () => {
+    const messages = await lintAsAppFile(dynamicFixtureSource)
+    const dynamic = messages.filter((message) => isDynamicBoundaryRule(message.ruleId))
+
+    expect(dynamic).toHaveLength(4)
+    expect(dynamic.every((message) => message.severity === 2)).toBe(true)
+    // The message says so, because a developer who hits this needs to know that moving the
+    // import back to the top is not the fix.
+    expect(dynamic.every((message) => /statically or dynamically/.test(message.message))).toBe(true)
+  })
+
+  it.each([
+    ['@prisma/client', /No Prisma in app/],
+    ['@/shared/db', /No database client in app/],
+    ['@/modules/iam/infrastructure/company-repository', /No repository or adapter in app/],
+    ['@/modules/iam/domain/permissions', /No domain internals in app/],
+  ])('bans a dynamic import of %s', async (specifier, expectedMessage) => {
+    const messages = await lintAsAppFile(
+      `export default async function Page() { return await import('${specifier}') }\n`,
+    )
+    const dynamic = messages.filter((message) => isDynamicBoundaryRule(message.ruleId))
+
+    expect(dynamic).toHaveLength(1)
+    expect(dynamic[0]?.message).toMatch(expectedMessage)
+  })
+
+  it.each([
+    ['@prisma/client'],
+    ['@/shared/db'],
+    ['@/modules/iam/infrastructure/company-repository'],
+    ['@/modules/iam/domain/permissions'],
+  ])('still bans a static import of %s — the original half did not regress', async (specifier) => {
+    const messages = await lintAsAppFile(
+      `import x from '${specifier}'\nexport default function Page() { return x }\n`,
+    )
+
+    expect(messages.filter((message) => isBoundaryRule(message.ruleId))).toHaveLength(1)
+  })
+
+  it.each([
+    ['@/shared/config/env'],
+    ['@/modules/platform/application/health-service'],
+    ['@/modules/iam/application/company-service'],
+  ])('leaves a dynamic import of %s alone — that is non-negotiable 9’s fix', async (specifier) => {
+    /*
+     * The assertion that keeps the two rules honest about their different purposes. Every
+     * server action and route handler in this codebase is built this way; if this ever fails,
+     * the dynamic ban has been widened past layering into timing and the whole app/ layer
+     * has no legal way to reach a service.
+     */
+    const messages = await lintAsAppFile(
+      `export default async function Page() { return await import('${specifier}') }\n`,
+    )
+
+    expect(messages.filter((message) => isDynamicBoundaryRule(message.ruleId))).toEqual([])
+    expect(messages.filter((message) => isBoundaryRule(message.ruleId))).toEqual([])
+  })
+
+  it('does not apply outside app/ — a service may import its own infrastructure', async () => {
+    const results = await eslint.lintText(
+      "export async function load() { return await import('@/shared/db') }\n",
+      {
+        filePath: fileURLToPath(
+          new URL('../src/modules/iam/application/probe-service.ts', import.meta.url),
+        ),
+      },
+    )
+
+    expect(
+      (results[0]?.messages ?? []).filter((message) => isDynamicBoundaryRule(message.ruleId)),
+    ).toEqual([])
   })
 })

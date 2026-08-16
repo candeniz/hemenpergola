@@ -15,9 +15,12 @@
 export const dynamic = 'force-dynamic'
 
 export async function GET(): Promise<Response> {
-  const [{ env }, { recentMail }] = await Promise.all([
+  // `shared/dev-outbox`, not `notification/infrastructure`: `app/` may not reach into a
+  // module's infrastructure, statically or dynamically (`05` §Shape). The buffer was never
+  // `notification`'s to own — the adapter writes it and development reads it.
+  const [{ env }, { recentDevMessages }] = await Promise.all([
     import('@/shared/config/env'),
-    import('@/modules/notification/infrastructure/mailer'),
+    import('@/shared/dev-outbox'),
   ])
 
   if (env.APP_ENV === 'production' || env.MAIL_PROVIDER !== 'log') {
@@ -25,7 +28,7 @@ export async function GET(): Promise<Response> {
   }
 
   return Response.json({
-    data: recentMail().map((email) => ({
+    data: recentDevMessages<{ to: string; subject: string; text: string }>('mail').map((email) => ({
       to: email.to,
       subject: email.subject,
       text: email.text,
