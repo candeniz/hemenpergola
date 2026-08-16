@@ -76,6 +76,17 @@ export const E2E_IDS = {
 const ADMIN_EMAIL = 'admin@pergola.local'
 export const SEED_ADMIN_PASSWORD = 'phase2-gate-admin-password'
 
+/**
+ * The manufacturer sign-in for the **D3 pilot session** (`26-execution-plan.md` §Phase 3
+ * task 3.8) and for `e2e/phase3-gate.spec.ts`.
+ *
+ * Same reasoning as the admin constant: development and test databases only. What it buys is
+ * that the pilot manufacturer's session does not begin with somebody resetting a password
+ * over a video call.
+ */
+export const SEED_MANUFACTURER_EMAIL = 'owner@marmaracam.local'
+export const SEED_MANUFACTURER_PASSWORD = 'phase3-pilot-manufacturer-password'
+
 type CompanySpec = {
   id?: string
   slug: string
@@ -284,6 +295,8 @@ async function seedDemo(prisma: PrismaClient): Promise<SeedSummary> {
     data: { rejectionReason: 'Vergi levhası okunaklı değil — yeniden yükleyiniz.' },
   })
 
+  await seedPilotManufacturer(prisma)
+
   return { profile: 'demo', ...common, users: emails.size, companies, memberships }
 }
 
@@ -349,4 +362,78 @@ export const PROFILES: Record<ProfileName, (prisma: PrismaClient) => Promise<See
 
 export function isProfileName(value: string): value is ProfileName {
   return value in PROFILES
+}
+
+/**
+ * Everything the **D3 pilot manufacturer** needs in order to walk in and price something —
+ * `26` §Phase 3 task 3.8: *this screen has to be put in front of a real manufacturer the week
+ * it lands.*
+ *
+ * The deliberate omission is the price book. Marmara Cam gets a password, its products marked
+ * as offered and a service area, and then **stops** — because the thing being observed is a
+ * manufacturer building a price book from nothing, and seeding one would test our ability to
+ * render a price book rather than their ability to enter one.
+ *
+ * Idempotent like every other seed step: keyed on natural unique columns, re-runnable.
+ */
+async function seedPilotManufacturer(prisma: PrismaClient): Promise<void> {
+  const [{ hash }, { ARGON2_OPTIONS }] = await Promise.all([
+    import('@node-rs/argon2'),
+    import('@/modules/iam/domain/password'),
+  ])
+
+  const user = await prisma.user.findUnique({ where: { email: SEED_MANUFACTURER_EMAIL } })
+  const company = await prisma.company.findUnique({ where: { slug: 'marmara-cam-sistemleri' } })
+  if (user === null || company === null) return
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash: await hash(SEED_MANUFACTURER_PASSWORD, ARGON2_OPTIONS),
+      emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
+    },
+  })
+
+  // Everything in the catalogue, offered. A pilot who has to first tick twenty product boxes
+  // is a pilot whose hour goes on task 3.2 instead of the screen under test.
+  const products = await prisma.product.findMany({
+    include: { attributes: { include: { options: true } } },
+  })
+
+  for (const product of products) {
+    const companyProduct = await prisma.companyProduct.upsert({
+      where: { companyId_productId: { companyId: company.id, productId: product.id } },
+      create: { companyId: company.id, productId: product.id, isActive: true },
+      update: { isActive: true },
+    })
+
+    for (const attribute of product.attributes) {
+      for (const option of attribute.options) {
+        await prisma.companyProductOption.upsert({
+          where: {
+            companyProductId_optionId: {
+              companyProductId: companyProduct.id,
+              optionId: option.id,
+            },
+          },
+          create: { companyProductId: companyProduct.id, optionId: option.id, isOffered: true },
+          update: { isOffered: true },
+        })
+      }
+    }
+  }
+
+  // One city service area, so the company is matchable on everything except a price book —
+  // which is exactly the state `21`'s phase gate describes minus its last step.
+  const istanbul = await prisma.city.findFirst({ where: { plateCode: 34 } })
+  if (istanbul !== null) {
+    const existing = await prisma.serviceArea.findFirst({
+      where: { companyId: company.id, kind: 'CITY', cityId: istanbul.id },
+    })
+    if (existing === null) {
+      await prisma.serviceArea.create({
+        data: { companyId: company.id, kind: 'CITY', cityId: istanbul.id, isActive: true },
+      })
+    }
+  }
 }

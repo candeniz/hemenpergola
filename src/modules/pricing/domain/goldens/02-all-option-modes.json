@@ -1,0 +1,119 @@
+{
+  "name": "02-all-option-modes",
+  "covers": "All five option modes priced together against one project.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 30,
+      "perimeterM": 22,
+      "heightM": 2.8,
+      "quantity": 2,
+      "selectedOptionIds": ["opt_flat", "opt_m2", "opt_m", "opt_unit", "opt_pct"],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 250000
+      },
+      "optionPrices": [
+        {
+          "optionId": "opt_flat",
+          "mode": "FLAT",
+          "valueKurus": 800000
+        },
+        {
+          "optionId": "opt_m2",
+          "mode": "PER_M2",
+          "valueKurus": 35000
+        },
+        {
+          "optionId": "opt_m",
+          "mode": "PER_M",
+          "valueKurus": 90000
+        },
+        {
+          "optionId": "opt_unit",
+          "mode": "PER_UNIT",
+          "valueKurus": 175000
+        },
+        {
+          "optionId": "opt_pct",
+          "mode": "PERCENT",
+          "percent": 6
+        }
+      ],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 33050000,
+    "bandLowKurus": 31350000,
+    "bandHighKurus": 34750000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 30,
+      "basisUnit": "AREA_M2",
+      "quantity": 2,
+      "baseKurus": 27000000,
+      "options": [
+        {
+          "optionId": "opt_flat",
+          "mode": "FLAT",
+          "amountKurus": 800000
+        },
+        {
+          "optionId": "opt_m2",
+          "mode": "PER_M2",
+          "amountKurus": 1050000
+        },
+        {
+          "optionId": "opt_m",
+          "mode": "PER_M",
+          "amountKurus": 1980000
+        },
+        {
+          "optionId": "opt_unit",
+          "mode": "PER_UNIT",
+          "amountKurus": 350000
+        },
+        {
+          "optionId": "opt_pct",
+          "mode": "PERCENT",
+          "amountKurus": 1620000
+        }
+      ],
+      "optionsKurus": 5800000,
+      "setupKurus": 250000,
+      "subtotalKurus": 33050000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 33050000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 33050000,
+      "unpricedOptionIds": []
+    }
+  }
+}

@@ -23,7 +23,8 @@
     "test:e2e:a11y": "playwright test a11y",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "seed": "tsx prisma/seed/index.ts",
-    "worker": "node --env-file-if-exists=.env --conditions=react-server --import tsx src/worker.ts"
+    "worker": "node --env-file-if-exists=.env --conditions=react-server --import tsx src/worker.ts",
+    "goldens:pricing": "tsx scripts/generate-price-goldens.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",

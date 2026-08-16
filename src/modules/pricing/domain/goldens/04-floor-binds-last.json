@@ -1,0 +1,87 @@
+{
+  "name": "04-floor-binds-last",
+  "covers": "Discounts and a negative regional adjustment pushed below the floor; floor wins.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 6,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 3500000,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [
+        {
+          "districtId": "dst_kadikoy",
+          "mode": "FLAT",
+          "valueKurus": -500000
+        }
+      ],
+      "rules": [
+        {
+          "id": "rule_value",
+          "kind": "VALUE_DISCOUNT",
+          "thresholdMin": 0,
+          "mode": "PERCENT",
+          "percent": 40
+        }
+      ]
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 3500000,
+    "bandLowKurus": 3300000,
+    "bandHighKurus": 3700000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 6,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 2700000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 2700000,
+      "rules": [
+        {
+          "ruleId": "rule_value",
+          "kind": "VALUE_DISCOUNT",
+          "mode": "PERCENT",
+          "amountKurus": -1080000,
+          "note": null
+        }
+      ],
+      "rulesKurus": -1080000,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": -500000,
+        "matchedOn": "district"
+      },
+      "regionalKurus": -500000,
+      "preFloorKurus": 1120000,
+      "minProjectPriceKurus": 3500000,
+      "floorApplied": true,
+      "netKurus": 3500000,
+      "unpricedOptionIds": []
+    }
+  }
+}

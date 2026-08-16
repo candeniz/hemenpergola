@@ -1,0 +1,37 @@
+{
+  "name": "13-missing-basis",
+  "covers": "No area on an AREA_M2 product: unpriceable, not a free project.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": null,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "unpriceable",
+    "reason": "missing-basis",
+    "engineVersion": 1
+  }
+}

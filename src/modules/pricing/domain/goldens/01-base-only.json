@@ -1,0 +1,65 @@
+{
+  "name": "01-base-only",
+  "covers": "The simplest priced project: base × area, nothing else.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 24,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 10800000,
+    "bandLowKurus": 10250000,
+    "bandHighKurus": 11350000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 24,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 10800000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 10800000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 10800000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 10800000,
+      "unpricedOptionIds": []
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "07-length-basis",
+  "covers": "A LENGTH_M product, with a per-metre option pricing off the perimeter.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_glass_railing",
+      "basisType": "LENGTH_M",
+      "lengthM": 18.5,
+      "perimeterM": 18.5,
+      "quantity": 1,
+      "selectedOptionIds": ["opt_m"],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 320000,
+        "minProjectPriceKurus": 1500000,
+        "setupFeeKurus": 150000
+      },
+      "optionPrices": [
+        {
+          "optionId": "opt_m",
+          "mode": "PER_M",
+          "valueKurus": 48000
+        }
+      ],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 6958000,
+    "bandLowKurus": 6600000,
+    "bandHighKurus": 7350000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 18.5,
+      "basisUnit": "LENGTH_M",
+      "quantity": 1,
+      "baseKurus": 5920000,
+      "options": [
+        {
+          "optionId": "opt_m",
+          "mode": "PER_M",
+          "amountKurus": 888000
+        }
+      ],
+      "optionsKurus": 888000,
+      "setupKurus": 150000,
+      "subtotalKurus": 6958000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 6958000,
+      "minProjectPriceKurus": 1500000,
+      "floorApplied": false,
+      "netKurus": 6958000,
+      "unpricedOptionIds": []
+    }
+  }
+}

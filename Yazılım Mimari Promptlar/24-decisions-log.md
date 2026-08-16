@@ -479,3 +479,45 @@ over existing rows rather than a migration.
 **Reverses if.** Matching quality complaints trace to service-area precision, or Phase 8
 brings map tiles for the public directory anyway — at which point the picker is nearly free
 and the argument above stops applying.
+
+---
+
+## ADR-020 — Monotonicity is a property of a price book, not of the engine
+
+**Context.** `20-testing-strategy.md` §Unit asks for a property test: *"net is monotonic in
+area."* Written as stated it fails, and it fails on a configuration the engine is handling
+correctly:
+
+    base ₺100/m², AREA_DISCOUNT of 10% at area ≥ 100
+      99 m² → ₺9 900
+     100 m² → ₺10 000 − 10% = ₺9 000
+
+A threshold discount can make a larger project cost less in total. Three ways out were on the
+table: drop threshold rules; make discounts apply only to the marginal amount above the
+threshold; or scope the property.
+
+**Decision.** Scope the property, and add a diagnostic.
+
+- The engine property test asserts monotonicity over **rule-free** books, where it is an
+  arithmetic fact: base, options and a regional percentage all scale or stay flat.
+- `inspectPriceBook` sweeps a book across basis values and reports an inversion as a
+  **warning to its owner**, surfaced in the simulator panel before publishing.
+- A second property — *the band always contains the net* — is asserted universally, because
+  it genuinely is.
+
+**Why not the alternatives.** Dropping threshold rules removes a feature every manufacturer in
+the design uses. Marginal-only discounts ("10% off the area above 100 m²") preserve
+monotonicity and are what a pricing theorist would choose — but they are not what
+`08-pricing-engine.md` §Algorithm describes, they are harder to explain on the screen, and
+picking them here would mean the engine quietly disagreeing with the specification. If the D3
+pilot says manufacturers think marginally, that is an ADR of its own with the evidence
+attached.
+
+**Consequences.** The manufacturer is told, in their own screen, that their 100 m² price is
+below their 99 m² price — which is a better outcome than a rule that silently prevented them
+from expressing it, and a far better one than a customer discovering it. `20` §Unit's line is
+now more specific than it was; the test file says why in full.
+
+**Reverses if.** The pilot shows manufacturers reliably create inverting books and ignore the
+warning. Then marginal-band discounts become the model and `08` §Algorithm changes with an
+`ENGINE_VERSION` bump.

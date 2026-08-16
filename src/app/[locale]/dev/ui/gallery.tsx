@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { EstimateBand } from '@/components/ui/estimate-band'
 import {
   Dialog,
   DialogContent,
@@ -413,6 +414,60 @@ export function UiGallery({ openOverlay = null }: { openOverlay?: OverlayName | 
             <CardTitle>Request AOE-99421</CardTitle>
             <CardDescription>İstanbul · Kadıköy</CardDescription>
           </Card>
+        </Item>
+      </Section>
+
+      {/*
+        `22` §Patterns calls this *"the one to get right first"*. All four states are here
+        because the disclosure rules are the component — a gallery that showed only the happy
+        band would leave the `priceOnRequest` and incomplete variants unreviewed, and those
+        are the two a customer is most likely to misread.
+      */}
+      <Section title="EstimateBand">
+        <Item label="band">
+          <EstimateBand
+            estimate={{
+              companyId: 'cmp_demo',
+              bandLowKurus: 180_000_00,
+              bandHighKurus: 220_000_00,
+              priceOnRequest: false,
+              incomplete: false,
+            }}
+          />
+        </Item>
+        <Item label="band · compact">
+          <EstimateBand
+            size="compact"
+            estimate={{
+              companyId: 'cmp_demo',
+              bandLowKurus: 45_000_00,
+              bandHighKurus: 55_000_00,
+              priceOnRequest: false,
+              incomplete: false,
+            }}
+          />
+        </Item>
+        <Item label="incomplete">
+          <EstimateBand
+            estimate={{
+              companyId: 'cmp_demo',
+              bandLowKurus: 180_000_00,
+              bandHighKurus: 220_000_00,
+              priceOnRequest: false,
+              incomplete: true,
+            }}
+          />
+        </Item>
+        <Item label="price on request">
+          <EstimateBand
+            estimate={{
+              companyId: 'cmp_demo',
+              bandLowKurus: null,
+              bandHighKurus: null,
+              priceOnRequest: true,
+              incomplete: false,
+            }}
+          />
         </Item>
       </Section>
 

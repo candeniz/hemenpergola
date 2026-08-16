@@ -1,0 +1,111 @@
+{
+  "name": "11-fractional-arithmetic",
+  "covers": "Awkward areas and prices, to pin rounding at every named step.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 17.35,
+      "perimeterM": 16.7,
+      "heightM": 3.15,
+      "quantity": 3,
+      "selectedOptionIds": ["opt_m2", "opt_pct"],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 333333,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 777
+      },
+      "optionPrices": [
+        {
+          "optionId": "opt_m2",
+          "mode": "PER_M2",
+          "valueKurus": 11111
+        },
+        {
+          "optionId": "opt_pct",
+          "mode": "PERCENT",
+          "percent": 7.5
+        }
+      ],
+      "regionAdjustments": [
+        {
+          "districtId": "dst_kadikoy",
+          "mode": "PERCENT",
+          "percent": 13
+        }
+      ],
+      "rules": [
+        {
+          "id": "rule_area",
+          "kind": "AREA_DISCOUNT",
+          "thresholdMin": 10,
+          "mode": "PERCENT",
+          "percent": 2.5
+        }
+      ]
+    },
+    "settings": {
+      "bandPercent": 9,
+      "bandMinKurus": 33300,
+      "roundStepKurus": 25000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 20762241,
+    "bandLowKurus": 19825000,
+    "bandHighKurus": 21700000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 17.35,
+      "basisUnit": "AREA_M2",
+      "quantity": 3,
+      "baseKurus": 17349983,
+      "options": [
+        {
+          "optionId": "opt_m2",
+          "mode": "PER_M2",
+          "amountKurus": 192776
+        },
+        {
+          "optionId": "opt_pct",
+          "mode": "PERCENT",
+          "amountKurus": 1301249
+        }
+      ],
+      "optionsKurus": 1494025,
+      "setupKurus": 777,
+      "subtotalKurus": 18844785,
+      "rules": [
+        {
+          "ruleId": "rule_area",
+          "kind": "AREA_DISCOUNT",
+          "mode": "PERCENT",
+          "amountKurus": -471120,
+          "note": null
+        }
+      ],
+      "rulesKurus": -471120,
+      "regional": {
+        "mode": "PERCENT",
+        "amountKurus": 2388576,
+        "matchedOn": "district"
+      },
+      "regionalKurus": 2388576,
+      "preFloorKurus": 20762241,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 20762241,
+      "unpricedOptionIds": []
+    }
+  }
+}

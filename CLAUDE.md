@@ -30,19 +30,26 @@ authorisation matrix, companies and memberships, audit, rate limits), `modules/c
 the admin CRUD over it, the seed catalogue, manufacturer verification, the audit viewer and
 the `PlatformSetting` surface.
 
-**Phase 3 is half done**: company profile and documents, the product offer, service areas and
-the portfolio. A verified company is matchable except for a price book — which, with the
-pricing engine, is the second half (`26` §Phase 3, tasks 3.3–3.5).
+**Phase 3 is complete and its gate is proven**: company profile and documents, the product
+offer, service areas, the portfolio, and the pricing half — the pure engine with its golden
+files, the price-book lifecycle, the editor and the simulator. A verified company is
+**matchable**.
 
-Two things exist now that did not before and that shape everything after them: a **background
-worker** (`src/worker.ts`, pg-boss, run with `pnpm worker`) and **object storage** behind the
-`StorageProvider` port. Jobs must be idempotent — `23` §Runtime drains a worker on replacement
-and retries whatever was in flight — and every upload goes straight from the browser to
-storage, never through the application.
+Three things exist now that did not before and that shape everything after them:
+
+- a **background worker** (`src/worker.ts`, pg-boss, run with `pnpm worker`). Jobs must be
+  idempotent — `23` §Runtime drains a worker on replacement and retries whatever was in
+  flight;
+- **object storage** behind the `StorageProvider` port. Every upload goes straight from the
+  browser to storage, never through the application;
+- the **pricing engine** (`modules/pricing/domain/engine.ts`), a pure function with committed
+  golden files. Changing the formula means bumping `ENGINE_VERSION` and adding a checksum
+  entry — a test enforces it, because a silent formula change invalidates every stored
+  estimate's comparability (`08` §Versioning).
 
 Read `25-progress.md` first — it is the only place that says what is actually done, and its
-§Open questions holds eight questions (Q11–Q18) that the catalogue produced and that the D3
-pilot manufacturer has to answer.
+§Open questions holds Q11–Q18, which the catalogue produced and which the D3 pilot
+manufacturer has to answer. `27-d3-pilot-guide.md` is the script for that session.
 
 `modules/iam/` is the template every later module copies: `domain/` pure, `application/`
 framework-agnostic and returning `Result`, `infrastructure/` for Prisma and adapters, and

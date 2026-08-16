@@ -76,9 +76,10 @@ tested).
 | 21 | `21-development-roadmap.md` | phases, gates, risks |
 | 22 | `22-design-system.md` | canonical theme, tokens, patterns |
 | 23 | `23-deployment-and-environments.md` | envs, migrations, backups, runbooks |
-| 24 | `24-decisions-log.md` | ADR-001..013 |
+| 24 | `24-decisions-log.md` | ADR-001..020 |
 | 25 | `25-progress.md` | current state, log, open questions |
 | 26 | `26-execution-plan.md` | how to start each phase: ordered tasks, evidence, decision calendar |
+| 27 | `27-d3-pilot-guide.md` | running the D3 session: pilot login, what to observe, which open questions it answers |
 
 ## Design reference
 

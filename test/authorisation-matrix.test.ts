@@ -180,6 +180,10 @@ function applicationFiles(root: string): string[] {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name)
       if (entry.isDirectory()) walk(path)
+      // A test file beside a service is not a service. Importing one would run its `describe`
+      // inside this test, which vitest refuses — and rightly, since a suite that spawns
+      // suites has no stable report.
+      else if (entry.name.endsWith('.test.ts')) continue
       else if (APPLICATION_DIR_PATTERN.test(path)) found.push(path)
     }
   }
@@ -369,12 +373,24 @@ describe('every service method has a matrix entry', () => {
       'matching.addServiceArea',
       'matching.removeServiceArea',
       'matching.companiesCoveringPoint',
+      'matching.listCities',
       // 3.7
       'portfolio.listPortfolio',
       'portfolio.createPortfolioItem',
       'portfolio.updatePortfolioItem',
       'portfolio.deletePortfolioItem',
       'portfolio.attachPhoto',
+      // 3.3 · price book lifecycle
+      'pricing.listPriceBooks',
+      'pricing.getPriceBook',
+      'pricing.createDraft',
+      'pricing.savePriceBook',
+      'pricing.publishPriceBook',
+      // 3.5 · the simulator, and the published path Phase 5 will call
+      'pricing.simulatePriceBook',
+      'pricing.estimateForProject',
+      // the company switcher
+      'company.listMyCompanies',
       // uploads
       'media.presignUpload',
       'media.completeUpload',
@@ -382,6 +398,26 @@ describe('every service method has a matrix entry', () => {
     ]) {
       expect(methods, method).toContain(method)
     }
+  })
+
+  it('keeps every pricing method company-scoped, never admin', () => {
+    /*
+     * A price book belongs to the manufacturer who wrote it. `ADR-006` lets an admin read a
+     * breakdown and the market aggregate, but nothing in `pricing` may be *authored* by an
+     * admin — an admin who can publish a price book can change what a customer is quoted on
+     * behalf of a company that never agreed to it.
+     *
+     * Asserted as a whole-service rule rather than per method, so a method added later is
+     * covered without anybody remembering to come back here.
+     */
+    const pricing = registeredMethods().filter((meta) => meta.service === 'pricing')
+
+    expect(pricing.length).toBeGreaterThanOrEqual(7)
+    expect(
+      pricing
+        .filter((meta) => meta.authorisation.kind !== 'permission')
+        .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`),
+    ).toEqual([])
   })
 
   it('keeps the audit log read-only, including for admins', async () => {
@@ -483,7 +519,7 @@ describe('every service method has a matrix entry', () => {
     // And the count is not zero, which is how this test would pass while measuring nothing.
     // 18 from Phase 1; 15 catalogue, 2 settings, 7 verification and 2 audit from Phase 2;
     // 5 profile, 3 offer, 4 service area, 5 portfolio and 3 media from Phase 3.
-    expect(registered.size).toBeGreaterThanOrEqual(64)
+    expect(registered.size).toBeGreaterThanOrEqual(72)
   })
 
   it('declares an authorisation spec for every registered method', async () => {

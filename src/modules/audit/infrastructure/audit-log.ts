@@ -48,6 +48,13 @@ export type AuditAction =
   // Phase 3 · supply side
   | 'company_profile_updated'
   | 'service_area_changed'
+  /*
+   * Phase 3 · pricing. Publishing is the moment a company's numbers become the ones
+   * customers are quoted, and `PRC-02` makes every estimate computed against them permanent —
+   * so which version went live, when, and who sent it has to be answerable later.
+   */
+  | 'price_book_draft_created'
+  | 'price_book_published'
   | 'company_products_changed'
   | 'portfolio_changed'
 

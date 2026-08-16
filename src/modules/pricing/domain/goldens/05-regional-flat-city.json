@@ -1,0 +1,71 @@
+{
+  "name": "05-regional-flat-city",
+  "covers": "The design’s “Kocaeli +₺10 000” case — a flat surcharge matched on the city.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 30,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_kocaeli",
+      "districtId": "dst_izmit"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [
+        {
+          "cityId": "city_kocaeli",
+          "mode": "FLAT",
+          "valueKurus": 1000000
+        }
+      ],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 14500000,
+    "bandLowKurus": 13750000,
+    "bandHighKurus": 15250000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 30,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 13500000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 13500000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 1000000,
+        "matchedOn": "city"
+      },
+      "regionalKurus": 1000000,
+      "preFloorKurus": 14500000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 14500000,
+      "unpricedOptionIds": []
+    }
+  }
+}

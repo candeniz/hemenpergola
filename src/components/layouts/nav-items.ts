@@ -34,24 +34,34 @@ export const customerNav: readonly NavItem[] = [
 ]
 
 /**
- * The portal routes are `/panel/[companyId]/...` (`07` §Route map), and these hrefs are the
- * shape without the id: `PortalShell` has no company in scope, and Phase 3 is the first
- * phase where any of these pages exists. Prefixing them correctly is the shell's job once a
- * company is selected — noted rather than silently half-done.
+ * The portal routes are `/panel/[companyId]/...` (`07` §Route map). These hrefs are the
+ * **suffix** after the company id, so `''` is the dashboard; `manufacturerNavHref` joins
+ * them. Storing the full path with a placeholder in it would mean every consumer doing string
+ * replacement, and one of them eventually forgetting.
  */
 export const manufacturerNav: readonly NavItem[] = [
-  { href: '/panel', labelKey: 'dashboard', icon: 'dashboard' },
-  { href: '/panel/talepler', labelKey: 'requests', icon: 'pending_actions' },
-  { href: '/panel/takvim', labelKey: 'calendar', icon: 'calendar_month' },
-  { href: '/panel/urunler', labelKey: 'products', icon: 'inventory_2' },
-  { href: '/panel/fiyatlandirma', labelKey: 'pricing', icon: 'payments' },
-  { href: '/panel/hizmet-bolgeleri', labelKey: 'serviceAreas', icon: 'home' },
-  { href: '/panel/portfoy', labelKey: 'portfolio', icon: 'description' },
-  { href: '/panel/degerlendirmeler', labelKey: 'reviews', icon: 'star' },
-  { href: '/panel/ekip', labelKey: 'team', icon: 'group' },
-  { href: '/panel/analitik', labelKey: 'analytics', icon: 'query_stats' },
-  { href: '/panel/ayarlar', labelKey: 'settings', icon: 'settings' },
+  { href: '', labelKey: 'dashboard', icon: 'dashboard' },
+  { href: '/talepler', labelKey: 'requests', icon: 'pending_actions' },
+  { href: '/takvim', labelKey: 'calendar', icon: 'calendar_month' },
+  { href: '/urunler', labelKey: 'products', icon: 'inventory_2' },
+  { href: '/fiyatlandirma', labelKey: 'pricing', icon: 'payments' },
+  { href: '/hizmet-bolgeleri', labelKey: 'serviceAreas', icon: 'home' },
+  { href: '/portfoy', labelKey: 'portfolio', icon: 'description' },
+  { href: '/degerlendirmeler', labelKey: 'reviews', icon: 'star' },
+  { href: '/ekip', labelKey: 'team', icon: 'group' },
+  { href: '/analitik', labelKey: 'analytics', icon: 'query_stats' },
+  { href: '/ayarlar', labelKey: 'settings', icon: 'settings' },
 ]
+
+/**
+ * A portal link for one company.
+ *
+ * Every manufacturer route is company-scoped, so a link without an id is not a link that is
+ * merely incomplete — it is a 404, or worse, a page that falls back to some other company.
+ */
+export function manufacturerNavHref(companyId: string, suffix: string): string {
+  return `/panel/${companyId}${suffix}`
+}
 
 export const adminNav: readonly NavItem[] = [
   { href: '/yonetim', labelKey: 'dashboard', icon: 'dashboard' },

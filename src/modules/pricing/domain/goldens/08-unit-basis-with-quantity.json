@@ -1,0 +1,77 @@
+{
+  "name": "08-unit-basis-with-quantity",
+  "covers": "A UNIT product ordered four times, with a per-unit option.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_sun_sail",
+      "basisType": "UNIT",
+      "units": 4,
+      "quantity": 4,
+      "selectedOptionIds": ["opt_unit"],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 1200000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [
+        {
+          "optionId": "opt_unit",
+          "mode": "PER_UNIT",
+          "valueKurus": 200000
+        }
+      ],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 20000000,
+    "bandLowKurus": 19000000,
+    "bandHighKurus": 21000000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 4,
+      "basisUnit": "UNIT",
+      "quantity": 4,
+      "baseKurus": 19200000,
+      "options": [
+        {
+          "optionId": "opt_unit",
+          "mode": "PER_UNIT",
+          "amountKurus": 800000
+        }
+      ],
+      "optionsKurus": 800000,
+      "setupKurus": 0,
+      "subtotalKurus": 20000000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 20000000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 20000000,
+      "unpricedOptionIds": []
+    }
+  }
+}

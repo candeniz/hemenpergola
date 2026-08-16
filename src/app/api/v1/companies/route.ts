@@ -15,6 +15,26 @@ import { respond } from '@/shared/http/respond'
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ *  — the companies the caller belongs to.
+ *
+ * The API half of the portal's company switcher. Scope is resolved from the route in the UI
+ * ( §Context resolution), so a scripted caller needs the same list the switcher renders
+ * in order to know which id to put in a path.
+ *
+ * Derived entirely from the caller's own memberships, so there is nothing here they could not
+ * already enumerate.
+ */
+export async function GET(request: Request): Promise<Response> {
+  const [{ listMyCompanies }, { resolveActor }] = await Promise.all([
+    import('@/modules/iam/application/my-companies-service'),
+    import('@/shared/context/actor'),
+  ])
+
+  const actor = await resolveActor(request)
+  return respond(await listMyCompanies(actor, {}))
+}
+
 export async function POST(request: Request): Promise<Response> {
   const [{ createCompanySchema }, { createCompany }, { resolveActor }, { err, validation }] =
     await Promise.all([

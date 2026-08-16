@@ -1,0 +1,77 @@
+{
+  "name": "09-incomplete-missing-option-price",
+  "covers": "A selected option the book does not price: contributes 0, flagged incomplete.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 20,
+      "quantity": 1,
+      "selectedOptionIds": ["opt_flat", "opt_unpriced"],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [
+        {
+          "optionId": "opt_flat",
+          "mode": "FLAT",
+          "valueKurus": 300000
+        }
+      ],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 9300000,
+    "bandLowKurus": 8800000,
+    "bandHighKurus": 9800000,
+    "incomplete": true,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 20,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 9000000,
+      "options": [
+        {
+          "optionId": "opt_flat",
+          "mode": "FLAT",
+          "amountKurus": 300000
+        }
+      ],
+      "optionsKurus": 300000,
+      "setupKurus": 0,
+      "subtotalKurus": 9300000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 9300000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 9300000,
+      "unpricedOptionIds": ["opt_unpriced"]
+    }
+  }
+}

@@ -68,6 +68,12 @@ const ENV_BOUNDARY_FILES = [
   'src/shared/config/env.test.ts',
   'src/instrumentation.ts',
   'vitest.config.ts',
+  // The build configuration. `images.remotePatterns` needs the CDN host at build time, and
+  // the typed env cannot be used here: it parses the *whole* environment and throws on the
+  // first missing secret, which is precisely the build-needs-production-secrets failure
+  // `23` §Configuration removed. `CDN_BASE_URL` is a public hostname, and an unset one falls
+  // back rather than failing — see the comment in the file.
+  'next.config.ts',
   // Test tooling, not application code: Playwright reads `CI` to decide retries and
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',

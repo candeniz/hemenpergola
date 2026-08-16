@@ -97,7 +97,12 @@ describe('message catalogues', () => {
      * number is written the same way on an English page, and inventing a different example
      * would teach the reader a format the field rejects.
      */
-    const SAME_IN_BOTH = ['auth.phonePlaceholder']
+    /*
+     * And the estimate range, which is punctuation around two numbers the formatter has
+     * already localised. `{low} – {high}` differing per locale would mean one of them was
+     * wrong, not that one of them was translated.
+     */
+    const SAME_IN_BOTH = ['auth.phonePlaceholder', 'estimate.range']
 
     const identical = trPaths.filter((path) => {
       if (SAME_IN_BOTH.includes(path)) return false

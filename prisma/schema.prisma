@@ -186,6 +186,10 @@ model Company {
   logoId          String?
   coverId         String?
   status          CompanyStatus @default(PENDING)
+  /// `ADR-006` item 4 and `PRC-06`: stay matchable without displaying a price. Not the same
+  /// as having no price book — this is a deliberate choice, and the results page ranks it
+  /// below priced companies rather than hiding it.
+  priceOnRequest  Boolean       @default(false)
   verifiedAt      DateTime?
   rejectionReason String?
   foundedYear     Int?
@@ -205,6 +209,9 @@ model Company {
   products      CompanyProduct[]
   serviceAreas  ServiceArea[]
   portfolio     PortfolioItem[]
+  // Phase 3 · migration 5
+  priceBooks    PriceBook[]
+  calculations  PriceCalculation[]
 
   @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
@@ -288,10 +295,11 @@ model City {
 
   point Unsupported("geography(Point, 4326)")?
 
-  districts       District[]
-  companyContacts CompanyContact[]
-  serviceAreas    ServiceArea[]
-  portfolioItems  PortfolioItem[]
+  districts                  District[]
+  companyContacts            CompanyContact[]
+  serviceAreas               ServiceArea[]
+  portfolioItems             PortfolioItem[]
+  priceBookRegionAdjustments PriceBookRegionAdjustment[]
 
   @@index([point], type: Gist, map: "City_point_gist")
   @@index([name])
@@ -307,9 +315,10 @@ model District {
 
   point Unsupported("geography(Point, 4326)")?
 
-  city            City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  companyContacts CompanyContact[]
-  serviceAreas    ServiceArea[]
+  city                       City                        @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  companyContacts            CompanyContact[]
+  serviceAreas               ServiceArea[]
+  priceBookRegionAdjustments PriceBookRegionAdjustment[]
 
   @@unique([cityId, name])
   @@index([point], type: Gist, map: "District_point_gist")
@@ -683,6 +692,7 @@ model Product {
   attributes      ProductAttribute[]
   companyProducts CompanyProduct[]
   portfolioItems  PortfolioItem[]
+  priceBookItems  PriceBookItem[]
 
   @@index([categoryId, sortOrder])
   @@index([isActive])
@@ -776,6 +786,7 @@ model ProductOption {
   attribute             ProductAttribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
   translations          ProductOptionTranslation[]
   companyProductOptions CompanyProductOption[]
+  priceBookOptionPrices PriceBookOptionPrice[]
 
   @@unique([attributeId, value])
   @@index([attributeId, sortOrder])
@@ -950,4 +961,171 @@ model FileVariant {
 
   @@unique([fileId, name])
   @@index([fileId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pricing — migration 5, Phase 3 (`04-data-model.md` §Pricing, `08-pricing-engine.md`)
+//
+// A `PriceBook` in `PUBLISHED` is **immutable**. Editing means: clone to a new
+// `DRAFT`, publish as `version + 1`, archive the old one. There is no update path
+// on a published book, and the partial unique index below is what makes "one live
+// book per company" true in the database rather than in a service comment.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PriceBookStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PriceUnit {
+  PER_M2
+  PER_M
+  PER_UNIT
+}
+
+enum OptionPriceMode {
+  FLAT
+  PER_M2
+  PER_M
+  PER_UNIT
+  PERCENT
+}
+
+/// `FLAT` is a kuruş amount, `PERCENT` a percentage of the stage it applies to.
+enum AdjustmentMode {
+  FLAT
+  PERCENT
+}
+
+enum PriceRuleKind {
+  AREA_DISCOUNT
+  VALUE_DISCOUNT
+  SIZE_SURCHARGE
+  HEIGHT_SURCHARGE
+}
+
+model PriceBook {
+  id          String          @id @default(cuid())
+  companyId   String
+  version     Int
+  status      PriceBookStatus @default(DRAFT)
+  publishedAt DateTime?
+  publishedBy String?
+  currency    String          @default("TRY")
+  validFrom   DateTime?
+  validTo     DateTime?
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  company      Company                     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items        PriceBookItem[]
+  optionPrices PriceBookOptionPrice[]
+  adjustments  PriceBookRegionAdjustment[]
+  rules        PriceBookRule[]
+  calculations PriceCalculation[]
+
+  @@unique([companyId, version])
+  @@index([companyId, status])
+}
+
+model PriceBookItem {
+  id                   String    @id @default(cuid())
+  priceBookId          String
+  productId            String
+  basePriceKurus       Int
+  unit                 PriceUnit
+  minProjectPriceKurus Int       @default(0)
+  setupFeeKurus        Int?
+
+  priceBook PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([priceBookId, productId])
+  @@index([productId])
+}
+
+model PriceBookOptionPrice {
+  id          String          @id @default(cuid())
+  priceBookId String
+  optionId    String
+  mode        OptionPriceMode
+  valueKurus  Int?
+  /// Stored as the percentage a human typed; the engine converts to basis points once.
+  percent     Float?
+
+  priceBook PriceBook     @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+  option    ProductOption @relation(fields: [optionId], references: [id], onDelete: Restrict)
+
+  @@unique([priceBookId, optionId])
+  @@index([optionId])
+}
+
+model PriceBookRegionAdjustment {
+  id          String         @id @default(cuid())
+  priceBookId String
+  cityId      String?
+  districtId  String?
+  mode        AdjustmentMode
+  valueKurus  Int?
+  percent     Float?
+
+  priceBook PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+  city      City?     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  district  District? @relation(fields: [districtId], references: [id], onDelete: Cascade)
+
+  @@index([priceBookId])
+  @@index([cityId])
+  @@index([districtId])
+}
+
+model PriceBookRule {
+  id           String         @id @default(cuid())
+  priceBookId  String
+  kind         PriceRuleKind
+  /// The window this rule fires in. The unit depends on the kind — m² or m for the size
+  /// kinds, kuruş for `VALUE_DISCOUNT` — which is why the editor labels it per kind.
+  thresholdMin Float?
+  thresholdMax Float?
+  mode         AdjustmentMode
+  /// A **magnitude**. The sign comes from the kind: `*_DISCOUNT` subtracts, `*_SURCHARGE`
+  /// adds. Signed values would let a discount typed as +500 become a surcharge.
+  valueKurus   Int?
+  percent      Float?
+  note         String?
+
+  priceBook PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+
+  @@index([priceBookId, kind])
+}
+
+/**
+ * Append-only (`PRC-02`). Never updated, never deleted by the application: republishing a
+ * price book must not move an old estimate, which is the whole reason `priceBookVersion` and
+ * `engineVersion` are columns rather than joins.
+ * `actorUserId` and `requestIp` are here for `ADR-006`'s scraping detection — one actor
+ * producing many calculations against one company across systematically varied dimensions.
+ */
+model PriceCalculation {
+  id               String   @id @default(cuid())
+  projectId        String?
+  companyId        String
+  priceBookId      String
+  priceBookVersion Int
+  netKurus         Int
+  bandLowKurus     Int
+  bandHighKurus    Int
+  breakdown        Json
+  engineVersion    Int
+  calculatedAt     DateTime @default(now())
+  actorUserId      String?
+  requestIp        String?
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  priceBook PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, calculatedAt])
+  @@index([priceBookId])
+  @@index([actorUserId, calculatedAt])
 }

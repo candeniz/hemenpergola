@@ -6,24 +6,28 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 3 is half done — 4 of its 8 tasks** (2026-08-16). A verified company
-can now complete its profile, upload documents, mark the products and options it offers, define
-service areas of all three kinds and publish a portfolio. It is **matchable except for a price
-book**, which is the second half along with the pricing engine.
+**Current phase:** **Phase 3 is complete and its gate is proven** (2026-08-16). A verified
+company can complete its profile, upload documents, mark the products and options it offers,
+define service areas of all three kinds, publish a portfolio **and publish a price book** —
+which is to say it is **matchable**. Matching itself is Phase 5; what is proven here is that
+every input the matching filter will read exists and produces a real number.
 
-Three things exist for the first time: a background worker (pg-boss, `23` §Runtime's second
-entrypoint), real file upload to object storage, and a feature spanning four modules.
+Four things exist for the first time in this phase: a background worker (pg-boss, `23`
+§Runtime's second entrypoint), real file upload to object storage, a feature spanning five
+modules, and **the pricing engine** — a pure function with golden files whose expectations
+cannot change without an `ENGINE_VERSION` bump.
 
-**Before Phase 3 ships its price-book UI, the D3 pilot manufacturer needs to exist** — and
-§Open questions now has eight questions (Q11–Q18) waiting for them, produced by writing the
-seed catalogue.
+**The D3 pilot session is now runnable.** `27-d3-pilot-guide.md` is a one-page script for it,
+with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as questions
+to ask. The pilot account is deliberately left **without** a price book, because building one
+from nothing is the thing being observed.
 
-The application runs, and now it has accounts: `docker compose up -d && pnpm seed demo &&
-pnpm dev` gives a working local stack with 81 provinces, 974 districts, and a registration →
-verification → sign-in → reset flow that completes end to end against a production build.
-**864 unit tests, 213 integration tests** against real PostGIS and MinIO containers, and **35
-Playwright specs green** (20 still skipped for later phases). Mail and SMS go to the log adapters, which
-is what Q3 and Q2 leave available.
+The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
+local stack with 81 provinces, 974 districts, a registration → verification → sign-in → reset
+flow, and a manufacturer who can price their work. **926 unit tests, 235 integration tests**
+against real PostGIS and MinIO containers, and **37 Playwright specs green** (20 still skipped
+for later phases). Mail and SMS go to the log adapters, which is what Q3 and Q2 leave
+available.
 
 ## Phase tracker
 
@@ -40,7 +44,7 @@ proven — not when the code is written.
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
-| 3 | Manufacturer supply side | **🟡 in progress · 4/8** | a company is matchable |
+| 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
@@ -1786,6 +1790,198 @@ they are classified differently.
   the second half.
 - **Q1, Q3, Q10, Q11–Q18** unchanged.
 
+### 2026-08-16 — Phase 3 tasks 3.3, 3.4, 3.5, the pricing engine and the gate (commit `P3.3-3.5 · Faz 3 kapanışı`)
+
+The pure engine first and on its own, then the lifecycle around it, then the screen, then the
+simulator. A verified company can now publish a price book, so a company is **matchable**:
+products, service areas and a live price book that produces a real number.
+
+#### The engine is pure, and that bought something concrete
+
+`modules/pricing/domain/engine.ts` imports `shared/money` and nothing else — no database, no
+clock, no randomness. 30 unit tests and 13 golden files run in **two seconds** with no
+container, which is why every rounding boundary and every option mode could be covered rather
+than sampled. The application service loads the inputs, calls it, and persists.
+
+Two design points are load-bearing and are asserted rather than commented:
+
+- **Rules are additive against the subtotal.** A test permutes all four rules through all 24
+  orderings and asserts one net. Compounding rules are how price engines stop being
+  explainable, and the property is now something a future change breaks loudly.
+- **The floor applies last.** A case drives base ₺2 000 through a 50% discount and a −₺500
+  regional adjustment to a pre-floor ₺500, and asserts ₺1 500 out. Applied at step 5 it would
+  have produced ₺500 — the minimum a manufacturer said they would accept, discounted away.
+
+#### Golden files, and how a bump is actually enforced
+
+13 fixtures, typed in TypeScript with their expectations committed as JSON — the compiler
+catches a fixture naming a mode that does not exist, and a reviewer reads a diff of real money
+rather than a re-recorded snapshot. They cover all three documented outcomes, not only the
+happy one: `priced`, `price-on-request` and `unpriceable`.
+
+Enforcement is a checksum recorded per `ENGINE_VERSION`. Changing any expectation without
+bumping fails with a message naming both halves of the fix. **Proven by tampering**: adding
+one kuruş to a golden failed two tests — the regression and the checksum gate — and both
+passed again on revert.
+
+Honest about the limit, and it is written in the file: nothing inside one file stops somebody
+editing a past version's checksum along with the goldens. What it guarantees is that the
+change cannot be *accidental*.
+
+#### `20` §Unit asks for a property that is not true — `ADR-020`
+
+*"net is monotonic in area"* fails on a configuration the engine handles correctly: ₺100/m²
+with 10% off above 100 m² makes 100 m² (₺9 000) cheaper than 99 m² (₺9 900). Three ways out
+were available — drop threshold rules, make discounts marginal-only, or scope the property.
+
+Scoping it, plus a diagnostic. The engine property covers rule-free books, where monotonicity
+is arithmetic. `inspectPriceBook` sweeps a book across basis values and reports an inversion
+**to its owner, in the simulator, before publishing** — along with a rule that never fires
+(almost always a unit mix-up) and a floor that swallows the whole range. Marginal-only
+discounts are what a pricing theorist would pick, and they are not what `08` §Algorithm
+describes; choosing them here would mean the engine quietly disagreeing with its own
+specification.
+
+#### The editor, and the four decisions that make it usable
+
+`26` §Risk register puts the largest risk in the project on this screen. Five option modes ×
+regional adjustments × four rule kinds is a form somebody abandons, so:
+
+- **You never start from nothing.** The draft is seeded from the products and options the
+  company already declared in 3.2. First screen is their own catalogue with empty price
+  fields.
+- **Cloning is a button, not a menu item.** `08` §Versioning makes editing a published book
+  *mean* cloning it, so every price book after the first is made that way. There is a clone
+  button per version, and the empty state is a row of them.
+- **Money is typed in lira.** `ADR-005` is about storage. Asking a human to type 450000 for
+  ₺4 500 is how a price book ends up out by a factor of a hundred.
+- **The simulator sits beside the form**, not behind a tab, and saves before it runs —
+  simulating unsaved state would tell a manufacturer their edits are fine and then publish
+  something else.
+
+Rule thresholds are labelled **per kind**, because "40" means 40 m², ₺40 and 40 m in three
+different rules.
+
+#### Immutability, proven against a real database
+
+`20` §Integration asks for one assertion by name: *publishing v2 does not alter any stored
+`PriceCalculation`.* A calculation is written at ₺1 000/m², v2 is published at ₺2 000/m², and
+the stored row still reads ₺20 000 against v1 — with a fresh calculation at ₺40 000 to prove
+the publish worked and the test is not passing on a broken one.
+
+"One live book per company" is a **partial unique index**, not a service check. A service
+check loses to two tabs; the test asserts the raw insert is rejected by Postgres.
+
+#### The disclosure boundary is a type
+
+`ADR-006` item 2 — *the customer sees a band, never line items* — is now a compile error
+rather than a review note. `NoLineItems<T>` maps any property named like a breakdown, a line
+item or an internal amount to `never`, and `EstimateBand` takes `CustomerEstimate`. The
+assertions run in `pnpm typecheck`, which is a pipeline stage, so the rule is enforced before
+anything executes. `OwnerEstimate` is structurally incompatible, so a handler cannot return
+the wrong one from a shared path.
+
+`EstimateBand` itself is built three phases before a customer surface exists, which is
+`22` §Patterns' point: the rules are decided once, while there is nothing to retrofit. All
+four states are in `/dev/ui`, so the a11y sweep covers them.
+
+#### Both corrections
+
+**`next/image` is back.** Non-negotiable 9's scope is `src/app`; `next.config.ts` is the
+build configuration, is evaluated once, and `CDN_BASE_URL` is a public hostname. It is read
+from `process.env` directly rather than through the typed env — that module parses the
+*whole* environment and throws on the first missing secret, which is exactly the
+build-needs-production-secrets failure `23` §Configuration removed. An unset host falls back
+to the local MinIO origin, so CI's no-`.env` build still succeeds. `imageSizes` matches the
+ladder `media.process` already renders, so the optimiser and the job do not each invent
+widths.
+
+**The company switcher.** `manufacturerNav` now holds path *suffixes* and
+`manufacturerNavHref` joins them, so a link without a company id cannot be constructed.
+Switching company is a **navigation** — the same path re-entered under a different id — which
+is what makes `12` §Context resolution's two-tabs case work. A single company renders as text
+rather than a one-option dropdown.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **926 passed**, 23 files |
+| `pnpm test:integration` | **235 passed**, 17 files, real PostGIS + real MinIO |
+| `pnpm test:e2e` | **37 passed, 20 skipped, 0 failed** |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `pnpm lint`, `pnpm typecheck`, `pnpm format` | clean |
+| `prisma migrate diff --exit-code` | `No difference detected`, exit 0 |
+| golden bump enforcement | tampering with one golden fails two tests; revert restores both |
+| rule permutation | 24 orderings, one net |
+| floor last | pre-floor ₺500 → net ₺1 500 |
+| v2 publish | stored calculation unchanged; fresh one picks up v2 |
+| one live book | raw second `PUBLISHED` insert rejected by the index |
+| simulator | draft book, full breakdown, no `PriceCalculation` written |
+| `EstimateBand` | cannot carry a line item — `tsc` |
+| Phase 3 gate e2e | offer → draft → simulate → publish → matchable |
+| authorisation matrix | 74 registered methods, 0 unregistered |
+
+#### Findings
+
+**The authorisation-matrix scan caught two things, and was right about both.** `bandSettings`
+was an exported helper in `application/` that takes no actor and asserts nothing — moved to
+`infrastructure/`, following the precedent the job handlers set in the first half. And the
+scan tried to *import* a `.test.ts` file sitting beside a service, which ran its `describe`
+inside the running test; vitest refuses that, rightly. The walker now skips test files. No
+exemption was added in either case.
+
+**The shared integration container turned a latent test coupling into a real failure — and
+that is an improvement.** `migration-1` creates a fixture city with `plateCode: 34`, which is
+unique and which `geo-seed` commits as the real İstanbul. Until the first half of this phase
+every test file got its own container, so the collision could not happen; one container per
+*run* means committed rows from one file are visible to the next. The fixture moved to the 9xx
+range the other suites already use — and the point is that the coupling was always there,
+hidden behind sixteen containers.
+
+It failed **only in the full run**, passing in isolation, which is the signature worth
+remembering: a suite that passes alone and fails together is telling you about shared state,
+not about the code under test.
+
+**A page in the first half calls Prisma directly from `app/`.**
+`hizmet-bolgeleri/page.tsx` does `prisma.city.findMany` through a dynamic import — which
+non-negotiable 2 forbids and which the lint rule does not catch, because the rule looks at
+static imports. The pricing page needed the same data; rather than copy the violation it got
+`matching.listCities`. **The existing violation is still there** — carried forward below.
+
+**`i18n`'s "the two locales must differ" test flagged the estimate range.** `{low} – {high}`
+is identical in `tr` and `en` because it is punctuation around two numbers the formatter has
+already localised; a different one would mean one of them was wrong. Named as an exception
+beside the phone placeholder rather than pattern-matched away.
+
+**Two icons in the design do not exist in the icon set.** `calculate` and `history` are in
+`manufacturer_pricing_management`; the typed `IconName` union refused them at compile time,
+which is the union doing its job. Substituted rather than added, because adding an icon is a
+design-system change and this was a screen.
+
+#### Carried forward
+
+- **`hizmet-bolgeleri/page.tsx` violates non-negotiable 2**, and the lint rule cannot see it
+  because the import is dynamic. Two fixes are needed and neither is this phase's scope:
+  switch that page to `matching.listCities`, and extend the boundary rule to dynamic
+  `import('@/shared/db')` inside `src/app`. New question **Q21**.
+- **`priceOnRequest` has a column and a DTO path but no screen.** `ADR-006` item 4 and
+  `PRC-06` are honoured by the type and by `toCustomerEstimate`; the toggle belongs on the
+  company settings screen and there was no customer surface to make it visible on. Phase 5.
+- **Regional adjustments are city-only in the editor.** The schema, the engine and the tests
+  all handle a district row and district-overrides-city; the *screen* offers provinces,
+  because 974 districts in a dropdown is a worse answer than none until somebody asks for it.
+- **`estimateForProject` writes a `PriceCalculation` but nothing calls it yet.** It is
+  Phase 5's entry point, built here because the anti-scraping columns and the append-only rule
+  are pricing's business rather than matching's. Covered by the immutability suite.
+- **No market aggregate.** `ADR-006` item 6 puts min/max/median in
+  `super_admin_market_pricing_dashboard` only. The `PriceCalculation` rows it reads now exist;
+  the dashboard is Phase 7.
+- **The golden checksum cannot stop a determined edit** — see above. It stops an accidental
+  one.
+- **Q1, Q3, Q10, Q11–Q20** unchanged. **Q11–Q18 are now answerable** — `27-d3-pilot-guide.md`
+  phrases each as a question and the pilot account is seeded.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -1809,6 +2005,7 @@ they are classified differently.
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
 | Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
+| Q21 | `src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`? | nothing today; a second violation is one careless page away | Extend the rule and fix the page in the first Phase 4 commit that touches `app/`. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

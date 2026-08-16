@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 
@@ -776,23 +778,21 @@ export function PortfolioForm({
                       <span className="text-body-sm text-muted">{t('photoProcessing')}</span>
                     ) : (
                       /*
-                       * A plain `img`, deliberately.
+                       * `next/image`, per `14` §Image pipeline. The allowed hosts are
+                       * configured in `next.config.ts` from `CDN_BASE_URL` — that file is the
+                       * build configuration rather than a route module, so non-negotiable 9
+                       * does not reach it, and the host is a public name rather than a secret.
                        *
-                       * `14` §Image pipeline asks for `next/image` with a remote pattern for
-                       * the storage host — and a remote pattern needs that host at *build*
-                       * time, which is the Phase 8 CDN decision nobody has made. Reading
-                       * `CDN_BASE_URL` into the build is what non-negotiable 9 forbids.
-                       *
-                       * The variants are already rendered and the smallest is served here, so
-                       * the bandwidth half of the rule is answered; what is missing is the
-                       * optimiser, and it arrives with the host.
+                       * `unoptimized` is not set: the variants `media.process` renders are the
+                       * *stored* ladder, and the optimiser is what adapts them to the layout
+                       * and the device. Both matter for `18` §Performance's budgets.
                        */
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={photo.variants[0]?.url ?? photo.url}
                         alt={item.title}
                         width={160}
                         height={120}
+                        sizes="160px"
                         className="rounded border border-divider object-cover"
                       />
                     )}

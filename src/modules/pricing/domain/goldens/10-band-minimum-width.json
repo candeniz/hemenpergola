@@ -1,0 +1,65 @@
+{
+  "name": "10-band-minimum-width",
+  "covers": "A small project where the percentage band is narrower than the minimum width.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_sun_sail",
+      "basisType": "UNIT",
+      "units": 1,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 250000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 200000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 250000,
+    "bandLowKurus": 150000,
+    "bandHighKurus": 350000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 1,
+      "basisUnit": "UNIT",
+      "quantity": 1,
+      "baseKurus": 250000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 250000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 250000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 250000,
+      "unpricedOptionIds": []
+    }
+  }
+}

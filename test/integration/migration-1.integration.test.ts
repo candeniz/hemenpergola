@@ -149,7 +149,13 @@ describe('migration 1 · one OWNER per company', () => {
 describe('migration 1 · geography columns accept and return points', () => {
   it('stores a point and reads it back through PostGIS', async () => {
     await withRollback(async (tx) => {
-      const city = await tx.city.create({ data: { name: 'İstanbul', plateCode: 34 } })
+      /*
+       * Plate 990, not 34. `plateCode` is unique and `geo-seed.integration.test.ts` commits the
+       * real 81 provinces into the same database — one container per *run* since Phase 3, not
+       * one per file. A fixture that claims a real plate code collides with it, and the 9xx
+       * range is the convention the other suites already use — 906, 934 and 941 are taken.
+       */
+      const city = await tx.city.create({ data: { name: 'İstanbul', plateCode: 990 } })
 
       // ST_MakePoint takes (longitude, latitude) — the reverse of how it is said aloud.
       await tx.$executeRaw`
@@ -232,6 +238,13 @@ describe('migration scope', () => {
       // Phase 3 · migration 4
       'PortfolioItem',
       'PortfolioPhoto',
+      // Phase 3 · migration 5 — the price book
+      'PriceBook',
+      'PriceBookItem',
+      'PriceBookOptionPrice',
+      'PriceBookRegionAdjustment',
+      'PriceBookRule',
+      'PriceCalculation',
       // Phase 2 · migration 3
       'Product',
       'ProductAttribute',
@@ -256,8 +269,8 @@ describe('migration scope', () => {
     // The project, pricing, matching, offer, messaging, review and content tables arrive
     // with their phases — their absence here is the assertion.
     expect(tables).not.toContain('Project')
-    expect(tables).not.toContain('PriceBook')
     expect(tables).not.toContain('OfferRequest')
+    expect(tables).not.toContain('Review')
 
     /*
      * `CompanyProduct` and `CompanyProductOption` arrived in migration 4, which is the
@@ -267,9 +280,18 @@ describe('migration scope', () => {
     expect(tables).toContain('CompanyProduct')
     expect(tables).toContain('CompanyProductOption')
 
-    // Phase 3's second half — the price book — is not here yet, and it is five tables.
-    expect(tables).not.toContain('PriceBookItem')
-    expect(tables).not.toContain('PriceBookOptionPrice')
+    /*
+     * And migration 5 is Phase 3's second half. `PriceCalculation` is the one worth naming:
+     * it is append-only (`PRC-02`) and Phase 5 writes to it, so the table existing before
+     * matching does is deliberate rather than premature.
+     */
+    expect(tables).toContain('PriceBook')
+    expect(tables).toContain('PriceBookItem')
+    expect(tables).toContain('PriceCalculation')
+
+    // Phase 4's project tables are the next boundary, and their absence is the assertion now.
+    expect(tables).not.toContain('ProjectAttributeValue')
+    expect(tables).not.toContain('MatchRun')
   })
 })
 

@@ -300,3 +300,39 @@ export const serviceAreaService = {
   removeServiceArea,
   companiesCoveringPoint,
 } satisfies Record<string, { meta: unknown }>
+
+export const listCitiesSchema = z.object({ companyId: z.string().min(1) })
+export type ListCitiesInput = z.infer<typeof listCitiesSchema>
+
+/**
+ * The provinces, for any screen that needs to name one — service areas and the price book's
+ * regional table.
+ *
+ * A service method rather than a `prisma.city.findMany` in the page, because
+ * `CLAUDE.md` non-negotiable 2 says pages call application services and nothing below them.
+ * The data is public reference data seeded in Phase 0, so the only gate is membership: it is
+ * on the company-scoped surface and there is no reason for an anonymous caller to reach it
+ * here rather than through the public catalogue.
+ */
+export const listCities = serviceMethod<
+  ListCitiesInput,
+  { cities: { cityId: string; name: string }[] }
+>(
+  'matching',
+  'listCities',
+  { kind: 'permission', permission: PERMISSIONS.MEMBER_READ },
+  async (actor, input) => {
+    void input
+    const allowed = authorize(actor, PERMISSIONS.MEMBER_READ)
+    if (!allowed.ok) return err(allowed.error)
+
+    // Turkish collation is on the column, so `İ` and `ı` order the way a Turkish reader
+    // expects rather than the way ASCII does.
+    const cities = await prisma.city.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    })
+
+    return ok({ cities: cities.map((city) => ({ cityId: city.id, name: city.name })) })
+  },
+)

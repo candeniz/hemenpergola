@@ -1,0 +1,76 @@
+{
+  "name": "06-regional-district-overrides-city",
+  "covers": "Both a city and a district row match; the district one is used.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 30,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [
+        {
+          "cityId": "city_istanbul",
+          "mode": "PERCENT",
+          "percent": 20
+        },
+        {
+          "districtId": "dst_kadikoy",
+          "mode": "PERCENT",
+          "percent": 5
+        }
+      ],
+      "rules": []
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 14175000,
+    "bandLowKurus": 13450000,
+    "bandHighKurus": 14900000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 30,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 13500000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 13500000,
+      "rules": [],
+      "rulesKurus": 0,
+      "regional": {
+        "mode": "PERCENT",
+        "amountKurus": 675000,
+        "matchedOn": "district"
+      },
+      "regionalKurus": 675000,
+      "preFloorKurus": 14175000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 14175000,
+      "unpricedOptionIds": []
+    }
+  }
+}

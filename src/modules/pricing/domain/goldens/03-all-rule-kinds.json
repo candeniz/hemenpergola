@@ -1,0 +1,125 @@
+{
+  "name": "03-all-rule-kinds",
+  "covers": "All four rule kinds firing at once, additively against the subtotal.",
+  "engineVersion": 1,
+  "input": {
+    "project": {
+      "productId": "prd_pergola_bioclimatic",
+      "basisType": "AREA_M2",
+      "areaM2": 80,
+      "perimeterM": 36,
+      "heightM": 4.2,
+      "quantity": 1,
+      "selectedOptionIds": [],
+      "cityId": "city_istanbul",
+      "districtId": "dst_kadikoy"
+    },
+    "priceBook": {
+      "version": 1,
+      "item": {
+        "basePriceKurus": 450000,
+        "minProjectPriceKurus": 0,
+        "setupFeeKurus": 0
+      },
+      "optionPrices": [],
+      "regionAdjustments": [],
+      "rules": [
+        {
+          "id": "rule_area",
+          "kind": "AREA_DISCOUNT",
+          "thresholdMin": 50,
+          "mode": "PERCENT",
+          "percent": 7
+        },
+        {
+          "id": "rule_value",
+          "kind": "VALUE_DISCOUNT",
+          "thresholdMin": 20000000,
+          "mode": "FLAT",
+          "valueKurus": 500000
+        },
+        {
+          "id": "rule_size",
+          "kind": "SIZE_SURCHARGE",
+          "thresholdMin": 60,
+          "mode": "FLAT",
+          "valueKurus": 1200000
+        },
+        {
+          "id": "rule_height",
+          "kind": "HEIGHT_SURCHARGE",
+          "thresholdMin": 4,
+          "mode": "PERCENT",
+          "percent": 3
+        }
+      ]
+    },
+    "settings": {
+      "bandPercent": 10,
+      "bandMinKurus": 50000,
+      "roundStepKurus": 50000
+    }
+  },
+  "expected": {
+    "status": "priced",
+    "netKurus": 35260000,
+    "bandLowKurus": 33450000,
+    "bandHighKurus": 37050000,
+    "incomplete": false,
+    "engineVersion": 1,
+    "breakdown": {
+      "engineVersion": 1,
+      "priceBookVersion": 1,
+      "basis": 80,
+      "basisUnit": "AREA_M2",
+      "quantity": 1,
+      "baseKurus": 36000000,
+      "options": [],
+      "optionsKurus": 0,
+      "setupKurus": 0,
+      "subtotalKurus": 36000000,
+      "rules": [
+        {
+          "ruleId": "rule_area",
+          "kind": "AREA_DISCOUNT",
+          "mode": "PERCENT",
+          "amountKurus": -2520000,
+          "note": null
+        },
+        {
+          "ruleId": "rule_height",
+          "kind": "HEIGHT_SURCHARGE",
+          "mode": "PERCENT",
+          "amountKurus": 1080000,
+          "note": null
+        },
+        {
+          "ruleId": "rule_size",
+          "kind": "SIZE_SURCHARGE",
+          "mode": "FLAT",
+          "amountKurus": 1200000,
+          "note": null
+        },
+        {
+          "ruleId": "rule_value",
+          "kind": "VALUE_DISCOUNT",
+          "mode": "FLAT",
+          "amountKurus": -500000,
+          "note": null
+        }
+      ],
+      "rulesKurus": -740000,
+      "regional": {
+        "mode": "FLAT",
+        "amountKurus": 0,
+        "matchedOn": null
+      },
+      "regionalKurus": 0,
+      "preFloorKurus": 35260000,
+      "minProjectPriceKurus": 0,
+      "floorApplied": false,
+      "netKurus": 35260000,
+      "unpricedOptionIds": []
+    }
+  }
+}
