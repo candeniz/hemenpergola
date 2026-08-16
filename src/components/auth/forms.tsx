@@ -209,6 +209,16 @@ export function LoginForm() {
             return
           }
           setTokens(true)
+
+          /*
+           * A full navigation, not a router push. The session cookie was set by the server
+           * action, and the destination is a Server Component that reads it — a client-side
+           * push would render from a cache populated while signed out.
+           *
+           * Until `ADR-022` this line did not exist and neither did the session: the form
+           * showed a tick and stayed where it was, which is how Q23 survived three phases.
+           */
+          window.location.assign('/hesap')
         })
       }}
     >

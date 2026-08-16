@@ -54,11 +54,15 @@ function readBearerToken(request: ActorRequestLike): string | null {
 }
 
 /**
- * Auth.js v5 cookie session.
+ * The web session — a server-side row addressed by an opaque cookie (`ADR-022`).
  *
- * The session row is read directly rather than through `auth()` because `resolveActor` runs
- * in route handlers, server actions and jobs alike, and `auth()` assumes a request context
- * that a job does not have. Same table, same cookie, one code path.
+ * The row is read directly rather than through any framework helper because `resolveActor`
+ * runs in route handlers, server actions and jobs alike, and a request-context helper is
+ * unavailable in a job. Same table, same cookie, one code path.
+ *
+ * Reading the row on every request is the cost that buys revocation: a suspended user, a
+ * revoked session and a changed membership all take effect on the **next request** rather
+ * than at token expiry.
  */
 async function identifyFromSession(request: ActorRequestLike): Promise<IdentifiedUser | null> {
   const token = readSessionCookie(request)
@@ -76,8 +80,15 @@ async function identifyFromSession(request: ActorRequestLike): Promise<Identifie
   return { userId: session.user.id, globalRole: session.user.globalRole }
 }
 
-/** Auth.js names the cookie `__Secure-authjs.session-token` over HTTPS. */
-const SESSION_COOKIE_NAMES = ['__Secure-authjs.session-token', 'authjs.session-token'] as const
+/**
+ * The web session cookie — `ADR-022`, `web-session.ts`.
+ *
+ * Both names are accepted because the `__Host-` prefix requires `Secure`, which development
+ * over plain HTTP cannot set. The Auth.js names this list used to carry are gone: nothing
+ * ever wrote them, and keeping them would point the next reader at documentation for a
+ * mechanism this codebase does not use.
+ */
+const SESSION_COOKIE_NAMES = ['__Host-pergola.session', 'pergola.session'] as const
 
 function readSessionCookie(request: ActorRequestLike): string | null {
   const header = request.headers.get('cookie')

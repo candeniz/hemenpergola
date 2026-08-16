@@ -124,6 +124,12 @@ Nine screens have placeholder PNGs (`<FIFE Image failed to fetch>`); use their `
   service methods, an authorisation-matrix entry, or the build fails.
 - Both locales render; loading, empty, error and forbidden states exist.
 - If a decision was made, it is an ADR. If a doc is now wrong, it is fixed in the same PR.
+- **Anything deferred is recorded in `25-progress.md` §Open questions.** Not only in the log —
+  in the *table*. A deferral written into a dated log entry is invisible within a phase: the
+  log is over 130 KB and nobody re-reads it, while the table is short and gets scanned. This
+  rule exists because Phase 1 deliberately deferred wiring a web session, wrote it in the log,
+  and Phase 4 discovered it as a bug three phases later (`ADR-022`, Q23). Q3, Q10, Q19 and Q20
+  stayed visible precisely because they were in the table.
 - `25-progress.md` is updated.
 
 ## When the documentation and the brief disagree

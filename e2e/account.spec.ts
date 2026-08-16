@@ -127,10 +127,28 @@ test.describe('F2 · customer account', () => {
     await page.getByLabel('Şifre').fill(PASSWORD)
     await page.getByRole('button', { name: 'Giriş yap' }).click()
 
-    // Not `getByRole('alert')`: Next renders its own `__next-route-announcer__` with that
-    // role on every navigation, so the generic query is always satisfied and never means
-    // what it looks like it means. Assert on the message the screen would actually show.
-    await expect(page.getByText('E-posta veya şifre hatalı.')).toBeHidden({ timeout: 30_000 })
+    /*
+     * **A real session assertion.**
+     *
+     * This used to be `expect(getByText('E-posta veya şifre hatalı.')).toBeHidden()`, which
+     * passes whether or not signing in did anything — and for three phases it did nothing:
+     * the form validated credentials, rendered a tick and discarded the tokens, while no
+     * cookie was ever written (`ADR-022`, Q23). The hollow assertion is *why* nobody noticed.
+     *
+     * So assert the thing that has to be true: a session cookie exists afterwards.
+     */
+    // Wait for the navigation the form performs on success, not for the error text to be
+    // absent — absent-by-default is what made the old assertion hollow, and checking cookies
+    // mid-navigation races the server response that sets them.
+    await page.waitForURL(/\/hesap/, { timeout: 30_000 })
+
+    const cookies = await page.context().cookies()
+    const session = cookies.find((cookie) => cookie.name.endsWith('pergola.session'))
+
+    expect(session, 'signing in must open a browser session').toBeTruthy()
+    expect(session?.httpOnly, 'the session cookie is not readable by script').toBe(true)
+    expect(session?.value.length, 'an opaque id, not a JWT').toBeGreaterThan(20)
+    expect(session?.value, 'opaque means opaque — no dots, no claims').not.toContain('.')
 
     // ── Reset the password ────────────────────────────────────────────────────
     await page.goto('/sifre-sifirla')
@@ -145,6 +163,31 @@ test.describe('F2 · customer account', () => {
     await page.getByRole('button', { name: 'Şifreyi güncelle' }).click()
     await expect(page.getByText('Şifreniz güncellendi')).toBeVisible({ timeout: 30_000 })
 
+    /*
+     * **The reset revoked the browser session that was open.**
+     *
+     * `12` §Sessions and revocation, and the promise the reset screen makes. Phase 1 proved
+     * this over `/api/v1` by revoking refresh-token families; the browser half could not be
+     * proved because no browser session existed (`ADR-022`). It does now, so the session
+     * opened at the top of this test must be dead — a reset that leaves the intruder signed
+     * in has fixed nothing.
+     *
+     * Checked against a gate that actually exists. `/hesap` is *described* as auth-gated in
+     * `07` §Rendering strategy but nothing enforces it — no middleware check, no layout guard —
+     * so asserting a redirect there would prove nothing (Q24). `createProject` does enforce
+     * identity, refusing a caller with none, so the old cookie is tested by trying to use it.
+     */
+    await page.goto('/proje/yeni')
+    await page
+      .getByRole('button', { name: /yapılandır|configure/i })
+      .first()
+      .click()
+
+    await expect(
+      page.getByText('sign in to start a project'),
+      'the session opened before the reset is dead',
+    ).toBeVisible({ timeout: 30_000 })
+
     // ── The new password works and the old one does not ───────────────────────
     await page.goto('/giris')
     await page.getByLabel('E-posta').fill(email)
@@ -154,7 +197,10 @@ test.describe('F2 · customer account', () => {
 
     await page.getByLabel('Şifre').fill(NEW_PASSWORD)
     await page.getByRole('button', { name: 'Giriş yap' }).click()
-    await expect(page.getByText('E-posta veya şifre hatalı.')).toBeHidden({ timeout: 30_000 })
+
+    // Again the navigation, not the absent error: signing in with the new password must open
+    // a *new* session, which is the other half of "the reset revoked the old one".
+    await page.waitForURL(/\/hesap/, { timeout: 30_000 })
   })
 
   test('a wrong reset link is refused without saying why', async ({ page }) => {

@@ -46,6 +46,11 @@ choosing a host. Also gives full-text search and `pg_trgm`, so no Elasticsearch 
 
 ## ADR-003 — Auth.js v5 cookies for web, Bearer JWT for `/api/v1`
 
+> **Superseded in part by `ADR-022`.** The `/api/v1` half stands. The web half does not:
+> Auth.js's Credentials provider supports only JWT sessions, which cannot deliver the
+> immediate revocation this ADR promises below. Left unedited on purpose — a decision log
+> rewritten to match what happened later stops being evidence.
+
 **Context.** Web needs CSRF-safe server actions; mobile needs tokens.
 
 **Decision.** Both, over one identity (`12-authentication-authorization.md`). `companyId` is
@@ -586,3 +591,67 @@ segment name is the documentation; an exception inside it makes the name false.
 **Reverses if.** Anonymous drafts are dropped from V1 entirely. Then the wizard can move back
 under `(customer)` and the wall moves up the funnel — which is a product decision, not a
 routing one.
+
+---
+
+## ADR-022 — Server-side sessions for web, overriding `ADR-003`'s web half
+
+**This is the first ADR that overrides another.** `ADR-003` stands for `/api/v1`; its web
+half is withdrawn. The reasoning is recorded at length because a superseded decision that
+nobody can re-derive is worse than the original mistake.
+
+**Context.** Phase 4 is the first feature needing an authenticated *browser* session, and
+found there was none. The sign-in form validated credentials, rendered a tick, and discarded
+the tokens `loginAction` returned; nothing in the codebase ever wrote a session cookie, while
+`identify.ts` read one. Every authenticated test to date drove `/api/v1` with a Bearer token,
+so nothing caught it.
+
+That gap was a **deliberate Phase 1 deferral** — "Auth.js wiring deferred; no screen required
+it" — recorded in the progress log and *not* in §Open questions. The log is 130 KB; the
+question table is where deferrals stay visible. See `CLAUDE.md` §Definition of done, which now
+requires the table entry, and **Q23**.
+
+**The constraint that decided it.** Auth.js v5's Credentials provider supports **only the JWT
+session strategy**. Database sessions with credentials require manually creating rows inside
+the `jwt` callback — fighting the framework rather than using it.
+
+That makes `ADR-003` internally inconsistent. Its own stated consequence is *"membership
+revocation is immediate rather than token-expiry-delayed"*, and a stateless JWT cookie cannot
+deliver that. Nor can it deliver the rest of `12` §Sessions and revocation:
+
+| `12` requires | Stateless JWT cookie |
+|---|---|
+| list sessions with device and IP | nothing to list |
+| revoke one session | cannot; the token stays valid until it expires |
+| revoke all others on password change | same |
+| membership change effective on the next request | only after the token expires |
+
+`Session(id, sessionToken, userId, expires)` has been in migration 1 since Phase 0, unused.
+
+**Decision.** For web: a **server-side session row plus an opaque httpOnly cookie** carrying
+only its id. `/api/v1` keeps Bearer JWTs exactly as `ADR-003` specified — that half was never
+in question, and mobile genuinely wants stateless tokens.
+
+Auth.js is not added as a dependency. It was never installed; adding it to obtain a mechanism
+weaker than the one already modelled would be cost without benefit.
+
+**Why not keep `ADR-003` and accept JWT cookies for web.** Because `12` is the more concrete
+document, and the four rows above are not decoration — session revocation on password change
+is a security control, and "your other devices are signed out" is a promise the reset screen
+already makes. An architecture note cannot outrank a security requirement it cannot satisfy.
+
+**Consequences.**
+
+- Two session mechanisms, as before, but now genuinely different: opaque and revocable for
+  web, stateless for the API. The authorisation-matrix suite already covers both paths.
+- A database read per authenticated web request. The `Session` lookup is a single indexed
+  query on a unique column, which is the cost `12` §Sessions was written knowing.
+- CSRF: the cookie is `httpOnly`, `SameSite=Lax`, `Secure` outside development. Server actions
+  are same-origin by construction.
+- `ADR-003`'s title now reads as half-true. It is left in place with a pointer here rather
+  than edited, because rewriting a decision to match what happened later is how a decision log
+  stops being evidence.
+
+**Reverses if.** The session lookup ever shows up in a latency budget, at which point the
+answer is a cache in front of the row — not a stateless token, which would give the revocation
+problem back.

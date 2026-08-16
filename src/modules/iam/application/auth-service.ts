@@ -151,9 +151,35 @@ async function sendMail(to: string, body: { subject: string; text: string }): Pr
 }
 
 export type AuthTokens = {
+  /**
+   * Who signed in. Their own id, returned to them.
+   *
+   * Added in Phase 4 for `ADR-022`: `loginAction` opens a browser session row and needs the
+   * user it belongs to. Decoding the access token to recover it would mean the action
+   * verifying a token it had just minted, and a client needs to know who it is signed in as
+   * regardless.
+   */
+  userId: string
   accessToken: string
   refreshToken: string
   expiresIn: number
+}
+
+/**
+ * What signing in returns — tokens **plus a web session** (`ADR-022`).
+ *
+ * A separate type from `AuthTokens` because `refresh` returns that one and must **not** open a
+ * browser session: refresh is the API path, and a mobile client rotating its token has no
+ * cookie jar to put one in. Sharing the type would have made the session optional, and an
+ * optional session is one a caller forgets to set.
+ *
+ * The row is created in the service rather than in the server action because it is a domain
+ * fact, not a transport detail — and because `app/` may not reach a module's infrastructure.
+ * The action's only job is to put this value in a cookie: the service decides *that* a session
+ * exists, the action decides *what the browser is handed*.
+ */
+export type LoginResult = AuthTokens & {
+  webSession: { token: string; expires: Date }
 }
 
 export type RegisterResult = {
@@ -251,7 +277,7 @@ export const register = serviceMethod<RegisterInput, RegisterResult>(
  * Argon2 cost, and the endpoint becomes an account-enumeration oracle no matter how
  * identical the JSON is. `credentials.test.ts` measures both paths.
  */
-export const login = serviceMethod<LoginInput, AuthTokens>(
+export const login = serviceMethod<LoginInput, LoginResult>(
   'auth',
   'login',
   { kind: 'anonymous', why: 'exchanging credentials for the session that carries permissions' },
@@ -352,10 +378,14 @@ export const login = serviceMethod<LoginInput, AuthTokens>(
       },
     )
 
+    const { startWebSession } = await import('../infrastructure/web-session')
+
     return ok({
+      userId: user.id,
       accessToken: await issueAccessToken(user.id, user.globalRole),
       refreshToken: refresh.token,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+      webSession: await startWebSession(user.id),
     })
   },
 )
@@ -388,6 +418,7 @@ export const refresh = serviceMethod<RefreshInput, AuthTokens>(
     }
 
     return ok({
+      userId: user.id,
       accessToken: await issueAccessToken(user.id, user.globalRole),
       refreshToken: outcome.refresh.token,
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
@@ -398,6 +429,28 @@ export const refresh = serviceMethod<RefreshInput, AuthTokens>(
 export type LogoutResult = { revokedFamilies: number }
 
 /** Log out. `allDevices` kills every family; otherwise just the one presented. */
+/**
+ * Close one browser session — `ADR-022`.
+ *
+ * Separate from `logout` because they close different things: `logout` revokes an API
+ * refresh-token family, this deletes a `Session` row. A caller signing out of a browser has
+ * no refresh token to name, and a mobile client has no cookie.
+ *
+ * `authenticated` rather than `customer-owned`: the token itself is the credential, and the
+ * delete is scoped by it. Signing out twice is not an error.
+ */
+export const endWebSession = serviceMethod<{ sessionToken: string }, { signedOut: true }>(
+  'auth',
+  'endWebSession',
+  { kind: 'authenticated' },
+  async (actor, input) => {
+    void actor
+    const { endWebSession: end } = await import('../infrastructure/web-session')
+    await end(input.sessionToken)
+    return ok({ signedOut: true as const })
+  },
+)
+
 export const logout = serviceMethod<LogoutInput, LogoutResult>(
   'auth',
   'logout',
@@ -505,7 +558,22 @@ export const resetPassword = serviceMethod<ResetPasswordInput, ResetPasswordResu
       },
     })
 
-    const revokedSessions = await revokeAllFamilies(outcome.userId, 'password_reset')
+    /*
+     * Both kinds of session, or the promise is half kept.
+     *
+     * `revokeAllFamilies` kills the API refresh-token families. Until `ADR-022` that was every
+     * session there was; now a browser session is a `Session` row, and leaving those alive
+     * would mean the reset signed out the phone and left the intruder's browser logged in —
+     * which is the opposite of the reason people reset passwords.
+     */
+    const { endAllWebSessions } = await import('../infrastructure/web-session')
+
+    const [revokedFamilies, revokedWeb] = await Promise.all([
+      revokeAllFamilies(outcome.userId, 'password_reset'),
+      endAllWebSessions(outcome.userId),
+    ])
+
+    const revokedSessions = revokedFamilies + revokedWeb
 
     // Same reasoning as login: the reset arrives on an anonymous request, but the token came
     // out of this user's mailbox, so the actor is known by the time the row is written.

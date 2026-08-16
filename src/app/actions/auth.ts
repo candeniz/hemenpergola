@@ -4,6 +4,7 @@ import { actionResult, type ActionResult } from '@/shared/http/respond'
 
 import type {
   AuthTokens,
+  LoginResult,
   ConfirmPhoneVerificationResult,
   ListSessionsResult,
   RegisterResult,
@@ -83,13 +84,94 @@ export async function registerAction(input: unknown): Promise<ActionResult<Regis
   )
 }
 
+/**
+ * Sign in, and **open a browser session** — `ADR-022`.
+ *
+ * The cookie is written here rather than in the service because only a server action or a
+ * route handler may set one, and because `05` §Shape keeps services free of transport
+ * concerns: `login` decides whether the credentials are good, this decides what the browser
+ * is handed.
+ *
+ * Until Phase 4 this action returned tokens and the form threw them away, so signing in did
+ * nothing at all (Q23). The tokens are still returned — `/api/v1` and any future mobile
+ * client want them — but the browser now also leaves with a session.
+ */
 export async function loginAction(input: unknown): Promise<ActionResult<AuthTokens>> {
-  return run(
+  const outcome = await run(
     'loginSchema',
     async (actor, data) =>
       (await import('@/modules/iam/application/auth-service')).login(actor, data),
     input,
   )
+
+  if ('data' in outcome) {
+    const [{ cookies }, { env }] = await Promise.all([
+      import('next/headers'),
+      import('@/shared/config/env'),
+    ])
+
+    const { webSession } = outcome.data as unknown as LoginResult
+    const secure = env.APP_ENV !== 'local'
+
+    const jar = await cookies()
+    jar.set(secure ? SESSION_COOKIE : SESSION_COOKIE_DEV, webSession.token, {
+      httpOnly: true,
+      // Lax rather than Strict: the verification and reset links are top-level navigations
+      // from a mail client, and Strict would drop the session on arrival — signing the user
+      // out at the exact moment they followed our own link.
+      sameSite: 'lax',
+      secure,
+      path: '/',
+      expires: new Date(webSession.expires),
+    })
+  }
+
+  return outcome
+}
+
+/**
+ * The cookie names, duplicated here rather than imported.
+ *
+ * `app/` may not import a module's infrastructure, statically or dynamically — the layering
+ * rule this file's own lint config enforces. Two short string constants are a smaller price
+ * than an exemption, and `web-session.ts` carries the same pair with the reasoning.
+ *
+ * `__Host-` in production forbids a `Domain` attribute and requires `Secure` and `Path=/`, so
+ * a subdomain cannot set or overwrite it. Local development is plain HTTP, where the prefix
+ * would make the cookie unsettable.
+ */
+const SESSION_COOKIE = '__Host-pergola.session'
+const SESSION_COOKIE_DEV = 'pergola.session'
+
+/**
+ * Sign out — delete the row, then clear the cookie.
+ *
+ * That order matters. Clearing the cookie first would leave a live session row addressable by
+ * anyone who copied the value, and "sign out" would mean "forget locally".
+ */
+export async function logoutAction(): Promise<ActionResult<{ signedOut: true }>> {
+  const [{ cookies }, { env }, { ok }] = await Promise.all([
+    import('next/headers'),
+    import('@/shared/config/env'),
+    import('@/shared/result'),
+  ])
+
+  const secure = env.APP_ENV !== 'local'
+  const name = secure ? SESSION_COOKIE : SESSION_COOKIE_DEV
+
+  const jar = await cookies()
+  const token = jar.get(name)?.value
+
+  if (token !== undefined) {
+    // Through the application service, not the infrastructure — the row is closed by the
+    // module that owns it, and this action only manages the cookie.
+    const { endWebSession } = await import('@/modules/iam/application/auth-service')
+    await endWebSession(await actorFromHeaders(), { sessionToken: token })
+  }
+
+  jar.delete(name)
+
+  return actionResult(ok({ signedOut: true as const }))
 }
 
 export async function requestPasswordResetAction(
