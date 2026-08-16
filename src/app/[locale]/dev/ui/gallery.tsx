@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { EstimateBand } from '@/components/ui/estimate-band'
+import { WizardStepper } from '@/components/ui/wizard-stepper'
 import {
   Dialog,
   DialogContent,
@@ -423,6 +424,61 @@ export function UiGallery({ openOverlay = null }: { openOverlay?: OverlayName | 
         band would leave the `priceOnRequest` and incomplete variants unreviewed, and those
         are the two a customer is most likely to misread.
       */}
+      {/*
+        Every position the stepper can be in, not one snapshot. The component's real surface
+        is its states: a completed stage is a link, the current one carries `aria-current`, a
+        future one is inert — and the last of those is the easiest to get wrong while the
+        screenshot still looks right. Same lesson as the open overlays above.
+      */}
+      <Section title="WizardStepper">
+        <Item label="stage 1 of 3 — nothing done yet">
+          <WizardStepper
+            stages={[
+              { key: 'PRODUCT', labelKey: 'stage.PRODUCT', state: 'current' },
+              { key: 'SPECS', labelKey: 'stage.SPECS', state: 'upcoming' },
+              { key: 'REVIEW', labelKey: 'stage.REVIEW', state: 'upcoming' },
+            ]}
+          />
+        </Item>
+        <Item label="stage 2 of 3 — one behind, one ahead">
+          <WizardStepper
+            stages={[
+              { key: 'PRODUCT', labelKey: 'stage.PRODUCT', state: 'complete', href: '#product' },
+              { key: 'SPECS', labelKey: 'stage.SPECS', state: 'current' },
+              { key: 'REVIEW', labelKey: 'stage.REVIEW', state: 'upcoming' },
+            ]}
+          />
+        </Item>
+        <Item label="stage 3 of 3 — both behind are links">
+          <WizardStepper
+            stages={[
+              { key: 'PRODUCT', labelKey: 'stage.PRODUCT', state: 'complete', href: '#product' },
+              { key: 'SPECS', labelKey: 'stage.SPECS', state: 'complete', href: '#specs' },
+              { key: 'REVIEW', labelKey: 'stage.REVIEW', state: 'current' },
+            ]}
+          />
+        </Item>
+        <Item label="all complete — the state after validation passes">
+          <WizardStepper
+            stages={[
+              { key: 'PRODUCT', labelKey: 'stage.PRODUCT', state: 'complete', href: '#product' },
+              { key: 'SPECS', labelKey: 'stage.SPECS', state: 'complete', href: '#specs' },
+              { key: 'REVIEW', labelKey: 'stage.REVIEW', state: 'complete', href: '#review' },
+            ]}
+          />
+        </Item>
+        <Item label="complete but not navigable — no href">
+          {/* A completed stage without an href renders as text rather than a dead link. */}
+          <WizardStepper
+            stages={[
+              { key: 'PRODUCT', labelKey: 'stage.PRODUCT', state: 'complete' },
+              { key: 'SPECS', labelKey: 'stage.SPECS', state: 'current' },
+              { key: 'REVIEW', labelKey: 'stage.REVIEW', state: 'upcoming' },
+            ]}
+          />
+        </Item>
+      </Section>
+
       <Section title="EstimateBand">
         <Item label="band">
           <EstimateBand

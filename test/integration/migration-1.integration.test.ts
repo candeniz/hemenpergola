@@ -253,6 +253,10 @@ describe('migration scope', () => {
       'ProductOptionTranslation',
       'ProductTranslation',
       // Phase 1 · migration 2
+      // Phase 4 · migration 6 — the configurator
+      'Project',
+      'ProjectAttachment',
+      'ProjectAttributeValue',
       'RateLimitHit',
       'RefreshToken',
       // Phase 2 · migration 3
@@ -268,7 +272,6 @@ describe('migration scope', () => {
 
     // The project, pricing, matching, offer, messaging, review and content tables arrive
     // with their phases — their absence here is the assertion.
-    expect(tables).not.toContain('Project')
     expect(tables).not.toContain('OfferRequest')
     expect(tables).not.toContain('Review')
 
@@ -289,9 +292,19 @@ describe('migration scope', () => {
     expect(tables).toContain('PriceBookItem')
     expect(tables).toContain('PriceCalculation')
 
-    // Phase 4's project tables are the next boundary, and their absence is the assertion now.
-    expect(tables).not.toContain('ProjectAttributeValue')
+    /*
+     * Migration 6 is Phase 4's. `Project` is worth naming: `04` §Project's "exactly one of
+     * `customerId` / `anonymousKey`" is a CHECK constraint on it, which is the kind of thing
+     * that silently disappears if a migration is ever regenerated without its hand-written
+     * tail.
+     */
+    expect(tables).toContain('Project')
+    expect(tables).toContain('ProjectAttributeValue')
+    expect(tables).toContain('ProjectAttachment')
+
+    // Phase 5's matching tables are the next boundary, and their absence is the assertion now.
     expect(tables).not.toContain('MatchRun')
+    expect(tables).not.toContain('OfferRequestCompany')
   })
 })
 

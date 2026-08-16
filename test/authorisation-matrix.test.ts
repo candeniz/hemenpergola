@@ -377,6 +377,7 @@ describe('every service method has a matrix entry', () => {
       'matching.listDistricts',
       // Phase 4 · the configurator
       'catalog.listConfigurableProducts',
+      'catalog.getConfigurableProduct',
       'platform.dashboardCounts',
       'project.createProject',
       'project.getProject',
@@ -508,7 +509,7 @@ describe('every service method has a matrix entry', () => {
      * Named rather than pattern-matched: "anything called list* may be anonymous" would let
      * the next admin list slip out silently, which is the failure this whole test exists for.
      */
-    const PUBLIC_READ = new Set(['listConfigurableProducts'])
+    const PUBLIC_READ = new Set(['listConfigurableProducts', 'getConfigurableProduct'])
 
     const platformOwned = registeredMethods().filter(
       (meta) =>
@@ -535,9 +536,17 @@ describe('every service method has a matrix entry', () => {
       (meta) => meta.service === 'catalog' && PUBLIC_READ.has(meta.method),
     )
 
-    expect(publicRead).toHaveLength(1)
-    expect(publicRead[0]?.authorisation.kind).toBe('anonymous')
-    expect(publicRead.every((meta) => meta.method.startsWith('list'))).toBe(true)
+    expect(publicRead).toHaveLength(2)
+    expect(publicRead.every((meta) => meta.authorisation.kind === 'anonymous')).toBe(true)
+
+    /*
+     * Reads only. An anonymous method that could write would be the worst outcome of this
+     * exception, so the *shape of the name* is asserted too — `get*` and `list*` and nothing
+     * else. A `setConfigurableProduct` would fail here before anybody had to notice it.
+     */
+    expect(
+      publicRead.filter((meta) => !/^(get|list)/.test(meta.method)).map((meta) => meta.method),
+    ).toEqual([])
 
     // And the company-owned three are *not* admin, or a manufacturer cannot say what they
     // sell. Both directions, so neither list can quietly swallow the other.

@@ -117,6 +117,13 @@ jobs:
       # one, the parse has crept back into build time.
       - run: pnpm build
 
+      # Routes in `(public-owner)` carry one customer's personal data on a public path
+      # (ADR-021). Prerendering or revalidating one serves it to somebody else, and nothing
+      # cheaper catches it: `noindex` governs indexing, not caching, and a source-level check
+      # passes while a parent layout's `revalidate` overrides the intent. Reads the real
+      # build output, so it has to run here rather than in the unit stage.
+      - run: node scripts/check-dynamic-routes.mjs
+
   # ── Stage 5 + 6 · e2e and a11y ───────────────────────────────────────────────
   # One job: both drive the same production server, and starting it twice doubles the
   # slowest part of the pipeline for no signal.

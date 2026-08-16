@@ -696,3 +696,118 @@ export const listConfigurableProducts = serviceMethod<
     })
   },
 )
+
+export const getConfigurableProductSchema = z.object({
+  productId: z.string().min(1),
+  /**
+   * Option ids this project already references, which must render **even if deactivated**.
+   *
+   * Ids rather than a `projectId`, deliberately. This method is `anonymous`; accepting a
+   * project id would let anyone holding one learn which options it selected. The caller has
+   * already loaded the project through `getProject`, which enforces ownership in its `where`
+   * clause — so passing the ids grants no authority the caller did not already have.
+   */
+  includeOptionIds: z.array(z.string().min(1)).max(200).optional(),
+})
+export type GetConfigurableProductInput = z.infer<typeof getConfigurableProductSchema>
+
+/**
+ * The product as the **configurator** loads it — `10` §What V1 builds.
+ *
+ * `getProduct` above carries that description in its comment and is `admin`. That was written
+ * in Phase 2, before a configurator existed, and a public wizard calling it would have got
+ * `FORBIDDEN` and rendered **zero attributes** — a form with no questions, failing silently.
+ *
+ * ## Visibility is three-sided, not two
+ *
+ * The first version of this method returned active options only, which is wrong for the
+ * customer it exists to serve. `10` §Admin authoring: *"deactivating an option — hidden from
+ * new projects; existing `ProjectAttributeValue` rows keep referencing it and still render."*
+ * That is a **customer** rule, not an admin one.
+ *
+ * With active-only, a customer who left a draft half-finished comes back after an option was
+ * deactivated and their answer has vanished. If the attribute is required, readiness reports
+ * it unanswered and the customer cannot see what they failed to answer — silent, and it hits
+ * the customer who waited longest.
+ *
+ * So: **active options, plus the inactive ones this project already references.** Closed to
+ * new selection, visible and selected where already chosen. On `/proje/yeni` there is no
+ * project and active-only is correct; on `/proje/[id]` the read has to know the context.
+ */
+export const getConfigurableProduct = serviceMethod<
+  GetConfigurableProductInput,
+  { product: ProductDetail }
+>(
+  'catalog',
+  'getConfigurableProduct',
+  {
+    kind: 'anonymous',
+    why: 'ADR-021 makes the configurator public; it renders the active attributes of one active product',
+  },
+  async (actor, input) => {
+    void actor
+
+    const row = await prisma.product.findFirst({
+      where: { id: input.productId, isActive: true },
+      include: {
+        translations: true,
+        category: { include: { translations: true } },
+        attributes: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            translations: true,
+            options: {
+              // Active, plus whatever this project already chose — see the docstring.
+              where: {
+                OR: [{ isActive: true }, { id: { in: input.includeOptionIds ?? [] } }],
+              },
+              orderBy: { sortOrder: 'asc' },
+              include: { translations: true },
+            },
+          },
+        },
+      },
+    })
+
+    if (row === null) return err(notFound('Product'))
+
+    const labelsOf = (translations: { locale: Locale; label: string }[]) =>
+      Object.fromEntries(translations.map((t) => [t.locale, t.label])) as Record<Locale, string>
+
+    return ok({
+      product: {
+        id: row.id,
+        categoryId: row.categoryId,
+        basisType: row.basisType,
+        isActive: row.isActive,
+        sortOrder: row.sortOrder,
+        attributeCount: row.attributes.length,
+        translations: Object.fromEntries(
+          row.translations.map((t) => [t.locale, { slug: t.slug, name: t.name }]),
+        ) as Record<Locale, { slug: string; name: string }>,
+        attributes: row.attributes.map((attribute) => ({
+          id: attribute.id,
+          key: attribute.key,
+          inputType: attribute.inputType,
+          unit: attribute.unit,
+          min: attribute.min,
+          max: attribute.max,
+          step: attribute.step,
+          isRequired: attribute.isRequired,
+          affectsPrice: attribute.affectsPrice,
+          sortOrder: attribute.sortOrder,
+          showIfAttributeKey: attribute.showIfAttributeKey,
+          showIfValue: attribute.showIfValue,
+          labels: labelsOf(attribute.translations),
+          options: attribute.options.map((option) => ({
+            id: option.id,
+            value: option.value,
+            sortOrder: option.sortOrder,
+            isActive: option.isActive,
+            labels: labelsOf(option.translations),
+          })),
+        })),
+      },
+    })
+  },
+)

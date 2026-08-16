@@ -196,17 +196,31 @@ describe('a referenced option cannot be deleted', () => {
     if (!option.ok) throw new Error('createOption failed')
     const optionId = option.value.optionId
 
-    await getPrisma().$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "ProjectAttributeValue" (
-        "id" TEXT PRIMARY KEY,
-        "optionId" TEXT NOT NULL
-      )
-    `)
-    await getPrisma().$executeRawUnsafe(
-      `INSERT INTO "ProjectAttributeValue" ("id", "optionId") VALUES ($1, $2)`,
-      `pav_${optionId}`,
-      optionId,
-    )
+    /*
+     * A real project referencing the option.
+     *
+     * This used to fabricate a stub `ProjectAttributeValue` table with
+     * `CREATE TABLE IF NOT EXISTS` and drop it in a `finally` — a Phase 2 workaround from when
+     * the real table did not exist. Migration 6 created it, and the workaround turned
+     * destructive: the create became a no-op, the insert violated `projectId NOT NULL`, and
+     * the `DROP TABLE` removed the **real** table from a database now shared by every
+     * integration file. The visible symptom was unrelated seed tests failing.
+     *
+     * A stub for a table that is coming is a landmine with a date on it.
+     */
+    const category = await getPrisma().category.create({ data: { sortOrder: 900 } })
+    const product = await getPrisma().product.create({
+      data: { categoryId: category.id, basisType: 'AREA_M2' },
+    })
+    const customer = await getPrisma().user.create({
+      data: { email: `catalog-delete-${Date.now()}@example.com` },
+    })
+    const project = await getPrisma().project.create({
+      data: { customerId: customer.id, productId: product.id },
+    })
+    await getPrisma().projectAttributeValue.create({
+      data: { projectId: project.id, attributeId, optionId },
+    })
 
     try {
       const refused = await deleteOption(admin, { optionId })
@@ -230,7 +244,10 @@ describe('a referenced option cannot be deleted', () => {
       const attributeRefusal = await deleteAttribute(admin, { attributeId })
       expect(attributeRefusal.ok).toBe(false)
     } finally {
-      await getPrisma().$executeRawUnsafe(`DROP TABLE IF EXISTS "ProjectAttributeValue"`)
+      // Remove the rows this test made, never the table. The database is shared by every
+      // integration file since Phase 3's harness change.
+      await getPrisma().projectAttributeValue.deleteMany({ where: { projectId: project.id } })
+      await getPrisma().project.delete({ where: { id: project.id } })
     }
   }, 180_000)
 })

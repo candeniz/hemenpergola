@@ -33,6 +33,43 @@ declare module 'vitest' {
   }
 }
 
+/**
+ * Poll until the server actually accepts a connection.
+ *
+ * `container.start()` resolving is **not** the same as Postgres being ready. The official
+ * image runs a temporary server for `initdb`, which logs *"database system is ready to accept
+ * connections"*, shuts it down, and only then starts the real one — so a log-based wait can
+ * match the first occurrence and hand back a container whose port is not listening yet.
+ *
+ * The symptom is `P1001: Can't reach database server` from `migrate deploy`, which fails the
+ * **entire run** rather than one test, and does it intermittently. Two seconds of polling
+ * beats a retry loop around the migration, because a half-applied migration is worse than a
+ * slow start.
+ */
+async function waitUntilAcceptingConnections(connectionString: string): Promise<void> {
+  const { Client } = await import('pg')
+  const deadline = Date.now() + 60_000
+  let lastError: unknown = null
+
+  while (Date.now() < deadline) {
+    const client = new Client({ connectionString, connectionTimeoutMillis: 2_000 })
+    try {
+      await client.connect()
+      await client.query('SELECT 1')
+      await client.end()
+      return
+    } catch (error) {
+      lastError = error
+      await client.end().catch(() => {})
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
+  }
+
+  throw new Error(
+    `Postgres never accepted a connection at ${connectionString}: ${String(lastError)}`,
+  )
+}
+
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(IMAGE)
     .withDatabase('pergola_test')
@@ -43,6 +80,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
     .start()
 
   const databaseUrl = container.getConnectionUri()
+
+  await waitUntilAcceptingConnections(databaseUrl)
 
   /*
    * `migrate deploy`, not `db push` — the same command `23` §Migrations gives production, so a

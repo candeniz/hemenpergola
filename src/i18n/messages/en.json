@@ -523,11 +523,23 @@
     "uploadFailed": "Upload failed"
   },
   "wizard": {
+    "title": "Configure your project",
     "startTitle": "Describe your project",
     "startSubtitle": "Enter your dimensions and preferences, and we will show you manufacturers who work in your area with estimated price ranges. You can start without an account.",
     "chooseProduct": "Configure this",
     "noProducts": "There are no configurable products right now.",
     "progressLabel": "Wizard progress",
+    "saveDraft": "Save draft",
+    "next": "Continue",
+    "saved": "Saved.",
+    "ready": "Your project is ready for offers.",
+    "notReady": "A few things are missing — you can go back and complete them below.",
+    "checkReadiness": "Check whether it is ready",
+    "choose": "Select",
+    "noOptions": "This product has no additional options.",
+    "locationWhy": "We ask for the location to work out wind and snow load and the delivery distance. We do not share your address; manufacturers see only the province and district.",
+    "areaLive": "Area: {area} m²",
+    "areaLabel": "Area (m²)",
     "basis": {
       "AREA_M2": "Priced by square metre",
       "LENGTH_M": "Priced by metre",
@@ -542,6 +554,54 @@
       "complete": "completed",
       "current": "current step",
       "upcoming": "not yet reached"
+    },
+    "step": {
+      "category": "Category",
+      "product": "Product",
+      "dimensions": "Dimensions",
+      "projectType": "Project type",
+      "installationType": "Installation type",
+      "options": "Options",
+      "location": "Location",
+      "timing": "Timing",
+      "attachments": "Attachments and notes",
+      "summary": "Summary"
+    },
+    "field": {
+      "widthMm": "Width (mm)",
+      "depthMm": "Depth (mm)",
+      "heightMm": "Height (mm)",
+      "cityId": "Province",
+      "districtId": "District",
+      "note": "Anything else we should know"
+    },
+    "projectType": {
+      "NEW_BUILD": "New build",
+      "RENOVATION": "Renovation"
+    },
+    "installationType": {
+      "WALL_MOUNTED": "Wall-mounted",
+      "FREESTANDING": "Freestanding",
+      "ROOF": "Roof-mounted",
+      "OTHER": "Other"
+    },
+    "timing": {
+      "ASAP": "As soon as possible",
+      "M1_3": "Within 1–3 months",
+      "M3_6": "Within 3–6 months",
+      "PLANNING": "Still planning"
+    },
+    "issue": {
+      "product-missing": "No product selected",
+      "dimensions-missing": "Dimensions are missing",
+      "dimension-out-of-range": "One of the dimensions is outside the supported range",
+      "area-invalid": "The area is invalid or above the maximum",
+      "required-attribute-missing": "A required option has not been answered",
+      "location-missing": "No province and district selected",
+      "location-unresolvable": "The district you chose could not be located on the map",
+      "project-type-missing": "No project type selected",
+      "installation-type-missing": "No installation type selected",
+      "email-unverified": "Your email address is not verified"
     }
   }
 }

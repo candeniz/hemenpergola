@@ -87,6 +87,18 @@ export const SEED_ADMIN_PASSWORD = 'phase2-gate-admin-password'
 export const SEED_MANUFACTURER_EMAIL = 'owner@marmaracam.local'
 export const SEED_MANUFACTURER_PASSWORD = 'phase3-pilot-manufacturer-password'
 
+/**
+ * The customer sign-in for `e2e/core-flow.spec.ts` step 2.
+ *
+ * Phase 4's gate is *a **signed-in** customer walks the wizard to `READY`*. Anonymous drafts
+ * are task 4.5, in the second half — until then `createProject` refuses a caller with no
+ * identity, because `04` §Project's CHECK constraint would otherwise reject the row.
+ *
+ * Same reasoning as the other two constants: development and test databases only.
+ */
+export const SEED_CUSTOMER_EMAIL = 'musteri@pergola.local'
+export const SEED_CUSTOMER_PASSWORD = 'phase4-core-flow-customer-password'
+
 type CompanySpec = {
   id?: string
   slug: string
@@ -287,8 +299,31 @@ async function seedDemo(prisma: PrismaClient): Promise<SeedSummary> {
   }
 
   // A customer, so the marketplace has both sides.
-  await upsertUser(prisma, { email: 'musteri@pergola.local', fullName: 'Ayşe Demir' })
-  emails.add('musteri@pergola.local')
+  const customer = await upsertUser(prisma, {
+    email: SEED_CUSTOMER_EMAIL,
+    fullName: 'Ayşe Demir',
+  })
+  emails.add(SEED_CUSTOMER_EMAIL)
+
+  /*
+   * A password and a verified email, so the core-flow gate can sign in and so readiness can
+   * pass — `10` §Validation makes a verified email one of its rules, and a customer who
+   * cannot clear it can never reach `READY`.
+   */
+  {
+    const [{ hash }, { ARGON2_OPTIONS }] = await Promise.all([
+      import('@node-rs/argon2'),
+      import('@/modules/iam/domain/password'),
+    ])
+
+    await prisma.user.update({
+      where: { id: customer.id },
+      data: {
+        passwordHash: await hash(SEED_CUSTOMER_PASSWORD, ARGON2_OPTIONS),
+        emailVerifiedAt: new Date(),
+      },
+    })
+  }
 
   await prisma.company.update({
     where: { slug: 'karadeniz-yapi' },

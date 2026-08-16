@@ -523,11 +523,23 @@
     "uploadFailed": "Yükleme başarısız"
   },
   "wizard": {
+    "title": "Projenizi yapılandırın",
     "startTitle": "Projenizi tarif edin",
     "startSubtitle": "Ölçüleri ve tercihlerinizi girin; size bölgenizde çalışan üreticileri ve tahmini fiyat aralıklarını gösterelim. Hesap açmadan başlayabilirsiniz.",
     "chooseProduct": "Bunu yapılandır",
     "noProducts": "Şu anda yapılandırılabilir ürün yok.",
     "progressLabel": "Sihirbaz ilerlemesi",
+    "saveDraft": "Taslağı kaydet",
+    "next": "Devam",
+    "saved": "Kaydedildi.",
+    "ready": "Projeniz teklif almaya hazır.",
+    "notReady": "Birkaç eksik var — aşağıdan gidip tamamlayabilirsiniz.",
+    "checkReadiness": "Hazır mı, kontrol et",
+    "choose": "Seçiniz",
+    "noOptions": "Bu ürün için ek seçenek yok.",
+    "locationWhy": "Konumu, rüzgâr ve kar yükü hesabı ile nakliye mesafesi için soruyoruz. Adresinizi kimseyle paylaşmıyoruz; üreticiler yalnızca il ve ilçeyi görüyor.",
+    "areaLive": "Alan: {area} m²",
+    "areaLabel": "Alan (m²)",
     "basis": {
       "AREA_M2": "Metrekare üzerinden",
       "LENGTH_M": "Metre üzerinden",
@@ -542,6 +554,54 @@
       "complete": "tamamlandı",
       "current": "şu anki adım",
       "upcoming": "henüz gelmedi"
+    },
+    "step": {
+      "category": "Kategori",
+      "product": "Ürün",
+      "dimensions": "Ölçüler",
+      "projectType": "Proje tipi",
+      "installationType": "Montaj tipi",
+      "options": "Seçenekler",
+      "location": "Konum",
+      "timing": "Zamanlama",
+      "attachments": "Ekler ve not",
+      "summary": "Özet"
+    },
+    "field": {
+      "widthMm": "Genişlik (mm)",
+      "depthMm": "Derinlik (mm)",
+      "heightMm": "Yükseklik (mm)",
+      "cityId": "İl",
+      "districtId": "İlçe",
+      "note": "Eklemek istedikleriniz"
+    },
+    "projectType": {
+      "NEW_BUILD": "Yeni yapı",
+      "RENOVATION": "Yenileme"
+    },
+    "installationType": {
+      "WALL_MOUNTED": "Duvara montaj",
+      "FREESTANDING": "Ayaklı (bağımsız)",
+      "ROOF": "Çatıya montaj",
+      "OTHER": "Diğer"
+    },
+    "timing": {
+      "ASAP": "En kısa sürede",
+      "M1_3": "1–3 ay içinde",
+      "M3_6": "3–6 ay içinde",
+      "PLANNING": "Henüz planlama aşamasında"
+    },
+    "issue": {
+      "product-missing": "Ürün seçilmemiş",
+      "dimensions-missing": "Ölçüler eksik",
+      "dimension-out-of-range": "Ölçülerden biri desteklenen aralığın dışında",
+      "area-invalid": "Alan geçersiz ya da azami sınırın üzerinde",
+      "required-attribute-missing": "Zorunlu bir seçenek cevaplanmamış",
+      "location-missing": "İl ve ilçe seçilmemiş",
+      "location-unresolvable": "Seçtiğiniz ilçe haritada bulunamadı",
+      "project-type-missing": "Proje tipi seçilmemiş",
+      "installation-type-missing": "Montaj tipi seçilmemiş",
+      "email-unverified": "E-posta adresiniz doğrulanmamış"
     }
   }
 }

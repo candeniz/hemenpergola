@@ -102,13 +102,16 @@ for (const route of routes) {
 // Every route in the group must actually be in the build. One that is not means the path
 // moved and the check has been silently guarding nothing.
 if (existsSync(APP_PATH_MANIFEST)) {
-  const appPaths = Object.keys(JSON.parse(readFileSync(APP_PATH_MANIFEST, 'utf8')))
+  /*
+   * The **values**, not the keys. A key is the source path and still carries the route group
+   * — `/[locale]/(public-owner)/proje/yeni/page` — while the value is the URL Next serves,
+   * `/[locale]/proje/yeni`. Comparing against keys made this check report every route as
+   * missing, which it did on its first real run.
+   */
+  const served = new Set(Object.values(JSON.parse(readFileSync(APP_PATH_MANIFEST, 'utf8'))))
 
   for (const route of routes) {
-    const present = appPaths.some(
-      (path) => path === route || path.startsWith(`${route}/`) || path.endsWith(route),
-    )
-    if (!present) {
+    if (!served.has(route)) {
       failures.push(`${route} is in ${GROUP_DIR} but not in the build — did it move?`)
     }
   }

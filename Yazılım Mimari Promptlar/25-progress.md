@@ -45,7 +45,7 @@ proven — not when the code is written.
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
-| 4 | Project configurator | **🟡 in progress · 5/9** | a customer walks the wizard to READY and it survives a restart |
+| 4 | Project configurator | **🟡 in progress · 5/9** | a customer walks the wizard to READY and it survives a restart — first half proven, see 2026-08-17 |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
@@ -2064,6 +2064,137 @@ needed a second in Phase 3. Public reads are now named explicitly and asserted t
 **Regenerating a migration with a hand-written tail duplicates statements.** Reassembling
 migration 6 left a second `ProjectAttachment_fileId_fkey`; caught and removed, worth knowing.
 
+### 2026-08-17 — Phase 4 tasks 4.1, 4.2, 4.3, 4.4, 4.7 (commit `P4.1-4.4+4.7`)
+
+The configurator's first half. A signed-in customer walks the wizard, every step writes to the
+database, and closing the browser loses nothing — the release gate's step 2 asserts exactly
+that and now runs.
+
+The interim checkpoint entry above covers the first two thirds of this work; this closes it.
+
+#### The wizard
+
+`ADR-013`'s three stages over ten logical steps, with `STEP_STAGE` in `domain/steps.ts` as
+the single mapping — the stepper and the form both read it, so moving a step between stages is
+one edit. Per-step Zod schemas, every field optional, because a draft is allowed to be invalid
+and a customer must be able to leave the wizard without finishing it.
+
+Three things the screens show that V1 does not: option prices (per manufacturer, none chosen —
+`ADR-006`), attachments (4.6, second half) and the ten-step progress bar (`ADR-013`).
+
+**Area is derived and cannot be typed.** No step schema has an `areaM2` field, so there is no
+request shape that carries one; an integration test sends `areaM2: 999` alongside 5 m × 4 m and
+gets 20 back. `10` §Field specifics wanted this because a typed area disagreeing with the
+dimensions is a support ticket.
+
+#### Readiness, and the step every issue carries
+
+`POST /projects/{id}/validate` returns `{ ready, issues[] }` with each issue tagged with its
+step **and** stage, so the summary links straight to the offending field. `10` §Validation asks
+for it, and it is painful to retrofit — by the time the UI wants it the issues have been
+flattened into strings at six call sites.
+
+A hidden attribute is never required. Demanding an answer to a question that was never on
+screen is the most confusing failure a form can produce, and `isAttributeVisible` — placed
+beside `validateShowIf` so `showIf` has one home — is called by both the wizard and the
+readiness check. A unit test asserts they agree across five answer sets.
+
+#### Q18's single read point
+
+Bounds are global today; the schema cannot express a regional one. `dimensionBounds()` is the
+only place that decides, and it already takes a `BoundsContext` carrying the city and district
+that nothing reads — so a caller cannot forget to pass them when the pilot answers. A test
+asserts the context makes no difference *today*, which is the assumption stated as code.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **947 passed**, 24 files |
+| `pnpm test:integration` | **246 passed**, 18 files |
+| `pnpm test:e2e` | **39 passed, 18 skipped, 0 failed** |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `check-dynamic-routes` | OK — and **proven to fail** on a tampered manifest |
+| `pnpm lint`, `pnpm typecheck`, `pnpm format` | clean |
+| `prisma migrate diff --exit-code` | `No difference detected` |
+| `core-flow` steps 1–2 | un-skipped, both pass |
+| area derived | `areaM2: 999` in the payload is ignored; 5 m × 4 m → 20 |
+| `showIf` agreement | wizard and server never disagree across five answer sets |
+| terminal status | `SUBMITTED` unmoved and unmisreported; `CLOSED` not resurrected |
+| ownership | another customer's project → `NOT_FOUND` |
+| soft delete | deleted project absent from reads, present for `prismaUnfiltered` |
+| point resolution | no pin → district centroid + `DISTRICT`; pin → `EXACT` |
+| deactivated option | still renders and stays selected on the project that chose it; absent from a new one |
+| authorisation matrix | 86 methods, project methods assert `customer-owned` + both identities |
+
+#### Findings
+
+**`getProduct` was admin-only while its comment said "as the configurator would load it".**
+Written in Phase 2 before a configurator existed. A public wizard calling it would have got
+`FORBIDDEN` and rendered a form with **zero questions** — failing silently. Fixed with a
+separate `getConfigurableProduct` rather than a widened permission, because the visibility
+rule differs too.
+
+**And that visibility rule is three-sided, not two.** The first version returned active options
+only, which breaks the customer it exists for: `10` §Admin authoring says a deactivated option
+keeps rendering on projects that already reference it — a **customer** rule. Without it,
+somebody who left a draft half-finished returns to find their answer gone, and if the attribute
+is required, readiness reports a question they cannot see. It hits the customer who waited
+longest. Now: active options **plus** the inactive ones this project already chose, passed as
+ids by a caller that has already proved ownership.
+
+**The status bugs were one bug.** `Project.status` was written from two sites with two guards
+that had drifted: validating a `SUBMITTED` project reported `READY` while the database said
+otherwise, and validating a `CLOSED` one resurrected it. One transition function in
+`domain/status.ts` now, and `validate` returns the **persisted** status — reporting a computed
+one while the database holds another is a lie Phase 6 would read out of that field.
+
+**The route-cache check failed on itself first.** `app-path-routes-manifest.json` keys by
+source path, which still carries the route group; the value is the URL served. Comparing keys
+made it report every route missing. Wrong in the safe direction — a false failure is fixed in
+minutes, a false OK guards nothing forever.
+
+**A Phase 2 test was faking a table that Phase 4 then created — and dropping it.**
+`catalog.integration.test.ts` proved "an option referenced by a project cannot be deleted" by
+running `CREATE TABLE IF NOT EXISTS "ProjectAttributeValue"` with two columns, inserting a
+row, and `DROP TABLE`-ing it in a `finally`. Reasonable in Phase 2, when the real table did
+not exist.
+
+Migration 6 created it. The create became a no-op against the real table, the insert violated
+`projectId NOT NULL`, and the `finally` **dropped the real table** — out from under every
+other file, because Phase 3's harness change made the database shared. The visible symptom was
+six failures in unrelated *seed* tests, which is as far from the cause as it gets.
+
+Two lessons worth keeping. A stub for a table that is coming is a landmine with a date on it.
+And `DROP TABLE` in a test `finally` is never proportionate — the test now creates real rows
+and deletes rows.
+
+**The integration harness had a start-up race that aborted whole runs.**
+`container.start()` resolving is not the same as Postgres accepting connections: the official
+image runs a temporary server for `initdb` that logs *"ready to accept connections"*, stops it,
+then starts the real one. `migrate deploy` intermittently met `P1001` and failed the **entire
+run** rather than one test. `global-setup.ts` now polls a real connection before migrating —
+better than retrying the migration, because a half-applied migration is worse than a slow
+start.
+
+**`core-flow` step 1 could not be written as `03` §F1 draws it.** Homepage → product detail
+needs Phase 8 screens. It proves the half F1 depends on — a visitor with no account reaches a
+configurable product — and says so rather than pretending.
+
+#### Carried forward
+
+- **Anonymous drafts are 4.5**, so `createProject` still refuses a caller with no identity;
+  `04`'s CHECK constraint would reject the row. The ownership scoping already carries
+  `anonymousKey`, so 4.5 adds a cookie and a claim flow, not a reshaping.
+- **Attachments are 4.6.** `ProjectAttachment` ships in migration 6 and the step exists with
+  only its note field.
+- **The map picker is not built.** `10` makes it optional and the service accepts a pin; no
+  screen offers one, so every project resolves to `DISTRICT`.
+- **Q24** — the `(customer)` and `(manufacturer)` segments are not actually auth-gated.
+- **Q22** — proximity scoring precision, owned by Phase 5.
+- **`ServiceArea` still discards its `precision`**, so a radius comparison has one end that
+  knows its accuracy and one that does not. Phase 5's migration is where the column is cheap.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2089,6 +2220,8 @@ migration 6 left a second `ProjectAttachment_fileId_fkey`; caught and removed, w
 | Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
 | Q21 | `src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`? | nothing today; a second violation is one careless page away | Extend the rule and fix the page in the first Phase 4 commit that touches `app/`. |
 | Q22 | Is district-centroid precision good enough for the **proximity score**? `ADR-019` argues centroid precision is sufficient, and that argument is sound for containment — `ST_DWithin` is a boolean. `09` §Scoring gives proximity 25/100 as a *continuous* function of distance normalised over the radius, where a centroid-grade error moves the ranking rather than being rounded away. Also: `ServiceArea` computes a `precision` and discards it, so one end of the comparison cannot report its own accuracy. | Phase 5 ranking — wrong order is invisible and unfalsifiable from the outside | Score proximity in bands rather than continuously, and add `precision` to `ServiceArea` in Phase 5's migration. |
+| ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
+| Q24 | **The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong — a per-segment layout that resolves the actor and redirects, or is "every page is empty without data" the actual design and `07` the thing that is wrong? | nothing today; the risk is the first page that renders something before its service call | Add a `layout.tsx` per gated segment that resolves the actor and redirects to `/giris`, and make `07` say which mechanism enforces the gate. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

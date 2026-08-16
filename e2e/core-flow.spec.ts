@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 /**
  * THE RELEASE GATE.
@@ -20,15 +20,85 @@ import { test } from '@playwright/test'
  * Do not delete a step to make the suite green. Do not add a step that F1 does not have.
  */
 test.describe('F1 · core flow (release gate)', () => {
-  test.skip('1 · discover: a visitor reaches a product from the public homepage', async () => {
-    // Phase 8 gives this real catalogue content; Phase 4 can drive it with seed rows.
-    // Screens: outdoor_systems_public_homepage_final → product_detail_bioclimatic_pergola
+  test('1 · discover: a visitor reaches a configurable product without an account', async ({
+    page,
+  }) => {
+    /*
+     * Un-skipped in Phase 4.
+     *
+     * F1 draws this as homepage → product detail, and those two screens are Phase 8 — there is
+     * no `/urunler/[slug]` yet. What Phase 4 can prove is the half F1 actually depends on:
+     * **a visitor with no account reaches a product they can configure.** `ADR-021` is what
+     * makes that true, and it is the step that would otherwise be assumed rather than tested.
+     *
+     * Phase 8 widens the entry point to the homepage; the assertion below stays.
+     */
+    await page.goto('/proje/yeni')
+
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    const configure = page.getByRole('button', { name: /yapılandır|configure/i }).first()
+    await expect(configure, 'a visitor is offered at least one configurable product').toBeVisible()
   })
 
-  test.skip('2 · configure: the wizard produces a READY project and survives a reload', async () => {
-    // Phase 4. Three visible stages, ten logical steps (ADR-013); each step persists, so
-    // the reload assertion is the one that proves state lives in the database.
-    // Screens: create_project_wizard_refined_style, dimensions_area_step_2, …_step_10
+  test('2 · configure: the wizard produces a READY project and survives a reload', async ({
+    page,
+  }) => {
+    /*
+     * Un-skipped in Phase 4. Three visible stages, ten logical steps (`ADR-013`).
+     *
+     * **The reload is the point.** Each step persists through `PATCH /projects/{id}`, so state
+     * lives in the database rather than a client store (`07` §Forms) — reloading mid-wizard
+     * and finding the values still there is what proves it, and it is the half of the phase
+     * gate that a client-state implementation would fail.
+     */
+    /*
+     * Signed in, because Phase 4's gate is *a signed-in customer walks the wizard*. Anonymous
+     * drafts are task 4.5: until then `createProject` refuses a caller with no identity, since
+     * `04` §Project's CHECK constraint requires exactly one owner. Step 1 above already proves
+     * the *page* is reachable without an account, which is `ADR-021`'s claim.
+     */
+    await page.goto('/giris')
+    // The same locators `account.spec.ts` already proves against this form.
+    await page.getByLabel('E-posta').fill('musteri@pergola.local')
+    await page.getByLabel('Şifre').fill('phase4-core-flow-customer-password')
+    await page.getByRole('button', { name: 'Giriş yap' }).click()
+
+    // Wait for the navigation the form performs once a session exists (`ADR-022`). Asserting
+    // the error text is absent would pass without a session at all — that is exactly how Q23
+    // survived three phases.
+    await page.waitForURL(/\/hesap/, { timeout: 30_000 })
+
+    await page.goto('/proje/yeni')
+    await page
+      .getByRole('button', { name: /yapılandır|configure/i })
+      .first()
+      .click()
+
+    // `(?!yeni)`: the entry point itself matches `/proje/<something>`, so without the
+    // lookahead this resolves before the redirect and captures the wrong URL.
+    await page.waitForURL(/\/proje\/(?!yeni)[^/]+$/)
+    const url = page.url()
+
+    // Dimensions, then leave the step so it is written.
+    await page.getByLabel(/genişlik|width/i).fill('5000')
+    await page.getByLabel(/derinlik|depth/i).fill('4000')
+    await page.getByLabel(/yükseklik|height/i).fill('2800')
+    await page
+      .getByRole('button', { name: /kaydet|save/i })
+      .first()
+      .click()
+
+    // The area is derived and shown live; the customer never types it (`10` §Field specifics).
+    await expect(page.getByText(/20/)).toBeVisible()
+
+    // ── the assertion this step exists for ────────────────────────────────────
+    await page.reload()
+    await expect(
+      page.getByLabel(/genişlik|width/i),
+      'the wizard survives a reload because the state is in the database',
+    ).toHaveValue('5000')
+    expect(page.url()).toBe(url)
   })
 
   test.skip('3 · request offers: matching and pricing return ranked, priced manufacturers', async () => {
