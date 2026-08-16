@@ -18,13 +18,62 @@ const ROUTES = [
   { path: '/yonetim', name: 'admin shell' },
   { path: '/dev/tokens', name: 'token sheet' },
   { path: '/dev/ui', name: 'UI gallery' },
+  { path: '/yonetim/katalog', name: 'admin catalogue' },
+  { path: '/yonetim/ayarlar', name: 'platform settings' },
+
+  /*
+   * The overlays, **open**.
+   *
+   * Until Phase 2 this suite scanned the gallery with every overlay closed, which scans the
+   * triggers. `ui/dialog.tsx` shipped `max-w-lg` in Phase 0 — 48 pixels in this theme — and
+   * neither the gallery nor this file noticed, because neither ever opened one.
+   *
+   * One overlay per page load: two open scrims stack, and axe would then report the
+   * stacking instead of the component.
+   */
+  { path: '/dev/ui?overlay=dialog', name: 'dialog, open', expect: 'dialog' },
+  { path: '/dev/ui?overlay=sheet', name: 'sheet, open', expect: 'dialog' },
+  { path: '/dev/ui?overlay=dropdown', name: 'dropdown, open', expect: 'menu' },
+  { path: '/dev/ui?overlay=tooltip', name: 'tooltip, open', expect: 'tooltip' },
+  { path: '/dev/ui?overlay=select', name: 'select, open', expect: 'listbox' },
+  { path: '/dev/ui?overlay=toast', name: 'toast, visible', expect: 'status' },
 ] as const
 
 for (const route of ROUTES) {
   test(`${route.name} (${route.path}) has no WCAG 2 A/AA violations`, async ({ page }) => {
     await page.goto(route.path)
 
-    const results = await new AxeBuilder({ page })
+    const overlayRole = 'expect' in route ? route.expect : null
+
+    if (overlayRole !== null) {
+      /*
+       * Wait for the overlay, and **assert it is there**. Radix portals on the next frame
+       * and sonner dispatches from an effect, so a scan that did not wait would scan an
+       * empty portal and pass — a green run measuring nothing, which is worse than the bug
+       * it was added to catch.
+       */
+      await expect(page.getByRole(overlayRole).first()).toBeVisible({ timeout: 10_000 })
+    }
+
+    const builder = new AxeBuilder({ page })
+
+    if (overlayRole !== null) {
+      /*
+       * Scan the overlay, not the page underneath it.
+       *
+       * Radix's `DropdownMenu` and `Select` are modal: opening one puts `aria-hidden` on
+       * everything else, and axe then reports `aria-hidden-focus` once per focusable thing
+       * in the hidden subtree — nineteen of them on a gallery page that deliberately renders
+       * every primitive at once. That is a fact about *this page having forty widgets on
+       * it*, not about the menu, and `/dev/ui` with no overlay is already scanned above with
+       * nothing excluded.
+       *
+       * Overlays portal to `body`, so excluding `main` leaves exactly the open component.
+       */
+      builder.exclude('main')
+    }
+
+    const results = await builder
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       /*
        * The colour swatches on /dev/tokens are the only excluded elements in the suite, and

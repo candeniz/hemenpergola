@@ -27,6 +27,12 @@ export type AuditAction =
   | 'member_joined'
   | 'member_role_changed'
   | 'member_removed'
+  // Phase 2 · admin writes (`17-admin-system.md`: every write produces an entry)
+  | 'catalog_created'
+  | 'catalog_updated'
+  | 'catalog_deleted'
+  | 'catalog_deactivated'
+  | 'setting_changed'
 
 export type AuditEntry = {
   action: AuditAction

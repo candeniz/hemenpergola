@@ -52,3 +52,19 @@ export function can(actor: ActorContext, permission: Permission): boolean {
   if (actor.companyRole === null || actor.companyStatus === null) return false
   return companyMemberCan(actor.companyRole, actor.companyStatus, permission)
 }
+
+/**
+ * The platform-admin check, for `{ kind: 'admin' }` service methods.
+ *
+ * A separate function rather than a `Permission`, because the company permission catalogue
+ * is company-scoped by construction — every key is `company:*` and every check runs through
+ * `role ∩ status` against a membership. A platform admin has no membership in the company
+ * whose catalogue they are editing, and inventing a synthetic one to reuse `authorize()`
+ * would put a fake row in the model that the audit log would then have to explain.
+ *
+ * `FORBIDDEN`, never `NOT_FOUND`: `/yonetim/*` is not a secret, it is simply not for
+ * everyone (`17-admin-system.md`).
+ */
+export function requireAdmin(actor: ActorContext): Result<void, DomainError> {
+  return actor.globalRole === 'ADMIN' ? ok(undefined) : err(forbidden('admin'))
+}

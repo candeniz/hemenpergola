@@ -24,16 +24,16 @@ Always: `00-project-overview.md` on a first visit, `25-progress.md` before start
 
 ## State of the repository
 
-**Phases 0 and 1 are built and their gates are proven** (2026-08-16). The foundation, the
-design system, the four shells, and `modules/iam` — accounts, credentials, tokens, the
-authorisation matrix, companies and memberships, audit and rate limits — are in place, with a
-registration → verification → sign-in → reset flow that completes end to end against a
-production build.
+**Phases 0 and 1 are built and their gates are proven, and Phase 2 is half done**
+(2026-08-16). The foundation, the design system, the four shells, `modules/iam` — accounts,
+credentials, tokens, the authorisation matrix, companies and memberships, audit and rate
+limits — and `modules/catalog`, the admin catalogue CRUD and the `PlatformSetting` surface.
 
-**Phase 2 (catalogue + admin skeleton) is next**: `21-development-roadmap.md` for its scope
-and gate, `26-execution-plan.md` §Phase 2 for the ordered tasks and the evidence each one
-needs. Read `25-progress.md` first — it is the only place that says what is actually done, and
-its §Open questions is where the things nobody has decided yet are written down.
+**Phase 2 tasks 2.3, 2.4 and 2.5 are next**: the real catalogue content, the manufacturer
+verification queue and the audit viewer. `26-execution-plan.md` §Phase 2 for the ordered
+tasks and the evidence each one needs. Read `25-progress.md` first — it is the only place that
+says what is actually done, and its §Open questions is where the things nobody has decided yet
+are written down.
 
 `modules/iam/` is the template every later module copies: `domain/` pure, `application/`
 framework-agnostic and returning `Result`, `infrastructure/` for Prisma and adapters, and

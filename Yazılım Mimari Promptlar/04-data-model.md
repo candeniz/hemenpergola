@@ -27,6 +27,13 @@ migration.
   | `City.name` | `COLLATE "tr-TR-x-icu"` |
   | `District.name` | `COLLATE "tr-TR-x-icu"` |
   | `Company.displayName` | `COLLATE "tr-TR-x-icu"` |
+  | `CategoryTranslation.name` | `COLLATE "tr-TR-x-icu"` |
+  | `ProductTranslation.name` | `COLLATE "tr-TR-x-icu"` |
+  | `ProductOptionTranslation.label` | `COLLATE "tr-TR-x-icu"` |
+
+  Slugs are **not** in this list, deliberately. A slug is an identifier that must compare
+  exactly and sort stably; it stays on the cluster's C collation for the same reason emails
+  and tokens do.
 
   Why not a `tr_TR` cluster: in Turkish collation `I` lower-cases to `ı`, not `i`. A
   cluster-wide Turkish locale would therefore make `USER@X.COM` and `user@x.com` compare as
@@ -82,21 +89,39 @@ CompanyContact(id, companyId, phone, email, website, addressLine, cityId, distri
 ## Catalogue (rows, not enums)
 
 ```
-Category(id, parentId?, slug unique, sortOrder, isActive, seoId)
-CategoryTranslation(categoryId, locale, name, description)     pk(categoryId, locale)
-Product(id, categoryId, slug unique, sortOrder, isActive, basisType: AREA_M2|LENGTH_M|UNIT, seoId)
-ProductTranslation(productId, locale, name, shortDescription, description)
+Category(id, parentId?, sortOrder, isActive, seoId)
+CategoryTranslation(categoryId, locale, slug, name, description)   pk(categoryId, locale)
+                                                                   unique(locale, slug)
+Product(id, categoryId, sortOrder, isActive, basisType: AREA_M2|LENGTH_M|UNIT, seoId)
+ProductTranslation(productId, locale, slug, name, shortDescription, description)
+                                                                   pk(productId, locale)
+                                                                   unique(locale, slug)
 ProductAttribute(id, productId, key, inputType: NUMBER|SELECT|MULTISELECT|BOOL|TEXT,
-                 unit?, min?, max?, step?, isRequired, affectsPrice, sortOrder)
+                 unit?, min?, max?, step?, isRequired, affectsPrice, sortOrder,
+                 showIfAttributeKey?, showIfValue?)               unique(productId, key)
 ProductAttributeTranslation(attributeId, locale, label, helpText)
-ProductOption(id, attributeId, value, sortOrder, isActive)
+ProductOption(id, attributeId, value, sortOrder, isActive)        unique(attributeId, value)
 ProductOptionTranslation(optionId, locale, label)
 CompanyProduct(id, companyId, productId, isActive)             unique(companyId, productId)
 CompanyProductOption(id, companyProductId, optionId, isOffered)
 ```
 
+**The slug is per locale and lives on the translation row** (`ADR-017`). An earlier version of
+this section put a single `slug unique` on `Category` and `Product`, which contradicted
+`07-frontend-architecture.md` §Route map — *"`en` uses its own slug set"* — and would have
+put a Turkish word in every English canonical URL. Uniqueness is `(locale, slug)`, so a
+lookup without a locale is not a lookup.
+
+`showIfAttributeKey` + `showIfValue` are the single level of conditionality V1 has
+(`10-project-configurator.md` §What V1 builds, `ADR-008` as amended). They were missing from
+this list; without them the only way to express a dependent field is the rules engine
+`ADR-008` declines to build.
+
 `ProductAttribute` + `ProductOption` are what the V1 configurator renders (`ADR-008`).
 `ConfiguratorQuestion` / `ConfiguratorRule` are not in V1 — see §Deferred.
+
+`CompanyProduct` / `CompanyProductOption` are the manufacturer's offer, and they arrive with
+**Phase 3**, not with the catalogue. Migration 3 stops at `Seo`.
 
 ## Project
 

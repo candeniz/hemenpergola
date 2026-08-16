@@ -201,6 +201,9 @@ describe('migration scope', () => {
       'AuditLog',
       // Phase 1 · migration 2
       'AuthToken',
+      // Phase 2 · migration 3
+      'Category',
+      'CategoryTranslation',
       'City',
       'Company',
       'CompanyContact',
@@ -215,9 +218,18 @@ describe('migration scope', () => {
       'Payment',
       'Plan',
       'PlatformSetting',
+      // Phase 2 · migration 3
+      'Product',
+      'ProductAttribute',
+      'ProductAttributeTranslation',
+      'ProductOption',
+      'ProductOptionTranslation',
+      'ProductTranslation',
       // Phase 1 · migration 2
       'RateLimitHit',
       'RefreshToken',
+      // Phase 2 · migration 3
+      'Seo',
       'Session',
       'Subscription',
       'User',
@@ -225,11 +237,100 @@ describe('migration scope', () => {
       'spatial_ref_sys',
     ])
 
-    // The catalogue, project, pricing, matching, offer, messaging, review and content
-    // tables arrive with their phases — their absence here is the assertion.
-    expect(tables).not.toContain('Product')
+    // The project, pricing, matching, offer, messaging, review and content tables arrive
+    // with their phases — their absence here is the assertion.
     expect(tables).not.toContain('Project')
     expect(tables).not.toContain('PriceBook')
     expect(tables).not.toContain('OfferRequest')
+
+    /*
+     * `CompanyProduct` and `CompanyProductOption` are in `04` §Catalogue but **not** in
+     * migration 3. They are the manufacturer's offer over the catalogue, and they belong to
+     * Phase 3 — the boundary between "what the platform sells" and "who sells it" is the
+     * whole reason task 2.1 stops where it does.
+     */
+    expect(tables).not.toContain('CompanyProduct')
+    expect(tables).not.toContain('CompanyProductOption')
+  })
+})
+
+/**
+ * Migration 3's hand-written half — the collations Prisma cannot express
+ * (`04-data-model.md` §Conventions).
+ */
+describe('migration 3 · catalogue collation and per-locale slugs', () => {
+  it.each([
+    ['CategoryTranslation', 'name'],
+    ['ProductTranslation', 'name'],
+    ['ProductOptionTranslation', 'label'],
+  ])('gives %s.%s the Turkish collation', async (table, column) => {
+    const rows = await getPrisma().$queryRaw<{ collation: string | null }[]>`
+      SELECT co.collname AS collation
+      FROM pg_attribute a
+      JOIN pg_class c ON c.oid = a.attrelid
+      LEFT JOIN pg_collation co ON co.oid = a.attcollation
+      WHERE c.relname = ${table} AND a.attname = ${column}
+    `
+    expect(rows[0]?.collation).toBe('tr-TR-x-icu')
+  })
+
+  it.each([
+    ['CategoryTranslation', 'slug'],
+    ['ProductTranslation', 'slug'],
+  ])('leaves %s.%s on the cluster collation', async (table, column) => {
+    /*
+     * Slugs are identifiers. They must compare exactly and sort stably, and a Turkish
+     * collation would make `İ`/`ı` comparisons locale-dependent inside a uniqueness index —
+     * the same reason `04` §Conventions keeps emails and tokens on C.
+     */
+    const rows = await getPrisma().$queryRaw<{ collation: string | null }[]>`
+      SELECT co.collname AS collation
+      FROM pg_attribute a
+      JOIN pg_class c ON c.oid = a.attrelid
+      LEFT JOIN pg_collation co ON co.oid = a.attcollation
+      WHERE c.relname = ${table} AND a.attname = ${column}
+    `
+    expect(rows[0]?.collation).not.toBe('tr-TR-x-icu')
+  })
+
+  it('makes the slug unique per locale, not globally (ADR-017)', async () => {
+    // The contradiction this migration settled: `04` said one slug per entity, `07` said
+    // `en` has its own set. The index is what makes `07` true.
+    const rows = await getPrisma().$queryRaw<{ indexdef: string }[]>`
+      SELECT indexdef FROM pg_indexes
+      WHERE tablename = 'ProductTranslation' AND indexdef LIKE '%UNIQUE%'
+    `
+    const perLocale = rows.filter(
+      (row) => row.indexdef.includes('locale') && row.indexdef.includes('slug'),
+    )
+
+    expect(perLocale.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('accepts the same slug in two locales and refuses it twice in one', async () => {
+    await withRollback(async (tx) => {
+      const category = await tx.category.create({ data: {} })
+      const product = await tx.product.create({
+        data: { categoryId: category.id, basisType: 'UNIT' },
+      })
+
+      // One word, both locales — "pergola" is the same in Turkish and English, and nothing
+      // should stop it being the slug in each.
+      await tx.productTranslation.create({
+        data: { productId: product.id, locale: 'tr', slug: 'pergola', name: 'Pergola' },
+      })
+      await tx.productTranslation.create({
+        data: { productId: product.id, locale: 'en', slug: 'pergola', name: 'Pergola' },
+      })
+
+      const other = await tx.product.create({
+        data: { categoryId: category.id, basisType: 'UNIT' },
+      })
+      await expect(
+        tx.productTranslation.create({
+          data: { productId: other.id, locale: 'tr', slug: 'pergola', name: 'Pergola 2' },
+        }),
+      ).rejects.toThrow()
+    })
   })
 })

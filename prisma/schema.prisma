@@ -330,6 +330,7 @@ model File {
 
   uploader         User?             @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
   companyDocuments CompanyDocument[]
+  seoOgImages      Seo[]
 
   @@index([ownerType, ownerId])
   @@index([uploadedBy])
@@ -546,12 +547,10 @@ model RefreshToken {
 
 /**
  * Rate-limit counters — `06-api-specification.md` §Rate limits.
- *
  * In Postgres, not in memory, and that is the only choice available: `23` runs the web tier
  * as *N* stateless instances behind a load balancer, so a per-process counter would give an
  * attacker N times the limit and would reset on every deploy. `05` §Jobs rules out Redis for
  * V1, which leaves the database that is already there.
- *
  * One row per (bucket, window). The window start is truncated, so the row is found by an
  * upsert with no read-modify-write and no lock held across a round trip.
  */
@@ -563,4 +562,219 @@ model RateLimitHit {
 
   @@id([bucket, windowStart])
   @@index([windowStart])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Catalogue — migration 3, Phase 2 (`ADR-014`: one migration per phase)
+//
+// `04-data-model.md` §Catalogue. Categories, products, attributes and options are
+// **rows, not enums** (`CAT-01`), because `CAT-03` requires an admin to add a product
+// and its options with no deployment. An enum would make every new product a migration.
+//
+// `CompanyProduct` / `CompanyProductOption` are deliberately absent: they are the
+// manufacturer's offer over this catalogue and they arrive in Phase 3. The boundary is
+// the point — this migration says what the platform sells, not who sells it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// How a product is measured, which decides what the configurator asks for and what the
+/// price book multiplies (`08-pricing-engine.md`).
+enum ProductBasis {
+  AREA_M2
+  LENGTH_M
+  UNIT
+}
+
+enum AttributeInputType {
+  NUMBER
+  SELECT
+  MULTISELECT
+  BOOL
+  TEXT
+}
+
+/**
+ * SEO metadata, attached to anything with a public URL (`18-cms-seo.md`).
+ * A separate table rather than columns on each entity: the same six fields hang off
+ * categories, products and CMS pages, and `18` treats them as one editable object in
+ * `super_admin_cms_seo_management`.
+ */
+model Seo {
+  id              String   @id @default(cuid())
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+  ogImageId       String?
+  noIndex         Boolean  @default(false)
+  jsonLd          Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ogImage    File?      @relation(fields: [ogImageId], references: [id], onDelete: SetNull)
+  categories Category[]
+  products   Product[]
+
+  @@index([ogImageId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  parentId  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  seoId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent       Category?             @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     Category[]            @relation("CategoryTree")
+  seo          Seo?                  @relation(fields: [seoId], references: [id], onDelete: SetNull)
+  translations CategoryTranslation[]
+  products     Product[]
+
+  @@index([parentId, sortOrder])
+  @@index([isActive])
+  @@index([seoId])
+}
+
+/**
+ * The slug lives here, not on `Category` (`ADR-017`).
+ * `07` §Route map: Turkish slugs are the canonical public URLs and `en` has its own set.
+ * One slug per entity would put a Turkish word in every English canonical URL, which is
+ * the thing `18-cms-seo.md` exists to prevent. Uniqueness is `(locale, slug)`, so a lookup
+ * without a locale is not a lookup.
+ */
+model CategoryTranslation {
+  categoryId  String
+  locale      Locale
+  slug        String
+  name        String
+  description String?
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, locale])
+  @@unique([locale, slug])
+  @@index([slug])
+}
+
+model Product {
+  id         String       @id @default(cuid())
+  categoryId String
+  basisType  ProductBasis
+  sortOrder  Int          @default(0)
+  isActive   Boolean      @default(true)
+  seoId      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  category     Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  seo          Seo?                 @relation(fields: [seoId], references: [id], onDelete: SetNull)
+  translations ProductTranslation[]
+  attributes   ProductAttribute[]
+
+  @@index([categoryId, sortOrder])
+  @@index([isActive])
+  @@index([seoId])
+}
+
+model ProductTranslation {
+  productId        String
+  locale           Locale
+  slug             String
+  name             String
+  shortDescription String?
+  description      String?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, locale])
+  @@unique([locale, slug])
+  @@index([slug])
+}
+
+/**
+ * One field in the configurator form (`10-project-configurator.md` §What V1 builds).
+ * `showIfAttributeKey` + `showIfValue` are the **only** conditionality V1 has: one level,
+ * no chaining, evaluated from the same rows on the client and the server. `ADR-008` declines
+ * to build a rules engine and these two columns are what makes that affordable — without
+ * them, "show the motor brand only when motorised is true" has no expression at all.
+ * `04` §Catalogue omitted them; see the amendment on `ADR-008`.
+ */
+model ProductAttribute {
+  id           String             @id @default(cuid())
+  productId    String
+  /// Stable machine key, referenced by `showIfAttributeKey` and by price books. Not
+  /// translated, not shown to anyone.
+  key          String
+  inputType    AttributeInputType
+  unit         String?
+  min          Int?
+  max          Int?
+  step         Int?
+  isRequired   Boolean            @default(false)
+  /// Whether a change here can move the price. Drives which fields invalidate an estimate.
+  affectsPrice Boolean            @default(false)
+  sortOrder    Int                @default(0)
+
+  /// One level of conditionality, by sibling `key` rather than by id: an attribute is
+  /// authored before the one it depends on has an id, and a key is what an admin types.
+  showIfAttributeKey String?
+  showIfValue        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product      Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  translations ProductAttributeTranslation[]
+  options      ProductOption[]
+
+  @@unique([productId, key])
+  @@index([productId, sortOrder])
+}
+
+model ProductAttributeTranslation {
+  attributeId String
+  locale      Locale
+  label       String
+  helpText    String?
+
+  attribute ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@id([attributeId, locale])
+}
+
+/**
+ * A choice within a `SELECT` / `MULTISELECT` attribute.
+ * **Never deleted once referenced — deactivated** (`10` §Admin authoring). A
+ * `ProjectAttributeValue` from six months ago still points at it, and a
+ * `PriceCalculation.breakdown` still names it; history has to stay readable. `onDelete:
+ * Restrict` on those relations arrives with their phases, and `catalog-service` refuses the
+ * delete today so the rule is enforced before there is anything to lose.
+ */
+model ProductOption {
+  id          String   @id @default(cuid())
+  attributeId String
+  /// The stored value, e.g. `motorised`. Machine-readable; the label is translated.
+  value       String
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attribute    ProductAttribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  translations ProductOptionTranslation[]
+
+  @@unique([attributeId, value])
+  @@index([attributeId, sortOrder])
+  @@index([isActive])
+}
+
+model ProductOptionTranslation {
+  optionId String
+  locale   Locale
+  label    String
+
+  option ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([optionId, locale])
 }

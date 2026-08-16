@@ -39,11 +39,27 @@ need an event handler or browser API, it stays a Server Component.
 | `/ureticiler` | `company_comparison_architectural_systems` (directory) |
 | `/ureticiler/[slug]` | `manufacturer_profile_architectural_systems` |
 | `/nasil-calisir`, `/hakkimizda`, `/iletisim`, `/fiyat-rehberi/[slug]` | CMS (`18-cms-seo.md`) |
-| `/giris`, `/kayit`, `/sifremi-unuttum` | `login_outdoor_systems`, `register_outdoor_systems`, `forgot_password_outdoor_systems` |
-| `/dogrulama/email`, `/dogrulama/telefon` | `email_verification_outdoor_systems`, `phone_verification_outdoor_systems` |
+| `/giris`, `/kayit`, `/sifre-sifirla` | `login_outdoor_systems`, `register_outdoor_systems`, `forgot_password_outdoor_systems` |
+| `/sifre-yenile?token=` | the reset-completion step; no Stitch screen, composed from the same card |
+| `/eposta-dogrula?token=`, `/telefon-dogrula` | `email_verification_outdoor_systems`, `phone_verification_outdoor_systems` |
+| `/yetkisiz` | `access_denied_permission_required` as a landable route — see §System states |
 
 Turkish slugs are the canonical public URLs; `en` uses its own slug set. Slug per locale is
-stored on the entity, not translated at runtime.
+stored, not translated at runtime — on the translation row, with uniqueness per
+`(locale, slug)` (`ADR-017`, which resolves this against `04` §Catalogue).
+
+**Locale is decided by the path, never by the browser** (`ADR-018`). `localeDetection` is
+off: `/` and every unprefixed route is Turkish for everybody, and `en` is an explicit choice
+that the `NEXT_LOCALE` cookie then remembers. next-intl negotiates on `Accept-Language` by
+default, which sent every English-configured browser — common in this audience — to the
+English site from a Turkish URL, and made an unprefixed path mean two different pages to two
+different crawlers.
+
+The four auth routes above are the ones Phase 1 built. Two differ from this table's first
+draft (`/sifre-sifirla` rather than `/sifremi-unuttum`; flat `/eposta-dogrula` rather than
+`/dogrulama/email`) and two were missing from it entirely — the reset-completion step and a
+landable 403. The table is corrected to what exists rather than the routes being renamed:
+the names are equally arbitrary, and the omissions were the real defect.
 
 ### Customer
 
@@ -94,6 +110,7 @@ The two request-detail screens are the **same route in two states**, split by
 | `/denetim` | `super_admin_audit_logs` |
 | `/metrikler` | `super_admin_platform_metrics_analytics` |
 | `/pazar-fiyatlari` | `super_admin_market_pricing_dashboard` — **admin-only aggregate** (`ADR-006`) |
+| `/ayarlar` | platform settings (`ADM-06`) — no Stitch screen; `17` §Platform settings is the spec |
 
 ### Deferred screens — do not build (`ADR-010`)
 

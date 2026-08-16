@@ -60,4 +60,5 @@ export const adminNav: readonly NavItem[] = [
   { href: '/yonetim/denetim', labelKey: 'audit', icon: 'visibility' },
   { href: '/yonetim/metrikler', labelKey: 'metrics', icon: 'query_stats' },
   { href: '/yonetim/pazar-fiyatlari', labelKey: 'marketPricing', icon: 'payments' },
+  { href: '/yonetim/ayarlar', labelKey: 'settings', icon: 'settings' },
 ]

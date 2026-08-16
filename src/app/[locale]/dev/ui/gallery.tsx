@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +68,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Toaster } from '@/components/ui/toast'
+import { toast } from 'sonner'
+
+import { OVERLAYS, type OverlayName } from './page'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -92,10 +95,31 @@ function Item({ label, children }: { label: string; children: React.ReactNode })
  * Every primitive, every variant, every state. A restyle that is never rendered cannot be
  * verified, and from Phase 1 onward this page is the regression surface for the theme.
  */
-export function UiGallery() {
+export function UiGallery({ openOverlay = null }: { openOverlay?: OverlayName | null }) {
   const common = useTranslations('common')
   const [checked, setChecked] = useState(true)
   const [switched, setSwitched] = useState(true)
+
+  /*
+   * Overlays render **open** when `?overlay=…` names them.
+   *
+   * A gallery that renders only the trigger verifies the trigger. `ui/dialog.tsx` carried
+   * `max-w-lg` from Phase 0 — which resolves to this theme's *spacing* token, 48 pixels —
+   * so every dialog in the application was a 48-pixel column, and this page showed a
+   * perfectly good button that opened it. Nothing caught it until an end-to-end test
+   * measured a heading's bounding box.
+   *
+   * One at a time: two open scrims stack, and axe on a page with two modals reports the
+   * stacking rather than the components.
+   */
+  const isOpen = (name: OverlayName) => openOverlay === name
+
+  useEffect(() => {
+    if (openOverlay !== 'toast') return
+    // Sonner renders nothing until something is dispatched, so an "open" toast has to be
+    // fired rather than declared.
+    toast('Teklif gönderildi', { description: 'Üretici 48 saat içinde yanıtlayacak.' })
+  }, [openOverlay])
 
   return (
     <div className="flex flex-col gap-lg">
@@ -210,6 +234,84 @@ export function UiGallery() {
         <Item label="switch">
           <Switch checked={switched} onCheckedChange={setSwitched} aria-label="Notifications" />
         </Item>
+      </Section>
+
+      <Section title="Overlays, open">
+        {/*
+         * Links rather than buttons: the state lives in the URL so a11y can visit each one
+         * directly, and so a developer can bookmark the broken one.
+         */}
+        {OVERLAYS.map((name) => (
+          <Item key={name} label={name}>
+            <Button asChild variant={openOverlay === name ? 'primary' : 'outline'} size="dense">
+              <a href={`?overlay=${name}`}>{name}</a>
+            </Button>
+          </Item>
+        ))}
+        <Item label="closed">
+          <Button asChild variant="ghost" size="dense">
+            <a href="?">{common('close')}</a>
+          </Button>
+        </Item>
+
+        <Dialog open={isOpen('dialog')}>
+          <DialogContent closeLabel={common('close')}>
+            <DialogHeader>
+              <DialogTitle>Send request</DialogTitle>
+              <DialogDescription>
+                Contact details are shared only after the manufacturer accepts.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="ghost">{common('cancel')}</Button>
+              <Button variant="confirm">{common('save')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Sheet open={isOpen('sheet')}>
+          <SheetContent side="left" closeLabel={common('close')}>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetContent>
+        </Sheet>
+
+        <DropdownMenu open={isOpen('dropdown')}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="dense">
+              Actions
+              <Icon name="expand_more" dense />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>Request</DropdownMenuLabel>
+            <DropdownMenuItem>Accept</DropdownMenuItem>
+            <DropdownMenuItem>Decline</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Archive</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <TooltipProvider>
+          <Tooltip open={isOpen('tooltip')}>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="info">
+                <Icon name="info" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Estimated, excl. KDV</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <Select open={isOpen('select')}>
+          <SelectTrigger aria-label="City open" className="w-64">
+            <SelectValue placeholder="Choose a city" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="34">İstanbul</SelectItem>
+            <SelectItem value="06">Ankara</SelectItem>
+            <SelectItem value="35">İzmir</SelectItem>
+          </SelectContent>
+        </Select>
       </Section>
 
       <Section title="Select · Dropdown · Tooltip">

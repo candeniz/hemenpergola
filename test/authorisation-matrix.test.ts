@@ -307,6 +307,49 @@ describe('every service method has a matrix entry', () => {
     // 1.9
     expect(methods).toContain('auth.listSessions')
     expect(methods).toContain('auth.revokeSession')
+
+    // 2.2 — catalogue CRUD. `CAT-03`: an admin adds a product with no deployment, which
+    // means these are the methods standing between an admin and the public catalogue.
+    for (const method of [
+      'catalog.listCategories',
+      'catalog.createCategory',
+      'catalog.updateCategory',
+      'catalog.deleteCategory',
+      'catalog.listProducts',
+      'catalog.getProduct',
+      'catalog.createProduct',
+      'catalog.updateProduct',
+      'catalog.createAttribute',
+      'catalog.updateAttribute',
+      'catalog.deleteAttribute',
+      'catalog.createOption',
+      'catalog.updateOption',
+      'catalog.deactivateOption',
+      'catalog.deleteOption',
+    ]) {
+      expect(methods, method).toContain(method)
+    }
+
+    // 2.7
+    expect(methods).toContain('platform.listSettings')
+    expect(methods).toContain('platform.updateSetting')
+  })
+
+  it('makes every catalogue and settings method admin-only', async () => {
+    /*
+     * `17-admin-system.md`: `/yonetim/*` is `globalRole = ADMIN` only. The catalogue is the
+     * public face of the platform and the settings move money, so neither is a place for a
+     * company-scoped permission — an OWNER of a verified manufacturer must not be able to
+     * edit what the platform sells or how wide its price bands are.
+     */
+    await importEveryService(modulesRoot)
+
+    const offenders = registeredMethods()
+      .filter((meta) => meta.service === 'catalog' || meta.service === 'platform')
+      .filter((meta) => meta.authorisation.kind !== 'admin')
+      .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`)
+
+    expect(offenders).toEqual([])
   })
 
   it('covers every declaration in every application module, discovered from disk', async () => {
@@ -334,7 +377,8 @@ describe('every service method has a matrix entry', () => {
     expect(missing).toEqual([])
 
     // And the count is not zero, which is how this test would pass while measuring nothing.
-    expect(registered.size).toBeGreaterThanOrEqual(18)
+    // 18 from Phase 1, 15 catalogue and 2 settings from Phase 2.
+    expect(registered.size).toBeGreaterThanOrEqual(35)
   })
 
   it('declares an authorisation spec for every registered method', async () => {

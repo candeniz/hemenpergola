@@ -6,8 +6,10 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 1 is complete and its gate is proven** (2026-08-16). Phase 2
-(Catalogue + admin skeleton) is next — `26-execution-plan.md` §Phase 2 for its ordered tasks.
+**Current phase:** **Phase 2 is in progress — 4 of its 7 tasks are done** (2026-08-16). The
+catalogue schema, the admin CRUD over it, the admin navigation and the `PlatformSetting`
+surface have landed; 2.3 (real catalogue content), 2.4 (verification queue) and 2.5 (audit
+viewer) remain. `26-execution-plan.md` §Phase 2.
 
 The application runs, and now it has accounts: `docker compose up -d && pnpm seed demo &&
 pnpm dev` gives a working local stack with 81 provinces, 974 districts, and a registration →
@@ -30,7 +32,7 @@ proven — not when the code is written.
 | Docs | 00–26, README, CLAUDE.md | ✅ done | — |
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
-| 2 | Catalogue + admin skeleton | ⬜ | admin adds a product with no deploy |
+| 2 | Catalogue + admin skeleton | **🟡 in progress · 4/7** | admin adds a product with no deploy |
 | 3 | Manufacturer supply side | ⬜ | a company is matchable |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
@@ -1240,6 +1242,174 @@ explicit consent to pick it up.
   `/kayit` is redirected to `/en/kayit`. That is next-intl's documented default and it is
   probably right; it is written down here because it surprised this build's own test suite,
   and a Turkish marketplace may want to reconsider it before launch.
+
+
+### 2026-08-16 — Phase 2 tasks 2.1, 2.2, 2.6, 2.7 (commit `P2.1+2.2+2.6+2.7`)
+
+The catalogue schema, the admin CRUD over it, the admin navigation and the `PlatformSetting`
+surface. Phase 2 row is now **🟡 in progress · 4/7**; 2.3 (real catalogue content), 2.4
+(verification queue) and 2.5 (audit viewer) are the second half.
+
+#### Three document contradictions, resolved in the documents
+
+**Ç1 — one slug or one per locale? `ADR-017`.** `04` §Catalogue said
+`Category(slug unique)`; `07` §Route map said *"`en` uses its own slug set"*. `07` wins:
+there is no `slug` column on `Category` or `Product`, the slug is on the translation row, and
+uniqueness is `(locale, slug)`. A single slug would put a Turkish word in every English
+canonical URL, which is the one thing `18-cms-seo.md` exists to prevent. `07`'s phrasing
+*"stored on the entity"* also permits `slugTr`/`slugEn` columns; that reading is rejected in
+the ADR, because it makes a third locale a migration rather than a row.
+
+**Ç2 — the `showIf` columns. No new ADR; `ADR-008` amended and `04` corrected.** There was no
+decision to make. `10` §What V1 builds and `ADR-008` both already describe single-level
+conditionality; `04` §Catalogue simply omitted `showIfAttributeKey` / `showIfValue` from
+`ProductAttribute`. Inventing an ADR for a transcription error would make the log harder to
+read, so the columns went in the schema and the omission is recorded as an amendment on the
+ADR that depends on them — worth recording because it was load-bearing: without those columns
+the only way to express "show the motor brand when motorised is true" is the rules engine
+`ADR-008` declines to build.
+
+**Ç3 — locale negotiation. `ADR-018`.** `localeDetection: false`. `/` and every unprefixed
+path is Turkish for everybody; `en` is an explicit choice that the `NEXT_LOCALE` cookie then
+remembers. next-intl negotiated on `Accept-Language` by default, which sent every
+English-configured browser — common in this audience — from a Turkish URL to the English
+site, and made an unprefixed path mean two different pages to two different crawlers, which
+`18` §Canonical cannot express in an `hreflang` pair.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **847 passed** (was 803) |
+| `pnpm test:integration` | **155 passed** (was 124) |
+| `pnpm test:e2e` | **30 passed, 20 skipped, 0 failed** (was 22) |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `prisma migrate diff --from-migrations --to-schema --exit-code` | `No difference detected`, exit 0 |
+| migration 3 applied | 8 catalogue tables + `Seo`; `CompanyProduct` absent, asserted |
+| authorisation matrix | 35 registered methods, 0 unregistered; catalogue and settings all `admin` |
+| referenced option delete | `PRECONDITION`, names the count, tells the admin to deactivate |
+| deferred screens in navigation | 0, asserted from both directions and against `07` itself |
+| `band_percent = 900` | refused, and the refusal carries the reason |
+| a11y with each overlay open | 6 routes, 0 violations |
+
+#### 2.1 — migration 3
+
+`Category`, `Product`, `ProductAttribute`, `ProductOption`, their four translation tables and
+`Seo`. `CompanyProduct` / `CompanyProductOption` are **not** in it — they are the
+manufacturer's offer over the catalogue and they belong to Phase 3. The migration-scope test
+asserts their absence, because the boundary between "what the platform sells" and "who sells
+it" is the whole reason task 2.1 stops where it does.
+
+Turkish collation on the three columns a human sorts by (`CategoryTranslation.name`,
+`ProductTranslation.name`, `ProductOptionTranslation.label`) and **deliberately not on the
+slugs**: a slug is an identifier that must compare exactly, and a Turkish collation would make
+`İ`/`ı` locale-dependent inside a uniqueness index. Both halves are asserted.
+
+#### 2.2 — the CRUD, and rules with nothing to protect yet
+
+`modules/catalog/` follows the `iam` template exactly: `domain/` pure, `application/`
+returning `Result`, every method through `serviceMethod()`, both adapters over one Zod
+schema. Fifteen methods, all `{ kind: 'admin' }` — asserted, because the catalogue is the
+public face of the platform and a verified manufacturer's OWNER must not be able to edit what
+the platform sells.
+
+The rules from `10` §Admin authoring are enforced now, while **nothing can violate them**.
+There is not one `Project` row in the database, so an admin could delete any option today and
+nothing would break. That is precisely the argument for doing it now: discovered in Phase 4,
+"we deleted the option that project referenced" is data loss with no recovery, because a
+`PriceCalculation.breakdown` naming an option that no longer exists cannot be reconstructed.
+
+The reference check is written against `information_schema` rather than a Prisma model,
+because `ProjectAttributeValue` and `PriceBookOptionPrice` do not exist yet. It reads zero
+today and becomes correct the moment those tables land, with no change here — the alternative
+is a `TODO` somebody has to find. The integration test creates a table of that exact shape and
+proves the refusal fires.
+
+`showIf` chains are refused **from both ends** — you cannot point at a conditional attribute,
+and you cannot make an attribute conditional once something depends on it. Authoring order
+should not decide whether a rule applies. Two levels is a dependency graph; a graph needs
+cycle detection and evaluation order; and at that point `ADR-008`'s rules engine has been
+built by accident.
+
+Adding a required attribute is **allowed and reported**, not refused: `10` says it applies to
+new projects only, so the service answers `impact: 'new-projects-only'`, the screen says so,
+and the audit entry carries it as its reason.
+
+#### 2.6 — navigation, and testing an absence
+
+The `adminNav` was already correct. What was missing was anything stopping it from becoming
+incorrect: `ADR-010`'s four deferred screens are absent, an absence has no code to review, and
+nothing in a pull request shows that a link is still missing. `nav-items.test.ts` checks it
+three ways — by name fragment, against an allow-list drawn from `07` §Route map, and by
+reading `07` itself to confirm the four are still listed as deferred. If somebody adds a
+placeholder page because the navigation "looks unfinished", they have to argue with the
+document first.
+
+The command center is now `17` §Command center's work queue rather than a placeholder card.
+Two of the six queues have data (`Company.status = PENDING`, and the catalogue counts); the
+other four render as **named and explicitly not-yet**. A zero and "this table does not exist"
+look identical on a dashboard and mean opposite things, and the one that gets ignored is the
+real zero.
+
+#### 2.7 — settings with bounds, and the bounds with reasons
+
+Every key in `domain/settings-catalogue.ts` carries a Zod schema, a unit, and a **stated
+reason for its range**. `pricing.band_percent` caps at 50 because a band wider than half the
+estimate tells the customer nothing; `matching.max_companies_per_project` caps at 10 because
+above that a request is spray-and-pray and manufacturers learn to ignore leads. The rationale
+travels with the refusal and is rendered next to the field — a bound with no stated reason is
+the first thing somebody widens when a value is refused.
+
+An unknown key is `NOT_FOUND`, not a new row. `PlatformSetting` is key-value, so nothing in
+the database stops `pricing.band_percnt` from being created by a typo; it would then sit there
+being read by nobody while the real setting keeps its old value, and the admin who "changed"
+it has no way to tell.
+
+Every write requires a reason and is audited with before and after (`17`).
+
+#### Findings
+
+**The `/dev/ui` gallery rendered triggers, not overlays — and that is why the 48-pixel dialog
+survived Phase 0.** Fixed by opening one overlay per page load from `?overlay=`, with all six
+in the a11y sweep. Two of them then failed axe with nineteen `aria-hidden-focus` violations
+each: Radix's `DropdownMenu` and `Select` are modal, so opening one puts `aria-hidden` on
+everything else, and this page deliberately renders forty focusable widgets at once. That is a
+fact about the gallery, not the menu, so the overlay routes scan the portal and exclude
+`main`; `/dev/ui` with nothing open is still scanned whole. Each overlay route asserts its
+role is visible **before** scanning — an axe run against an empty portal passes, and a green
+run measuring nothing would be worse than the bug it was added to catch.
+
+**Prisma refuses a create that mixes a scalar foreign key with a nested relation write.**
+`{ parentId, seo: { create } }` does not typecheck: the checked and unchecked input shapes are
+disjoint. The `Seo` row is created first and its id passed. Not a defect, but the error message
+points at the whole `data` object and takes a while to read.
+
+**Four Phase 1 routes did not match `07` §Route map.** `/sifre-sifirla` versus the table's
+`/sifremi-unuttum`, flat `/eposta-dogrula` versus `/dogrulama/email` — and two routes Phase 1
+needed were missing from the table entirely: the reset-completion step and a landable 403.
+The table is corrected to what exists rather than the routes being renamed: the names are
+equally arbitrary, and the omissions were the real defect. Worth recording because I
+introduced the divergence in Phase 1 and did not notice it there.
+
+**`/yonetim/ayarlar` is a route `07` did not have.** `17` §Platform settings specifies the
+surface and names no screen, and `/bildirimler` is notification settings, which band width is
+not. Added to the route map and to the navigation allow-list in the same change.
+
+#### Carried forward
+
+- **2.3, 2.4, 2.5** — the real catalogue content, the verification queue and the audit
+  viewer. The audit *writer* is done: catalogue and setting writes produce entries with
+  before/after, so the trail starts now rather than when somebody builds the viewer and
+  discovers a hole exactly where the early mistakes are.
+- **Q1, Q3, Q10** unchanged from Phase 1.
+- **Q6 and Q7** are now editable rather than only seeded — `tax.kdv_default_percent` and
+  `offer_request.sla_hours` can be tuned from the admin screen the day an accountant or real
+  data answers them, with the change audited.
+- **Category nesting is capped at one level**, which `04` does not state either way. `07`
+  §Route map has `/kategoriler/[slug]`, not a path of arbitrary depth, and a tree nobody can
+  render is a tree nobody maintains. Stated in the service; not worth an ADR unless a second
+  level is ever asked for.
 
 ## Open questions — need a human answer before the phase that hits them
 

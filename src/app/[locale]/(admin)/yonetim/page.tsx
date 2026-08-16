@@ -2,10 +2,25 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { AdminShell } from '@/components/layouts/admin-shell'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Link } from '@/i18n/navigation'
 
-/** 07 §Rendering strategy: the admin surface is never indexed. */
+/**
+ * `super_admin_command_center_final` — task 2.6.
+ *
+ * *"It is a work queue, not a vanity dashboard"* (`17` §Command center). Top row is things
+ * waiting on an admin; below that, health numbers.
+ *
+ * Four of the six queues have no table yet — reviews, complaints, the notification
+ * dead-letter and zero-result districts all arrive with their phases. They are rendered as
+ * **named and explicitly not-yet**, rather than as a zero. A zero and "this does not exist"
+ * look identical on a dashboard and mean opposite things, and the one that gets ignored is
+ * the real zero.
+ */
 export const metadata: Metadata = { robots: { index: false, follow: false } }
+export const dynamic = 'force-dynamic'
+
+type Tile = { labelKey: string; value: number | null; href?: string }
 
 export default async function AdminDashboardPage({
   params,
@@ -14,15 +29,74 @@ export default async function AdminDashboardPage({
 }) {
   const { locale } = await params
   setRequestLocale(locale)
-  const t = await getTranslations({ locale, namespace: 'nav.admin' })
-  const shell = await getTranslations({ locale, namespace: 'shell' })
+
+  const [t, { prisma }] = await Promise.all([
+    getTranslations('admin.commandCenter'),
+    import('@/shared/db'),
+  ])
+
+  const [pendingManufacturers, categories, products] = await Promise.all([
+    prisma.company.count({ where: { status: 'PENDING' } }),
+    prisma.category.count(),
+    prisma.product.count({ where: { isActive: true } }),
+  ])
+
+  const queues: Tile[] = [
+    { labelKey: 'pendingManufacturers', value: pendingManufacturers, href: '/yonetim/ureticiler' },
+    { labelKey: 'pendingReviews', value: null },
+    { labelKey: 'openComplaints', value: null },
+    { labelKey: 'failedNotifications', value: null },
+    { labelKey: 'infectedUploads', value: null },
+    { labelKey: 'zeroResultDistricts', value: null },
+  ]
+
+  const health: Tile[] = [
+    { labelKey: 'catalogCategories', value: categories, href: '/yonetim/katalog' },
+    { labelKey: 'catalogProducts', value: products, href: '/yonetim/katalog' },
+  ]
 
   return (
-    <AdminShell title={t('dashboard')}>
-      <Card density="dense">
-        <CardTitle>{t('section')}</CardTitle>
-        <CardDescription>{shell('placeholderNotice')}</CardDescription>
-      </Card>
+    <AdminShell title={t('title')}>
+      <p className="pb-md text-body-md text-muted">{t('subtitle')}</p>
+
+      <section className="flex flex-col gap-md pb-lg">
+        <h2 className="font-heading text-headline-md">{t('queues')}</h2>
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+          {queues.map((tile) => (
+            <TileCard key={tile.labelKey} tile={tile} />
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-md">
+        <h2 className="font-heading text-headline-md">{t('health')}</h2>
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+          {health.map((tile) => (
+            <TileCard key={tile.labelKey} tile={tile} />
+          ))}
+        </div>
+      </section>
     </AdminShell>
   )
+}
+
+async function TileCard({ tile }: { tile: Tile }) {
+  const t = await getTranslations('admin.commandCenter')
+
+  const body = (
+    <Card density="dense" className="h-full">
+      <CardHeader>
+        <CardTitle className="text-body-md text-muted">{t(tile.labelKey)}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {tile.value === null ? (
+          <p className="text-body-sm text-muted">{t('notYet')}</p>
+        ) : (
+          <p className="font-heading text-display-lg">{tile.value}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+
+  return tile.href === undefined ? body : <Link href={tile.href}>{body}</Link>
 }

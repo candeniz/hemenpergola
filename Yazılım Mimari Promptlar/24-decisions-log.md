@@ -132,6 +132,15 @@ options without deployment (`CAT-03`). Avoids the largest scope risk in the brie
 product later needs true cross-option rules, this ADR gets superseded with that product as
 the evidence.
 
+**Amended 2026-08-16, task 2.1.** This decision rests on `showIfAttributeKey` +
+`showIfValue`, which `10-project-configurator.md` §What V1 builds describes and
+`04-data-model.md` §Catalogue omitted from `ProductAttribute`. Writing migration 3 surfaced
+the gap. No decision changed — the columns were always what "single-level conditionality"
+meant — so this is an amendment rather than a new ADR: the columns are in the schema and `04`
+is corrected. Worth recording because the omission was load-bearing: without those columns
+the only way to express "show the motor brand when motorised is true" is the rules engine
+this ADR declines to build.
+
 ---
 
 ## ADR-009 — Polling, not WebSocket, for messaging
@@ -319,3 +328,83 @@ The precedent worth naming: **the catalogue in code is the source of truth, and 
 is generated from it** (`scripts/generate-permission-table.mjs`). When the two disagree the
 resolution is a decision recorded here plus a regenerated table — not a comment in the
 service explaining why the code differs from the document.
+
+---
+
+## ADR-017 — Slugs are per locale, and they live on the translation row
+
+**Context.** Two documents disagreed, and Phase 2 writes the schema that settles it.
+
+`04-data-model.md` §Catalogue declared `Category(slug unique)` and `Product(slug unique)` —
+one slug per entity. `07-frontend-architecture.md` §Route map declared the opposite:
+*"Turkish slugs are the canonical public URLs; `en` uses its own slug set. Slug per locale is
+stored on the entity, not translated at runtime."*
+
+Both cannot be true. `/urunler/bioklimatik-pergola` and `/en/products/bioclimatic-pergola` are
+the same product, and `18-cms-seo.md` builds `hreflang` pairs and canonical URLs out of them.
+A single slug means the English URL carries a Turkish word, which is the one thing an SEO
+document exists to prevent.
+
+**Decision.** `07` wins. There is no `slug` column on `Category` or `Product`. The slug is a
+column on `CategoryTranslation` / `ProductTranslation`, with `@@unique([locale, slug])`.
+
+**Consequences.**
+
+Uniqueness is per locale, which is what it should be: nothing stops a Turkish slug and an
+English slug from being the same string when the word is the same, and nothing allows two
+Turkish products to collide.
+
+`07`'s wording — *"stored on the entity"* — also permits a second reading: `slugTr` and
+`slugEn` columns on `Category` itself. That is rejected. It makes a third locale a migration
+rather than a row, it duplicates the uniqueness constraint per column, and it puts locale
+knowledge in the entity table, which is exactly what a translation table is for.
+
+The cost is that resolving a public URL is a join, and that every lookup must carry a locale.
+That is not incidental — a slug without a locale is ambiguous, and the type system now says
+so. `04` §Catalogue is corrected accordingly.
+
+**Reverses if.** A product ever needs one canonical URL across locales, which would be a
+decision about `18`, not about this table.
+
+---
+
+## ADR-018 — Turkish is the default locale unconditionally; no `Accept-Language` negotiation
+
+**Context.** `07-frontend-architecture.md` §i18n says *"Turkish is the default locale and the
+root URL path"*, and `localePrefix: 'as-needed'` implements that: `/kayit` is Turkish,
+`/en/kayit` is English.
+
+next-intl also negotiates on `Accept-Language` by default, and that quietly overrides the
+first rule. A visitor whose browser announces `en-US` asking for `/kayit` is redirected to
+`/en/kayit`. Phase 1's own end-to-end suite hit this: Playwright's Chromium requests
+`en-US`, and every assertion about a Turkish page failed against an English one.
+
+An English-configured browser is common among the target audience — developers, designers,
+anyone who bought a laptop with an English image, and a large share of professional users in
+Turkey generally. So the negotiation sends a substantial fraction of Turkish users to the
+English site by default, on a Turkish marketplace, and the only way back is a language switch
+they have to notice.
+
+**Decision.** `localeDetection: false`. `/` and every unprefixed path is Turkish, always.
+English is reached by an explicit `/en` prefix — a link, a bookmark, or the locale switcher,
+which persists the choice in the `NEXT_LOCALE` cookie.
+
+**Consequences.**
+
+The default is now a property of the URL rather than of the visitor's browser configuration,
+which makes it cacheable and makes a canonical URL canonical: `18-cms-seo.md` builds
+`hreflang` pairs on the assumption that a path maps to one locale, and a negotiated redirect
+on the unprefixed path breaks that for crawlers as well as for people.
+
+A genuine English speaker landing on `/` now sees Turkish until they use the switcher. That is
+the trade, and it is the right way round: a Turkish user shown Turkish has lost nothing, and
+an English user shown Turkish is one click from English. The reverse — a Turkish user shown
+English — costs a page they may simply leave.
+
+`localeDetection: false` does not disable the cookie. A visitor who switches to English stays
+in English on their next visit, because that is a choice they made rather than a header their
+browser sent.
+
+**Reverses if.** Analytics show meaningful non-Turkish traffic arriving on unprefixed paths
+and bouncing. The fix then is a dismissible banner offering the other locale, not an automatic
+redirect.
