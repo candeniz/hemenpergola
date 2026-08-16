@@ -6,12 +6,13 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 2 is complete and its gate is proven** (2026-08-16). An admin adds
-a product and its options with no deployment, and verifies a manufacturer — both walked end to
-end by `e2e/phase2-gate.spec.ts`. Phase 3 (manufacturer supply side) is next, and
-`26-execution-plan.md` §Sequencing is emphatic that it runs **before** Phase 4: it carries the
-largest un-derisked assumption in the register (D3) and the data model with the most surface
-area.
+**Current phase:** **Phase 3 is half done — 4 of its 8 tasks** (2026-08-16). A verified company
+can now complete its profile, upload documents, mark the products and options it offers, define
+service areas of all three kinds and publish a portfolio. It is **matchable except for a price
+book**, which is the second half along with the pricing engine.
+
+Three things exist for the first time: a background worker (pg-boss, `23` §Runtime's second
+entrypoint), real file upload to object storage, and a feature spanning four modules.
 
 **Before Phase 3 ships its price-book UI, the D3 pilot manufacturer needs to exist** — and
 §Open questions now has eight questions (Q11–Q18) waiting for them, produced by writing the
@@ -20,8 +21,8 @@ seed catalogue.
 The application runs, and now it has accounts: `docker compose up -d && pnpm seed demo &&
 pnpm dev` gives a working local stack with 81 provinces, 974 districts, and a registration →
 verification → sign-in → reset flow that completes end to end against a production build.
-**803 unit tests, 124 integration tests** against a real PostGIS container, and **22 Playwright
-specs green** (20 still skipped for later phases). Mail and SMS go to the log adapters, which
+**864 unit tests, 213 integration tests** against real PostGIS and MinIO containers, and **35
+Playwright specs green** (20 still skipped for later phases). Mail and SMS go to the log adapters, which
 is what Q3 and Q2 leave available.
 
 ## Phase tracker
@@ -39,7 +40,7 @@ proven — not when the code is written.
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
-| 3 | Manufacturer supply side | ⬜ | a company is matchable |
+| 3 | Manufacturer supply side | **🟡 in progress · 4/8** | a company is matchable |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
@@ -1594,6 +1595,197 @@ which one they mean — the collision is a fact about the domain, not an acciden
   priced per m². Rather than invent a product to fill the enum, it is Q17.
 - **Q1, Q3, Q10** unchanged from Phase 1.
 
+
+### 2026-08-16 — Phase 3 tasks 3.1, 3.2, 3.6, 3.7 (commit `P3.1+3.2+3.6+3.7`)
+
+The manufacturer supply side, minus the price book. Phase 3 row is now
+**🟡 in progress · 4/8**; 3.3, 3.4, 3.5 and the pure pricing engine are the second half.
+
+#### Three firsts, and what each one cost
+
+**The first background job.** pg-boss on the same Postgres, in its own `pgboss` schema —
+`ADR-014`'s "one migration per phase" is about *our* tables, and letting a self-migrating
+queue into `public` would put a dozen of them into `migration-1`'s exact table list. `23`
+§Runtime's second entrypoint now exists: `src/worker.ts`, same code, different command,
+draining on `SIGTERM`.
+
+Both jobs are idempotent **by shape rather than by a flag**: the geocode job is a pure
+function of the row, and `media.process` upserts every variant on `(fileId, name)` with keys
+derived from the original. The version that would look idempotent and is not — "skip if
+`centerPoint` is already set" — passes a naive re-run test and silently ignores a
+manufacturer correcting their district, so there is a test for that case specifically.
+
+**The first real upload.** `StorageProvider` port, S3 adapter, presigned PUT straight to
+MinIO. The server validates type, size and count **before** issuing the URL, and the URL is
+pinned to the declared content-type *and* length — without the length pin it is a blank
+cheque: the client declares 2 MB, the quota check passes, and 2 GB arrives.
+
+**The first multi-module feature.** Placed by `05` §Shape: the company profile in `iam/`
+(the same module already owns the company row, its memberships and its verification), the
+product offer in `catalog/` (the rows are about the catalogue and every read joins it), and
+service areas in `matching/` (a service area has exactly one reader, and it is the matching
+filter).
+
+#### Portfolio went into its own module, and here is the argument
+
+`05` is silent, so: not `iam/`, which is identity and access and has nothing to do with a
+photo gallery — letting it in is how an "iam" module ends up holding everything that hangs
+off `Company`. Not `catalog/`, where every method is `admin` and the subject is what the
+*platform* sells. Not `matching/`, even though `09` §Scoring reads portfolio depth for five
+points out of a hundred — matching reads reviews, price books and service areas too, and
+owning a table because you read it is how a module becomes everything.
+
+So `modules/portfolio/`: company showcase content and its media, one writer, two readers
+arriving later (the public profile in Phase 8, the score in Phase 5). It costs a directory,
+which is the price `notification/` and `audit/` already paid for being small and about one
+thing.
+
+#### Q4, decided — `ADR-019`
+
+**No geocoding provider in V1, and no map-tile vendor either.** The `Geocoder` port ships
+with an administrative-centroid adapter over the 974 district centroids Phase 0 already
+seeded, plus optional coordinates a manufacturer can type.
+
+The argument is that a radius area says "we work within N kilometres of here", the
+uncertainty that dominates is N, and `09` §Service-area coverage *already* accepts a district
+centroid as the project's point when the customer gave none — calling it "good enough for a
+radius test". Paying a provider to place one end of that comparison to within ten metres
+while the other end is the middle of a district buys nothing measurable.
+
+Q4 is **narrowed rather than closed**: the open question is now "does the public site need
+map tiles in Phase 8, and does the picker come free with them". The adapter is called
+`administrativeGeocoder` rather than `nullGeocoder` on purpose — it is a real geocoder with a
+coarse resolution, and naming it after what it lacks invites replacing it before anybody finds
+out whether the resolution is a problem. `precision` is stored and shown, so a manufacturer
+can tell a centroid from a pin.
+
+#### The carried-over debt is closed
+
+`17` §Manufacturer verification calls document *viewing* a disclosure — these are legal
+identity documents — and Phase 2 could only log the decision, because the surface serving the
+file did not exist. It does now: `fileUrl` writes a `document_viewed` entry when it issues a
+signed URL for a `COMPANY_DOCUMENT`.
+
+**Logged on issuance, not on fetch.** The fetch goes straight to storage and never reaches
+the application, so the URL is the thing we hand over and therefore the thing to record. A
+portfolio photo writes nothing — logging every CDN image request would make the audit log
+unreadable and prove nothing.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **864 passed** |
+| `pnpm test:integration` | **223 passed, 16 files** (was 186), real PostGIS + real MinIO, 205 s |
+| `pnpm test:e2e` | **35 passed, 20 skipped, 0 failed** |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `prisma migrate diff --exit-code` | `No difference detected`, exit 0 |
+| `pnpm worker` | starts, creates both queues, reports ready |
+| radius boundary | 39 km inside a 40 km radius matches; 41 km does not |
+| job idempotency | both jobs, same result on the second run, same object keys |
+| access classes | portfolio photo `public/` unsigned CDN; document `private/` signed 5 min |
+| document viewing | `document_viewed` audit entry with actor and IP |
+| authorisation matrix | 64 registered methods, 0 unregistered |
+| integration harness | one container per run, one `migrate deploy`; setup 7.9 s total, was ~150 s per file |
+
+#### Findings
+
+**The web tier ran on ten database connections, and the end-to-end suite is what found it.**
+`createAdapter` built `PrismaPg` with no `max`, so every Next process used `pg`'s default
+pool of ten. A server action that verifies a password holds its connection for the whole
+Argon2 hash — 19 MiB, t=2 — and three Playwright specs running in parallel against one server
+were enough to exhaust it. The symptom was not slowness: it was
+`Application error: a server-side exception has occurred` on `/sifre-yenile`, a page that
+passes every time on its own. This was a **production defect**, not a test artefact; ten
+concurrent sign-ins would have done the same to real users. `POOL_SIZE = 20` now, with the
+note that the answer to sustained load is a pooler in front of Postgres rather than a larger
+pool in every process.
+
+**The integration harness started sixteen containers while claiming to start one.** The
+config said *"One container, shared by the files"*; the container was created in
+`setupFiles`, which Vitest evaluates once per **test file**. Sixteen files meant sixteen
+PostGIS boots and sixteen `migrate deploy` runs, ~123 s of prologue each, a half-hour run —
+and enough Docker churn that *different* files failed on each run, including `tokens` and
+`company-verification`, which nothing in this phase touches. Flakiness that moves between
+runs is a property of the harness. The container moved to a real `globalSetup`, which runs
+once in Vitest's own process and hands the URL to the workers through `provide`.
+
+Worth saying plainly: **two full runs were red for this reason and the failures looked like
+Phase 3 regressions.** Chasing them as regressions would have been wasted; what distinguished
+them was that the set of failing files changed and included files no recent commit touched.
+
+**A test declared 40 bytes for a 26-byte upload, and storage refused it — correctly.** The
+presigned URL pins `ContentLength`, so a body that does not match the declaration is rejected
+before a byte is stored. The `PENDING`-company test hardcoded a round `sizeBytes` next to a
+literal PDF fragment and the two drifted. The pin is exactly the protection `14` asks for
+against a client that declares 2 MB and uploads 2 GB; this is the only evidence in the suite
+that it actually engages, so the fixture now derives its length and says why.
+
+**The matrix scan caught the job handlers, and it was right.** `runGeocodeServiceArea` and
+`runMediaProcess` were exported from `application/` with no `serviceMethod` entry. A job
+handler takes no `ActorContext`, asserts no permission and returns no `Result`, so it is not
+an application service however much it orchestrates — both moved to `infrastructure/`,
+following the precedent `audit/infrastructure/audit-log.ts` already set. No exemption was
+added; the scan stayed exactly as strict.
+
+**The matrix's "everything in `catalog` is admin" rule became wrong this phase.** True in
+Phase 2, and it would now have made `setCompanyProduct` admin-only — a manufacturer unable to
+say what they sell. The test names the company-owned three explicitly and asserts *both*
+directions, so neither list can quietly swallow the other.
+
+**`server-only` broke the worker, as it broke the seed in Phase 2.** The fix this time is
+`--conditions=react-server`: that is the condition under which the marker package resolves to
+an empty module, Next sets it, and plain Node does not. It is honest rather than a bypass — a
+worker *is* a server. The same script needs `--env-file-if-exists=.env`, because Next loads
+`.env` for the web tier and nothing loads it for a standalone process.
+
+**pg-boss's `singletonKey` does nothing without a queue policy.** The first version
+deduplicated nothing and the test caught it; `createQueue(name, { policy: 'stately' })` is
+what makes one job per key in each state true. Queue creation moved into `ensureQueues()` so
+the worker and the tests cannot configure it differently.
+
+**A hardcoded base64 PNG in a test was not a valid PNG**, and the suite failed with
+`vipspng: libpng read error` from inside the job — which reads as a bug in the pipeline
+rather than a bug in the fixture. The fixture is now rendered by `sharp` itself.
+
+**A non-breaking space inside a JSX string literal** survived two attempts to replace it and
+does not show in a diff. Worth knowing that `cat -A` is the way to see it.
+
+**A `PENDING` company cannot build a portfolio, and that is correct** — `portfolio.manage` is
+`write` and `02` §Verification state gives a pending company only the onboarding path. It is
+recorded because the first draft of the test assumed otherwise and because the two states are
+easy to conflate: documents *do* work while pending (`ADR-016`), and that is the whole reason
+they are classified differently.
+
+#### Carried forward
+
+- **There is no virus scanner.** `14` §Virus scanning gates serving on `virusScanStatus` and
+  that gate is built and enforced — nothing is served to anyone but its uploader until
+  `CLEAN`. What is missing is the thing that *decides* `CLEAN`, which is a ClamAV sidecar or
+  a provider API and therefore an infrastructure decision. `scan()` returns `CLEAN`
+  unconditionally; leaving everything `PENDING` instead would mean no image is ever visible
+  and would be discovered as "images are broken". New question **Q19**.
+- **SVG logos are rejected rather than sanitised.** `14` allows SVG *if* it is sanitised
+  server-side; no sanitiser is built, and an unsanitised SVG is a stored-XSS vector. Rejecting
+  is the honest V1 answer. Part of **Q19**.
+- **`node dist/worker.js` has no build step.** `23` §Runtime specifies it; there is no
+  Dockerfile and no bundler configured for the worker. Inventing one for an image nobody
+  builds would be guessing at Phase 9. New question **Q20**.
+- **Portfolio photos render with a plain `<img>`.** `14` asks for `next/image`, whose remote
+  pattern needs the CDN host at *build* time — the Phase 8 decision nobody has made, and
+  reading `CDN_BASE_URL` into the build is what non-negotiable 9 forbids. The variants are
+  rendered and the smallest is served, so the bandwidth half is answered; the optimiser
+  arrives with the host.
+- **Deleting a portfolio item leaves its objects.** `14` §Retention marks files and a nightly
+  job removes the objects after seven days; that job is Phase 9. The rows go, the objects
+  stay — which is the correct half to build first, since the reverse is unrecoverable.
+- **The manufacturer navigation still points at `/panel/...` without a company id.** The four
+  new pages live at `/panel/[companyId]/...` per `07` §Route map; `PortalShell` has no company
+  in scope to prefix with. It needs a company switcher, which belongs with the dashboard in
+  the second half.
+- **Q1, Q3, Q10, Q11–Q18** unchanged.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -1601,7 +1793,7 @@ which one they mean — the collision is a fact about the domain, not an acciden
 | Q1 | Brand name. The screens use *Outdoor Systems*, *Archivault*, *ARCHITECTURA*, *Arte Outdoor*, *ArchPortal*. | Phase 0 (i18n keys, logo, titles) — and **upstream of Q2/Q3**: the SMS sender ID is the brand | placeholder `{brand}` token everywhere, swapped once |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |
-| Q4 | Geocoding provider and budget | Phase 3 (radius service areas) | district centroids only, no free-point radius |
+| ~~Q4~~ | ~~Geocoding provider and budget~~ **NARROWED 2026-08-16 by `ADR-019`.** V1 needs no provider: the `Geocoder` port ships with an administrative-centroid adapter over the 974 district centroids Phase 0 seeded, plus optional coordinates a manufacturer can type. `09` §Service-area coverage already accepts a district centroid on the *project* side, so paying to place the other end to within ten metres buys nothing measurable. What remains open is narrower and belongs to Phase 8: **does the public directory need map tiles, and does a pin-drop picker come free with them?** | Phase 8 | administrative centroids; radius precision is stored and shown so a centroid is distinguishable from a pin |
 | Q11 | **Profil rengi: hangisi standart, hangisi ek ücretli?** Katalog dört RAL sunuyor (9016 beyaz, 7016 antrasit, 9005 siyah, özel RAL) ve yalnızca *özel RAL*'in ücretli olduğunu varsayıyor. Stoklu renkler firmadan firmaya değişiyorsa bu varsayım her üretici için yanlış olur. | Faz 3 (fiyat listesi giriş ekranı bu varsayımı kullanacak) | dördü de seçilebilir, ücret farkı üreticinin fiyat listesine bırakılmış |
 | Q12 | **Bioklimatik pergolada tek modül ölçü sınırları.** Katalogda genişlik 2000–6000 mm, çıkıntı 2000–4500 mm, yükseklik 2200–3500 mm. Bunlar taşıma kapasitesi ve lamel boyu üzerinden makul tahminlerdir, ölçülmüş değerler değil. Gerçek sınır kar/rüzgâr yüküne ve lamel profiline göre değişiyorsa hangi aralık doğru? | Faz 4 (sihirbaz bu aralıkların dışını reddedecek) | mevcut aralıklar; üstünü üretici modül birleştirerek çözer |
 | Q13 | **Giyotin camda açıklık sınırları ve panel mantığı.** Katalog genişliği 1000–6000 mm, yüksekliği 1000–3000 mm alıyor ve panel sayısını **sormuyor** — üreticinin hesapladığını varsayıyor (`ADR-008` sınamasının sonucu). Panel sayısı müşterinin bilmesi gereken bir şeyse veya fiyatı doğrudan etkiliyorsa bu yanlış. | Faz 4 ve Faz 5 | açıklığı müşteri verir, paneli üretici belirler |
@@ -1610,6 +1802,8 @@ which one they mean — the collision is a fact about the domain, not an acciden
 | Q16 | **Hangi opsiyonlar standart pakete dahil?** Katalog `sensor_paketi`, `aydinlatma`, `sineklik` ve `su_tahliye`yi ayrı ayrı sorulabilir sayıyor. Bunların bir kısmı sektörde standart olarak veriliyorsa, müşteriye ücretli opsiyon gibi göstermek fiyat tahminini şişirir. | Faz 5 (fiyat bandı) | hepsi opsiyonel, fiyatı üreticinin listesi belirler |
 | Q17 | **`LENGTH_M` ve `UNIT` ölçü temellerinin karşılığı var mı?** Katalogdaki yedi ürünün hepsi m² ile fiyatlanıyor. Metrekare dışında satılan bir ürün (metretül korkuluk, adet bazlı motor/aksesuar) platformun kapsamına giriyorsa şimdi söylenmeli; girmiyorsa `Product.basisType` üç yerine tek değere inebilir. | Faz 5, ve `04` §Catalogue'un sadeleşmesi | üç değer şemada kalır, ikisi kullanılmaz |
 | Q18 | **Kar ve rüzgâr yükü hangi alanı etkiliyor?** `08` §Algorithm'de bölgesel ayarlama var (`PriceBookRegionAdjustment`), ama kar yükünün ölçü sınırlarını mı, profil seçimini mi, yoksa yalnızca fiyatı mı değiştirdiği katalogda modellenmedi. Ölçü sınırını değiştiriyorsa bu `ProductAttribute.max`'ın bölgeye göre değişmesi demektir ve şema bunu desteklemiyor. | **Faz 4'ten önce** — cevabı "ölçü sınırını değiştirir" ise şema değişikliği gerekir | bölgesel etki yalnızca fiyatta; ölçü sınırları ülke geneli |
+| Q19 | **Virüs tarayıcı ve SVG temizleyici.** `14` §Virus scanning dosyaların `CLEAN` olana kadar sunulmamasını istiyor; bu kapı kurulu ve zorlanıyor, ama `CLEAN` kararını verecek şey yok — `scan()` koşulsuz `CLEAN` dönüyor. Seçenekler: ClamAV yan konteyneri (altyapı maliyeti, worker imajına eklenir) ya da bir sağlayıcı API'si (dosya başına ücret, dosyanın dışarı çıkması). Aynı karar SVG'yi de kapsıyor: `14` sunucu tarafında temizlenmiş SVG'ye izin veriyor, temizleyici yok, bu yüzden logo yüklemede SVG şimdilik reddediliyor. | **Faz 9'dan önce** — üretici belgeleri ve müşteri fotoğrafları taranmadan yayına çıkmamalı | tarayıcı yok, kapı kurulu; SVG reddediliyor |
+| Q20 | **Worker imajı nasıl paketlenecek?** `23` §Runtime `node dist/worker.js` diyor — aynı imaj, farklı entrypoint. Ne Dockerfile var ne de worker için bir derleme adımı; `pnpm worker` geliştirmede `tsx` ile koşuyor. Next'in kendi çıktısı worker'ı kapsamıyor ve `@/` yol takma adlarını çözecek bir bundler (esbuild/tsup) ya da `tsc` + `tsc-alias` gerekiyor. | Faz 9 (dağıtım), ama seçim worker'ın hangi bağımlılıkları imaja taşıdığını belirlediği için erken bilinmesi ucuz | `pnpm worker` (tsx) — yalnızca geliştirme |
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |

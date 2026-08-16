@@ -351,6 +351,37 @@ describe('every service method has a matrix entry', () => {
     // 2.5
     expect(methods).toContain('audit.listAuditEntries')
     expect(methods).toContain('audit.listAuditFacets')
+
+    // Phase 3 · the supply side
+    for (const method of [
+      // 3.1
+      'company.getCompanyProfile',
+      'company.updateCompanyProfile',
+      'company.updateCompanySlug',
+      'company.updateCompanyContact',
+      'company.attachDocument',
+      // 3.2
+      'catalog.listCompanyProducts',
+      'catalog.setCompanyProduct',
+      'catalog.setCompanyOptions',
+      // 3.6
+      'matching.listServiceAreas',
+      'matching.addServiceArea',
+      'matching.removeServiceArea',
+      'matching.companiesCoveringPoint',
+      // 3.7
+      'portfolio.listPortfolio',
+      'portfolio.createPortfolioItem',
+      'portfolio.updatePortfolioItem',
+      'portfolio.deletePortfolioItem',
+      'portfolio.attachPhoto',
+      // uploads
+      'media.presignUpload',
+      'media.completeUpload',
+      'media.fileUrl',
+    ]) {
+      expect(methods, method).toContain(method)
+    }
   })
 
   it('keeps the audit log read-only, including for admins', async () => {
@@ -369,12 +400,18 @@ describe('every service method has a matrix entry', () => {
     expect(writers.map((meta) => meta.method)).toEqual([])
   })
 
-  it('makes every catalogue and settings method admin-only', async () => {
+  it('makes the platform-owned surfaces admin-only, and the company-owned ones not', async () => {
     /*
-     * `17-admin-system.md`: `/yonetim/*` is `globalRole = ADMIN` only. The catalogue is the
-     * public face of the platform and the settings move money, so neither is a place for a
-     * company-scoped permission — an OWNER of a verified manufacturer must not be able to
-     * edit what the platform sells or how wide its price bands are.
+     * `17-admin-system.md`: `/yonetim/*` is `globalRole = ADMIN` only. The platform
+     * catalogue is the public face of the product and the settings move money, so neither is
+     * a place for a company-scoped permission — an OWNER of a verified manufacturer must not
+     * be able to edit what the platform sells or how wide its price bands are.
+     *
+     * **The mirror image matters just as much**, and Phase 3 is where it started to: the
+     * `catalog` service now holds both the platform catalogue *and* the company's offer over
+     * it. A blanket "everything in catalog is admin" was true in Phase 2 and would have made
+     * `setCompanyProduct` admin-only — a manufacturer unable to say what they sell. The
+     * split is named here rather than inferred from a service name.
      */
     await importEveryService(modulesRoot)
 
@@ -388,18 +425,35 @@ describe('every service method has a matrix entry', () => {
       'reviewDocument',
     ])
 
-    const offenders = registeredMethods()
-      .filter(
-        (meta) =>
-          meta.service === 'catalog' ||
-          meta.service === 'platform' ||
-          meta.service === 'audit' ||
-          (meta.service === 'company' && VERIFICATION.has(meta.method)),
-      )
-      .filter((meta) => meta.authorisation.kind !== 'admin')
-      .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`)
+    /** The company's offer over the catalogue — theirs to edit, not the platform's. */
+    const COMPANY_OWNED = new Set(['listCompanyProducts', 'setCompanyProduct', 'setCompanyOptions'])
 
-    expect(offenders).toEqual([])
+    const platformOwned = registeredMethods().filter(
+      (meta) =>
+        (meta.service === 'catalog' && !COMPANY_OWNED.has(meta.method)) ||
+        meta.service === 'platform' ||
+        meta.service === 'audit' ||
+        (meta.service === 'company' && VERIFICATION.has(meta.method)),
+    )
+
+    expect(
+      platformOwned
+        .filter((meta) => meta.authorisation.kind !== 'admin')
+        .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`),
+    ).toEqual([])
+
+    // And the company-owned three are *not* admin, or a manufacturer cannot say what they
+    // sell. Both directions, so neither list can quietly swallow the other.
+    const companyOwned = registeredMethods().filter(
+      (meta) => meta.service === 'catalog' && COMPANY_OWNED.has(meta.method),
+    )
+
+    expect(companyOwned).toHaveLength(3)
+    expect(
+      companyOwned
+        .filter((meta) => meta.authorisation.kind !== 'permission')
+        .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`),
+    ).toEqual([])
   })
 
   it('covers every declaration in every application module, discovered from disk', async () => {
@@ -427,8 +481,9 @@ describe('every service method has a matrix entry', () => {
     expect(missing).toEqual([])
 
     // And the count is not zero, which is how this test would pass while measuring nothing.
-    // 18 from Phase 1; 15 catalogue, 2 settings, 7 verification and 2 audit from Phase 2.
-    expect(registered.size).toBeGreaterThanOrEqual(44)
+    // 18 from Phase 1; 15 catalogue, 2 settings, 7 verification and 2 audit from Phase 2;
+    // 5 profile, 3 offer, 4 service area, 5 portfolio and 3 media from Phase 3.
+    expect(registered.size).toBeGreaterThanOrEqual(64)
   })
 
   it('declares an authorisation spec for every registered method', async () => {

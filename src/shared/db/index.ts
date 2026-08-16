@@ -10,8 +10,28 @@ import { env } from '@/shared/config/env'
  * connection string comes from the typed env, so the database address is validated at
  * startup with everything else (23-deployment-and-environments.md §Configuration).
  */
+/**
+ * How many Postgres connections one process may hold.
+ *
+ * `pg` defaults to 10, and 10 is too few for a Next server under any real concurrency: a
+ * server action that hashes a password holds its connection for the length of an Argon2
+ * verification, and a handful of simultaneous logins is enough to starve every other request
+ * in the process. The symptom is not a slow page — it is
+ * `Timed out fetching a new connection from the connection pool` surfacing as a 500 and an
+ * error boundary, which reads as "the app is broken" rather than "the pool is small".
+ *
+ * Phase 3's end-to-end suite is what surfaced it: three specs running in parallel against
+ * one server produced exactly that, intermittently, on pages that pass in isolation.
+ *
+ * 20 per process against `23` §Runtime's N web instances plus 1–2 workers is comfortable for
+ * a Postgres whose default `max_connections` is 100. It is deliberately a small multiple
+ * rather than a large one: the fix for sustained load is a pooler in front of the database,
+ * not a bigger pool in every process.
+ */
+const POOL_SIZE = 20
+
 export function createAdapter(connectionString: string = env.DATABASE_URL): PrismaPg {
-  return new PrismaPg({ connectionString })
+  return new PrismaPg({ connectionString, max: POOL_SIZE })
 }
 
 /**

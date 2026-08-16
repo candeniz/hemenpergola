@@ -39,6 +39,17 @@ export type AuditAction =
   | 'company_documents_requested'
   | 'company_suspended'
   | 'document_reviewed'
+  /**
+   * Phase 3 · `17` §Manufacturer verification calls document *viewing* a disclosure — these
+   * are legal identity documents. Written when a signed URL is issued, because the fetch
+   * itself goes straight to storage and never reaches the application.
+   */
+  | 'document_viewed'
+  // Phase 3 · supply side
+  | 'company_profile_updated'
+  | 'service_area_changed'
+  | 'company_products_changed'
+  | 'portfolio_changed'
 
 export type AuditEntry = {
   action: AuditAction

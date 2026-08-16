@@ -33,6 +33,12 @@ export const customerNav: readonly NavItem[] = [
   { href: '/hesap/ayarlar', labelKey: 'settings', icon: 'settings' },
 ]
 
+/**
+ * The portal routes are `/panel/[companyId]/...` (`07` §Route map), and these hrefs are the
+ * shape without the id: `PortalShell` has no company in scope, and Phase 3 is the first
+ * phase where any of these pages exists. Prefixing them correctly is the shell's job once a
+ * company is selected — noted rather than silently half-done.
+ */
 export const manufacturerNav: readonly NavItem[] = [
   { href: '/panel', labelKey: 'dashboard', icon: 'dashboard' },
   { href: '/panel/talepler', labelKey: 'requests', icon: 'pending_actions' },

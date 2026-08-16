@@ -30,10 +30,15 @@ authorisation matrix, companies and memberships, audit, rate limits), `modules/c
 the admin CRUD over it, the seed catalogue, manufacturer verification, the audit viewer and
 the `PlatformSetting` surface.
 
-**Phase 3 (manufacturer supply side) is next**, and `26-execution-plan.md` §Sequencing is
-emphatic that it runs *before* Phase 4: it carries the largest un-derisked assumption in the
-register and the data model with the most surface area. `21-development-roadmap.md` for its
-scope and gate, `26` §Phase 3 for the ordered tasks.
+**Phase 3 is half done**: company profile and documents, the product offer, service areas and
+the portfolio. A verified company is matchable except for a price book — which, with the
+pricing engine, is the second half (`26` §Phase 3, tasks 3.3–3.5).
+
+Two things exist now that did not before and that shape everything after them: a **background
+worker** (`src/worker.ts`, pg-boss, run with `pnpm worker`) and **object storage** behind the
+`StorageProvider` port. Jobs must be idempotent — `23` §Runtime drains a worker on replacement
+and retries whatever was in flight — and every upload goes straight from the browser to
+storage, never through the application.
 
 Read `25-progress.md` first — it is the only place that says what is actually done, and its
 §Open questions holds eight questions (Q11–Q18) that the catalogue produced and that the D3

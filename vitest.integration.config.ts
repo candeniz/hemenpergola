@@ -20,12 +20,14 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['test/integration/**/*.integration.test.ts'],
+    globalSetup: ['./test/integration/global-setup.ts'],
     setupFiles: ['./test/integration/setup.ts'],
     // A valid environment so modules that parse env at load — `src/shared/db` — can be
     // imported. The DATABASE_URL here is never connected to: every client in these tests is
     // built against the container's URL from `setup.ts`.
     env: { ...VALID_ENV },
-    // One container, shared by the files; each test rolls its own transaction back.
+    // One container for the whole run, started by the global setup; each test rolls its
+    // own transaction back. Files stay sequential because they share that one database.
     fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 300_000,

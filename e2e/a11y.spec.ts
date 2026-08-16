@@ -20,6 +20,8 @@ const ROUTES = [
   { path: '/dev/ui', name: 'UI gallery' },
   { path: '/yonetim/katalog', name: 'admin catalogue' },
   { path: '/yonetim/ayarlar', name: 'platform settings' },
+  { path: '/yonetim/ureticiler', name: 'verification queue' },
+  { path: '/yonetim/denetim', name: 'audit viewer' },
 
   /*
    * The overlays, **open**.

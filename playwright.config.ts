@@ -34,7 +34,9 @@ export default defineConfig({
     command: `pnpm build && pnpm start --port ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: !isCI,
-    timeout: 180_000,
+    // Phase 3 added sharp and the AWS SDK; `next build` plus type checking plus
+    // `next start` no longer fits in three minutes on a cold `.next`.
+    timeout: 420_000,
     stdout: 'pipe',
     stderr: 'pipe',
   },

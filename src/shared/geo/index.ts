@@ -81,24 +81,28 @@ export async function distanceMetres(from: Point, to: Point): Promise<number> {
 
 /** Writes a point onto a row whose column Prisma cannot see. */
 export async function setPoint(
-  table: 'CompanyContact' | 'City' | 'District',
+  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea',
   id: string,
   point: Point,
 ): Promise<void> {
   // The table name cannot be a bind parameter, so it comes from a closed union rather than
   // from anything a caller can construct — the alternative is string interpolation into SQL.
   const relation = Prisma.raw(`"${table}"`)
-  await prisma.$executeRaw`UPDATE ${relation} SET "point" = ${pointSql(point)} WHERE "id" = ${id}`
+  // `ServiceArea` calls its column `centerPoint`; everything else calls it `point`. One
+  // more closed-union lookup rather than a second function that would drift from this one.
+  const column = Prisma.raw(table === 'ServiceArea' ? '"centerPoint"' : '"point"')
+  await prisma.$executeRaw`UPDATE ${relation} SET ${column} = ${pointSql(point)} WHERE "id" = ${id}`
 }
 
 /** Reads a point back. `null` when the row has none. */
 export async function getPoint(
-  table: 'CompanyContact' | 'City' | 'District',
+  table: 'CompanyContact' | 'City' | 'District' | 'ServiceArea',
   id: string,
 ): Promise<Point | null> {
   const relation = Prisma.raw(`"${table}"`)
+  const column = Prisma.raw(table === 'ServiceArea' ? '"centerPoint"' : '"point"')
   const rows = await prisma.$queryRaw<{ latitude: number | null; longitude: number | null }[]>`
-    SELECT ST_Y("point"::geometry) AS latitude, ST_X("point"::geometry) AS longitude
+    SELECT ST_Y(${column}::geometry) AS latitude, ST_X(${column}::geometry) AS longitude
     FROM ${relation}
     WHERE "id" = ${id}
   `
@@ -115,4 +119,57 @@ export async function postgisVersion(): Promise<string> {
   const first = rows[0]
   if (first === undefined) throw new GeoError('PostGIS_Version() returned no rows')
   return first.version
+}
+
+/**
+ * Companies whose service area covers a point — `09-manufacturer-matching.md`
+ * §Service-area coverage, verbatim.
+ *
+ * All three kinds in one query, because a company mixes them and a union in SQL is one
+ * index scan per branch rather than three round trips. The `RADIUS` branch is the reason
+ * `ServiceArea.centerPoint` has a GiST index: `ST_DWithin` on a `geography` column uses it,
+ * and the same predicate written in JavaScript would not (`ADR-002`, `ADR-015`).
+ *
+ * Phase 5 wraps this in the matching filter; Phase 3 needs it to prove the boundary case.
+ */
+export async function companiesCovering(input: {
+  point: Point
+  cityId: string
+  districtId?: string | null
+}): Promise<string[]> {
+  assertPoint(input.point)
+
+  const rows = await prisma.$queryRaw<{ companyId: string }[]>`
+    SELECT DISTINCT sa."companyId"
+    FROM "ServiceArea" sa
+    WHERE sa."isActive" = true
+      AND (
+        (sa."kind" = 'CITY'     AND sa."cityId"     = ${input.cityId})
+        OR (sa."kind" = 'DISTRICT' AND sa."districtId" = ${input.districtId ?? null})
+        OR (
+          sa."kind" = 'RADIUS'
+          AND sa."centerPoint" IS NOT NULL
+          AND ST_DWithin(sa."centerPoint", ${pointSql(input.point)}, sa."radiusKm" * 1000)
+        )
+      )
+  `
+
+  return rows.map((row) => row.companyId)
+}
+
+/** Metres from a service area's centre to a point. `null` when the area has no centre. */
+export async function distanceToServiceArea(
+  serviceAreaId: string,
+  point: Point,
+): Promise<number | null> {
+  assertPoint(point)
+
+  const rows = await prisma.$queryRaw<{ metres: number | null }[]>`
+    SELECT ST_Distance("centerPoint", ${pointSql(point)}) AS metres
+    FROM "ServiceArea"
+    WHERE "id" = ${serviceAreaId}
+  `
+
+  const metres = rows[0]?.metres
+  return metres === null || metres === undefined ? null : Number(metres)
 }

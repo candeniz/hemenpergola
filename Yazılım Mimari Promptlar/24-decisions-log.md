@@ -419,3 +419,63 @@ browser sent.
 **Reverses if.** Analytics show meaningful non-Turkish traffic arriving on unprefixed paths
 and bouncing. The fix then is a dismissible banner offering the other locale, not an automatic
 redirect.
+
+---
+
+## ADR-019 — No geocoding provider in V1; administrative centroids and an optional pin
+
+**Context.** `26-execution-plan.md` §Decision calendar put Q4 — *"geocoding provider and
+budget"* — at the start of Phase 3, because `ServiceArea` with `kind = RADIUS` needs a
+`centerPoint` and something has to produce one. Two routes were on the table:
+
+- a **map picker**, where the manufacturer drags a pin and no geocoding happens at all; the
+  cost is a map-tile vendor decision — licence, per-view pricing, and a third party
+  receiving the location of every Turkish manufacturer on the platform;
+- a **geocoding provider** behind the `Geocoder` port, where an address is typed and
+  resolved; the cost is per-request pricing, a rate limit, a cache table, and addresses
+  leaving the country.
+
+**Decision.** Neither, for now. The `Geocoder` port ships with an
+**administrative-centroid adapter**: it resolves a city and district to the centroid Phase 0
+already seeded — 81 provinces and 974 districts, offline and free — and a manufacturer who
+knows their coordinates can enter them directly, which is stored as `precision: 'exact'`.
+
+Q4 is therefore **narrowed, not closed**: the question is no longer "which provider and what
+budget" but "does the public site need map tiles in Phase 8, and if it does, does the picker
+come free with them".
+
+**Why this is not a fudge.**
+
+A radius service area says *"we work within N kilometres of here"*. The uncertainty that
+dominates is N — a manufacturer picks 30 or 50, never 32.4 — and on the *other* side of the
+comparison `09-manufacturer-matching.md` §Service-area coverage already accepts a district
+centroid as the project's point when the customer gave no precise location, calling it *"good
+enough for a radius test"*. Paying a provider to place one end of that comparison to within
+ten metres while the other end is the middle of a district buys nothing that anybody can
+measure.
+
+The largest district in Turkey is tens of kilometres across, so the worst case is real; it is
+also bounded, visible, and fixed by the manufacturer entering coordinates. What it is not is
+a reason to take on a vendor before a single manufacturer has drawn a service area.
+
+**Consequences.**
+
+Phase 3 waits on no procurement decision, which was the point of putting Q4 in the calendar.
+
+The port is real and the adapter is one file, so the day street-level accuracy is needed
+nothing else changes. The adapter is called `administrativeGeocoder` rather than
+`nullGeocoder` on purpose: it is a real geocoder with a coarse resolution, and naming it after
+what it lacks would invite somebody to replace it before finding out whether the resolution is
+a problem.
+
+`GeocodeResult.precision` is stored and shown, because a radius drawn around a district
+centroid is a different promise from one drawn around a pin, and the manufacturer should be
+able to tell which they have.
+
+Resolution happens in the **`geo.geocode_service_area` job**, not in the request. That is one
+more moving part than an inline call, and it is what makes a better geocoder a bulk re-run
+over existing rows rather than a migration.
+
+**Reverses if.** Matching quality complaints trace to service-area precision, or Phase 8
+brings map tiles for the public directory anyway — at which point the picker is nearly free
+and the argument above stops applying.

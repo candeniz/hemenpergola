@@ -190,10 +190,16 @@ describe('migration 1 · geography columns accept and return points', () => {
  * which is a deliberate edit in that phase's commit, not a surprise.
  */
 describe('migration scope', () => {
-  it('has exactly the tables Phases 0 and 1 own, and none from later phases', async () => {
+  it('has exactly the tables Phases 0 to 3 own, and none from later phases', async () => {
     const rows = await getPrisma().$queryRaw<{ tablename: string }[]>`
       SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename
     `
+    /*
+     * pg-boss is excluded by schema, not by name: it creates and migrates its own tables and
+     * they live in `pgboss` (`shared/jobs`). The query below is already scoped to `public`,
+     * so this is a note rather than a filter — but it is the thing a reader wonders about
+     * the first time they see a job queue in a project with an exact table list.
+     */
     const tables = rows.map((row) => row.tablename).filter((name) => !name.startsWith('_'))
 
     expect(tables).toEqual([
@@ -209,15 +215,23 @@ describe('migration scope', () => {
       'CompanyContact',
       'CompanyDocument',
       'CompanyMembership',
+      // Phase 3 · migration 4
+      'CompanyProduct',
+      'CompanyProductOption',
       'ConfiguratorQuestion',
       'ConfiguratorRule',
       'Consent',
       'District',
       'File',
+      // Phase 3 · migration 4
+      'FileVariant',
       'LeadCredit',
       'Payment',
       'Plan',
       'PlatformSetting',
+      // Phase 3 · migration 4
+      'PortfolioItem',
+      'PortfolioPhoto',
       // Phase 2 · migration 3
       'Product',
       'ProductAttribute',
@@ -230,6 +244,8 @@ describe('migration scope', () => {
       'RefreshToken',
       // Phase 2 · migration 3
       'Seo',
+      // Phase 3 · migration 4
+      'ServiceArea',
       'Session',
       'Subscription',
       'User',
@@ -244,13 +260,16 @@ describe('migration scope', () => {
     expect(tables).not.toContain('OfferRequest')
 
     /*
-     * `CompanyProduct` and `CompanyProductOption` are in `04` §Catalogue but **not** in
-     * migration 3. They are the manufacturer's offer over the catalogue, and they belong to
-     * Phase 3 — the boundary between "what the platform sells" and "who sells it" is the
-     * whole reason task 2.1 stops where it does.
+     * `CompanyProduct` and `CompanyProductOption` arrived in migration 4, which is the
+     * boundary task 2.1 stopped at: migration 3 said what the platform sells, migration 4
+     * says who sells it. The assertion moved rather than being deleted.
      */
-    expect(tables).not.toContain('CompanyProduct')
-    expect(tables).not.toContain('CompanyProductOption')
+    expect(tables).toContain('CompanyProduct')
+    expect(tables).toContain('CompanyProductOption')
+
+    // Phase 3's second half — the price book — is not here yet, and it is five tables.
+    expect(tables).not.toContain('PriceBookItem')
+    expect(tables).not.toContain('PriceBookOptionPrice')
   })
 })
 

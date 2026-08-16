@@ -201,6 +201,10 @@ model Company {
   subscriptions Subscription[]
   payments      Payment[]
   leadCredits   LeadCredit[]
+  // Phase 3 · migration 4
+  products      CompanyProduct[]
+  serviceAreas  ServiceArea[]
+  portfolio     PortfolioItem[]
 
   @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
@@ -286,6 +290,8 @@ model City {
 
   districts       District[]
   companyContacts CompanyContact[]
+  serviceAreas    ServiceArea[]
+  portfolioItems  PortfolioItem[]
 
   @@index([point], type: Gist, map: "City_point_gist")
   @@index([name])
@@ -303,6 +309,7 @@ model District {
 
   city            City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
   companyContacts CompanyContact[]
+  serviceAreas    ServiceArea[]
 
   @@unique([cityId, name])
   @@index([point], type: Gist, map: "District_point_gist")
@@ -331,6 +338,9 @@ model File {
   uploader         User?             @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
   companyDocuments CompanyDocument[]
   seoOgImages      Seo[]
+  // Phase 3 · migration 4
+  portfolioPhotos  PortfolioPhoto[]
+  variants         FileVariant[]
 
   @@index([ownerType, ownerId])
   @@index([uploadedBy])
@@ -667,10 +677,12 @@ model Product {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  category     Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  seo          Seo?                 @relation(fields: [seoId], references: [id], onDelete: SetNull)
-  translations ProductTranslation[]
-  attributes   ProductAttribute[]
+  category        Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  seo             Seo?                 @relation(fields: [seoId], references: [id], onDelete: SetNull)
+  translations    ProductTranslation[]
+  attributes      ProductAttribute[]
+  companyProducts CompanyProduct[]
+  portfolioItems  PortfolioItem[]
 
   @@index([categoryId, sortOrder])
   @@index([isActive])
@@ -761,8 +773,9 @@ model ProductOption {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  attribute    ProductAttribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  translations ProductOptionTranslation[]
+  attribute             ProductAttribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  translations          ProductOptionTranslation[]
+  companyProductOptions CompanyProductOption[]
 
   @@unique([attributeId, value])
   @@index([attributeId, sortOrder])
@@ -777,4 +790,164 @@ model ProductOptionTranslation {
   option ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@id([optionId, locale])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Manufacturer supply side — migration 4, Phase 3 (`ADR-014`)
+//
+// What a company offers and where it offers it: the catalogue rows it sells, the
+// areas it covers, and the work it has done. `PriceBook*` is the second half of the
+// phase and arrives in the same migration only if it lands in the same commit — it
+// does not, so it comes with a fifth.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A product this company sells (`04-data-model.md` §Catalogue).
+ * The row is the company's *claim*, not a price. `09` §1 filters candidates on it: a
+ * company that does not offer the product is not a candidate, and one that does not offer a
+ * required option is not either. The filter is Phase 5; the shape has to be right here or
+ * Phase 5 has nothing to filter on.
+ */
+model CompanyProduct {
+  id        String   @id @default(cuid())
+  companyId String
+  productId String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  options CompanyProductOption[]
+
+  @@unique([companyId, productId])
+  @@index([productId, isActive])
+  @@index([companyId])
+}
+
+/**
+ * Whether this company offers one option of one product.
+ * A row means "we have an answer for this"; `isOffered = false` means "we do not do that".
+ * The absence of a row means the company has never said either way, which `09` treats as
+ * not offered — stated here because the two are easy to conflate and they rank differently.
+ * `onDelete: Restrict` on the option is the database half of `10` §Admin authoring: an
+ * option a manufacturer has answered cannot be deleted out from under them.
+ */
+model CompanyProductOption {
+  id               String   @id @default(cuid())
+  companyProductId String
+  optionId         String
+  isOffered        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  companyProduct CompanyProduct @relation(fields: [companyProductId], references: [id], onDelete: Cascade)
+  option         ProductOption  @relation(fields: [optionId], references: [id], onDelete: Restrict)
+
+  @@unique([companyProductId, optionId])
+  @@index([optionId, isOffered])
+}
+
+enum ServiceAreaKind {
+  CITY
+  DISTRICT
+  RADIUS
+}
+
+/**
+ * Where a company works — `09-manufacturer-matching.md` §Service-area coverage.
+ * Three kinds, one table, because a company mixes them: "all of İzmir, plus Çeşme, plus
+ * 40 km around the workshop" is one company's answer and three rows.
+ * `centerPoint` is `Unsupported("geography")` and therefore invisible to the Prisma client
+ * (`ADR-015`): it is written and read through `shared/geo`, and its GiST index is declared
+ * here so `prisma migrate diff` stays empty.
+ */
+model ServiceArea {
+  id          String                                 @id @default(cuid())
+  companyId   String
+  kind        ServiceAreaKind
+  cityId      String?
+  districtId  String?
+  /// Only for `RADIUS`. Filled by the `geo.geocode_service_area` job.
+  centerPoint Unsupported("geography(Point, 4326)")?
+  radiusKm    Int?
+  isActive    Boolean                                @default(true)
+  /// What the manufacturer typed, kept so the centre can be recomputed if the geocoder
+  /// behind the port ever gets better. Without it a re-geocode has nothing to work from.
+  centerLabel String?
+  createdAt   DateTime                               @default(now())
+  updatedAt   DateTime                               @updatedAt
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  city     City?     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  district District? @relation(fields: [districtId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, isActive])
+  @@index([kind, cityId])
+  @@index([kind, districtId])
+  @@index([centerPoint], type: Gist, map: "ServiceArea_centerPoint_gist")
+}
+
+/**
+ * One completed job in a company's portfolio (`04` §Content and media).
+ * `09` §Scoring reads the count per product as "portfolio depth", worth 5 of 100 — small,
+ * but it is the only signal a brand-new company can move on its own in week one.
+ */
+model PortfolioItem {
+  id          String    @id @default(cuid())
+  companyId   String
+  title       String
+  description String?
+  productId   String?
+  cityId      String?
+  completedAt DateTime?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  city    City?            @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  photos  PortfolioPhoto[]
+
+  @@index([companyId, sortOrder])
+  @@index([productId])
+}
+
+model PortfolioPhoto {
+  id              String   @id @default(cuid())
+  portfolioItemId String
+  fileId          String
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  item PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  file File          @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioItemId, fileId])
+  @@index([portfolioItemId, sortOrder])
+  @@index([fileId])
+}
+
+/**
+ * The rendered variants of one image — `14-file-storage-and-media.md` §Image pipeline.
+ * A row per variant rather than a JSON column on `File`, because `next/image` needs a URL
+ * per width and a JSON blob would have to be parsed on every render. `media.process` writes
+ * them; re-running it upserts, which is what makes the job idempotent.
+ */
+model FileVariant {
+  id        String @id @default(cuid())
+  fileId    String
+  /// `thumb` | `card` | `hero` | `full`, plus `hero-avif`.
+  name      String
+  key       String @unique
+  width     Int
+  height    Int
+  mime      String
+  sizeBytes Int
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, name])
+  @@index([fileId])
 }
