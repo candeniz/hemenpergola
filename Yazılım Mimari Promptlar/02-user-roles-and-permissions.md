@@ -46,6 +46,7 @@ truth and this table must be regenerated from it, never hand-edited to diverge.
 |---|:--:|:--:|:--:|:--:|
 | `company.update` | ✓ | ✓ | — | — |
 | `company.delete` | ✓ | — | — | — |
+| `member.read` | ✓ | ✓ | ✓ | ✓ |
 | `member.invite` | ✓ | ✓ | — | — |
 | `member.remove` | ✓ | ✓ | — | — |
 | `member.change_role` | ✓ | ✓¹ | — | — |
@@ -99,7 +100,7 @@ Manufacturer capability is the intersection of role **and** company state:
 
 | Company status | Effect |
 |---|---|
-| `PENDING` | can complete profile and upload documents; not matchable, not listed |
+| `PENDING` | can complete profile, manage members and upload documents; not matchable, not listed (`ADR-016`) |
 | `VERIFIED` | fully operational |
 | `REJECTED` | read-only, may resubmit documents |
 | `SUSPENDED` | read-only, hidden from search and matching, existing requests frozen |

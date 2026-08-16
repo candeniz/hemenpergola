@@ -65,3 +65,15 @@ ALTER TABLE "AuthToken" ADD CONSTRAINT "AuthToken_userId_fkey" FOREIGN KEY ("use
 -- AddForeignKey
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+
+-- Rate-limit counters (06 §Rate limits). Shared state, because the web tier is N instances.
+CREATE TABLE "RateLimitHit" (
+    "bucket" TEXT NOT NULL,
+    "windowStart" TIMESTAMP(3) NOT NULL,
+    "count" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "RateLimitHit_pkey" PRIMARY KEY ("bucket", "windowStart")
+);
+
+-- Sweeping expired windows is a range scan, not a full table scan.
+CREATE INDEX "RateLimitHit_windowStart_idx" ON "RateLimitHit"("windowStart");

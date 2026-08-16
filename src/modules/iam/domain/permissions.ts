@@ -24,6 +24,13 @@ export type CompanyStatus = (typeof COMPANY_STATUSES)[number]
 export const PERMISSIONS = {
   COMPANY_UPDATE: 'company:company.update',
   COMPANY_DELETE: 'company:company.delete',
+  /**
+   * Reading the roster. `02`'s table does not list it — the same omission as
+   * `document.upload` — but every role needs it: SALES has to see who to hand a lead to, and
+   * VIEWER sees the team on the company page. Gating the roster behind `member.invite` would
+   * mean only OWNER and ADMIN can see who is in the company they work for (`ADR-016`).
+   */
+  MEMBER_READ: 'company:member.read',
   MEMBER_INVITE: 'company:member.invite',
   MEMBER_REMOVE: 'company:member.remove',
   MEMBER_CHANGE_ROLE: 'company:member.change_role',
@@ -63,17 +70,30 @@ export const PERMISSION_KIND: Record<Permission, PermissionKind> = {
   [PERMISSIONS.PRICE_BOOK_READ]: 'read',
   [PERMISSIONS.OFFER_REQUEST_READ]: 'read',
   [PERMISSIONS.ANALYTICS_READ]: 'read',
+  [PERMISSIONS.MEMBER_READ]: 'read',
 
   // The onboarding path: a PENDING company must be able to finish its profile and upload
   // documents, or it can never reach VERIFIED (02 §Verification state).
   [PERMISSIONS.COMPANY_UPDATE]: 'onboarding',
   [PERMISSIONS.DOCUMENT_UPLOAD]: 'onboarding',
+  /*
+   * Member management is onboarding, not operational (`ADR-016`).
+   *
+   * `02` §Verification state summarises `PENDING` as "can complete profile and upload
+   * documents", and the first reading of that makes inviting a colleague a `write` — which
+   * means a newly registered company is one person until an administrator verifies it. In a
+   * real firm the founder is not the person who scans the tax certificate. Building the team
+   * *is* the work that gets a company verified, so it belongs on the onboarding path.
+   *
+   * `SUSPENDED` and `REJECTED` are unaffected: neither permits onboarding work, so a frozen
+   * company still cannot change who its members are.
+   */
+  [PERMISSIONS.MEMBER_INVITE]: 'onboarding',
+  [PERMISSIONS.MEMBER_REMOVE]: 'onboarding',
+  [PERMISSIONS.MEMBER_CHANGE_ROLE]: 'onboarding',
 
   // Everything operational
   [PERMISSIONS.COMPANY_DELETE]: 'write',
-  [PERMISSIONS.MEMBER_INVITE]: 'write',
-  [PERMISSIONS.MEMBER_REMOVE]: 'write',
-  [PERMISSIONS.MEMBER_CHANGE_ROLE]: 'write',
   [PERMISSIONS.PRODUCT_MANAGE]: 'write',
   [PERMISSIONS.PRICE_BOOK_WRITE]: 'write',
   [PERMISSIONS.PRICE_BOOK_PUBLISH]: 'write',
@@ -98,6 +118,7 @@ const OWNER_PERMISSIONS: readonly Permission[] = ALL_PERMISSIONS
 
 const ADMIN_PERMISSIONS: readonly Permission[] = [
   PERMISSIONS.COMPANY_UPDATE,
+  PERMISSIONS.MEMBER_READ,
   PERMISSIONS.MEMBER_INVITE,
   PERMISSIONS.MEMBER_REMOVE,
   PERMISSIONS.MEMBER_CHANGE_ROLE,
@@ -119,6 +140,7 @@ const ADMIN_PERMISSIONS: readonly Permission[] = [
 ]
 
 const SALES_PERMISSIONS: readonly Permission[] = [
+  PERMISSIONS.MEMBER_READ,
   PERMISSIONS.PRICE_BOOK_READ,
   PERMISSIONS.OFFER_REQUEST_READ,
   PERMISSIONS.OFFER_REQUEST_RESPOND,
@@ -132,6 +154,7 @@ const SALES_PERMISSIONS: readonly Permission[] = [
 ]
 
 const VIEWER_PERMISSIONS: readonly Permission[] = [
+  PERMISSIONS.MEMBER_READ,
   PERMISSIONS.PRICE_BOOK_READ,
   PERMISSIONS.OFFER_REQUEST_READ,
   PERMISSIONS.ANALYTICS_READ,

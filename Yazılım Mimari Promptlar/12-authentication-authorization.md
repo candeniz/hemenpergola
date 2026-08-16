@@ -51,6 +51,16 @@ effect immediately instead of at token expiry.
 Phone verification before disclosure is the only real defence manufacturers have against
 junk leads; it is a hard gate, not a nudge (`03-user-flows.md` §F2).
 
+Implemented as a table, in `src/modules/iam/domain/verification-gates.ts`. The rows above are
+transcribed verbatim, including the two it is tempting to over-read: **requesting offers needs
+a verified email, not a phone**, and the phone gate lands on disclosure. That is not a hole —
+disclosure is only reached through a request that already required the email — and tightening
+it would block every customer for as long as Q3 leaves the SMS provider undecided.
+
+Four actions the table above does not name are also encoded there, marked as judgement rather
+than transcription: signing in (ungated, or an unverified account is unrecoverable),
+registering a company (both channels), inviting a member (email) and writing a review (both).
+
 ## Context resolution
 
 ```ts

@@ -197,13 +197,89 @@ export async function revokeFamily(familyId: string, reason: string): Promise<nu
   return result.count
 }
 
-/** Kill every family for a user — password change or reset (`12` §Sessions and revocation). */
-export async function revokeAllFamilies(userId: string, reason: string): Promise<number> {
+/**
+ * Kill every family for a user — password change or reset (`12` §Sessions and revocation).
+ *
+ * `exceptFamilyId` spares the caller's own session, which is what "sign out everywhere
+ * else" means. A password *reset* passes nothing, because the person resetting is not
+ * signed in and the whole point is that whoever else was, no longer is.
+ */
+export async function revokeAllFamilies(
+  userId: string,
+  reason: string,
+  exceptFamilyId?: string,
+): Promise<number> {
   const result = await prisma.refreshToken.updateMany({
-    where: { userId, revokedAt: null },
+    where: {
+      userId,
+      revokedAt: null,
+      ...(exceptFamilyId === undefined ? {} : { familyId: { not: exceptFamilyId } }),
+    },
     data: { revokedAt: new Date(), revokedReason: reason },
   })
   return result.count
+}
+
+export type SessionSummary = {
+  familyId: string
+  ip: string | null
+  userAgent: string | null
+  startedAt: Date
+  lastUsedAt: Date
+  current: boolean
+}
+
+/**
+ * The signed-in sessions of one user, one row per family (`12` §Sessions and revocation).
+ *
+ * A family is a login, so the *first* token in it is when the session started and the
+ * newest is when it was last used — which is the pair the screen shows next to the device.
+ */
+export async function listSessionFamilies(
+  userId: string,
+  currentToken?: string,
+): Promise<SessionSummary[]> {
+  const tokens = await prisma.refreshToken.findMany({
+    where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  const currentHash = currentToken === undefined ? null : hashToken(currentToken)
+  const families = new Map<string, SessionSummary>()
+
+  for (const token of tokens) {
+    const existing = families.get(token.familyId)
+    const current = currentHash !== null && token.tokenHash === currentHash
+
+    if (existing === undefined) {
+      families.set(token.familyId, {
+        familyId: token.familyId,
+        ip: token.ip,
+        userAgent: token.userAgent,
+        startedAt: token.createdAt,
+        lastUsedAt: token.createdAt,
+        current,
+      })
+      continue
+    }
+
+    existing.lastUsedAt = token.createdAt
+    if (current) existing.current = true
+    // Keep the newest device fingerprint: rotation records where the session is *now*.
+    if (token.ip !== null) existing.ip = token.ip
+    if (token.userAgent !== null) existing.userAgent = token.userAgent
+  }
+
+  return [...families.values()].sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime())
+}
+
+/** The family a refresh token belongs to, for "this is the session I am in". */
+export async function familyOfToken(token: string): Promise<string | null> {
+  const row = await prisma.refreshToken.findUnique({
+    where: { tokenHash: hashToken(token) },
+    select: { familyId: true, userId: true },
+  })
+  return row?.familyId ?? null
 }
 
 // ── Verification tokens ──────────────────────────────────────────────────────

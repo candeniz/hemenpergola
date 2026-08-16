@@ -113,5 +113,94 @@
     "requirement": "Eşik",
     "uiTitle": "Arayüz galerisi",
     "uiBody": "Her primitive, her varyant ve durumuyla. Render edilmeyen bir yeniden stillendirme doğrulanamaz."
+  },
+  "auth": {
+    "emailLabel": "E-posta",
+    "emailPlaceholder": "ornek@firma.com",
+    "passwordLabel": "Şifre",
+    "passwordHint": "En az 12 karakter.",
+    "fullNameLabel": "Ad soyad",
+    "phoneLabel": "Telefon",
+    "phonePlaceholder": "0555 123 45 67",
+    "submitting": "Gönderiliyor…",
+    "register": {
+      "title": "Hesap oluştur",
+      "subtitle": "Projenizi tarif edin, doğrulanmış üreticilerden tahmini fiyat alın.",
+      "submit": "Hesap oluştur",
+      "consent": "Kullanım koşullarını ve aydınlatma metnini okudum, kabul ediyorum.",
+      "consentLink": "Kullanım koşulları",
+      "consentRequired": "Devam etmek için koşulları kabul etmeniz gerekiyor.",
+      "done": "Hesabınız oluşturuldu",
+      "doneBody": "E-posta adresinize bir doğrulama bağlantısı gönderdik. Bağlantı 24 saat geçerli.",
+      "haveAccount": "Zaten hesabınız var mı?",
+      "signIn": "Giriş yapın"
+    },
+    "login": {
+      "title": "Giriş yap",
+      "subtitle": "Hesabınıza girerek tekliflerinizi yönetin.",
+      "submit": "Giriş yap",
+      "forgot": "Şifremi unuttum",
+      "noAccount": "Hesabınız yok mu?",
+      "register": "Hesap oluşturun",
+      "failed": "E-posta veya şifre hatalı.",
+      "slowed": "Çok fazla başarısız deneme. Lütfen biraz bekleyin."
+    },
+    "forgot": {
+      "title": "Şifrenizi mi unuttunuz?",
+      "subtitle": "E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.",
+      "submit": "Bağlantı gönder",
+      "done": "Bağlantı gönderildi",
+      "doneBody": "Bu adrese ait bir hesap varsa sıfırlama bağlantısını gönderdik. Bağlantı 1 saat geçerli.",
+      "backToLogin": "Girişe dön"
+    },
+    "reset": {
+      "title": "Yeni şifre belirleyin",
+      "subtitle": "Şifrenizi değiştirdiğinizde diğer tüm oturumlarınız kapatılır.",
+      "newPassword": "Yeni şifre",
+      "submit": "Şifreyi güncelle",
+      "done": "Şifreniz güncellendi",
+      "doneBody": "Artık yeni şifrenizle giriş yapabilirsiniz.",
+      "sessionsRevoked": "Diğer oturumlarınız kapatıldı: {count}",
+      "invalidToken": "Bağlantı geçersiz veya süresi dolmuş",
+      "invalidTokenBody": "Sıfırlama bağlantıları 1 saat geçerlidir ve bir kez kullanılır.",
+      "requestNew": "Yeni bağlantı iste"
+    },
+    "verifyEmail": {
+      "title": "E-posta adresiniz doğrulanıyor",
+      "done": "E-posta adresiniz doğrulandı",
+      "doneBody": "Hesabınız hazır.",
+      "failed": "Bağlantı geçersiz veya süresi dolmuş",
+      "failedBody": "Doğrulama bağlantıları 24 saat geçerlidir ve bir kez kullanılır.",
+      "missingToken": "Bu sayfaya e-postanızdaki bağlantıdan ulaşmanız gerekiyor.",
+      "resend": "Yeni bağlantı gönder",
+      "resent": "Doğrulanmamış bir hesap varsa yeni bağlantı gönderildi.",
+      "continue": "Girişe dön"
+    },
+    "verifyPhone": {
+      "title": "Telefonunuzu doğrulayın",
+      "subtitle": "Numaranıza altı haneli bir kod göndereceğiz.",
+      "send": "Kod gönder",
+      "codeLabel": "Doğrulama kodu",
+      "codeHint": "Kod 5 dakika geçerli.",
+      "confirm": "Doğrula",
+      "resend": "Kodu tekrar gönder",
+      "resendIn": "{seconds} saniye sonra tekrar gönderebilirsiniz",
+      "sent": "Kod gönderildi.",
+      "done": "Telefonunuz doğrulandı",
+      "wrongCode": "Kod hatalı. Kalan hakkınızı dikkatli kullanın.",
+      "tooManyAttempts": "Çok fazla hatalı deneme. Yeni bir kod isteyin.",
+      "logAdapterNotice": "Geliştirme ortamı: SMS sağlayıcısı henüz seçilmedi, kod sunucu günlüğüne yazılıyor."
+    },
+    "forbidden": {
+      "title": "Bu sayfaya erişiminiz yok",
+      "body": "Bu işlem için gereken yetkiye sahip değilsiniz. Yanlış hesapla giriş yapmış olabilirsiniz.",
+      "permission": "Gereken yetki: {permission}",
+      "switchAccount": "Başka hesapla giriş yap",
+      "home": "Ana sayfaya dön"
+    },
+    "verificationRequired": {
+      "email": "Devam etmek için e-posta adresinizi doğrulayın.",
+      "phone": "Devam etmek için telefon numaranızı doğrulayın."
+    }
   }
 }

@@ -11,9 +11,8 @@ import { test } from '@playwright/test'
  */
 
 test.describe('F2 · customer account', () => {
-  test.fixme('registration → email verification → login → password reset', async () => {
-    // Phase 1. Unverified email may browse and build a draft; it may not request offers.
-  })
+  // 'registration → email verification → login → password reset' now runs, in
+  // `account.spec.ts`. Phase 1 closed it; it is not listed here twice.
 
   test.fixme('phone verification gates contact disclosure', async () => {
     // Phase 1 for the flow, Phase 6 for the gate it protects. The only real defence
@@ -61,9 +60,7 @@ test.describe('03 §Failure paths — each row is a test', () => {
     // independently — that separation is the point.
   })
 
-  test.fixme('permission denied → 403 page, never a redirect loop', async () => {
-    // Phase 1. Screen: access_denied_permission_required.
-  })
+  // 'permission denied → 403 page, never a redirect loop' now runs, in `account.spec.ts`.
 
   test.fixme('all manufacturers decline → customer prompted to select others', async () => {
     // Phase 6.

@@ -266,3 +266,56 @@ The cost is that spatial columns are invisible to the Prisma client, so they can
 selected, filtered or included through it. Phase 3 follows the same pattern when
 `ServiceArea.centerPoint` arrives: `Unsupported` column, GiST index in the migration,
 containment query as a function in `shared/geo`.
+
+---
+
+## ADR-016 — Member management is onboarding work, and reading the roster is a read
+
+**Context.** `02-user-roles-and-permissions.md` §Verification state summarises `PENDING` as
+*"can complete profile and upload documents"*. Task 1.6 turned that summary into code, and two
+consequences fell out that nobody had decided.
+
+The first: with `member.invite`, `member.remove` and `member.change_role` classified as
+`write`, a company that has just registered is **one person** until an administrator verifies
+it. The founder must personally scan the tax certificate, upload it, and answer any question
+about it. In a real firm the person who registers the company is rarely the person who does
+the paperwork, and there is no way to hand it over. That is a verification queue designed to
+be slow.
+
+The second: `02`'s catalogue has no permission for *reading* the roster. Task 1.6 needed one
+and used `member.invite`, which means a `SALES` user cannot see who else is in the company
+they work for — they can answer a customer request but not find the colleague to hand it to.
+This is the same omission as `document.upload`, which `02`'s prose implies and its table left
+out.
+
+**Decision.**
+
+`member.invite`, `member.remove` and `member.change_role` are **`onboarding`**, not `write`.
+A `PENDING` company may build its team, because building the team is part of the work that
+gets it verified.
+
+A new permission **`company:member.read`** is added, classified `read`, held by all four
+company roles. `listMembers` uses it.
+
+`02` §Verification state is corrected: the `PENDING` row now reads *"can complete profile,
+manage members and upload documents"*.
+
+**Consequences.**
+
+`REJECTED` and `SUSPENDED` are untouched. Neither permits onboarding work, so a frozen or
+rejected company still cannot change who its members are — which is the property that
+mattered, and it is now enforced by the `PermissionKind` table rather than by three
+permissions happening to be classified `write` for an unrelated reason.
+
+A `PENDING` company can now invite people into a company that is not yet verified. That is
+not a new exposure: every operational permission is still `write`, so an invited member of a
+pending company can do exactly what the founder can — onboarding work and reads.
+
+`member.read` makes the roster visible to `VIEWER`. The roster is names, email addresses and
+roles of colleagues, which every member of a company already knows; it is not customer data
+and `19-security-and-kvkk.md` §Contact disclosure does not reach it.
+
+The precedent worth naming: **the catalogue in code is the source of truth, and `02`'s table
+is generated from it** (`scripts/generate-permission-table.mjs`). When the two disagree the
+resolution is a decision recorded here plus a regenerated table — not a comment in the
+service explaining why the code differs from the document.

@@ -1,22 +1,64 @@
 import 'server-only'
 
+import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
+import { brandName } from '@/modules/notification/domain/brand'
+import {
+  accountAlreadyExistsEmail,
+  emailVerificationEmail,
+  lockoutNoticeEmail,
+  passwordResetEmail,
+  phoneOtpSms,
+} from '@/modules/notification/domain/templates'
+import { getMailer, type Email } from '@/modules/notification/infrastructure/mailer'
+import { getSmsSender } from '@/modules/notification/infrastructure/sms-sender'
+import { env } from '@/shared/config/env'
 import { prisma } from '@/shared/db'
-import { conflict, err, forbidden, ok, rateLimited, type DomainError } from '@/shared/result'
+import { consumeAuthRateLimit } from '@/shared/rate-limit'
+import {
+  conflict,
+  dependency,
+  err,
+  forbidden,
+  notFound,
+  ok,
+  precondition,
+  rateLimited,
+  type DomainError,
+} from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
+import { consentTextVersion } from '../domain/consent-text'
 import { validatePassword } from '../domain/password'
 import { getCaptchaProvider } from '../infrastructure/captcha'
 import { burnPasswordTime, hashPassword, verifyPassword } from '../infrastructure/password-hasher'
 import {
   ACCESS_TOKEN_TTL_SECONDS,
+  consumeAuthToken,
+  familyOfToken,
   issueAccessToken,
   issueAuthToken,
   issueRefreshToken,
+  listSessionFamilies,
+  recordAuthTokenAttempt,
   revokeAllFamilies,
   revokeFamily,
   rotateRefreshToken,
+  type SessionSummary,
 } from '../infrastructure/token-service'
-import type { LoginInput, LogoutInput, RefreshInput, RegisterInput } from './dto'
+import type {
+  ConfirmPhoneVerificationInput,
+  ListSessionsInput,
+  LoginInput,
+  LogoutInput,
+  RefreshInput,
+  RegisterInput,
+  RequestPasswordResetInput,
+  ResendEmailVerificationInput,
+  ResetPasswordInput,
+  RevokeSessionInput,
+  StartPhoneVerificationInput,
+  VerifyEmailInput,
+} from './dto'
 
 /**
  * Authentication use cases — `12-authentication-authorization.md` §Credentials, §Tokens,
@@ -56,9 +98,56 @@ export function progressiveDelayMs(failedCount: number): number {
   return Math.min(1000 * 2 ** step, MAX_PROGRESSIVE_DELAY_MS)
 }
 
+/**
+ * The `06` §Rate limits row for the auth surface: 10 / 15 min, per IP **and** per account.
+ *
+ * Applied to every anonymous auth method, not only login. Registration, "forgot my
+ * password" and "resend the link" all send mail to an address the caller names, so an
+ * unlimited one is a way to have this platform deliver somebody else's harassment.
+ *
+ * The account dimension is keyed on the address, not a user id, so an attempt against an
+ * address with no account is counted too — otherwise the limit is avoided by guessing
+ * addresses instead of passwords.
+ */
+async function underAuthRateLimit(
+  actor: { ip: string },
+  account: string,
+): Promise<DomainError | null> {
+  const verdict = await consumeAuthRateLimit(actor.ip, account)
+  return verdict.allowed ? null : rateLimited(verdict.retryAfterSeconds)
+}
+
 async function delay(ms: number): Promise<void> {
   if (ms <= 0) return
   await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * A link into the app.
+ *
+ * `AUTH_URL` is the app's public origin (`23-deployment-and-environments.md`
+ * §Configuration). Paths are the Turkish ones: `tr` is the default locale and is
+ * unprefixed, so a link built here works for the majority and `en` users are redirected
+ * by the middleware rather than sent a broken URL.
+ */
+function appLink(path: string): string {
+  return new URL(path, env.AUTH_URL).toString()
+}
+
+/**
+ * Send mail without letting a mail failure fail the use case.
+ *
+ * A provider outage must not roll back a completed registration — the user would have an
+ * account they could not be told about *and* an error page saying it failed. The link can be
+ * re-requested; the account cannot be un-created.
+ */
+async function sendMail(to: string, body: { subject: string; text: string }): Promise<void> {
+  const email: Email = { to, subject: body.subject, text: body.text }
+  try {
+    await getMailer().send(email)
+  } catch (error) {
+    console.error('[mail] send failed', body.subject, error)
+  }
 }
 
 export type AuthTokens = {
@@ -86,6 +175,9 @@ export const register = serviceMethod<RegisterInput, RegisterResult>(
   'register',
   { kind: 'anonymous', why: 'creating the account that would be the subject of a permission' },
   async (actor, input) => {
+    const limited = await underAuthRateLimit(actor, input.email)
+    if (limited !== null) return err(limited)
+
     const problems = validatePassword(input.password)
     if (problems.length > 0) {
       return err(conflict(`password rejected: ${problems.map((p) => p.kind).join(', ')}`))
@@ -95,22 +187,56 @@ export const register = serviceMethod<RegisterInput, RegisterResult>(
 
     if (existing !== null) {
       // Same work, same shape, same answer. The account owner gets an email; the person
-      // probing the endpoint learns nothing.
+      // probing the endpoint learns nothing — and the one who *does* own the address gets
+      // told, with the reset link they would actually have wanted.
       await burnPasswordTime(input.password)
+      const reset = await issueAuthToken(existing.id, 'PASSWORD_RESET', input.email)
+      await sendMail(
+        input.email,
+        accountAlreadyExistsEmail(appLink(`/sifre-yenile?token=${reset.token}`), brandName()),
+      )
       return ok({ userId: existing.id, emailVerificationSent: true })
     }
 
-    const user = await prisma.user.create({
-      data: {
-        email: input.email,
-        fullName: input.fullName,
-        locale: input.locale,
-        passwordHash: await hashPassword(input.password),
-      },
+    const passwordHash = await hashPassword(input.password)
+
+    /*
+     * The account and its consent record are written in one transaction.
+     *
+     * `19-security-and-kvkk.md` §Consent treats consent as evidence, and evidence written
+     * *after* the thing it evidences goes missing exactly when the second write fails. An
+     * account with no consent row is an account nobody can prove agreed to anything.
+     */
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: input.email,
+          fullName: input.fullName,
+          locale: input.locale,
+          passwordHash,
+        },
+      })
+
+      await tx.consent.create({
+        data: {
+          userId: created.id,
+          type: 'TERMS',
+          // Derived from the file's bytes, never a constant — `domain/consent-text.ts`
+          // says why at length.
+          textVersion: consentTextVersion('TERMS', input.locale),
+          ip: actor.ip,
+          userAgent: actor.userAgent,
+        },
+      })
+
+      return created
     })
 
-    await issueAuthToken(user.id, 'EMAIL_VERIFICATION', input.email)
-    void actor
+    const verification = await issueAuthToken(user.id, 'EMAIL_VERIFICATION', input.email)
+    await sendMail(
+      input.email,
+      emailVerificationEmail(appLink(`/eposta-dogrula?token=${verification.token}`), brandName()),
+    )
 
     return ok({ userId: user.id, emailVerificationSent: true })
   },
@@ -130,6 +256,9 @@ export const login = serviceMethod<LoginInput, AuthTokens>(
   'login',
   { kind: 'anonymous', why: 'exchanging credentials for the session that carries permissions' },
   async (actor, input) => {
+    const limited = await underAuthRateLimit(actor, input.email)
+    if (limited !== null) return err(limited)
+
     const user = await prisma.user.findUnique({ where: { email: input.email } })
 
     if (user === null || user.passwordHash === null) {
@@ -177,6 +306,21 @@ export const login = serviceMethod<LoginInput, AuthTokens>(
         },
       })
 
+      if (failedLoginCount === FAILED_LOGINS_BEFORE_DELAY) {
+        await sendMail(user.email, lockoutNoticeEmail(brandName()))
+      }
+
+      // Deliberately *not* attributed: whoever typed the wrong password may not be the
+      // account owner, and recording them as the actor would put an innocent user's id on
+      // an attacker's attempt. `entityId` names the account that was targeted, which is the
+      // fact that is actually known.
+      await recordAudit(actor, {
+        action: 'login_failed',
+        entityType: 'User',
+        entityId: user.id,
+        reason: `attempt ${failedLoginCount}`,
+      })
+
       return err(invalidCredentials())
     }
 
@@ -189,6 +333,24 @@ export const login = serviceMethod<LoginInput, AuthTokens>(
       ip: actor.ip,
       userAgent: actor.userAgent,
     })
+
+    /*
+     * Attributed to the user, not to the anonymous context the request arrived with.
+     *
+     * `resolveActor` runs before the credentials are checked, so `actor.userId` is null all
+     * the way through a login — and an audit row that leaves "who did this" blank on the one
+     * event where the answer is certain is not an audit row. The rest of the context (IP,
+     * user agent) is the request's.
+     */
+    await recordAudit(
+      { ...actor, userId: user.id },
+      {
+        action: 'login',
+        entityType: 'User',
+        entityId: user.id,
+        after: { familyId: refresh.familyId },
+      },
+    )
 
     return ok({
       accessToken: await issueAccessToken(user.id, user.globalRole),
@@ -261,9 +423,330 @@ export const logout = serviceMethod<LogoutInput, LogoutResult>(
   },
 )
 
-export const authService = { register, login, refresh, logout } satisfies Record<
-  string,
-  { meta: unknown }
->
+// ── Password reset (`12` §Recovery) ──────────────────────────────────────────
+
+export type RequestPasswordResetResult = { sent: true }
+
+/**
+ * Ask for a reset link.
+ *
+ * Always returns `{ sent: true }`, for a known address and an unknown one alike. "No account
+ * with that email" is the same disclosure as a login that distinguishes its failures, just
+ * on a page nobody thought to watch.
+ */
+export const requestPasswordReset = serviceMethod<
+  RequestPasswordResetInput,
+  RequestPasswordResetResult
+>(
+  'auth',
+  'requestPasswordReset',
+  { kind: 'anonymous', why: 'the person asking has by definition lost their credential' },
+  async (actor, input) => {
+    const limited = await underAuthRateLimit(actor, input.email)
+    if (limited !== null) return err(limited)
+
+    const user = await prisma.user.findUnique({ where: { email: input.email } })
+
+    if (user !== null && user.status !== 'SUSPENDED') {
+      const issued = await issueAuthToken(user.id, 'PASSWORD_RESET', input.email)
+      await sendMail(
+        input.email,
+        passwordResetEmail(appLink(`/sifre-yenile?token=${issued.token}`), brandName()),
+      )
+    }
+
+    return ok({ sent: true } as const)
+  },
+)
+
+export type ResetPasswordResult = { revokedSessions: number }
+
+/**
+ * Complete a reset.
+ *
+ * **It revokes every other session** (`12` §Sessions and revocation). The likeliest reason
+ * somebody resets a password is that they believe someone else has it, and a reset that
+ * leaves the intruder's thirty-day refresh token alive has fixed nothing.
+ */
+export const resetPassword = serviceMethod<ResetPasswordInput, ResetPasswordResult>(
+  'auth',
+  'resetPassword',
+  { kind: 'anonymous', why: 'the reset token is itself the credential being presented' },
+  async (actor, input) => {
+    // Keyed on the token rather than an address, because the caller supplies no address
+    // here. That still bounds a caller working through guessed tokens: each guess is a
+    // distinct bucket, but the IP dimension is shared and fills after ten.
+    const limited = await underAuthRateLimit(actor, `reset:${input.token.slice(0, 16)}`)
+    if (limited !== null) return err(limited)
+
+    const problems = validatePassword(input.password)
+    if (problems.length > 0) {
+      return err(conflict(`password rejected: ${problems.map((p) => p.kind).join(', ')}`))
+    }
+
+    const outcome = await consumeAuthToken(input.token, 'PASSWORD_RESET')
+    if (outcome.status !== 'valid') {
+      // Expired, already used and never-existed are one answer: somebody working through a
+      // list of guessed tokens learns nothing about which of them were ever real.
+      return err(forbidden('auth:reset-token'))
+    }
+
+    const passwordHash = await hashPassword(input.password)
+
+    await prisma.user.update({
+      where: { id: outcome.userId },
+      data: {
+        passwordHash,
+        // Completing a reset proves the address receives mail, and ends the failure streak.
+        emailVerifiedAt: new Date(),
+        failedLoginCount: 0,
+        lastFailedLoginAt: null,
+        lockoutNotifiedAt: null,
+      },
+    })
+
+    const revokedSessions = await revokeAllFamilies(outcome.userId, 'password_reset')
+
+    // Same reasoning as login: the reset arrives on an anonymous request, but the token came
+    // out of this user's mailbox, so the actor is known by the time the row is written.
+    await recordAudit(
+      { ...actor, userId: outcome.userId },
+      {
+        action: 'password_reset',
+        entityType: 'User',
+        entityId: outcome.userId,
+        after: { revokedSessions },
+      },
+    )
+
+    return ok({ revokedSessions })
+  },
+)
+
+// ── Email verification (`12` §Verification gates) ────────────────────────────
+
+export type VerifyEmailResult = { verified: true }
+
+export const verifyEmail = serviceMethod<VerifyEmailInput, VerifyEmailResult>(
+  'auth',
+  'verifyEmail',
+  { kind: 'anonymous', why: 'the link is opened from a mail client, usually not signed in' },
+  async (actor, input) => {
+    const limited = await underAuthRateLimit(actor, `verify:${input.token.slice(0, 16)}`)
+    if (limited !== null) return err(limited)
+
+    const outcome = await consumeAuthToken(input.token, 'EMAIL_VERIFICATION')
+    if (outcome.status !== 'valid') return err(forbidden('auth:verification-token'))
+
+    await prisma.user.update({
+      where: {
+        id: outcome.userId,
+        // The token was issued against one address; if the user has changed it since, the
+        // token verifies nothing. In the `where` clause, not a comparison after the fetch.
+        ...(outcome.target === null ? {} : { email: outcome.target }),
+      },
+      data: { emailVerifiedAt: new Date() },
+    })
+
+    void actor
+    return ok({ verified: true } as const)
+  },
+)
+
+export const resendEmailVerification = serviceMethod<
+  ResendEmailVerificationInput,
+  RequestPasswordResetResult
+>(
+  'auth',
+  'resendEmailVerification',
+  { kind: 'anonymous', why: 'a user who cannot verify their email often cannot sign in either' },
+  async (actor, input) => {
+    const limited = await underAuthRateLimit(actor, input.email)
+    if (limited !== null) return err(limited)
+
+    const user = await prisma.user.findUnique({ where: { email: input.email } })
+
+    if (user !== null && user.emailVerifiedAt === null) {
+      const issued = await issueAuthToken(user.id, 'EMAIL_VERIFICATION', input.email)
+      await sendMail(
+        input.email,
+        emailVerificationEmail(appLink(`/eposta-dogrula?token=${issued.token}`), brandName()),
+      )
+    }
+
+    return ok({ sent: true } as const)
+  },
+)
+
+// ── Phone verification (`26-execution-plan.md` row 1.5) ──────────────────────
+
+/** 60 seconds between codes, so "resend" is not an SMS bill. */
+export const OTP_RESEND_INTERVAL_SECONDS = 60
+
+export type StartPhoneVerificationResult = { sent: true; expiresAt: Date }
+
+export const startPhoneVerification = serviceMethod<
+  StartPhoneVerificationInput,
+  StartPhoneVerificationResult
+>('auth', 'startPhoneVerification', { kind: 'authenticated' }, async (actor, input) => {
+  if (actor.userId === null) return err(forbidden('auth:session'))
+
+  const recent = await prisma.authToken.findFirst({
+    where: { userId: actor.userId, type: 'PHONE_OTP' },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  if (recent !== null) {
+    const elapsed = (Date.now() - recent.createdAt.getTime()) / 1000
+    if (elapsed < OTP_RESEND_INTERVAL_SECONDS) {
+      // Every SMS costs money, and a resend button is the cheapest way to spend somebody
+      // else's. A 429 carrying the wait, not a silent no-op that looks like success.
+      return err(rateLimited(Math.ceil(OTP_RESEND_INTERVAL_SECONDS - elapsed)))
+    }
+  }
+
+  // The number is stored unverified here. `phoneVerifiedAt` is what the gates read, and only
+  // `confirmPhoneVerification` sets it.
+  await prisma.user.update({
+    where: { id: actor.userId },
+    data: { phone: input.phone, phoneVerifiedAt: null },
+  })
+
+  const issued = await issueAuthToken(actor.userId, 'PHONE_OTP', input.phone)
+
+  try {
+    await getSmsSender().send({ to: input.phone, text: phoneOtpSms(issued.token, brandName()) })
+  } catch (error) {
+    console.error('[sms] send failed', error)
+    return err(dependency('sms'))
+  }
+
+  return ok({ sent: true as const, expiresAt: issued.expiresAt })
+})
+
+export type ConfirmPhoneVerificationResult = { verified: true }
+
+export const confirmPhoneVerification = serviceMethod<
+  ConfirmPhoneVerificationInput,
+  ConfirmPhoneVerificationResult
+>('auth', 'confirmPhoneVerification', { kind: 'authenticated' }, async (actor, input) => {
+  if (actor.userId === null) return err(forbidden('auth:session'))
+
+  const outcome = await consumeAuthToken(input.code, 'PHONE_OTP')
+
+  if (outcome.status !== 'valid' || outcome.userId !== actor.userId) {
+    /*
+     * Six digits is a million guesses, which is nothing — the attempt cap is the only thing
+     * that makes an OTP a credential at all. The failure counts against *this user's*
+     * outstanding code, and after five the code is dead and a new one must be requested.
+     */
+    await recordAuthTokenAttempt(actor.userId, 'PHONE_OTP')
+
+    if (outcome.status === 'too_many_attempts') {
+      return err(rateLimited(OTP_RESEND_INTERVAL_SECONDS))
+    }
+    return err(forbidden('auth:otp'))
+  }
+
+  await prisma.user.update({
+    where: {
+      id: actor.userId,
+      // The code went to a number; if the number has changed since, it proves nothing.
+      ...(outcome.target === null ? {} : { phone: outcome.target }),
+    },
+    data: { phoneVerifiedAt: new Date() },
+  })
+
+  return ok({ verified: true } as const)
+})
+
+// ── Sessions (`12` §Sessions and revocation) ─────────────────────────────────
+
+export type ListSessionsResult = { sessions: SessionSummary[] }
+
+export const listSessions = serviceMethod<ListSessionsInput, ListSessionsResult>(
+  'auth',
+  'listSessions',
+  { kind: 'owner', describe: 'RefreshToken rows where userId is the actor’s own' },
+  async (actor, input) => {
+    void input
+    if (actor.userId === null) return err(forbidden('auth:session'))
+
+    // Scoped by userId inside the query. There is no parameter that could widen it.
+    return ok({ sessions: await listSessionFamilies(actor.userId) })
+  },
+)
+
+export type RevokeSessionResult = { revoked: number }
+
+export const revokeSession = serviceMethod<RevokeSessionInput, RevokeSessionResult>(
+  'auth',
+  'revokeSession',
+  { kind: 'owner', describe: 'RefreshToken family scoped by userId in the where clause' },
+  async (actor, input) => {
+    if (actor.userId === null) return err(forbidden('auth:session'))
+
+    if (input.allOthers) {
+      const currentFamily =
+        input.currentRefreshToken === undefined
+          ? undefined
+          : ((await familyOfToken(input.currentRefreshToken)) ?? undefined)
+
+      const revoked = await revokeAllFamilies(actor.userId, 'revoked_by_user', currentFamily)
+
+      await recordAudit(actor, {
+        action: 'session_revoked',
+        entityType: 'User',
+        entityId: actor.userId,
+        after: { scope: 'all_others', revoked },
+      })
+
+      return ok({ revoked })
+    }
+
+    if (input.familyId === undefined) {
+      return err(precondition('either familyId or allOthers'))
+    }
+
+    /*
+     * Ownership lives in the `where` clause (`CLAUDE.md` non-negotiable 3). Fetching the
+     * family and then comparing `userId` in JavaScript would behave identically today and
+     * be a hole the first time somebody adds an early return above the comparison.
+     */
+    const revoked = await prisma.refreshToken.updateMany({
+      where: { familyId: input.familyId, userId: actor.userId, revokedAt: null },
+      data: { revokedAt: new Date(), revokedReason: 'revoked_by_user' },
+    })
+
+    if (revoked.count === 0) {
+      // Somebody else's family and a family that never existed get the same answer.
+      return err(notFound('Session'))
+    }
+
+    await recordAudit(actor, {
+      action: 'session_revoked',
+      entityType: 'User',
+      entityId: actor.userId,
+      after: { familyId: input.familyId, revoked: revoked.count },
+    })
+
+    return ok({ revoked: revoked.count })
+  },
+)
+
+export const authService = {
+  register,
+  login,
+  refresh,
+  logout,
+  requestPasswordReset,
+  resetPassword,
+  verifyEmail,
+  resendEmailVerification,
+  startPhoneVerification,
+  confirmPhoneVerification,
+  listSessions,
+  revokeSession,
+} satisfies Record<string, { meta: unknown }>
 
 export type AuthService = typeof authService

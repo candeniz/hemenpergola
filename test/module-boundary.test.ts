@@ -31,6 +31,15 @@ const buildTimeFixtureSource = readFileSync(BUILD_TIME_FIXTURE, 'utf8')
 // several seconds, and doing it per test makes the suite look flaky when it is only slow.
 const eslint = new ESLint({ cwd: process.cwd() })
 
+/**
+ * The rule id moved when rule 9 was narrowed: only `@typescript-eslint/no-restricted-imports`
+ * understands `allowTypeImports`, and a type-only import must pass. Both ids are accepted so
+ * this helper keeps telling the truth if the config ever moves back.
+ */
+function isBoundaryRule(ruleId: string | null): boolean {
+  return ruleId === 'no-restricted-imports' || ruleId === '@typescript-eslint/no-restricted-imports'
+}
+
 async function lintAsAppFile(source: string) {
   const results = await eslint.lintText(source, {
     filePath: fileURLToPath(new URL('../src/app/[locale]/__boundary-probe.tsx', import.meta.url)),
@@ -44,7 +53,7 @@ vi.setConfig({ testTimeout: 30_000 })
 describe('module boundary: app/ may only call application services', () => {
   it('reports every forbidden import in the fixture', async () => {
     const messages = await lintAsAppFile(fixtureSource)
-    const boundary = messages.filter((message) => message.ruleId === 'no-restricted-imports')
+    const boundary = messages.filter((message) => isBoundaryRule(message.ruleId))
 
     // Four violations, one per layer the fixture reaches into.
     expect(boundary).toHaveLength(4)
@@ -60,7 +69,7 @@ describe('module boundary: app/ may only call application services', () => {
     const messages = await lintAsAppFile(
       `import x from '${specifier}'\nexport default function Page() { return x }\n`,
     )
-    const boundary = messages.filter((message) => message.ruleId === 'no-restricted-imports')
+    const boundary = messages.filter((message) => isBoundaryRule(message.ruleId))
 
     expect(boundary).toHaveLength(1)
     expect(boundary[0]?.message).toMatch(expectedMessage)
@@ -76,7 +85,7 @@ describe('module boundary: app/ may only call application services', () => {
       ].join('\n'),
     )
 
-    expect(messages.filter((message) => message.ruleId === 'no-restricted-imports')).toEqual([])
+    expect(messages.filter((message) => isBoundaryRule(message.ruleId))).toEqual([])
   })
 
   it('does not apply the rule outside app/ — infrastructure is where Prisma belongs', async () => {
@@ -90,7 +99,7 @@ describe('module boundary: app/ may only call application services', () => {
     )
 
     expect(
-      (results[0]?.messages ?? []).filter((message) => message.ruleId === 'no-restricted-imports'),
+      (results[0]?.messages ?? []).filter((message) => isBoundaryRule(message.ruleId)),
     ).toEqual([])
   })
 })
@@ -103,7 +112,7 @@ describe('module boundary: app/ may only call application services', () => {
 describe('build-time coupling: app/ must not read config or services at module scope', () => {
   it('reports both imports in the fixture', async () => {
     const messages = await lintAsAppFile(buildTimeFixtureSource)
-    const boundary = messages.filter((message) => message.ruleId === 'no-restricted-imports')
+    const boundary = messages.filter((message) => isBoundaryRule(message.ruleId))
 
     expect(boundary).toHaveLength(2)
     expect(boundary.every((message) => /module scope/.test(message.message))).toBe(true)
@@ -118,7 +127,7 @@ describe('build-time coupling: app/ must not read config or services at module s
       `import x from '${specifier}'\nexport default function Page() { return x }\n`,
     )
 
-    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toHaveLength(1)
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toHaveLength(1)
   })
 
   it('allows the dynamic import that is the actual fix', async () => {
@@ -132,7 +141,7 @@ describe('build-time coupling: app/ must not read config or services at module s
       ].join('\n'),
     )
 
-    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([])
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
   })
 
   it('allows env.client, whose values Next inlines at build time anyway', async () => {
@@ -140,7 +149,7 @@ describe('build-time coupling: app/ must not read config or services at module s
       "import { clientEnv } from '@/shared/config/env.client'\nexport default function Page() { return clientEnv }\n",
     )
 
-    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([])
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
   })
 
   it('does not apply outside app/ — instrumentation.ts must import env at module scope', async () => {
@@ -149,9 +158,7 @@ describe('build-time coupling: app/ must not read config or services at module s
       { filePath: fileURLToPath(new URL('../src/instrumentation.ts', import.meta.url)) },
     )
 
-    expect(
-      (results[0]?.messages ?? []).filter((m) => m.ruleId === 'no-restricted-imports'),
-    ).toEqual([])
+    expect((results[0]?.messages ?? []).filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
   })
 })
 
@@ -167,7 +174,7 @@ describe('the rule protects the iam module specifically', () => {
 
   it('reports all three real internals the fixture reaches for', async () => {
     const messages = await lintAsAppFile(iamFixture)
-    const boundary = messages.filter((message) => message.ruleId === 'no-restricted-imports')
+    const boundary = messages.filter((message) => isBoundaryRule(message.ruleId))
 
     expect(boundary).toHaveLength(3)
   })
@@ -180,7 +187,7 @@ describe('the rule protects the iam module specifically', () => {
     const messages = await lintAsAppFile(
       `import x from '${specifier}'\nexport default function Page() { return x }\n`,
     )
-    const boundary = messages.filter((m) => m.ruleId === 'no-restricted-imports')
+    const boundary = messages.filter((m) => isBoundaryRule(m.ruleId))
 
     expect(boundary).toHaveLength(1)
     expect(boundary[0]?.message).toMatch(expected)
@@ -196,6 +203,83 @@ describe('the rule protects the iam module specifically', () => {
       ].join('\n'),
     )
 
-    expect(messages.filter((m) => m.ruleId === 'no-restricted-imports')).toEqual([])
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
+  })
+})
+
+/**
+ * The distinction the rule actually rests on: **static** import versus **dynamic** import.
+ *
+ * These two fixtures are the same server action written twice. Only one of them is a bug,
+ * and until both were committed the rule was only ever proven in one direction — which is
+ * how the `actions.ts` version shipped: the file had been moved into `app/`, and moving it
+ * changed nothing, because the static import chain still dragged `auth-service` into the
+ * page's build-time module graph.
+ */
+describe('server actions: the same file, static and dynamic', () => {
+  const staticFixture = readFileSync(
+    fileURLToPath(new URL('./fixtures/boundary/app-action-static-import.ts', import.meta.url)),
+    'utf8',
+  )
+  const dynamicFixture = readFileSync(
+    fileURLToPath(new URL('./fixtures/boundary/app-action-dynamic-import.ts', import.meta.url)),
+    'utf8',
+  )
+
+  it('rejects the static version — both imports, even inside app/', async () => {
+    const messages = await lintAsAppFile(staticFixture)
+    const boundary = messages.filter((m) => isBoundaryRule(m.ruleId))
+
+    // `auth-service` and `dto`: two application-layer modules, two errors.
+    expect(boundary).toHaveLength(2)
+    expect(boundary.every((m) => /module scope/.test(m.message))).toBe(true)
+  })
+
+  it('accepts the dynamic version, type import and all', async () => {
+    const messages = await lintAsAppFile(dynamicFixture)
+
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
+  })
+
+  it('accepts `import type` from an application service on its own', async () => {
+    // The narrowing that made `app/actions/auth.ts` possible to type. Erased at compile
+    // time, so it is in neither the module graph nor the bundle.
+    const messages = await lintAsAppFile(
+      [
+        "import type { AuthTokens } from '@/modules/iam/application/auth-service'",
+        'export default function Page(): AuthTokens | null { return null }',
+      ].join('\n'),
+    )
+
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toEqual([])
+  })
+
+  it('still rejects the value import of the very same module', async () => {
+    // The pair that makes the previous test mean something.
+    const messages = await lintAsAppFile(
+      [
+        "import { login } from '@/modules/iam/application/auth-service'",
+        'export default function Page() { return login }',
+      ].join('\n'),
+    )
+
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toHaveLength(1)
+  })
+
+  it('does not let `import type` through the layers that are not about build time', async () => {
+    /*
+     * `allowTypeImports` is on the rule-9 group only. The domain and infrastructure bans are
+     * architectural — `05` §Shape — and erasure has nothing to do with why they exist: a
+     * page that knows the shape of a repository row is coupled to it whether or not the
+     * import survives compilation.
+     */
+    const messages = await lintAsAppFile(
+      [
+        "import type { Permission } from '@/modules/iam/domain/permissions'",
+        'export default function Page(): Permission | null { return null }',
+      ].join('\n'),
+    )
+
+    expect(messages.filter((m) => isBoundaryRule(m.ruleId))).toHaveLength(1)
   })
 })

@@ -216,6 +216,7 @@ describe('migration scope', () => {
       'Plan',
       'PlatformSetting',
       // Phase 1 · migration 2
+      'RateLimitHit',
       'RefreshToken',
       'Session',
       'Subscription',

@@ -24,9 +24,20 @@ Always: `00-project-overview.md` on a first visit, `25-progress.md` before start
 
 ## State of the repository
 
-Documentation and design reference only. **No application code yet.** Phase 0 is the next
-thing to build: `21-development-roadmap.md` for its scope and gate,
-`26-execution-plan.md` §Phase 0 for the ordered tasks and the evidence each one needs.
+**Phases 0 and 1 are built and their gates are proven** (2026-08-16). The foundation, the
+design system, the four shells, and `modules/iam` — accounts, credentials, tokens, the
+authorisation matrix, companies and memberships, audit and rate limits — are in place, with a
+registration → verification → sign-in → reset flow that completes end to end against a
+production build.
+
+**Phase 2 (catalogue + admin skeleton) is next**: `21-development-roadmap.md` for its scope
+and gate, `26-execution-plan.md` §Phase 2 for the ordered tasks and the evidence each one
+needs. Read `25-progress.md` first — it is the only place that says what is actually done, and
+its §Open questions is where the things nobody has decided yet are written down.
+
+`modules/iam/` is the template every later module copies: `domain/` pure, `application/`
+framework-agnostic and returning `Result`, `infrastructure/` for Prisma and adapters, and
+server actions in `app/actions/` rather than in the module.
 
 ## Non-negotiables
 
@@ -46,13 +57,21 @@ thing to build: `21-development-roadmap.md` for its scope and gate,
    (`22-design-system.md`).
 8. **Contact data is disclosed only on acceptance**, with consent, a `ContactDisclosure`
    row, an audit entry and a notification (`19-security-and-kvkk.md`).
-9. **Nothing under `src/app` imports configuration or the database at module scope.**
-   Next evaluates a route's module graph while collecting page data — at *build* time — so
-   a static `import` of anything that reads `env` or constructs the Prisma client makes
+9. **Nothing under `src/app` *evaluates* configuration or the database at module scope.**
+   Next walks a route's module graph while collecting page data — at *build* time — so a
+   **static** `import` of anything that reads `env` or constructs the Prisma client makes
    `pnpm build` require production secrets again, undoing
-   `23-deployment-and-environments.md` §Configuration. Use `await import(...)` inside the
-   handler or component instead. This has now cost two bugs (`/dev` layout, `/api/health`);
-   it is a lint error, and the CI build job runs with no `.env` so it stays findable.
+   `23-deployment-and-environments.md` §Configuration.
+
+   The ban is on the evaluation, not on the dependency: `await import(...)` inside a handler,
+   a component or a server action is fine, because the module is only evaluated when the
+   request runs. `import type` is fine too — types are erased. This applies transitively:
+   a file in `app/` that statically imports a *second* `app/` file which statically imports a
+   service is the same bug one step further away, which is why server actions live in `app/`
+   and reach their service through `await import(...)`.
+
+   This has cost two bugs already (`/dev` layout, `/api/health`). It is a lint error on
+   static imports, and the CI build job runs with no `.env` so it stays findable.
 
 ## Do not build these
 

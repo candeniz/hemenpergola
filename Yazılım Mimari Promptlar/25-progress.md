@@ -6,13 +6,15 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 0 is complete and its gate is proven** (2026-08-16). Phase 1
-(Identity) is next — `26-execution-plan.md` §Phase 1 for its ordered tasks.
+**Current phase:** **Phase 1 is complete and its gate is proven** (2026-08-16). Phase 2
+(Catalogue + admin skeleton) is next — `26-execution-plan.md` §Phase 2 for its ordered tasks.
 
-The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
-local stack with 81 provinces, 974 districts, five demo companies and four shells rendering
-in both locales. 192 unit tests, 36 integration tests against a real PostGIS container,
-7 Playwright a11y checks, and the nine-step release gate standing by as skips.
+The application runs, and now it has accounts: `docker compose up -d && pnpm seed demo &&
+pnpm dev` gives a working local stack with 81 provinces, 974 districts, and a registration →
+verification → sign-in → reset flow that completes end to end against a production build.
+**803 unit tests, 124 integration tests** against a real PostGIS container, and **22 Playwright
+specs green** (20 still skipped for later phases). Mail and SMS go to the log adapters, which
+is what Q3 and Q2 leave available.
 
 ## Phase tracker
 
@@ -27,7 +29,7 @@ proven — not when the code is written.
 |---|---|---|---|
 | Docs | 00–26, README, CLAUDE.md | ✅ done | — |
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
-| 1 | Identity | **🟡 in progress · 5/9** | authorisation matrix covers every service method |
+| 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | ⬜ | admin adds a product with no deploy |
 | 3 | Manufacturer supply side | ⬜ | a company is matchable |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
@@ -995,12 +997,249 @@ call the same services through the same Zod schemas.
 #### Deferred, with owners
 
 - **CAPTCHA — Q10.** Port built, no provider. Progressive delay and the lockout notification
-  are implemented; the challenge is not. Blocks the second half of Phase 1.
-- **Auth events to `AuditLog`** — task 1.9, second half. The failure counters are recorded on
-  `User`; the audit rows are not yet written.
+  are implemented; the challenge is not. *Still open at the end of Phase 1 — see that entry.*
+- ~~**Auth events to `AuditLog`**~~ — done in 1.9. Four events, each with IP and user agent.
 - **Auth.js wiring.** `identifyFromRequest` reads the `Session` table directly, which is the
   same table the Auth.js Prisma adapter owns. The provider configuration lands with the
   login page in 1.4.
+
+
+### 2026-08-16 — Phase 1 tasks 1.4, 1.5, 1.6, 1.9 and the gate (commit `P1.4-1.6+1.9 · Faz 1 kapanışı`)
+
+The second half of Phase 1, plus a correction to the first half. Phase 1 row is now
+**✅ gate met · 9/9**.
+
+#### The correction: server actions were in the wrong place, and moving them was not the fix
+
+The review point was exact. `modules/iam/application/actions.ts` carried `'use server'` and
+`next/headers`, and `05` §ActorContext defines `application/` as framework-agnostic —
+*"callable from jobs and tests"*. So the file moved to `src/app/actions/`, where `05` §Two
+entry points draws it, alongside the route handlers.
+
+**Moving it changed nothing about the build, and the justification written in it was wrong.**
+A page imports the action file statically; the action file imported `auth-service` statically;
+`auth-service` reaches `env` and Prisma. The service was still in the page's build-time module
+graph one hop further away. What had been keeping `pnpm build` secret-free was never the
+file's location — it was laziness deeper in the chain.
+
+Three things changed as a result:
+
+1. **`CLAUDE.md` non-negotiable 9 now says what is banned: module-scope *evaluation*.** Not
+   the dependency, not the import statement. `await import(...)` inside a handler is fine.
+   `import type` is fine. It applies transitively, which is the part that had been unstated
+   and is the part that bit.
+
+2. **The lint rule moved to `@typescript-eslint/no-restricted-imports` with
+   `allowTypeImports` on the rule-9 group only.** Types are erased, so a type-only import
+   cannot cause the evaluation the rule exists to prevent — and without the allowance the
+   actions could not be typed at all, which is how a rule earns a suppression comment. The
+   domain and infrastructure bans keep the base behaviour: those are architectural, and
+   erasure has nothing to do with why they exist.
+
+3. **Two committed fixtures, the same server action written twice.**
+   `test/fixtures/boundary/app-action-static-import.ts` must fail;
+   `app-action-dynamic-import.ts` must pass, `import type` and all. A fixture that only
+   proves a rule fires proves half of it — a rule that also fires on the correct shape gets
+   suppressed, and the suppression is what the next person copies.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **803 passed** (was 733) |
+| `pnpm test:integration` | **124 passed** (was 61), real PostGIS container |
+| `pnpm test:e2e` | **22 passed, 20 skipped, 0 failed** |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `prisma migrate diff --from-migrations --to-schema --exit-code` | `No difference detected`, exit 0 |
+| static import of a service from `app/` | 2 errors, message names module scope |
+| dynamic import + `import type` from `app/` | 0 errors |
+| authorisation matrix coverage | 18 registered methods, 0 unregistered, discovered from disk |
+| manufacturer company created | `PENDING`, creator `OWNER`, slug `oz-pergola` |
+| registration + verification e2e | runs, no longer `fixme` |
+
+#### The gate
+
+*The authorisation matrix covers every service method.* It did, and the test that said so was
+weaker than it read: it imported `auth-service` by name and scanned for unregistered plain
+functions. A new module with six registered methods would have passed without ever being
+imported. The scan now **discovers every `application/` module from the filesystem**, imports
+each one, and cross-checks the `export const x = serviceMethod` declarations in the source
+against the registry. 18 methods, none missing. "Every method the test remembered" and "every
+method that exists" read identically in a green run.
+
+*A manufacturer company reaches `PENDING`.* `membership.integration.test.ts` creates one
+through the service: creator becomes `OWNER`, company is `PENDING`, and a `PENDING` company
+can upload documents and read but cannot publish a price book — `PRECONDITION`, not
+`FORBIDDEN`, because "your company is pending" is actionable and "you are not allowed" is not.
+
+*`20` §End to end's registration + verification spec runs.* `e2e/account.spec.ts`, against a
+production build: register → follow the link from the mailbox → verify → sign in → reset →
+sign in with the new password and fail with the old one. The `permission denied → 403 page`
+failure-path row is un-`fixme`d with it. `e2e/core-flow.spec.ts` steps stay skipped — the
+project wizard is Phase 4.
+
+#### What the end-to-end suite found that nothing else did
+
+Four defects, all of which passed lint, typecheck, 803 unit tests and 124 integration tests.
+They are listed together because they share a shape: **each one is invisible to any test that
+does not render the page in a browser.**
+
+**1. `max-w-md` is twenty-four pixels here.** This theme defines a custom spacing scale with
+`sm`/`md`/`lg`/`xl`, and in Tailwind 4 a `max-w-*` utility resolves against the container
+namespace *and* the spacing namespace — spacing wins. So the auth card was a 24-pixel column,
+the heading had a zero-width bounding box, and Playwright reported it `hidden`. The same
+mistake was already in `ui/dialog.tsx` from Phase 0 (`max-w-lg` → 48px): **every dialog in the
+application was forty-eight pixels wide and nobody had opened one.** Fixed with named tokens
+(`--container-form`, `--container-dialog`), a lint rule that rejects the whole `max-w-{scale}`
+family in components, and `test/design-system-lint.test.ts` — the design-system rules had
+never had a fixture, unlike the boundary rules, and this is what that gap cost.
+
+**2. React 19 empties an uncontrolled form after its action resolves.** Correct for a
+successful submit, silently destructive for a rejected one: a mistyped password on the
+register screen also cost the person their name, their email and the consent tick. The e2e
+suite found it by refilling only the password after a failed login — the emptied email then
+failed validation and the screen said "e-posta veya şifre hatalı", which was true and about
+entirely the wrong thing. All six forms are now controlled through one `useFields` hook.
+
+**3. Module state is not shared between routes, and `globalThis` is not enough either.** The
+dev mailbox began as a module-scope array; Next builds a separate server bundle per route, so
+the route handler read a different array from the one the server action wrote — an empty
+mailbox, forever, with no error. Parking it on `globalThis` (the Prisma-client trick) fixed
+that and then failed *intermittently*, because `next start` serves from more than one process.
+It is a file in the OS temp directory now.
+
+**4. Login audit rows were attributed to nobody.** `resolveActor` runs before credentials are
+checked, so `actor.userId` is null throughout a login, and `recordAudit(actor, …)` wrote
+`actorUserId: null` on the one event where the answer is certain. Login and password reset now
+attribute explicitly. `login_failed` deliberately does not: whoever typed the wrong password
+may not be the account owner, and recording them as the actor would put an innocent user's id
+on an attacker's attempt.
+
+#### 1.4 — the five screens
+
+`/kayit`, `/giris`, `/sifre-sifirla`, `/sifre-yenile`, `/eposta-dogrula`, in both locales,
+through the real `PublicShell`. Every capability has **two adapters over one service**: a
+server action in `app/actions/auth.ts` and an `/api/v1` route handler, parsing with the same
+Zod schema. Nothing about the password policy, the token lifetimes or the enumeration-proof
+responses is expressed twice.
+
+`Mailer` is a port with a `log` adapter (`MAIL_PROVIDER=log`, refused in production by the env
+schema). Verification tokens live 24 hours, resets 1 hour, both single-use and stored hashed —
+and **a completed reset revokes every other session**, because the likeliest reason somebody
+resets is that they think someone else has their password.
+
+**Consent.** Registration writes `Consent(type=TERMS)` in the *same transaction* as the user:
+consent is evidence, and evidence written after the fact goes missing exactly when the second
+write fails. The `textVersion` is a **content hash of the committed file** —
+`terms.tr@<sha256[0:8]>` — not a constant. A constant passes every check anyone would think to
+write, right up until somebody edits the text and forgets it; from then on every consent row
+records agreement to a document nobody agreed to, silently, with no way to tell afterwards
+which rows are wrong. The text itself is `src/legal/terms.tr.md`, marked as a draft: it has
+not been read by a lawyer (Q2).
+
+#### 1.5 — phone verification
+
+`SmsSender` port, log adapter. Six digits, five minutes, five attempts, sixty seconds between
+codes, stored hashed. The `12` §Verification gates table is implemented as data in
+`domain/verification-gates.ts`, with `emailVerifiedAt`/`phoneVerifiedAt` already on `User`, so
+Phases 4 to 6 arrive already gated instead of each one remembering.
+
+**The first version of that table was wrong in the direction nobody checks.** It required
+email *and* phone for requesting offers and for contact disclosure. `12` says email for the
+first and phone for the second, and the difference is not pedantic: requiring a phone to
+request an offer would block every customer for as long as Q3 leaves the SMS provider
+undecided — a missing decision turned into an outage, which is the failure mode Q10 was
+written to avoid. The table now transcribes `12` verbatim and marks its four additions
+(sign-in, company creation, invitations, reviews) as judgement.
+
+#### 1.6 — companies and membership
+
+Creation makes the creator `OWNER` and the company `PENDING`. The partial unique index
+`CompanyMembership_one_owner_per_company` surfaces as `CONFLICT`, not a 500 — an unrecognised
+constraint code is re-thrown rather than swallowed, so a real bug does not become a quiet 409.
+Granting `OWNER` is a *transfer*: the current owner is demoted in the same transaction, so
+there is never a moment with two.
+
+`ADMIN` can neither grant nor take `OWNER` — proven from all three directions (self-promotion,
+demoting the owner, removing the owner).
+
+**Role change and membership revocation take effect on the next request**, proven by driving
+`resolveActor` and the real `loadMembership` rather than rebuilding an actor object. Nothing
+writes a role into a token; that is what `companyId`'s absence from the JWT buys. A
+`SUSPENDED` company drops every member to read-only immediately, including the owner, who
+cannot invite.
+
+#### ADR-016 — and the two ways task 1.6 disagreed with `02`
+
+Writing the service surfaced two decisions nobody had made, and both are recorded rather than
+coded around.
+
+With `member.invite` classified `write`, a freshly registered company is **one person** until
+an administrator verifies it: the founder must personally scan the tax certificate. In a real
+firm the person who registers the company is not the person who does the paperwork. Member
+management is now `onboarding`. `REJECTED` and `SUSPENDED` are untouched — neither permits
+onboarding work, so a frozen company still cannot change who its members are.
+
+And `02`'s catalogue had no permission for *reading* the roster, so `listMembers` used
+`member.invite` — meaning a `SALES` user could answer a customer request but not see the
+colleague to hand it to. `company:member.read` is added, `read`, held by all four roles. Same
+omission as `document.upload`, same resolution: the catalogue in code is the source of truth,
+`02`'s table is generated from it, and a disagreement is an ADR plus a regenerated table.
+
+#### 1.9 — audit and abuse
+
+`AuditLog` rows for `login`, `login_failed`, `password_reset` and `session_revoked`, each with
+IP and user agent. A login against an address with no account writes **nothing** — there is no
+user to attribute it to, and a row keyed on the attempted address would make the audit log the
+account-enumeration oracle that the login response is careful not to be.
+
+Progressive delay (1/2/4/8s, capped, after five failures) with a lockout notice mailed **once
+per streak**, because five emails in five seconds is itself the attack.
+
+Session list with device and address, individual and bulk revoke. Ownership is in the `where`
+clause: revoking somebody else's family matches nothing and answers `NOT_FOUND`, which is the
+same answer a family that never existed gets.
+
+**Rate limits from `06`, in Postgres.** `23` §Runtime runs the web tier as N stateless
+instances, so a per-process counter would hand an attacker N times the limit and forget
+everything on deploy — a limit that looks present and is not. `05` §Jobs rules out Redis for
+V1, so the shared store is the database that is already there. Fixed windows, one upsert, no
+read first. Both dimensions are consumed even when the first already refused, so spreading
+attempts across accounts still fills the IP bucket. The known cost is the window boundary; the
+per-account progressive delay is what actually makes guessing expensive.
+
+`RateLimitHit` is a new table, added to migration 2 rather than a third migration
+(`ADR-014`: one migration per phase). The local development database was reset with the user's
+explicit consent to pick it up.
+
+#### Carried forward, explicitly
+
+- **Q10 — CAPTCHA. No enforcement, and this is not an oversight.** `12` §Abuse controls calls
+  for a challenge after ten failed logins from one IP; no provider is named, and every
+  candidate sends visitor data to a third party, which under `19` is a processor relationship
+  needing a named purpose in the privacy notice and an agreement behind it. That is a decision,
+  not an implementation detail. `noopCaptchaProvider` reports `enforcing: false` and login
+  **proceeds** past ten failures rather than locking the account out: a missing decision must
+  not become an outage. The port, the call site and the counter are all built — the day a
+  provider is chosen, it is one adapter.
+- **Q3 — SMS provider.** Task 1.5 closes on the log adapter, which is what the row asked for;
+  the *question* stays open and now blocks Phase 6 disclosure rather than Phase 1. It is
+  downstream of Q2 (İYS registration needs the legal entity) and Q2 is downstream of Q1.
+- **Q1 — brand.** Still the literal `{brand}` placeholder. Mail now reads it from the same
+  message catalogue the UI does, so there is one place to change and not two.
+- **Auth.js wiring.** Still deferred. `identifyFromRequest` reads the `Session` table directly.
+  The auth screens call the services through actions and route handlers; no provider
+  configuration was needed to close 1.4, and adding one speculatively would be a second
+  session mechanism to keep in step with the first.
+- **A note for whoever runs the e2e suite twice in fifteen minutes.** Rate-limit rows persist,
+  so the spec randomises its `x-forwarded-for` per run. Without that the second run fails on a
+  limit the first one filled, and it looks exactly like a broken registration screen.
+- **Locale negotiation.** `localePrefix: 'as-needed'` makes `/kayit` the Turkish route, but
+  next-intl also negotiates on `Accept-Language`, so an English-configured browser asking for
+  `/kayit` is redirected to `/en/kayit`. That is next-intl's documented default and it is
+  probably right; it is written down here because it surprised this build's own test suite,
+  and a Turkish marketplace may want to reconsider it before launch.
 
 ## Open questions — need a human answer before the phase that hits them
 
@@ -1008,13 +1247,13 @@ call the same services through the same Zod schemas.
 |---|---|---|---|
 | Q1 | Brand name. The screens use *Outdoor Systems*, *Archivault*, *ARCHITECTURA*, *Arte Outdoor*, *ArchPortal*. | Phase 0 (i18n keys, logo, titles) — and **upstream of Q2/Q3**: the SMS sender ID is the brand | placeholder `{brand}` token everywhere, swapped once |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
-| Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | apply in Phase 1, must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter in dev |
+| Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |
 | Q4 | Geocoding provider and budget | Phase 3 (radius service areas) | district centroids only, no free-point radius |
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
-| Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Phase 1 second half** (login and registration pages). The port and the progressive delay are built; only the challenge itself is missing. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
+| Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

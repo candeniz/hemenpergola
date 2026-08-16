@@ -189,11 +189,14 @@ function applicationFiles(root: string): string[] {
 }
 
 /**
- * Files in `application/` that are not use cases: DTO schemas, the authorisation helper
- * itself, and the server-action adapter, which re-exports registered methods rather than
- * defining new ones.
+ * Files in `application/` that are not use cases: DTO schemas and the authorisation helper.
+ *
+ * `actions.ts` used to be here. It is gone because the server actions are no longer in
+ * `application/` at all — they live in `app/actions/`, which is where `05` §Two entry points
+ * draws them and the only place a `'use server'` file belongs. An exemption that no longer
+ * exempts anything is a rule with a hole cut in it for a shape nobody remembers.
  */
-const NOT_USE_CASES = ['dto.ts', 'authorization.ts', 'actions.ts']
+const NOT_USE_CASES = ['dto.ts', 'authorization.ts']
 
 /**
  * The exemption list, and it has exactly one entry.
@@ -241,22 +244,101 @@ export function unregisteredServiceMethods(root: string): { file: string; name: 
   return offenders
 }
 
+/**
+ * `export const name = serviceMethod...` — the declarations the registry should end up
+ * holding. Read from the source rather than from the module, so a method that is never
+ * imported anywhere still has to appear.
+ */
+function declaredServiceMethods(source: string): string[] {
+  return [...source.matchAll(/export\s+const\s+([A-Za-z0-9_]+)\s*=\s*serviceMethod/g)]
+    .map((match) => match[1])
+    .filter((name): name is string => name !== undefined)
+}
+
+/**
+ * Import every `application/` module, because importing is what runs its `serviceMethod()`
+ * calls and therefore what populates the registry.
+ *
+ * Discovered from disk rather than listed. A hand-written list would mean a new module is
+ * covered only once somebody remembers to add it here — which is exactly the failure the
+ * registry exists to make impossible, reintroduced in the test that proves it.
+ */
+async function importEveryService(root: string): Promise<void> {
+  for (const file of applicationFiles(root)) {
+    if (NOT_USE_CASES.some((name) => file.endsWith(name))) continue
+    if (OPERATIONAL_PROBES.some((name) => file.endsWith(name))) continue
+
+    const specifier = file
+      .replaceAll('\\', '/')
+      .replace(/^.*\/src\//, '@/')
+      .replace(/\.ts$/, '')
+    await import(specifier)
+  }
+}
+
 describe('every service method has a matrix entry', () => {
   const modulesRoot = fileURLToPath(new URL('../src/modules', import.meta.url))
 
   it('registers at least the Phase 1 methods', async () => {
-    // Importing the service is what runs its `serviceMethod` calls.
-    await import('@/modules/iam/application/auth-service')
+    await importEveryService(modulesRoot)
 
     const methods = registeredMethods().map((meta) => `${meta.service}.${meta.method}`)
+
+    // 1.1–1.3
     expect(methods).toContain('auth.login')
     expect(methods).toContain('auth.register')
     expect(methods).toContain('auth.refresh')
     expect(methods).toContain('auth.logout')
+    // 1.4
+    expect(methods).toContain('auth.requestPasswordReset')
+    expect(methods).toContain('auth.resetPassword')
+    expect(methods).toContain('auth.verifyEmail')
+    expect(methods).toContain('auth.resendEmailVerification')
+    // 1.5
+    expect(methods).toContain('auth.startPhoneVerification')
+    expect(methods).toContain('auth.confirmPhoneVerification')
+    // 1.6
+    expect(methods).toContain('company.createCompany')
+    expect(methods).toContain('company.listMembers')
+    expect(methods).toContain('company.inviteMember')
+    expect(methods).toContain('company.acceptInvitation')
+    expect(methods).toContain('company.changeMemberRole')
+    expect(methods).toContain('company.removeMember')
+    // 1.9
+    expect(methods).toContain('auth.listSessions')
+    expect(methods).toContain('auth.revokeSession')
+  })
+
+  it('covers every declaration in every application module, discovered from disk', async () => {
+    /*
+     * The gate condition for Phase 1: *the matrix covers every service method that exists*.
+     *
+     * "Every method the test remembered to import" is a weaker claim and reads identically
+     * in a green run, so the file list comes from the filesystem and the method list from
+     * the source text. A new module with six methods and no import anywhere still fails here.
+     */
+    await importEveryService(modulesRoot)
+
+    const registered = new Set(registeredMethods().map((meta) => meta.method))
+    const missing: string[] = []
+
+    for (const file of applicationFiles(modulesRoot)) {
+      if (NOT_USE_CASES.some((name) => file.endsWith(name))) continue
+      if (OPERATIONAL_PROBES.some((name) => file.endsWith(name))) continue
+
+      for (const name of declaredServiceMethods(readFileSync(file, 'utf8'))) {
+        if (!registered.has(name)) missing.push(`${file.replaceAll('\\', '/')} → ${name}`)
+      }
+    }
+
+    expect(missing).toEqual([])
+
+    // And the count is not zero, which is how this test would pass while measuring nothing.
+    expect(registered.size).toBeGreaterThanOrEqual(18)
   })
 
   it('declares an authorisation spec for every registered method', async () => {
-    await import('@/modules/iam/application/auth-service')
+    await importEveryService(modulesRoot)
 
     for (const meta of registeredMethods()) {
       expect(meta.authorisation, `${meta.service}.${meta.method}`).toBeDefined()
@@ -279,7 +361,7 @@ describe('every service method has a matrix entry', () => {
   })
 
   it('finds no exported service method outside the registry', async () => {
-    await import('@/modules/iam/application/auth-service')
+    await importEveryService(modulesRoot)
 
     const offenders = unregisteredServiceMethods(modulesRoot)
 

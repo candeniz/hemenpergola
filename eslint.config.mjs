@@ -143,7 +143,11 @@ export default tseslint.config(
   {
     files: ['src/app/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': [
+      // The base rule is off; the typescript-eslint version is used because only it can say
+      // `allowTypeImports`, and a type-only import is erased before the bundler ever sees
+      // it — see the rule-9 group below.
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           paths: [
@@ -161,16 +165,29 @@ export default tseslint.config(
             },
             {
               /*
-               * CLAUDE.md non-negotiable 9. Next evaluates a route's module graph while
-               * collecting page data — at build time — so a *static* import of anything
-               * that reads `env` or builds the Prisma client at module load makes
-               * `pnpm build` need production secrets again.
+               * CLAUDE.md non-negotiable 9.
                *
-               * `env.client.ts` is not here: its values are `NEXT_PUBLIC_*`, which Next
-               * inlines at build time, so evaluating it during the build is correct.
+               * What is banned is **module-scope evaluation**, not the dependency. Next
+               * walks a route's module graph while collecting page data — at build time —
+               * so a *static* import of anything that reads `env` or builds the Prisma
+               * client at module load makes `pnpm build` need production secrets again.
                *
-               * The fix at a call site is `await import(...)` inside the handler or the
-               * component, not an exception to this rule.
+               * Two things are therefore deliberately allowed, and a fixture in
+               * `test/module-boundary.test.ts` proves each:
+               *
+               *   `await import(...)` inside a handler, a component or a server action —
+               *   the module is evaluated when the request runs, which is the point.
+               *
+               *   `import type` — erased by the compiler, so it reaches neither the module
+               *   graph nor the bundle. That is what `allowTypeImports` below is for.
+               *
+               * It applies transitively: a file in app/ that statically imports a *second*
+               * app/ file which statically imports a service is the same bug one step
+               * further away. That is why the server actions in `app/actions/` reach their
+               * service through `await import(...)` even though they already live in app/.
+               *
+               * `env.client.ts` is not in the group: its values are `NEXT_PUBLIC_*`, which
+               * Next inlines at build time, so evaluating it during the build is correct.
                */
               group: [
                 '@/shared/config/env',
@@ -180,8 +197,11 @@ export default tseslint.config(
                 '**/modules/*/application/*',
                 '**/modules/*/application/**',
               ],
+              // Types are erased, so a type-only import cannot cause the evaluation this
+              // rule exists to prevent.
+              allowTypeImports: true,
               message:
-                'Do not import configuration or an application service at module scope in app/ — Next evaluates it at build time and the build stops being secret-free (CLAUDE.md non-negotiable 9). Use `await import(...)` inside the handler instead.',
+                'Do not evaluate configuration or an application service at module scope in app/ — Next walks the module graph at build time and the build stops being secret-free (CLAUDE.md non-negotiable 9). Use `await import(...)` inside the handler, or `import type` if only the type is needed.',
             },
             {
               group: ['@/modules/*/infrastructure/**', '**/modules/*/infrastructure/**'],
@@ -242,6 +262,26 @@ export default tseslint.config(
           selector: 'Literal[value=/(^|\\s)[a-z-]+-\\[[^\\]]+\\](?!:)/]',
           message:
             'No arbitrary Tailwind values in components (22-design-system.md Rule 1). Add a token instead.',
+        },
+        {
+          /*
+           * `max-w-md` and its family — a class that is neither a hex literal nor an
+           * arbitrary value, and is wrong anyway.
+           *
+           * This theme defines a custom spacing scale with `sm`/`md`/`lg`/`xl`, and in
+           * Tailwind 4 a `max-w-*` utility resolves against the container **and** the
+           * spacing namespaces, with spacing winning. So `max-w-md` in this project means
+           * 24 pixels, not 28rem — and a card carrying it becomes a 24-pixel column with no
+           * error, no warning and a perfectly normal-looking class name. It shipped twice:
+           * in `ui/dialog.tsx` from Phase 0, and in the auth card here in Phase 1.
+           *
+           * Named container tokens (`max-w-page`, `max-w-form`, `max-w-dialog`) do not
+           * collide, because no spacing token shares their names.
+           */
+          selector:
+            'Literal[value=/(^|\\s)(max-)?[wh]-(xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl)(\\s|$)/]',
+          message:
+            'A `max-w-md`-style class resolves to this theme’s *spacing* scale, not a container width — `max-w-md` is 24px here. Use a named container token (max-w-page, max-w-form, max-w-dialog) or add one to globals.css.',
         },
       ],
     },

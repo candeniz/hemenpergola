@@ -139,6 +139,20 @@
 
   /* ---- Container ---------------------------------------------------------- */
   --container-page: 1200px;
+  /*
+   * A single form column — sign in, register, reset. 28rem is Tailwind's own `md` container
+   * width, declared here under a name of its own for a reason worth writing down:
+   *
+   * this theme defines a custom spacing scale with `sm`/`md`/`lg`/`xl`, and in Tailwind 4 a
+   * `max-w-md` resolves against **both** the container and the spacing namespaces — the
+   * spacing token wins. So `max-w-md` in this project silently means 24px, not 28rem, and
+   * the card it is on becomes a 24-pixel column with no error anywhere. The lint rules
+   * cannot see it: `max-w-md` is a real class, not an arbitrary value. `e2e/account.spec.ts`
+   * caught it, by asserting a heading was visible rather than merely present.
+   */
+  --container-form: 28rem;
+  /* Modal width. Same trap as `--container-form`: `max-w-lg` here means 48px. */
+  --container-dialog: 32rem;
   /* Side drawer: fixed on desktop, capped so it never covers the whole phone screen. */
   --container-drawer: 20rem;
   --container-drawer-max: 85vw;
