@@ -94,3 +94,25 @@ export function isPasswordAcceptable(password: string): boolean {
 
 /** Exposed for the test that asserts the list is actually consulted. */
 export const COMMON_PASSWORD_COUNT = COMMON_PASSWORD_SET.size
+
+/**
+ * The Argon2id work factor — `12-authentication-authorization.md` §Credentials.
+ *
+ * In `domain/` rather than next to the hasher because it is a **policy decision**, not an
+ * implementation detail: 19 MiB / t=2 / p=1 are the OWASP minimums for Argon2id, they are
+ * written down in the document so nobody "optimises" them downwards when a login feels slow,
+ * and `credentials.integration.test.ts` pins them.
+ *
+ * The practical reason for the move is smaller and just as real: `infrastructure/` carries
+ * `import 'server-only'`, and `prisma/seed` runs under plain Node. The seed needs to hash the
+ * bootstrap admin's password with *these* numbers, and the alternative — a second copy of
+ * them in the seed — is exactly the drift this constant exists to prevent.
+ */
+export const ARGON2_OPTIONS = {
+  /** 19 MiB, expressed in KiB as `@node-rs/argon2` expects. */
+  memoryCost: 19 * 1024,
+  timeCost: 2,
+  parallelism: 1,
+  /** Argon2id — the hybrid, resistant to both side-channel and GPU attacks. */
+  algorithm: 2 as const,
+}

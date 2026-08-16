@@ -6,10 +6,16 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 2 is in progress — 4 of its 7 tasks are done** (2026-08-16). The
-catalogue schema, the admin CRUD over it, the admin navigation and the `PlatformSetting`
-surface have landed; 2.3 (real catalogue content), 2.4 (verification queue) and 2.5 (audit
-viewer) remain. `26-execution-plan.md` §Phase 2.
+**Current phase:** **Phase 2 is complete and its gate is proven** (2026-08-16). An admin adds
+a product and its options with no deployment, and verifies a manufacturer — both walked end to
+end by `e2e/phase2-gate.spec.ts`. Phase 3 (manufacturer supply side) is next, and
+`26-execution-plan.md` §Sequencing is emphatic that it runs **before** Phase 4: it carries the
+largest un-derisked assumption in the register (D3) and the data model with the most surface
+area.
+
+**Before Phase 3 ships its price-book UI, the D3 pilot manufacturer needs to exist** — and
+§Open questions now has eight questions (Q11–Q18) waiting for them, produced by writing the
+seed catalogue.
 
 The application runs, and now it has accounts: `docker compose up -d && pnpm seed demo &&
 pnpm dev` gives a working local stack with 81 provinces, 974 districts, and a registration →
@@ -32,7 +38,7 @@ proven — not when the code is written.
 | Docs | 00–26, README, CLAUDE.md | ✅ done | — |
 | 0 | Foundation | **✅ gate met · 17/17** | pipeline green, shells render in tr/en — proven, see 2026-08-16 |
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
-| 2 | Catalogue + admin skeleton | **🟡 in progress · 4/7** | admin adds a product with no deploy |
+| 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | ⬜ | a company is matchable |
 | 4 | Project configurator | ⬜ | a project reaches `READY` and survives a restart |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
@@ -1411,6 +1417,183 @@ not. Added to the route map and to the navigation allow-list in the same change.
   render is a tree nobody maintains. Stated in the service; not worth an ADR unless a second
   level is ever asked for.
 
+
+### 2026-08-16 — Phase 2 tasks 2.3, 2.4, 2.5 and the gate (commit `P2.3-2.5 · Faz 2 kapanışı`)
+
+The seed catalogue, the verification queue and the audit viewer. Phase 2 row is now
+**✅ gate met · 7/7**.
+
+#### Two document debts, closed while they were still one line each
+
+**`CmsPage` had a single `slug unique`** — `ADR-017`'s contradiction one table further along.
+`07` §Route map gives the CMS pages Turkish canonical URLs and an English set beside them, so
+one slug per page would put a Turkish word in every English CMS URL. `04` §Content is
+corrected and `ADR-017` gained a **Scope** paragraph making the rule general: no `slug` on the
+entity, `slug` on the translation row, `@@unique([locale, slug])`, for anything with a public
+URL. Done now because `CmsPage` does not exist yet; after Phase 8 it is a migration over live
+content with indexed URLs and a redirect map hanging off it.
+
+**Category depth was only in a service.** `Category(parentId?)` describes a tree and `04`'s
+contract did not bound it. `07` §Route map has `/kategoriler/[slug]` — one segment — so a
+second level would have no URL to live at. One paragraph in `04`, and the column stays
+self-referencing because that is still the right shape for one level.
+
+#### Verified on this machine
+
+| Check | Result |
+|---|---|
+| `pnpm test` | **864 passed** (was 847) |
+| `pnpm test:integration` | **186 passed** (was 155) |
+| `pnpm test:e2e` | **33 passed, 20 skipped, 0 failed** (was 30) |
+| `pnpm build` with `.env` moved aside | exit 0 |
+| `pnpm lint`, `pnpm typecheck` | clean |
+| `prisma migrate diff --exit-code` | `No difference detected`, exit 0 |
+| `pnpm seed` / `seed demo` / `seed e2e` | 3 categories, 7 products (2 fully specified), 19 attributes, 42 options |
+| authorisation matrix | 44 registered methods, 0 unregistered; catalogue, settings, verification and audit all `admin` |
+| Phase 2 gate e2e | green — product + attribute + option added, manufacturer verified, both in the audit trail |
+| audit filters | every one lands on an index; the one that cannot is refused |
+
+#### The gate
+
+`21`: *"an admin adds a product and its options with no deployment, and verifies a
+manufacturer."* `e2e/phase2-gate.spec.ts` does both against a production build.
+
+It **provisions its own manufacturer** rather than verifying whichever `PENDING` company the
+seed left lying around. That version works once: the second run finds the company already
+`VERIFIED`. So the spec registers a founder, verifies the email, verifies the phone and
+creates the company through `/api/v1`, then the admin reviews the documents and approves —
+re-runnable on any profile, and it proves that whole path still works as a side effect.
+
+Reading the OTP needed the SMS twin of the dev mailbox, so `/api/dev/outbox` now exists with
+the same two guards (`APP_ENV` and the provider, and the env schema already refuses
+`SMS_PROVIDER=log` in production). A third gate test asserts both endpoints report
+`provider: log`, so the guard is watched rather than assumed.
+
+#### 2.3 — the catalogue, and the part that is not code
+
+Three categories, seven products — the seven `product_selection_step_1` shows — and **two of
+them fully specified**: bioklimatik pergola and giyotin cam. The other five carry *no*
+attributes at all rather than a few, because a half-specified product looks finished in a list
+and becomes a surprise in Phase 4.
+
+Giyotin cam was chosen over the alternatives for a reason worth recording:
+`project_options_step_5` shows *zip perde* and *sürme cam* as options **on** the pergola, so
+specifying either as a standalone product first would specify the same thing twice from two
+directions. Kış bahçesi was the other candidate and was rejected as three specifications in a
+trench coat — roof, walls and a thermal break — which from outside the trade would have been
+exactly the invention this task is trying to avoid.
+
+The Turkish is written, not translated, and a test pins the places where the trade term and a
+literal translation differ: *çıkıntı* not *projeksiyon*, *duvara dayalı* not *duvara monte*,
+*ısıcam* rather than *çift cam*, *giyotin* not *gilotin*.
+
+`affectsPrice` is defined precisely rather than set to `true` by reflex: it marks an attribute
+whose answer reaches `08` §Algorithm — **step 3** for choice attributes (each selected option
+needs a `PriceBookOptionPrice` from the manufacturer) and **step 1 or 6** for numbers (the
+basis, or a `SIZE_SURCHARGE` / `HEIGHT_SURCHARGE` threshold). Phase 5 reads it to know which
+price-book rows a manufacturer must fill in.
+
+#### `ADR-008` was tested, and it survived — with one reshape
+
+`10` §What V1 builds claims *"every product in the seed catalogue is expressible as a flat
+attribute set"*, and that sentence is the whole justification for not building a rules engine.
+Until there was a catalogue it was a prediction.
+
+**It held, but not on the first draft.** The first `giyotin-cam` had a `panel_sayisi`
+attribute, and it did not work: the valid panel count depends on the opening width, which is a
+*compatibility* rule between two attributes, and `showIf` only does visibility. `ADR-008`
+names cross-option compatibility as out of V1, so the choice was to build the engine or
+reshape the attribute.
+
+Reshaped. Panel count is an engineering consequence of the opening, not a customer choice, so
+the customer gives the opening and the manufacturer works out the panels — which is also what
+actually happens when somebody orders one. The attribute is *gone* rather than constrained,
+and `catalogue-data.test.ts` asserts it stays gone, so a future attribute that reintroduces a
+compatibility rule fails there rather than in Phase 4.
+
+Both products use exactly one level of `showIf` (`zip_kumas` on `yan_kapama`,
+`motor_markasi` on `hareket_tipi`), validated through the *service's* `validateShowIf` rather
+than a second copy of the rule.
+
+**The finding to carry into Phase 4:** `showIf` handles visibility and nothing else. A
+customer can still configure a combination a manufacturer would not build. That is tolerable
+in V1 only because the output is an *estimate* the manufacturer corrects with a real offer
+after a site survey (`ADR-006`, `11`) — if the product ever presents an estimate as binding,
+`ADR-008` needs revisiting on that ground, not on this one.
+
+#### 2.4 — verification
+
+`PENDING` → `VERIFIED` | `REJECTED`, plus two actions `17` lists separately and that are
+separate here: **request documents** does not change the status (rejecting somebody in order
+to ask them a question is how a queue becomes adversarial) and **suspend** freezes an already
+verified company.
+
+Rejection needs a reason ≥ 10 characters, and the reason travels to the company verbatim —
+`17` says it stays visible to both sides, so there is no internal-versus-external version to
+keep in step. Approval clears the old rejection reason, because a verified company should not
+be shown its rejection text forever.
+
+The queue opens on `PENDING`. A work queue that opens on everything is a list.
+
+`02` §Verification state is enforced at the service, and the tests assert the distinction that
+is easy to lose: `REJECTED` keeps exactly one write permission — `document.upload`, which is
+what "may resubmit" means in a permission catalogue — while `SUSPENDED` keeps none.
+
+Every decision is audited and every decision is mailed. The notification catalogue is Phase 7;
+one event per decision is the floor, and silence is not an acceptable placeholder for it.
+
+#### 2.5 — the audit viewer
+
+Read-only, and the matrix now has a test asserting no `audit.*` method starts with
+`create`/`update`/`delete` — `17` makes the table append-only for everyone including admins,
+and retention is a Phase 9 job rather than a button.
+
+**Every filter lands on an index from `04` §Indexes**, and the one that cannot is refused:
+`entityId` without `entityType` gets a `VALIDATION` error, because the index is
+`(entityType, entityId, createdAt)` and an id alone is a sequential scan over the
+fastest-growing table in the system. `04` §Conventions says a filter the index does not
+support means adding the index in the same change; the honest answer here is that nobody
+searches audit rows by a bare id they cannot type from memory, so the filter is refused rather
+than indexed. A test reads `pg_indexes` and asserts all three indexes are actually on the
+table, because the migration is what ships.
+
+`before`/`after` are rendered as a **field-level diff** rather than two JSON blobs. The diff
+is computed in the service so the screen and any future export agree on what "changed" means,
+and an entry whose payloads are identical says so instead of showing nothing.
+
+#### Findings
+
+**The seed could not import the password hasher.** `infrastructure/password-hasher.ts` carries
+`import 'server-only'`, which throws under `tsx` — and the seed needs to hash the bootstrap
+admin's password, because Phase 1 built the credential flow and an admin with no password is
+an admin the gate cannot sign in as. The Argon2 work factor moved to `domain/password.ts`,
+where it belongs anyway: 19 MiB / t=2 / p=1 is a policy decision from `12` §Credentials, not
+an implementation detail. One source for the numbers, and the guard stays on the module that
+needs it.
+
+**A `NUMBER` attribute with no bounds is invisible until Phase 4.** `10` §Validation reads
+readiness bounds from `ProductAttribute.min`/`max`, so a numeric attribute without them cannot
+be validated at all — and nothing in the schema requires them. The catalogue test now fails if
+a `NUMBER` attribute is missing `unit`, `min`, `max` or `step`.
+
+**Two things are called verification.** Phase 1's `verification.integration.test.ts` is email
+verification; Phase 2's is company verification. The new file is
+`company-verification.integration.test.ts` rather than a rename, because both names now say
+which one they mean — the collision is a fact about the domain, not an accident.
+
+#### Carried forward
+
+- **Q11–Q18 are new, and they are the point of this task.** Everything provisional in the
+  catalogue is written down as a question for the `26` §D3 pilot manufacturer rather than left
+  looking decided. See §Open questions.
+- **Document *viewing* is not yet audit-logged.** `17` §Manufacturer verification calls it a
+  disclosure — these are legal identity documents. The review *decision* is logged; the
+  fetch is not, because the storage surface that serves the file is Phase 3. It lands with
+  the surface that can see the request.
+- **No seeded product uses `LENGTH_M` or `UNIT`.** Everything in this market appears to be
+  priced per m². Rather than invent a product to fill the enum, it is Q17.
+- **Q1, Q3, Q10** unchanged from Phase 1.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -1419,6 +1602,14 @@ not. Added to the route map and to the navigation allow-list in the same change.
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |
 | Q4 | Geocoding provider and budget | Phase 3 (radius service areas) | district centroids only, no free-point radius |
+| Q11 | **Profil rengi: hangisi standart, hangisi ek ücretli?** Katalog dört RAL sunuyor (9016 beyaz, 7016 antrasit, 9005 siyah, özel RAL) ve yalnızca *özel RAL*'in ücretli olduğunu varsayıyor. Stoklu renkler firmadan firmaya değişiyorsa bu varsayım her üretici için yanlış olur. | Faz 3 (fiyat listesi giriş ekranı bu varsayımı kullanacak) | dördü de seçilebilir, ücret farkı üreticinin fiyat listesine bırakılmış |
+| Q12 | **Bioklimatik pergolada tek modül ölçü sınırları.** Katalogda genişlik 2000–6000 mm, çıkıntı 2000–4500 mm, yükseklik 2200–3500 mm. Bunlar taşıma kapasitesi ve lamel boyu üzerinden makul tahminlerdir, ölçülmüş değerler değil. Gerçek sınır kar/rüzgâr yüküne ve lamel profiline göre değişiyorsa hangi aralık doğru? | Faz 4 (sihirbaz bu aralıkların dışını reddedecek) | mevcut aralıklar; üstünü üretici modül birleştirerek çözer |
+| Q13 | **Giyotin camda açıklık sınırları ve panel mantığı.** Katalog genişliği 1000–6000 mm, yüksekliği 1000–3000 mm alıyor ve panel sayısını **sormuyor** — üreticinin hesapladığını varsayıyor (`ADR-008` sınamasının sonucu). Panel sayısı müşterinin bilmesi gereken bir şeyse veya fiyatı doğrudan etkiliyorsa bu yanlış. | Faz 4 ve Faz 5 | açıklığı müşteri verir, paneli üretici belirler |
+| Q14 | **Motor markası katalogda yer almalı mı?** Şu an `farketmez / Somfy / Nice`. Marka seçimi müşteriye sunulunca, o markayla çalışmayan üretici teklif veremez hâle gelebilir; alternatif, markayı gizleyip `standart / sessiz / akıllı-ev uyumlu` gibi bir sınıf sormak. Hangisi piyasada karşılık buluyor? | Faz 4 | marka listesi, varsayılan "farketmez" |
+| Q15 | **Zip perde kumaşı: şeffaf PVC / mesh / akrilik ayrımı müşterinin anlayacağı ayrım mı?** Yardım metni "PVC manzarayı korur ama nefes almaz, mesh güneşi keser ve hava geçirir" diyor. Satışta bu üçlü mü konuşuluyor, yoksa marka/gramaj mı (ör. belirli bir kumaş serisi)? | Faz 4 | üçlü ayrım |
+| Q16 | **Hangi opsiyonlar standart pakete dahil?** Katalog `sensor_paketi`, `aydinlatma`, `sineklik` ve `su_tahliye`yi ayrı ayrı sorulabilir sayıyor. Bunların bir kısmı sektörde standart olarak veriliyorsa, müşteriye ücretli opsiyon gibi göstermek fiyat tahminini şişirir. | Faz 5 (fiyat bandı) | hepsi opsiyonel, fiyatı üreticinin listesi belirler |
+| Q17 | **`LENGTH_M` ve `UNIT` ölçü temellerinin karşılığı var mı?** Katalogdaki yedi ürünün hepsi m² ile fiyatlanıyor. Metrekare dışında satılan bir ürün (metretül korkuluk, adet bazlı motor/aksesuar) platformun kapsamına giriyorsa şimdi söylenmeli; girmiyorsa `Product.basisType` üç yerine tek değere inebilir. | Faz 5, ve `04` §Catalogue'un sadeleşmesi | üç değer şemada kalır, ikisi kullanılmaz |
+| Q18 | **Kar ve rüzgâr yükü hangi alanı etkiliyor?** `08` §Algorithm'de bölgesel ayarlama var (`PriceBookRegionAdjustment`), ama kar yükünün ölçü sınırlarını mı, profil seçimini mi, yoksa yalnızca fiyatı mı değiştirdiği katalogda modellenmedi. Ölçü sınırını değiştiriyorsa bu `ProductAttribute.max`'ın bölgeye göre değişmesi demektir ve şema bunu desteklemiyor. | **Faz 4'ten önce** — cevabı "ölçü sınırını değiştirir" ise şema değişikliği gerekir | bölgesel etki yalnızca fiyatta; ölçü sınırları ülke geneli |
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
 | Q6 | Default KDV rate confirmation (20%) and whether any product differs | Phase 6 | 20% platform-wide, admin-editable |
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |

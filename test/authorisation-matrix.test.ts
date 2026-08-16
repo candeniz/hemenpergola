@@ -333,6 +333,40 @@ describe('every service method has a matrix entry', () => {
     // 2.7
     expect(methods).toContain('platform.listSettings')
     expect(methods).toContain('platform.updateSetting')
+
+    // 2.4 — verification. These are the methods that decide whether a company can be
+    // matched at all, which is the most consequential admin action in the product.
+    for (const method of [
+      'company.listVerificationQueue',
+      'company.getCompanyForVerification',
+      'company.verifyCompany',
+      'company.rejectCompany',
+      'company.requestDocuments',
+      'company.suspendCompany',
+      'company.reviewDocument',
+    ]) {
+      expect(methods, method).toContain(method)
+    }
+
+    // 2.5
+    expect(methods).toContain('audit.listAuditEntries')
+    expect(methods).toContain('audit.listAuditFacets')
+  })
+
+  it('keeps the audit log read-only, including for admins', async () => {
+    /*
+     * `17` §Audit log: *"Read-only for everyone, including admins; append-only in the
+     * database."* The registry is where that is checkable — a method named `updateAudit…`
+     * or `deleteAudit…` would have to be registered to exist at all, and retention is a
+     * Phase 9 job rather than an action anybody can take from a screen.
+     */
+    await importEveryService(modulesRoot)
+
+    const writers = registeredMethods()
+      .filter((meta) => meta.service === 'audit')
+      .filter((meta) => /^(create|update|delete|remove|purge)/.test(meta.method))
+
+    expect(writers.map((meta) => meta.method)).toEqual([])
   })
 
   it('makes every catalogue and settings method admin-only', async () => {
@@ -344,8 +378,24 @@ describe('every service method has a matrix entry', () => {
      */
     await importEveryService(modulesRoot)
 
+    const VERIFICATION = new Set([
+      'listVerificationQueue',
+      'getCompanyForVerification',
+      'verifyCompany',
+      'rejectCompany',
+      'requestDocuments',
+      'suspendCompany',
+      'reviewDocument',
+    ])
+
     const offenders = registeredMethods()
-      .filter((meta) => meta.service === 'catalog' || meta.service === 'platform')
+      .filter(
+        (meta) =>
+          meta.service === 'catalog' ||
+          meta.service === 'platform' ||
+          meta.service === 'audit' ||
+          (meta.service === 'company' && VERIFICATION.has(meta.method)),
+      )
       .filter((meta) => meta.authorisation.kind !== 'admin')
       .map((meta) => `${meta.service}.${meta.method} is ${meta.authorisation.kind}`)
 
@@ -377,8 +427,8 @@ describe('every service method has a matrix entry', () => {
     expect(missing).toEqual([])
 
     // And the count is not zero, which is how this test would pass while measuring nothing.
-    // 18 from Phase 1, 15 catalogue and 2 settings from Phase 2.
-    expect(registered.size).toBeGreaterThanOrEqual(35)
+    // 18 from Phase 1; 15 catalogue, 2 settings, 7 verification and 2 audit from Phase 2.
+    expect(registered.size).toBeGreaterThanOrEqual(44)
   })
 
   it('declares an authorisation spec for every registered method', async () => {

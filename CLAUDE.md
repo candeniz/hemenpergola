@@ -24,16 +24,20 @@ Always: `00-project-overview.md` on a first visit, `25-progress.md` before start
 
 ## State of the repository
 
-**Phases 0 and 1 are built and their gates are proven, and Phase 2 is half done**
-(2026-08-16). The foundation, the design system, the four shells, `modules/iam` — accounts,
-credentials, tokens, the authorisation matrix, companies and memberships, audit and rate
-limits — and `modules/catalog`, the admin catalogue CRUD and the `PlatformSetting` surface.
+**Phases 0, 1 and 2 are built and their gates are proven** (2026-08-16). The foundation, the
+design system, the four shells, `modules/iam` (accounts, credentials, tokens, the
+authorisation matrix, companies and memberships, audit, rate limits), `modules/catalog` with
+the admin CRUD over it, the seed catalogue, manufacturer verification, the audit viewer and
+the `PlatformSetting` surface.
 
-**Phase 2 tasks 2.3, 2.4 and 2.5 are next**: the real catalogue content, the manufacturer
-verification queue and the audit viewer. `26-execution-plan.md` §Phase 2 for the ordered
-tasks and the evidence each one needs. Read `25-progress.md` first — it is the only place that
-says what is actually done, and its §Open questions is where the things nobody has decided yet
-are written down.
+**Phase 3 (manufacturer supply side) is next**, and `26-execution-plan.md` §Sequencing is
+emphatic that it runs *before* Phase 4: it carries the largest un-derisked assumption in the
+register and the data model with the most surface area. `21-development-roadmap.md` for its
+scope and gate, `26` §Phase 3 for the ordered tasks.
+
+Read `25-progress.md` first — it is the only place that says what is actually done, and its
+§Open questions holds eight questions (Q11–Q18) that the catalogue produced and that the D3
+pilot manufacturer has to answer.
 
 `modules/iam/` is the template every later module copies: `domain/` pure, `application/`
 framework-agnostic and returning `Result`, `infrastructure/` for Prisma and adapters, and

@@ -33,6 +33,12 @@ export type AuditAction =
   | 'catalog_deleted'
   | 'catalog_deactivated'
   | 'setting_changed'
+  // Phase 2 · verification decisions (`17` §Manufacturer verification)
+  | 'company_verified'
+  | 'company_rejected'
+  | 'company_documents_requested'
+  | 'company_suspended'
+  | 'document_reviewed'
 
 export type AuditEntry = {
   action: AuditAction

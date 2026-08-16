@@ -10,7 +10,14 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.{test,spec}.ts', 'test/**/*.{test,spec}.ts'],
+    include: [
+      'src/**/*.{test,spec}.ts',
+      'test/**/*.{test,spec}.ts',
+      // The seed catalogue is specification, not scaffolding: `ADR-008`'s claim that every
+      // seeded product is a flat attribute set is tested against the data itself, and the
+      // test belongs next to it.
+      'prisma/seed/**/*.{test,spec}.ts',
+    ],
     // The reference folders are committed material, not source (CLAUDE.md §Layout).
     exclude: [
       'node_modules/**',

@@ -363,6 +363,17 @@ The cost is that resolving a public URL is a join, and that every lookup must ca
 That is not incidental — a slug without a locale is ambiguous, and the type system now says
 so. `04` §Catalogue is corrected accordingly.
 
+**Scope.** This is not a rule about the catalogue; it is a rule about **every table with a
+public URL**. That is `Category`, `Product` and `CmsPage`. `04` §Content still had
+`CmsPage(slug unique)` when this ADR was written, which is the same contradiction one table
+further along — `07` §Route map gives the CMS pages Turkish canonical URLs and an English set
+beside them. It was corrected in Phase 2, while `CmsPage` is still a line in a document.
+After Phase 8 it would be a migration over live content with indexed URLs hanging off it, and
+the redirect map to go with it.
+
+Anything added later with a public URL inherits the same shape: no `slug` on the entity, a
+`slug` on the translation row, `@@unique([locale, slug])`.
+
 **Reverses if.** A product ever needs one canonical URL across locales, which would be a
 decision about `18`, not about this table.
 

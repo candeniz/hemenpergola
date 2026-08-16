@@ -2,23 +2,17 @@ import 'server-only'
 
 import { hash, verify } from '@node-rs/argon2'
 
+import { ARGON2_OPTIONS } from '../domain/password'
+
 /**
- * Argon2id, with the parameters `12-authentication-authorization.md` §Credentials fixes:
- * `memoryCost` 19 MiB, `timeCost` 2, `parallelism` 1. These are the OWASP minimums for
- * Argon2id and they are written down in the document so nobody "optimises" them downwards
- * when a login feels slow.
+ * The work factor lives in `domain/password.ts`: it is a policy decision
+ * (`12-authentication-authorization.md` §Credentials), and the seed has to hash the
+ * bootstrap admin with the same numbers without importing this `server-only` module.
  */
-const ARGON2_OPTIONS = {
-  /** 19 MiB, expressed in KiB as the library expects. */
-  memoryCost: 19 * 1024,
-  timeCost: 2,
-  parallelism: 1,
-  /** Argon2id — the hybrid, resistant to both side-channel and GPU attacks. */
-  algorithm: 2 as const,
-} satisfies Parameters<typeof hash>[1]
+const OPTIONS = ARGON2_OPTIONS satisfies Parameters<typeof hash>[1]
 
 export async function hashPassword(password: string): Promise<string> {
-  return hash(password, ARGON2_OPTIONS)
+  return hash(password, OPTIONS)
 }
 
 /**
@@ -27,7 +21,7 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
   try {
-    return await verify(passwordHash, password, ARGON2_OPTIONS)
+    return await verify(passwordHash, password, OPTIONS)
   } catch {
     // A malformed hash in the database must read as "wrong password", not as a 500 that
     // tells an attacker this account is special.
@@ -58,9 +52,9 @@ export async function burnPasswordTime(password: string): Promise<false> {
 
 /** For the test that asserts the parameters are the documented ones. */
 export const ARGON2_PARAMETERS = {
-  memoryCostKib: ARGON2_OPTIONS.memoryCost,
-  memoryCostMib: ARGON2_OPTIONS.memoryCost / 1024,
-  timeCost: ARGON2_OPTIONS.timeCost,
-  parallelism: ARGON2_OPTIONS.parallelism,
+  memoryCostKib: OPTIONS.memoryCost,
+  memoryCostMib: OPTIONS.memoryCost / 1024,
+  timeCost: OPTIONS.timeCost,
+  parallelism: OPTIONS.parallelism,
   algorithm: 'argon2id',
 } as const

@@ -1,5 +1,6 @@
 import type { CompanyRole, CompanyStatus, PrismaClient } from '@prisma/client'
 
+import { seedCatalogue } from './catalogue/seed-catalogue'
 import { seedGeography } from './geo/seed-geo'
 import { seedPlatformSettings } from './platform-settings'
 
@@ -14,7 +15,7 @@ import { seedPlatformSettings } from './platform-settings'
  * reviews and portfolios — is the destination, not this stop. Migration 1 has no catalogue,
  * pricing or review tables (`ADR-014`), so those parts arrive with their phases:
  *
- *   Phase 2  catalogue rows            → `demo` gains products and options
+ *   Phase 2  catalogue rows            → done: all three profiles seed the D2 catalogue
  *   Phase 3  price books, service areas → `demo` gains published price books
  *   Phase 5  match runs                → `e2e` gains a project that can be priced
  *   Phase 7  reviews                    → `demo` gains ratings
@@ -35,6 +36,12 @@ export type SeedSummary = {
   users: number
   companies: number
   memberships: number
+  categories: number
+  products: number
+  attributes: number
+  options: number
+  /** Of `products`, how many carry a complete attribute set (`26` §D2). */
+  fullySpecified: number
 }
 
 /**
@@ -55,8 +62,19 @@ export const E2E_IDS = {
   },
 } as const
 
-/** The bootstrap admin. Phase 1 replaces the null password with a real credential flow. */
+/**
+ * The bootstrap admin, and a password for it.
+ *
+ * Phase 1 built the credential flow, so a seeded admin with no password is an admin nobody
+ * can sign in as — including `e2e/phase2-gate.spec.ts`, which has to be an admin to prove
+ * the Phase 2 gate at all.
+ *
+ * The password is a constant in a seed file on purpose and is safe to be one: seeds run
+ * against development and test databases, and `23` §Runtime never runs them in production —
+ * the production admin is created by an operator, not by `pnpm seed`.
+ */
 const ADMIN_EMAIL = 'admin@pergola.local'
+export const SEED_ADMIN_PASSWORD = 'phase2-gate-admin-password'
 
 type CompanySpec = {
   id?: string
@@ -137,14 +155,44 @@ async function seedCommon(prisma: PrismaClient, adminId?: string) {
   const geo = await seedGeography(prisma)
   const settings = await seedPlatformSettings(prisma)
 
-  await upsertUser(prisma, {
+  /*
+   * The catalogue is in *every* profile, including `minimal`.
+   *
+   * `26` §D2: Phase 4 renders a form from these rows and Phase 5 prices against them. A
+   * developer database without them is one where neither can be run at all, which is not a
+   * smaller database — it is a broken one. The rows are identical across profiles and their
+   * ids derive from their slugs, so `e2e` gets its determinism for free.
+   */
+  const catalogue = await seedCatalogue(prisma)
+
+  /*
+   * Argon2 directly, with the work factor from `domain/password.ts`.
+   *
+   * `infrastructure/password-hasher.ts` carries `import 'server-only'`, which throws under
+   * `tsx` — the seed is a Node script, not a request. Importing the *parameters* rather than
+   * the hasher keeps one source for the numbers and leaves the guard on the module that
+   * needs it.
+   */
+  const [{ hash }, { ARGON2_OPTIONS }] = await Promise.all([
+    import('@node-rs/argon2'),
+    import('@/modules/iam/domain/password'),
+  ])
+
+  const admin = await upsertUser(prisma, {
     ...(adminId === undefined ? {} : { id: adminId }),
     email: ADMIN_EMAIL,
     fullName: 'Platform Admin',
     globalRole: 'ADMIN',
   })
 
-  return { ...geo, settings }
+  // Set every run: an admin whose password drifted from the constant is an admin the gate
+  // cannot sign in as, and the failure would read as a broken gate rather than a stale row.
+  await prisma.user.update({
+    where: { id: admin.id },
+    data: { passwordHash: await hash(SEED_ADMIN_PASSWORD, ARGON2_OPTIONS) },
+  })
+
+  return { ...geo, settings, ...catalogue }
 }
 
 async function seedMinimal(prisma: PrismaClient): Promise<SeedSummary> {

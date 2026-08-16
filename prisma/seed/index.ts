@@ -49,6 +49,10 @@ async function main(): Promise<void> {
     console.log(`  users       ${summary.users}`)
     console.log(`  companies   ${summary.companies}`)
     console.log(`  memberships ${summary.memberships}`)
+    console.log(`  categories  ${summary.categories}`)
+    console.log(`  products    ${summary.products} (${summary.fullySpecified} fully specified)`)
+    console.log(`  attributes  ${summary.attributes}`)
+    console.log(`  options     ${summary.options}`)
   } finally {
     await prisma.$disconnect()
   }

@@ -106,6 +106,13 @@ CompanyProduct(id, companyId, productId, isActive)             unique(companyId,
 CompanyProductOption(id, companyProductId, optionId, isOffered)
 ```
 
+**Categories nest one level.** `Category(parentId?)` describes a tree and the contract
+above does not bound it, but `07` §Route map has `/kategoriler/[slug]` — a single segment,
+not a path of arbitrary depth. A second level would have no URL to live at and no screen to
+render it, so `catalog-service` refuses a parent that itself has a parent. The column stays
+nullable and self-referencing because that is still the right shape for one level, and
+because a future decision to allow two is then a service change rather than a migration.
+
 **The slug is per locale and lives on the translation row** (`ADR-017`). An earlier version of
 this section put a single `slug unique` on `Category` and `Product`, which contradicted
 `07-frontend-architecture.md` §Route map — *"`en` uses its own slug set"* — and would have
@@ -209,8 +216,9 @@ File(id, key, bucket, mime, sizeBytes, width?, height?, ownerType, ownerId, uplo
      virusScanStatus)
 PortfolioItem(id, companyId, title, description, productId?, cityId?, completedAt, sortOrder)
 PortfolioPhoto(id, portfolioItemId, fileId, sortOrder)
-CmsPage(id, slug unique, status, seoId)
-CmsPageTranslation(pageId, locale, title, body)
+CmsPage(id, status, seoId)
+CmsPageTranslation(pageId, locale, slug, title, body)   pk(pageId, locale)
+                                                        unique(locale, slug)
 Seo(id, metaTitle?, metaDescription?, canonicalUrl?, ogImageId?, noIndex, jsonLd Json?)
 Notification(id, userId, type, payload Json, readAt?, createdAt)
 NotificationPreference(id, userId, channel, type, enabled)
@@ -221,6 +229,14 @@ PlatformSetting(key primary, value Json, updatedBy, updatedAt)
 
 `Review` is unique per `offerRequestId` — one engagement, one review
 (`16-reviews-and-ratings.md`).
+
+`CmsPage` follows `ADR-017`: **the slug is per locale, on the translation row.** It is the
+same shape as `Category` and `Product` and for the same reason — `07` §Route map lists
+`/nasil-calisir`, `/hakkimizda`, `/iletisim` and `/fiyat-rehberi/[slug]` as Turkish
+canonical URLs with an English set alongside, and one slug per page would put a Turkish word
+in every English CMS URL. Corrected in Phase 2 rather than Phase 8: the table does not exist
+yet, so today it is one line in a document and after Phase 8 it is a migration over live
+content with published URLs hanging off it.
 
 ## Deferred — modelled, not built (`ADR-010`, brief §37)
 
