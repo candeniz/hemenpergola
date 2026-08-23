@@ -73,8 +73,13 @@ export async function seedGeography(prisma: PrismaClient): Promise<{
   // 09 §Service-area coverage falls back to the district centroid when the customer gives no
   // precise location. A district without a point would silently drop every radius-based
   // manufacturer for that district, so this is checked rather than assumed.
+  // Scoped to the seed's own universe (real plate codes): the integration suites share one
+  // database and their fixtures use 900-range plate codes, which are not this seed's to
+  // vouch for.
   const missing = await prisma.$queryRaw<{ count: bigint }[]>`
-    SELECT count(*) AS count FROM "District" WHERE "point" IS NULL
+    SELECT count(*) AS count FROM "District" d
+    JOIN "City" c ON c."id" = d."cityId" AND c."plateCode" <= 81
+    WHERE d."point" IS NULL
   `
   if (Number(missing[0]?.count ?? 0) > 0) {
     throw new Error(`${missing[0]?.count} districts have no point after seeding`)

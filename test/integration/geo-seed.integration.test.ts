@@ -18,9 +18,20 @@ beforeAll(async () => {
   await seedPlatformSettings(getPrisma())
 }, 300_000)
 
+/*
+ * The header's promise — "each assertion tolerates the rows the other files leave behind" —
+ * is enforced by scoping every query to `plateCode <= 81`: the seed's universe is exactly
+ * the 81 real provinces, and every fixture in this suite names its cities with 900-range
+ * plate codes. Unscoped, these assertions depended on this file finishing before the
+ * others' `beforeAll` fixtures landed — an ordering twelve local workers happened to
+ * deliver for three phases and CI's two cores did not (first real integration run).
+ */
 describe('geography seed', () => {
   it('has all 81 provinces, numbered 1..81', async () => {
-    const cities = await getPrisma().city.findMany({ select: { plateCode: true } })
+    const cities = await getPrisma().city.findMany({
+      where: { plateCode: { lte: 81 } },
+      select: { plateCode: true },
+    })
 
     expect(cities).toHaveLength(81)
     expect(cities.map((c) => c.plateCode).sort((a, b) => a - b)).toEqual(
@@ -32,8 +43,9 @@ describe('geography seed', () => {
     // 09 §Service-area coverage falls back to the district centroid when the customer gives
     // no precise location. A district without one silently drops every radius match there.
     const rows = await getPrisma().$queryRaw<{ total: bigint; missing: bigint }[]>`
-      SELECT count(*) AS total, count(*) FILTER (WHERE "point" IS NULL) AS missing
-      FROM "District"
+      SELECT count(*) AS total, count(*) FILTER (WHERE d."point" IS NULL) AS missing
+      FROM "District" d
+      JOIN "City" c ON c."id" = d."cityId" AND c."plateCode" <= 81
     `
 
     expect(Number(rows[0]?.total)).toBeGreaterThan(900)
@@ -42,7 +54,8 @@ describe('geography seed', () => {
 
   it('gives every province a point too', async () => {
     const rows = await getPrisma().$queryRaw<{ missing: bigint }[]>`
-      SELECT count(*) FILTER (WHERE "point" IS NULL) AS missing FROM "City"
+      SELECT count(*) FILTER (WHERE "point" IS NULL) AS missing
+      FROM "City" WHERE "plateCode" <= 81
     `
     expect(Number(rows[0]?.missing)).toBe(0)
   })
@@ -74,7 +87,7 @@ describe('Turkish collation, on real data', () => {
     // same answer here — so the pair below is the one that separates them.
     const cities = await getPrisma().$queryRaw<{ name: string }[]>`
       SELECT "name" FROM "City"
-      WHERE "name" IN ('Isparta', 'İstanbul', 'İzmir', 'Iğdır')
+      WHERE "name" IN ('Isparta', 'İstanbul', 'İzmir', 'Iğdır') AND "plateCode" <= 81
       ORDER BY "name"
     `
 
@@ -87,8 +100,10 @@ describe('Turkish collation, on real data', () => {
     // precedes anything starting with D. Under the C collation `Ç` (U+00C7) sorts after
     // every ASCII letter and Dinar would come first — this is the pair that proves the
     // column collation is actually in effect.
+    // DISTINCT: the fixtures create their own Çankaya and Şile, and a duplicate name in the
+    // list breaks nothing about the ordering claim being made here.
     const rows = await getPrisma().$queryRaw<{ name: string }[]>`
-      SELECT "name" FROM "District"
+      SELECT DISTINCT "name" FROM "District"
       WHERE "name" IN ('Çankaya', 'Dinar', 'Bornova', 'Şile', 'Tuzla')
       ORDER BY "name"
     `
@@ -102,11 +117,13 @@ describe('Turkish collation, on real data', () => {
 
   it('disagrees with the C collation, which is the whole point', async () => {
     const turkish = await getPrisma().$queryRaw<{ name: string }[]>`
-      SELECT "name" FROM "District" WHERE "name" IN ('Çankaya', 'Dinar') ORDER BY "name"
+      SELECT DISTINCT "name" FROM "District" WHERE "name" IN ('Çankaya', 'Dinar') ORDER BY "name"
     `
+    // Subquery: DISTINCT + ORDER BY on a different collation cannot share one SELECT.
     const byte = await getPrisma().$queryRaw<{ name: string }[]>`
-      SELECT "name" FROM "District"
-      WHERE "name" IN ('Çankaya', 'Dinar')
+      SELECT "name" FROM (
+        SELECT DISTINCT "name" FROM "District" WHERE "name" IN ('Çankaya', 'Dinar')
+      ) AS names
       ORDER BY "name" COLLATE "C"
     `
 
@@ -199,21 +216,26 @@ describe('seed profiles', () => {
   it.each(['minimal', 'demo', 'e2e'] as const)(
     '%s runs and is idempotent',
     async (profile) => {
+      /*
+       * The counted universe is the seed's own (real plate codes): other files' fixtures
+       * insert 900-range cities *between these two runs*, and a global count() turns their
+       * concurrency into a false idempotency failure. Companies and memberships are not
+       * counted globally for the same reason — their duplication is already impossible
+       * (unique slug, unique (userId, companyId)), and the profile's own summary equality
+       * below is the idempotency claim for what it wrote.
+       */
+      const scopedCounts = async () => ({
+        cities: await getPrisma().city.count({ where: { plateCode: { lte: 81 } } }),
+        districts: await getPrisma().district.count({
+          where: { city: { plateCode: { lte: 81 } } },
+        }),
+      })
+
       const first = await PROFILES[profile](getPrisma())
-      const countsAfterFirst = {
-        cities: await getPrisma().city.count(),
-        districts: await getPrisma().district.count(),
-        companies: await getPrisma().company.count(),
-        memberships: await getPrisma().companyMembership.count(),
-      }
+      const countsAfterFirst = await scopedCounts()
 
       const second = await PROFILES[profile](getPrisma())
-      const countsAfterSecond = {
-        cities: await getPrisma().city.count(),
-        districts: await getPrisma().district.count(),
-        companies: await getPrisma().company.count(),
-        memberships: await getPrisma().companyMembership.count(),
-      }
+      const countsAfterSecond = await scopedCounts()
 
       expect(second).toEqual(first)
       expect(countsAfterSecond).toEqual(countsAfterFirst)
