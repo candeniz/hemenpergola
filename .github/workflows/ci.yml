@@ -123,7 +123,23 @@ jobs:
         run: pnpm prisma generate
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-      - run: node scripts/ci-integration.mjs
+
+      - name: Integration
+        run: |
+          set -o pipefail
+          node scripts/ci-integration.mjs 2>&1 | tee integration.log
+
+      # Full step logs need repository access to read; the job summary does not. On a
+      # failure the tail lands where anyone debugging a public run can actually see it.
+      - name: Publish output tail to the job summary
+        if: ${{ failure() }}
+        run: |
+          {
+            echo '### Integration output (tail)'
+            echo '```'
+            tail -c 60000 integration.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ── Stage 4 · build ──────────────────────────────────────────────────────────
   build:
