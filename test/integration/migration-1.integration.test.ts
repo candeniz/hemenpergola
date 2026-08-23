@@ -232,6 +232,9 @@ describe('migration scope', () => {
       // Phase 3 · migration 4
       'FileVariant',
       'LeadCredit',
+      // Phase 5 · migration 7 — matching
+      'MatchResult',
+      'MatchRun',
       'Payment',
       'Plan',
       'PlatformSetting',
@@ -302,9 +305,13 @@ describe('migration scope', () => {
     expect(tables).toContain('ProjectAttributeValue')
     expect(tables).toContain('ProjectAttachment')
 
-    // Phase 5's matching tables are the next boundary, and their absence is the assertion now.
-    expect(tables).not.toContain('MatchRun')
-    expect(tables).not.toContain('OfferRequestCompany')
+    // Migration 7 is Phase 5's — the boundary this assertion used to hold moved with it.
+    expect(tables).toContain('MatchRun')
+    expect(tables).toContain('MatchResult')
+
+    // Phase 6's lifecycle tables are the next boundary, and their absence is the assertion now.
+    expect(tables).not.toContain('OfferRequest')
+    expect(tables).not.toContain('ContactDisclosure')
   })
 })
 

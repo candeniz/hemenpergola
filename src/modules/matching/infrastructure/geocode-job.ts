@@ -58,6 +58,24 @@ export async function runGeocodeServiceArea(serviceAreaId: string): Promise<Geoc
   const { setPoint } = await import('@/shared/geo')
   await setPoint('ServiceArea', serviceAreaId, resolved.point)
 
+  /*
+   * Q22, migration 7: the precision is persisted, not just returned. Until Phase 5 the port
+   * computed this and the row discarded it, so one end of every radius comparison could not
+   * report its own accuracy. Written in the same idempotent spirit as the point: a re-run
+   * resolves the same inputs to the same precision.
+   */
+  await prisma.serviceArea.update({
+    where: { id: serviceAreaId },
+    data: {
+      precision:
+        resolved.precision === 'exact'
+          ? 'EXACT'
+          : resolved.precision === 'district'
+            ? 'DISTRICT'
+            : 'CITY',
+    },
+  })
+
   return { status: 'geocoded', precision: resolved.precision }
 }
 

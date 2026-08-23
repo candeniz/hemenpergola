@@ -213,6 +213,8 @@ model Company {
   // Phase 3 · migration 5
   priceBooks    PriceBook[]
   calculations  PriceCalculation[]
+  // Phase 5 · migration 7
+  matchResults  MatchResult[]
 
   @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
@@ -893,6 +895,11 @@ model ServiceArea {
   /// What the manufacturer typed, kept so the centre can be recomputed if the geocoder
   /// behind the port ever gets better. Without it a re-geocode has nothing to work from.
   centerLabel String?
+  /// How `centerPoint` was obtained — Q22, migration 7. The `Geocoder` port has computed
+  /// this since `ADR-019` and the job used to discard it, leaving one end of every radius
+  /// comparison unable to report its own accuracy. Null means "geocoded before this column
+  /// existed" — unknown, not exact.
+  precision   PointPrecision?
   createdAt   DateTime                               @default(now())
   updatedAt   DateTime                               @updatedAt
 
@@ -1129,12 +1136,68 @@ model PriceCalculation {
   actorUserId      String?
   requestIp        String?
 
-  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  priceBook PriceBook @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  priceBook    PriceBook     @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
+  matchResults MatchResult[]
 
   @@index([companyId, calculatedAt])
   @@index([priceBookId])
   @@index([actorUserId, calculatedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Matching — migration 7, Phase 5 (`04-data-model.md` §Matching and service areas,
+// `09-manufacturer-matching.md`)
+//
+// A match run is **persisted, not cached**: revisiting the results page must not
+// recompute, and "why was this company third" must be answerable months later
+// (`09` §Explainability). `weightsVersion` pins which weight set produced the
+// ranking, because the weights are `PlatformSetting` rows an admin can move.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MatchRun {
+  id             String   @id @default(cuid())
+  projectId      String
+  /// Which `matching.weights` set produced this ranking (`ADM-06`).
+  weightsVersion Int
+  resultCount    Int
+  durationMs     Int
+  createdAt      DateTime @default(now())
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  results MatchResult[]
+
+  @@index([projectId, createdAt])
+}
+
+model MatchResult {
+  id         String @id @default(cuid())
+  matchRunId String
+  companyId  String
+  /// 0–100, the weighted sum `09` §Scoring defines. A float because components are
+  /// normalised ratios — this is a ranking signal, not money (`ADR-005` does not apply).
+  score      Float
+  /// 1-based, the position after `ORDER BY priceOnRequest ASC, score DESC, distanceKm ASC,
+  /// companyId ASC` — stored so the same run never reorders between page loads.
+  rank       Int
+  /// Every component's raw and weighted value (`09` §Explainability). Internal: the customer
+  /// sees a sentence, the admin sees this.
+  scoreBreakdown Json
+  /// Null when the company could not be priced — which never removed it from the results
+  /// (`08` §Failure modes, `PRC-06`).
+  priceCalculationId String?
+  priceOnRequest     Boolean @default(false)
+  /// Company ↔ project, kilometres, from the eligibility query. Null when the company has
+  /// no located point; nulls rank last within their tier.
+  distanceKm Float?
+
+  matchRun         MatchRun          @relation(fields: [matchRunId], references: [id], onDelete: Cascade)
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  priceCalculation PriceCalculation? @relation(fields: [priceCalculationId], references: [id], onDelete: SetNull)
+
+  @@unique([matchRunId, companyId])
+  @@index([matchRunId, rank])
+  @@index([companyId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1235,6 +1298,7 @@ model Project {
   district    District?               @relation(fields: [districtId], references: [id], onDelete: SetNull)
   values      ProjectAttributeValue[]
   attachments ProjectAttachment[]
+  matchRuns   MatchRun[]
 
   /// `04` §Indexes. The GiST index arrives with the table rather than with Phase 5's
   /// matching, because an index added later is an index somebody adds by hand in production.

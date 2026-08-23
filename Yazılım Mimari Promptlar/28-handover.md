@@ -135,7 +135,8 @@ Ten phases, defined in `21-development-roadmap.md` (scope and gates) and
 | 2 Catalogue + admin skeleton | ✅ gate met · 7/7 |
 | 3 Manufacturer supply side | ✅ gate met · 8/8 |
 | 4 Project configurator | ✅ gate met · 9/9 |
-| 5–9 | not started |
+| 5 Matching + pricing | 🟡 in progress · 5/9 — engine half (5.1–5.5) proven, surface (5.6–5.9) not started |
+| 6–9 | not started |
 
 **The gate was proven on 2026-08-23**, on the first working checkout after the blind
 session: the full pipeline ran green — typecheck clean on the first pass, one real lint

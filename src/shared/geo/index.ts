@@ -149,12 +149,148 @@ export async function companiesCovering(input: {
         OR (
           sa."kind" = 'RADIUS'
           AND sa."centerPoint" IS NOT NULL
+          -- The constant ceiling first (the schema caps radiusKm at 500), so the GiST index
+          -- has a usable condition; the per-row test the index cannot see runs second. Same
+          -- pattern as eligibleCompaniesForProject, documented there.
+          AND ST_DWithin(sa."centerPoint", ${pointSql(input.point)}, 500000)
           AND ST_DWithin(sa."centerPoint", ${pointSql(input.point)}, sa."radiusKm" * 1000)
         )
       )
   `
 
   return rows.map((row) => row.companyId)
+}
+
+/**
+ * One eligible candidate for one project — the row shape `09-manufacturer-matching.md`
+ * §Eligibility's single query produces. Distances are metres (PostGIS `geography`); the
+ * caller converts to kilometres for display and scoring.
+ */
+export type EligibleCompanyRow = {
+  companyId: string
+  priceOnRequest: boolean
+  verifiedAt: Date | null
+  /** Company ↔ project: nearest matched RADIUS centre, else the company contact point. */
+  distanceMetres: number | null
+  /** The tightest matched radius, for normalising proximity over it. Null off RADIUS. */
+  radiusKm: number | null
+  /** Which service-area kinds matched — 'CITY' | 'DISTRICT' | 'RADIUS'. */
+  matchedKinds: string[]
+  /** `ServiceArea.precision` values among matched areas (Q22). Nulls are legacy rows. */
+  areaPrecisions: (string | null)[]
+}
+
+/**
+ * The eligibility filter — `09-manufacturer-matching.md` §1, as **one SQL query**.
+ *
+ * Five conditions, and the reason they are one query rather than five and a JS intersection
+ * is the `RADIUS` branch: `ST_DWithin` on `ServiceArea.centerPoint` is what the GiST index
+ * exists for, and it can only be used by the database (`ADR-002`). The rest of the
+ * conditions ride along as joins so the candidate set never materialises in the application
+ * at all.
+ *
+ *   1. `Company.status = VERIFIED`, not soft-deleted   — the JOIN on `Company`
+ *   2. active `CompanyProduct` for the project product — the JOIN on `CompanyProduct`
+ *   3. a `ServiceArea` covers the project location     — the JOIN on `ServiceArea`
+ *   4. every *selected required* option is offered     — the NOT EXISTS
+ *   5. not SUSPENDED                                   — implied by 1 (status is one value)
+ *
+ * A customer blocklist is condition 5's other half in `09`; no such table exists yet, so
+ * there is deliberately no clause pretending to check one.
+ *
+ * Option semantics per the schema's own comment on `CompanyProductOption`: **the absence of
+ * a row means not offered.** So "offered" is `EXISTS (… isOffered = true)`, and a required
+ * selected option with no row disqualifies.
+ *
+ * Distance: the nearest matched RADIUS centre when one matched, else the company's contact
+ * point. Both can be null — a CITY-matched company with no located contact simply has no
+ * distance, which ranks last within its tier rather than being invented.
+ *
+ * Price, rating and response time are **not here** (`09` §1: "Not filters").
+ */
+export async function eligibleCompaniesForProject(
+  projectId: string,
+): Promise<EligibleCompanyRow[]> {
+  const rows = await prisma.$queryRaw<
+    {
+      companyId: string
+      priceOnRequest: boolean
+      verifiedAt: Date | null
+      distanceMetres: number | null
+      radiusKm: number | null
+      matchedKinds: string[]
+      areaPrecisions: (string | null)[]
+    }[]
+  >`
+    SELECT
+      c."id"             AS "companyId",
+      c."priceOnRequest" AS "priceOnRequest",
+      c."verifiedAt"     AS "verifiedAt",
+      COALESCE(
+        MIN(CASE WHEN sa."kind" = 'RADIUS' THEN ST_Distance(sa."centerPoint", p."point") END),
+        MIN(ST_Distance(cc."point", p."point"))
+      )                  AS "distanceMetres",
+      MIN(CASE WHEN sa."kind" = 'RADIUS' THEN sa."radiusKm" END) AS "radiusKm",
+      array_agg(DISTINCT sa."kind"::text)      AS "matchedKinds",
+      array_agg(DISTINCT sa."precision"::text) AS "areaPrecisions"
+    FROM "Project" p
+    JOIN "Company" c
+      ON c."status" = 'VERIFIED' AND c."deletedAt" IS NULL
+    JOIN "CompanyProduct" cp
+      ON cp."companyId" = c."id" AND cp."productId" = p."productId" AND cp."isActive" = true
+    JOIN "ServiceArea" sa
+      ON sa."companyId" = c."id" AND sa."isActive" = true
+      AND (
+        (sa."kind" = 'CITY'     AND sa."cityId"     = p."cityId")
+        OR (sa."kind" = 'DISTRICT' AND sa."districtId" = p."districtId")
+        OR (
+          sa."kind" = 'RADIUS'
+          AND sa."centerPoint" IS NOT NULL
+          AND p."point" IS NOT NULL
+          /*
+           * Two ST_DWithin calls on purpose, and the order matters.
+           *
+           * 09's own SQL -- ST_DWithin(..., sa."radiusKm" * 1000) -- cannot use the GiST
+           * index by itself: the expansion distance is a column of the indexed table, and
+           * an index condition must be constant with respect to the scanned relation
+           * (EXPLAIN shows it demoted to a row filter). The first call uses the schema's
+           * own ceiling -- addServiceAreaSchema caps radiusKm at 500 -- as a constant,
+           * which the planner turns into "centerPoint && _st_expand(point, 500000)", an
+           * index condition. The second call is the exact per-area test the first one
+           * over-approximates.
+           */
+          AND ST_DWithin(sa."centerPoint", p."point", 500000)
+          AND ST_DWithin(sa."centerPoint", p."point", sa."radiusKm" * 1000)
+        )
+      )
+    LEFT JOIN "CompanyContact" cc ON cc."companyId" = c."id"
+    WHERE p."id" = ${projectId}
+      AND p."deletedAt" IS NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM "ProjectAttributeValue" pav
+        JOIN "ProductAttribute" pa ON pa."id" = pav."attributeId" AND pa."isRequired" = true
+        WHERE pav."projectId" = p."id"
+          AND pav."optionId" IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM "CompanyProductOption" cpo
+            WHERE cpo."companyProductId" = cp."id"
+              AND cpo."optionId" = pav."optionId"
+              AND cpo."isOffered" = true
+          )
+      )
+    GROUP BY c."id", c."priceOnRequest", c."verifiedAt"
+    ORDER BY c."id"
+  `
+
+  return rows.map((row) => ({
+    ...row,
+    distanceMetres: row.distanceMetres === null ? null : Number(row.distanceMetres),
+    radiusKm: row.radiusKm === null ? null : Number(row.radiusKm),
+    // `array_agg(DISTINCT …::text)` folds SQL NULLs in; keep them — a null precision is a
+    // legacy row whose accuracy is unknown, and unknown is information (Q22).
+  }))
 }
 
 /** Metres from a service area's centre to a point. `null` when the area has no centre. */

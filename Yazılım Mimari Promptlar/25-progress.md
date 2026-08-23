@@ -6,28 +6,25 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 3 is complete and its gate is proven** (2026-08-16). A verified
-company can complete its profile, upload documents, mark the products and options it offers,
-define service areas of all three kinds, publish a portfolio **and publish a price book** —
-which is to say it is **matchable**. Matching itself is Phase 5; what is proven here is that
-every input the matching filter will read exists and produces a real number.
+**Current phase:** **Phase 4 is complete and its gate is proven** (2026-08-23); **Phase 5's
+engine half (5.1–5.5) is built and integration-proven** the same day, its surface (5.6–5.9)
+not started. A visitor — signed in or anonymous — walks the wizard to `READY`, the draft
+survives a browser restart, registration claims it, and the old cookie gets a 404. Behind
+that, the match pipeline runs: one-query eligibility over PostGIS, seven-component scoring
+with a stored breakdown, a pricing pass that never drops an unpriceable manufacturer, a
+deterministic ranking and a persisted `MatchRun`.
 
-Four things exist for the first time in this phase: a background worker (pg-boss, `23`
-§Runtime's second entrypoint), real file upload to object storage, a feature spanning five
-modules, and **the pricing engine** — a pure function with golden files whose expectations
-cannot change without an `ENGINE_VERSION` bump.
-
-**The D3 pilot session is now runnable.** `27-d3-pilot-guide.md` is a one-page script for it,
-with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as questions
-to ask. The pilot account is deliberately left **without** a price book, because building one
-from nothing is the thing being observed.
+**The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
+it, with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as
+questions to ask. The pilot account is deliberately left **without** a price book, because
+building one from nothing is the thing being observed.
 
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
-local stack with 81 provinces, 974 districts, a registration → verification → sign-in → reset
-flow, and a manufacturer who can price their work. **926 unit tests, 235 integration tests**
-against real PostGIS and MinIO containers, and **37 Playwright specs green** (20 still skipped
-for later phases). Mail and SMS go to the log adapters, which is what Q3 and Q2 leave
-available.
+local stack with 81 provinces, 974 districts, the full account flow with real web sessions
+(`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
+price their work. **991 unit tests, 276 integration tests** against real PostGIS and MinIO
+containers, and **43 Playwright specs green** (18 still skipped for later phases). Mail and
+SMS go to the log adapters, which is what Q3 and Q2 leave available.
 
 ## Phase tracker
 
@@ -46,7 +43,7 @@ proven — not when the code is written.
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
-| 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
+| 5 | Matching + pricing | **🟡 in progress · 5/9** | `GET OFFERS` returns ranked priced results — engine half (5.1–5.5) built and integration-proven 2026-08-23; surface (5.6–5.9) not started |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
@@ -2397,6 +2394,97 @@ and the ninth `ActorContext` field. What actually broke, and was fixed:
 No design decision moved. The single `UPDATE` claim, the `where`-clause ownership, the
 carried key, and the matrix rule all survived contact with the compiler unchanged.
 
+### 2026-08-23 — Phase 5 tasks 5.1–5.5 (commit `P5.1-5.5 · eşleştirme ve skorlama`)
+
+The engine half of matching: eligibility, scoring, the pricing pass, ranking and
+persistence. The surface (5.6–5.9) is deliberately not here.
+
+**Q18 was answered with its table default, and that is a schema-shaping assumption.** The
+question — does snow/wind load change dimension *limits* or only price — is still open in
+the table, so this phase proceeded on "regional effect is price-only; dimension limits are
+country-wide". `dimensionBounds()` remains the single read point and `BoundsContext`
+already carries city/district, so if the real answer is "limits change", the change is a
+schema addition (`ProductAttribute.max` per region) plus one function — but it is
+*retroactive* about migration 7's shape, and it was not silently made: it is the first line
+of the phase report.
+
+#### 5.1 · eligibility — one SQL query
+
+`eligibleCompaniesForProject` in `shared/geo` (the only file allowed PostGIS SQL,
+`ADR-002`/`ADR-015`): verified + active product + covering area + required-options-offered +
+not suspended, one statement, `GROUP BY` company. Blocklists are condition five's other
+half in `09` and there is deliberately no clause pretending to check a table that does not
+exist.
+
+**Found while proving GiST usage with EXPLAIN**: `09` §Service-area coverage's own SQL —
+`ST_DWithin(sa.center_point, :point, sa.radius_km * 1000)` — cannot use the GiST index as
+written. The expansion distance is a column of the indexed table, and an index condition
+must be constant with respect to the scanned relation; EXPLAIN shows the predicate demoted
+to a row filter. The fix is a second, constant-ceiling `ST_DWithin(…, 500000)` first — 500
+km is `addServiceAreaSchema`'s own cap — which plans as `centerPoint &&
+_st_expand(point, 500000)`, an index condition, with the exact per-row test running behind
+it. Applied to `companiesCovering` too, same reasoning, comment points here.
+
+#### 5.2 · scoring
+
+`matching/domain/scoring.ts`, pure like the pricing engine and for the same reasons. Seven
+weighted components exactly per `09` §Scoring (25/20/20/15/10/5/5), weights read from one
+`matching.weights` `PlatformSetting` JSON row with `version` inside it, stored on
+`MatchRun.weightsVersion`. Bayesian rating `(C·m + Σ)/(C + n)`, `C = 5`, prior = platform
+mean (a setting, default 4.2): with zero reviews everywhere (Phase 7), every company sits on
+the prior — the designed cold start. Newcomer allowance: +5 bounded points for 30 days after
+verification. **Price is not a component and `CandidateSignals` has no price field**, so
+adding one is a visible act. Responsiveness and history read signals that do not exist
+until Phase 6 (`OfferRequest`); they return the neutral middle and zero respectively, named
+as such in the code rather than faked.
+
+**Q22 closed by doing what its row prescribed**: proximity is scored in **bands**, not
+continuously — ratio-of-radius bands when a RADIUS area matched, absolute km bands for
+CITY/DISTRICT, neutral 0.5 for unknown distance — so centroid-grade error (`ADR-019`) moves
+a score only when it crosses a band edge. And `ServiceArea.precision` arrived in migration
+7: the geocode job now persists the precision it always computed, nulls meaning "geocoded
+before the column existed".
+
+#### 5.3 · the pricing pass never removes a match
+
+Per candidate: the published book, the same pure engine, a `PriceCalculation` row per priced
+result (`PRC-02`, actor + IP per `ADR-006`). No book, product not in book, company-level
+`priceOnRequest`, engine throw — every shape lands in the results as `priceOnRequest`,
+never dropped. The integration test bites: the bookless company is given the **highest raw
+score on the board** and the test asserts it still sorts below every priced company.
+
+#### 5.4 · deterministic ranking
+
+`ORDER BY priceOnRequest ASC, score DESC, distanceKm ASC, companyId ASC`, null distances
+last within their tier. One comparator (`compareForRank`), exported and unit-tested; the
+integration suite runs the pipeline twice and asserts identical order, and builds two
+candidates with deliberately identical signals to prove the tie breaks on `companyId`
+rather than on iteration order.
+
+#### 5.5 · persistence
+
+Migration 7 (`20260823000000_phase5_matching`): `MatchRun(projectId, weightsVersion,
+resultCount, durationMs)`, `MatchResult(rank, score, scoreBreakdown, priceCalculationId?,
+priceOnRequest, distanceKm)` with `unique(matchRunId, companyId)`, plus
+`ServiceArea.precision`. The run and its results are written in one transaction;
+`getMatchRun` re-serves the stored run without recomputing (`09` §Pipeline), and the
+customer view carries **band, rank and distance only** — no score, no breakdown, no line
+items (`ADR-006`, `09` §Explainability); a test asserts the exact key set.
+
+Service methods `matching.runMatch` / `matching.getMatchRun` are `customer-owned`, both
+identities, ownership in the `where` clause — a stranger's project answers `NOT_FOUND`,
+tested from the attacker's side with both a wrong user and a wrong cookie.
+
+#### Carried forward
+
+- Zero-result handling (widening, "may be able to help", the notify-me subscription) is the
+  results *page's* behaviour — 5.6–5.9. An empty run is persisted with `resultCount: 0`.
+- `Company.avgRating` / `reviewCount` / `medianResponseMinutes` denormalised aggregates
+  (`09` §Performance) wait for the tables they aggregate (Phases 6–7); scoring reads
+  today's signals batched per run instead.
+- The customer blocklist named in `09` §1 condition 5 has no table anywhere in `04`. Phase 6
+  should decide whether it exists in V1.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2412,7 +2500,7 @@ carried key, and the matrix rule all survived contact with the compiler unchange
 | Q15 | **Zip perde kumaşı: şeffaf PVC / mesh / akrilik ayrımı müşterinin anlayacağı ayrım mı?** Yardım metni "PVC manzarayı korur ama nefes almaz, mesh güneşi keser ve hava geçirir" diyor. Satışta bu üçlü mü konuşuluyor, yoksa marka/gramaj mı (ör. belirli bir kumaş serisi)? | Faz 4 | üçlü ayrım |
 | Q16 | **Hangi opsiyonlar standart pakete dahil?** Katalog `sensor_paketi`, `aydinlatma`, `sineklik` ve `su_tahliye`yi ayrı ayrı sorulabilir sayıyor. Bunların bir kısmı sektörde standart olarak veriliyorsa, müşteriye ücretli opsiyon gibi göstermek fiyat tahminini şişirir. | Faz 5 (fiyat bandı) | hepsi opsiyonel, fiyatı üreticinin listesi belirler |
 | Q17 | **`LENGTH_M` ve `UNIT` ölçü temellerinin karşılığı var mı?** Katalogdaki yedi ürünün hepsi m² ile fiyatlanıyor. Metrekare dışında satılan bir ürün (metretül korkuluk, adet bazlı motor/aksesuar) platformun kapsamına giriyorsa şimdi söylenmeli; girmiyorsa `Product.basisType` üç yerine tek değere inebilir. | Faz 5, ve `04` §Catalogue'un sadeleşmesi | üç değer şemada kalır, ikisi kullanılmaz |
-| Q18 | **Kar ve rüzgâr yükü hangi alanı etkiliyor?** `08` §Algorithm'de bölgesel ayarlama var (`PriceBookRegionAdjustment`), ama kar yükünün ölçü sınırlarını mı, profil seçimini mi, yoksa yalnızca fiyatı mı değiştirdiği katalogda modellenmedi. Ölçü sınırını değiştiriyorsa bu `ProductAttribute.max`'ın bölgeye göre değişmesi demektir ve şema bunu desteklemiyor. | **Faz 4'ten önce** — cevabı "ölçü sınırını değiştirir" ise şema değişikliği gerekir | bölgesel etki yalnızca fiyatta; ölçü sınırları ülke geneli |
+| Q18 | **Kar ve rüzgâr yükü hangi alanı etkiliyor?** `08` §Algorithm'de bölgesel ayarlama var (`PriceBookRegionAdjustment`), ama kar yükünün ölçü sınırlarını mı, profil seçimini mi, yoksa yalnızca fiyatı mı değiştirdiği katalogda modellenmedi. Ölçü sınırını değiştiriyorsa bu `ProductAttribute.max`'ın bölgeye göre değişmesi demektir ve şema bunu desteklemiyor. | **Faz 4'ten önce** — cevabı "ölçü sınırını değiştirir" ise şema değişikliği gerekir. **Faz 5 (2026-08-23) varsayılanla ilerledi**: migration 7 bölgesel ölçü sınırı modellemedi; cevap "sınırı değiştirir" çıkarsa `ProductAttribute.max`'ın bölgeselleşmesi ayrı bir migration olur ve `dimensionBounds()` tek okuma noktası olarak durur | bölgesel etki yalnızca fiyatta; ölçü sınırları ülke geneli |
 | Q19 | **Virüs tarayıcı ve SVG temizleyici.** `14` §Virus scanning dosyaların `CLEAN` olana kadar sunulmamasını istiyor; bu kapı kurulu ve zorlanıyor, ama `CLEAN` kararını verecek şey yok — `scan()` koşulsuz `CLEAN` dönüyor. Seçenekler: ClamAV yan konteyneri (altyapı maliyeti, worker imajına eklenir) ya da bir sağlayıcı API'si (dosya başına ücret, dosyanın dışarı çıkması). Aynı karar SVG'yi de kapsıyor: `14` sunucu tarafında temizlenmiş SVG'ye izin veriyor, temizleyici yok, bu yüzden logo yüklemede SVG şimdilik reddediliyor. | **Faz 9'dan önce** — üretici belgeleri ve müşteri fotoğrafları taranmadan yayına çıkmamalı | tarayıcı yok, kapı kurulu; SVG reddediliyor |
 | Q20 | **Worker imajı nasıl paketlenecek?** `23` §Runtime `node dist/worker.js` diyor — aynı imaj, farklı entrypoint. Ne Dockerfile var ne de worker için bir derleme adımı; `pnpm worker` geliştirmede `tsx` ile koşuyor. Next'in kendi çıktısı worker'ı kapsamıyor ve `@/` yol takma adlarını çözecek bir bundler (esbuild/tsup) ya da `tsc` + `tsc-alias` gerekiyor. | Faz 9 (dağıtım), ama seçim worker'ın hangi bağımlılıkları imaja taşıdığını belirlediği için erken bilinmesi ucuz | `pnpm worker` (tsx) — yalnızca geliştirme |
 | Q5 | Launch cities — matching quality depends on supply density per district | Phase 9 | Istanbul, Ankara, İzmir, Bursa, Antalya |
@@ -2421,7 +2509,7 @@ carried key, and the matrix rule all survived contact with the compiler unchange
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
 | Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
 | ~~Q21~~ | ~~`src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`?~~ **CLOSED 2026-08-16 — and the closure never reached this table, which is the point.** The rule was extended to `ImportExpression`, four violations were found and fixed, and two-way fixtures prove both directions; the dated log entry says so. The row stayed live here for a week because closing a question is a second edit nobody is prompted to make. `CLAUDE.md` §Definition of done requires the deferral to be in the table; it should require the closure to be too. | — | — |
-| Q22 | Is district-centroid precision good enough for the **proximity score**? `ADR-019` argues centroid precision is sufficient, and that argument is sound for containment — `ST_DWithin` is a boolean. `09` §Scoring gives proximity 25/100 as a *continuous* function of distance normalised over the radius, where a centroid-grade error moves the ranking rather than being rounded away. Also: `ServiceArea` computes a `precision` and discards it, so one end of the comparison cannot report its own accuracy. | Phase 5 ranking — wrong order is invisible and unfalsifiable from the outside | Score proximity in bands rather than continuously, and add `precision` to `ServiceArea` in Phase 5's migration. |
+| ~~Q22~~ | ~~Is district-centroid precision good enough for the **proximity score**?~~ **CLOSED 2026-08-23 by doing exactly what this row's default prescribed.** Proximity is scored in bands (`matching/domain/scoring.ts` — ratio-of-radius bands on a RADIUS match, absolute km bands otherwise, neutral for unknown), so centroid-grade error moves a score only when it crosses a band edge, and the unit suite asserts two centroid-grade-apart distances land in one band. `ServiceArea.precision` arrived in migration 7 and the geocode job now persists what it always computed; null means "geocoded before the column existed". Closed in the table in the same phase, per the Q21 lesson. | — | — |
 | ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
 | Q25 | **The anonymous-draft retention sweep has no scheduler.** `19` §Retention gives unclaimed drafts thirty days and says retention is *"enforced by the `audit.retention_sweep` job, not by manual cleanup"*. Task 4.5 wrote the **rule** — `expiredAnonymousDraftsWhere()` in `shared/context/anonymous-key.ts`, measured from `updatedAt`, restricted to rows that are still anonymous and not soft-deleted — and deliberately did not write half a sweeper: one table, no schedule, no audit entry, to be reconciled with Phase 9's own retention set later. Nothing deletes an expired draft today. | **Faz 9** (retention set). Not a leak — the rows are unreachable once the cookie expires — but it is *storage that grows and personal data that outlives its stated retention*, which `19` treats as a KVKK obligation rather than a housekeeping preference. | The rule exists and is unit-tested; Phase 9 adds the schedule and the audit entry. Recorded here rather than only in the log, per `CLAUDE.md` §Definition of done. |
