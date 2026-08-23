@@ -235,6 +235,8 @@ describe('migration scope', () => {
       // Phase 5 · migration 7 — matching
       'MatchResult',
       'MatchRun',
+      // Phase 5 · migration 7 — 04 §Messaging's Notification, pulled forward by 5.7
+      'Notification',
       'Payment',
       'Plan',
       'PlatformSetting',

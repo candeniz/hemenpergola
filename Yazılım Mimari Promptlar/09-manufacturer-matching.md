@@ -29,20 +29,32 @@ A company is a candidate only if **all** hold:
 Not filters: price, rating, response time. Those are scoring inputs. Filtering by them
 produces an empty results page for exactly the customers who most need results.
 
-### Service-area coverage (`ADR-002`)
+### Service-area coverage (`ADR-002`, `ADR-025`)
 
 ```sql
 -- CITY
 sa.kind = 'CITY'     AND sa.city_id     = :cityId
 -- DISTRICT
 sa.kind = 'DISTRICT' AND sa.district_id = :districtId
--- RADIUS
-sa.kind = 'RADIUS'   AND ST_DWithin(sa.center_point, :projectPoint, sa.radius_km * 1000)
+-- RADIUS: two ST_DWithin calls, and the order is the point (ADR-025)
+sa.kind = 'RADIUS'
+  AND ST_DWithin(sa.center_point, :projectPoint, 500000)              -- constant → GiST
+  AND ST_DWithin(sa.center_point, :projectPoint, sa.radius_km * 1000) -- exact, per row
 ```
 
 `geography` columns, GiST index on `center_point`, metres. The project point comes from the
 district centroid when the customer gave no precise location — good enough for a radius
 test, and the customer is told the match used their district.
+
+**Why two calls.** The single-call version this section used to show —
+`ST_DWithin(…, sa.radius_km * 1000)` — cannot use the GiST index: the expansion distance is
+a column of the indexed table, and an index condition must be constant with respect to the
+scanned relation, so EXPLAIN demotes the predicate to a row filter and the scan is
+sequential. The constant first call is the index condition
+(`center_point && _st_expand(:point, 500000)`); the per-row second call is the exact test
+the first one over-approximates. The 500 km ceiling is safe because migration 7's
+`ServiceArea_radiusKm_range` CHECK makes `radius_km` ≤ 500 a property of the *data*, not of
+a validation layer. `ADR-025` records the decision and the alternatives.
 
 ## 2. Scoring
 

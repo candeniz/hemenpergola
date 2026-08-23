@@ -125,7 +125,15 @@ export function ProjectWizard({
     return map
   }, [view.values, attributes])
 
-  const visibleAttributes = attributes.filter((attribute) => isAttributeVisible(attribute, answers))
+  /*
+   * Visible AND answerable. A `NUMBER` attribute (the catalogue's `genislik_mm` family)
+   * carries no options — it exists as the dimension bounds `steps.ts` reads, and the
+   * dimensions step is where the customer answers it. Rendering it here produced an empty
+   * required-looking fieldset with nothing to click.
+   */
+  const visibleAttributes = attributes.filter(
+    (attribute) => isAttributeVisible(attribute, answers) && attribute.options.length > 0,
+  )
 
   const stages: StepperStage[] = STAGES.map((stage) => ({
     key: stage,
@@ -431,7 +439,14 @@ export function ProjectWizard({
                  * for and nothing more.
                  */}
                 {signedIn ? (
-                  <p className="text-body-sm text-muted">{t('offersNext')}</p>
+                  /* Task 5.6: GET OFFERS is real now. The results page computes the first
+                     run and shows the loading skeleton while it does; the wall above still
+                     decides who gets this far (`ADR-021`). */
+                  <Button asChild>
+                    <Link href={`/hesap/projeler/${view.projectId}/eslesmeler`}>
+                      {t('getOffers')}
+                    </Link>
+                  </Button>
                 ) : (
                   <Button asChild>
                     <Link href={`/kayit?proje=${encodeURIComponent(view.projectId)}`}>

@@ -131,6 +131,8 @@ model User {
   authTokens    AuthToken[]
   refreshTokens RefreshToken[]
   projects      Project[]
+  // Phase 5 · migration 7 — the zero-result subscription (5.7)
+  notifications Notification[]
 
   @@index([deletedAt])
   @@index([globalRole, status])
@@ -1155,6 +1157,18 @@ model PriceCalculation {
 // ranking, because the weights are `PlatformSetting` rows an admin can move.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Why a result has no band — `08` §Failure modes' three shapes, kept apart because the
+ * customer reads them differently (5.8): `ON_REQUEST` is a company's choice or a book gap
+ * ("ask them"), `UNAVAILABLE` is our engine failing ("try again shortly"). Collapsing them
+ * would tell a customer to go ask a manufacturer for a price we failed to compute.
+ */
+enum MatchPriceState {
+  PRICED
+  ON_REQUEST
+  UNAVAILABLE
+}
+
 model MatchRun {
   id             String   @id @default(cuid())
   projectId      String
@@ -1187,6 +1201,8 @@ model MatchResult {
   /// (`08` §Failure modes, `PRC-06`).
   priceCalculationId String?
   priceOnRequest     Boolean @default(false)
+  /// Refines `priceOnRequest` for display (5.8). `priceOnRequest` stays the ranking key.
+  priceState MatchPriceState @default(ON_REQUEST)
   /// Company ↔ project, kilometres, from the eligibility query. Null when the company has
   /// no located point; nulls rank last within their tier.
   distanceKm Float?
@@ -1198,6 +1214,27 @@ model MatchResult {
   @@unique([matchRunId, companyId])
   @@index([matchRunId, rank])
   @@index([companyId])
+}
+
+/**
+ * `04` §Messaging's notification row, pulled forward by task 5.7: `09` §Zero-result handling
+ * stores "notify me when a manufacturer covers my area" as a notification subscription. Only
+ * the table 5.7 reads is built; `NotificationPreference` stays deferred with the rest of
+ * Phase 7.
+ */
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  /// e.g. `supply_gap_watch` — the zero-result subscription (`09` §Zero-result handling).
+  type      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

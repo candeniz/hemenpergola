@@ -150,6 +150,9 @@ beforeAll(async () => {
 
   const { setPoint } = await import('@/shared/geo')
   await setPoint('Project', projectId, PROJECT_POINT)
+  // The district gets a point too: the suites share one container, and `geo-seed`'s
+  // invariant — every district has a centroid — must survive this fixture existing.
+  await setPoint('District', districtId, PROJECT_POINT)
 
   // ── the candidate set ──────────────────────────────────────────────────────
   priced1 = await company('priced-a', {})
@@ -371,6 +374,9 @@ describe('5.5 · persistence and explainability', () => {
     if (!view.ok) return
 
     for (const result of view.value.results) {
+      // The exact key set, so a new field is a deliberate edit here rather than a leak.
+      // `priceState` refines the empty band's reason (5.8) and `incomplete` is `08`
+      // §Failure modes' caveat — neither is a number, a score or a line item.
       expect(Object.keys(result).sort()).toEqual(
         [
           'bandLowKurus',
@@ -378,11 +384,35 @@ describe('5.5 · persistence and explainability', () => {
           'companyId',
           'displayName',
           'distanceKm',
+          'incomplete',
           'priceOnRequest',
+          'priceState',
           'rank',
         ].sort(),
       )
     }
+  })
+})
+
+describe('the radiusKm ceiling is a constraint, not a convention', () => {
+  it('refuses a service area whose radius exceeds the GiST pre-filter ceiling', async () => {
+    /*
+     * The eligibility query's index pre-filter expands by a constant 500 km (`ADR-025`)
+     * and is correct only if no row can exceed it. Until migration 7 the 5..500 range
+     * lived only in `addServiceAreaSchema` — one raw insert away from a service area that
+     * silently drops out of every match. This asserts the database refuses to hold one.
+     */
+    await expect(
+      getPrisma().serviceArea.create({
+        data: { companyId: priced1, kind: 'RADIUS', radiusKm: 600, isActive: true },
+      }),
+    ).rejects.toThrow(/ServiceArea_radiusKm_range|check constraint/i)
+
+    await expect(
+      getPrisma().serviceArea.create({
+        data: { companyId: priced1, kind: 'RADIUS', radiusKm: 2, isActive: true },
+      }),
+    ).rejects.toThrow(/ServiceArea_radiusKm_range|check constraint/i)
   })
 })
 

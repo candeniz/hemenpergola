@@ -643,6 +643,42 @@
         "FAILED": "Scan failed"
       },
       "size": "{kilobytes} KB"
-    }
+    },
+    "getOffers": "Get offers"
+  },
+  "results": {
+    "title": "Matched manufacturers",
+    "subtitle": "Verified manufacturers who serve your area and fit your project.",
+    "count": "{count} manufacturers found",
+    "computedAt": "Computed {when}",
+    "refresh": "Recompute",
+    "serves": "Serves your area",
+    "distance": "About {km} km away",
+    "priceUnavailable": "Price cannot be calculated right now",
+    "priceUnavailableNote": "A technical problem stopped this estimate. The match itself stands; please try again shortly.",
+    "compareHint": "Select up to 3 companies to compare.",
+    "compareCta": "Compare selected ({count}/3)",
+    "compareLimit": "You can compare at most 3 companies.",
+    "loadingTitle": "Finding manufacturers…",
+    "loadingBody": "Filtering verified manufacturers that cover your area and computing price bands.",
+    "zeroTitle": "No exact matches for this project yet",
+    "zeroBody": "This is not an error: no verified manufacturer currently offers this product in your area. Consider the options below.",
+    "widenedTitle": "We widened the search by one step (+{km} km)",
+    "widenedNote": "These companies’ service radius comes within {km} km of your project; results are labelled as a widened search.",
+    "nearbyTitle": "Companies that may be able to help",
+    "nearbyNote": "They serve your area but do not offer exactly this product; they are listed separately.",
+    "watchCta": "Notify me when a manufacturer covers my area",
+    "watching": "Saved — we will notify you when a manufacturer covering your area joins."
+  },
+  "compare": {
+    "title": "Comparison",
+    "backToResults": "Back to results",
+    "company": "Company",
+    "estimate": "Estimated range",
+    "distance": "Distance",
+    "distanceValue": "{km} km",
+    "distanceUnknown": "—",
+    "empty": "No companies selected to compare.",
+    "maxNote": "At most 3 companies are compared side by side; extras are ignored."
   }
 }

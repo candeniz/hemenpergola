@@ -43,7 +43,7 @@ proven — not when the code is written.
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
-| 5 | Matching + pricing | **🟡 in progress · 5/9** | `GET OFFERS` returns ranked priced results — engine half (5.1–5.5) built and integration-proven 2026-08-23; surface (5.6–5.9) not started |
+| 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
@@ -2484,6 +2484,110 @@ tested from the attacker's side with both a wrong user and a wrong cookie.
   today's signals batched per run instead.
 - The customer blocklist named in `09` §1 condition 5 has no table anywhere in `04`. Phase 6
   should decide whether it exists in V1.
+
+### 2026-08-24 — Phase 5 tasks 5.6–5.9 and four carried gaps (commit `P5.6-5.9 · Faz 5 kapanışı`)
+
+**The four gaps first, because they were owed:**
+
+- **The Phase 4 e2e count is on the record**: 43 passed / 18 skipped / 0 failed, re-run
+  fresh before anything else moved. The ✅ rows stand on that number.
+- **`radiusKm`'s 5–500 range is a CHECK constraint now** (`ServiceArea_radiusKm_range`,
+  migration 7 — still unpushed when edited). It had lived only in Zod, which made
+  `ADR-025`'s constant pre-filter correct by convention; a raw row with `radiusKm > 500`
+  would have silently dropped out of every match. An integration test inserts 600 and 2 and
+  asserts the database refuses both.
+- **`09` §Service-area coverage now shows the two-call SQL** and says why the one-call
+  version cannot use the GiST index; **`ADR-025`** records the decision, the alternatives
+  and the reversal condition.
+- **The remote exists and CI runs** — see the handover's §4 for the first-run findings
+  (missing `prisma generate` under pnpm 11's script blocking; an e2e job with no database;
+  a unit test tripping on the string "migrate deploy"). The repository is **public** at
+  `github.com/candeniz/hemenpergola`, branch `master`, secrets scan over the full history
+  clean before the first push.
+
+#### 5.6 · results and comparison
+
+`/hesap/projeler/[id]/eslesmeler` (+ skeleton `loading.tsx`) and
+`/hesap/projeler/[id]/karsilastir`. First visit computes behind the loading state, revisits
+read the stored run, "Yeniden hesapla" is the explicit re-run (`09` §Pipeline). **Every band
+is `EstimateBand`** — the results card converts `MatchResultView` to `CustomerEstimate` and
+renders the Phase 3 component; nothing on the customer path formats money itself, and the
+Stitch screens' per-option prices predate `ADR-006` and were not copied. Comparison is
+capped at 3 on **both** sides of the URL: the fourth checkbox is refused with a reason, and
+the compare page drops extras server-side — a checkbox cap alone is a cap any edited URL
+ignores (`CUS-06`). The wizard's summary now carries the real `GET OFFERS` button for a
+signed-in customer; the account wall for the anonymous one is unchanged (`ADR-021`).
+
+#### 5.7 · the zero-result ladder
+
+Zero results render the ladder, not an error (`07` §System states): the radius test widened
+by one step (+25 km, labelled, computed via `eligibleCompaniesForProject`'s `widenRadiusKm`
+and **not** persisted as matches — a widened result is an offer of the page, though its
+`PriceCalculation` rows are persisted like any estimate a customer sees, `ADR-006`); then
+"may be able to help" — verified companies serving the location without the product, names
+only, clearly separated; then the notify-me subscription, stored as a `Notification` row
+(`type: supply_gap_watch`, payload carrying location + product so repeated zero-result
+districts read as the supply-acquisition backlog). `Notification` is `04` §Messaging's own
+model pulled forward into migration 7; `NotificationPreference` stays with Phase 7.
+
+#### 5.8 · price-unavailable is a state, not a route
+
+`MatchResult.priceState` (`PRICED` / `ON_REQUEST` / `UNAVAILABLE`) keeps `08` §Failure
+modes' shapes apart where the customer reads them: an engine failure renders "cannot be
+calculated right now" in the band's place, on the same card, in the same list — sending the
+customer elsewhere would undo 5.3's rule in the UI, and telling them to "ask the
+manufacturer" for a price we failed to compute would dress our failure as their choice.
+`priceOnRequest` stays the ranking key.
+
+#### 5.9 · the p95 budget, measured in CI
+
+`match-performance.integration.test.ts`: 200 fully-priceable candidates (the doc's own
+ceiling, every one taking the expensive path), two warm-ups, twelve timed runs, p95 asserted
+≤ 2 500 ms. Runs in the integration stage, so CI makes the claim on every push. Local
+measurement: **p95 805 ms** (min 401, max 805) on the development machine. Persistence was
+rewritten to batched `createManyAndReturn` on the way — the per-row transaction loop was the
+slowest part of the run.
+
+#### Two Phase 4 defects, found by making step 3 walk the real wizard
+
+Neither was visible to Phase 4's own gate, because the gate never chose a location and its
+integration fixtures used synthetic products. Both surfaced the first time an e2e walked the
+whole wizard against the real catalogue:
+
+- **The public wizard's location step could never be filled.** `listCities` /
+  `listDistricts` were gated behind `MEMBER_READ` (a Phase 3 assumption `ADR-021` quietly
+  invalidated), the customer actor got `FORBIDDEN`, and the page's fallback rendered two
+  empty selects. Both methods are `anonymous` now, with the history in their comments — 81
+  provinces and 974 districts are public reference data.
+- **No real catalogue product could ever reach `READY`.** The catalogue names its dimension
+  attributes `genislik_mm` / `cikinti_mm` / `yukseklik_mm`; readiness looked bounds up by
+  `widthMm`-style field names (finding nothing, so **no catalogue bound was ever enforced**,
+  Q12's ranges included) and then demanded an option-shaped answer to those same required
+  attributes, which the dimensions step had already answered. `DIMENSION_ATTRIBUTE_KEYS` in
+  `steps.ts` is now the one translation table; readiness resolves bounds through it and
+  treats dimension attributes as answered by the dimensions rules. The wizard also stops
+  rendering optionless attributes as empty required-looking fieldsets.
+
+#### Also
+
+- `core-flow.spec.ts` steps 3 and 4 are live: sign in (via a session fixture —
+  `session-fixture.ts` — because two more form logins pushed the suite past the auth
+  surface's 10-per-15-min budget and broke an unrelated spec) → walk the whole wizard to
+  `READY` → `GET OFFERS` → ranked cards with bands, then the zero-match branch (a Trabzon
+  project meets the ladder and the watch button), then compare — three columns, the fourth
+  refused, URL-edited extras dropped.
+- The demo seed grew a supply side: Ege Pergola and Anadolu Güneş now carry offers, an
+  İstanbul service area and a **published price book** each, so `GET OFFERS` prices for
+  real. Marmara Cam deliberately stays bookless (the pilot), which keeps one honest
+  `priceOnRequest` row in every demo result list (`PRC-06`).
+
+#### Carried forward
+
+- The widened-search results are labelled but not persisted; if Phase 6 wants "request an
+  offer" from a widened result, the request flow must run the match properly first.
+- `Notification` rows are written and nothing sends them — Phase 7 owns delivery.
+- The compare screen shows band + distance only; portfolio and rating columns arrive with
+  the data that fills them (Phases 6–7).
 
 ## Open questions — need a human answer before the phase that hits them
 

@@ -643,6 +643,42 @@
         "FAILED": "Taranamadı"
       },
       "size": "{kilobytes} KB"
-    }
+    },
+    "getOffers": "Teklif al"
+  },
+  "results": {
+    "title": "Eşleşen üreticiler",
+    "subtitle": "Projenize uygun, bölgenize hizmet veren doğrulanmış üreticiler.",
+    "count": "{count} üretici bulundu",
+    "computedAt": "Hesaplama: {when}",
+    "refresh": "Yeniden hesapla",
+    "serves": "Bölgenize hizmet veriyor",
+    "distance": "Yaklaşık {km} km uzaklıkta",
+    "priceUnavailable": "Fiyat şu an hesaplanamıyor",
+    "priceUnavailableNote": "Teknik bir sorun nedeniyle bu firmanın tahmini hesaplanamadı. Eşleşme geçerli; kısa süre sonra yeniden deneyin.",
+    "compareHint": "Karşılaştırmak için en fazla 3 firma seçin.",
+    "compareCta": "Seçilenleri karşılaştır ({count}/3)",
+    "compareLimit": "En fazla 3 firma karşılaştırılabilir.",
+    "loadingTitle": "Üreticiler aranıyor…",
+    "loadingBody": "Bölgenizi kapsayan doğrulanmış üreticiler süzülüyor ve fiyat aralıkları hesaplanıyor.",
+    "zeroTitle": "Bu proje için henüz birebir eşleşme yok",
+    "zeroBody": "Bu bir hata değil: bölgenizde bu ürünü sunan doğrulanmış üretici şu an bulunmuyor. Aşağıdaki seçeneklere bakın.",
+    "widenedTitle": "Aramayı bir kademe genişlettik (+{km} km)",
+    "widenedNote": "Bu firmaların hizmet yarıçapı projenize {km} km mesafeye kadar yaklaşıyor; sonuçlar genişletilmiş arama olarak işaretlidir.",
+    "nearbyTitle": "Yardımcı olabilecek firmalar",
+    "nearbyNote": "Bölgenize hizmet veriyorlar ancak tam olarak bu ürünü sunmuyorlar; ayrı listelenirler.",
+    "watchCta": "Bölgemi kapsayan üretici gelince haber ver",
+    "watching": "Kaydettik — bölgenizi kapsayan bir üretici katıldığında haber vereceğiz."
+  },
+  "compare": {
+    "title": "Karşılaştırma",
+    "backToResults": "Sonuçlara dön",
+    "company": "Firma",
+    "estimate": "Tahmini aralık",
+    "distance": "Uzaklık",
+    "distanceValue": "{km} km",
+    "distanceUnknown": "—",
+    "empty": "Karşılaştırılacak firma seçilmedi.",
+    "maxNote": "En fazla 3 firma yan yana karşılaştırılır; fazlası dikkate alınmaz."
   }
 }

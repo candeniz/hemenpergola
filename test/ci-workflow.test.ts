@@ -103,6 +103,9 @@ describe('CI workflow', () => {
       .map((step) => step.run ?? '')
       .join('\n')
 
-    expect(everyRun).not.toMatch(/deploy|staging|smoke/i)
+    // `prisma migrate deploy` is exempt by name: it applies migrations to the job's own
+    // throwaway database and deploys nothing anywhere. The word this test hunts is the
+    // deploy *stage* from `23` §Pipeline's tail, which still must not exist.
+    expect(everyRun.replaceAll('prisma migrate deploy', '')).not.toMatch(/deploy|staging|smoke/i)
   })
 })

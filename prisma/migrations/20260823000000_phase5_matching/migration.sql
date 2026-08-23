@@ -1,6 +1,17 @@
 -- AlterTable
 ALTER TABLE "ServiceArea" ADD COLUMN     "precision" "PointPrecision";
 
+-- Hand-written tail, like migration 6's XOR constraint: Prisma cannot model a CHECK.
+--
+-- The eligibility query's GiST pre-filter uses a constant 500 km expansion (ADR-025) and is
+-- correct only if no row can exceed it. Until this constraint, the 5..500 range lived only
+-- in a Zod schema — one raw insert away from a service area that silently drops out of
+-- every match, presenting as "no manufacturers in your area". The bounds are the ones
+-- addServiceAreaSchema has always enforced.
+ALTER TABLE "ServiceArea"
+  ADD CONSTRAINT "ServiceArea_radiusKm_range"
+  CHECK ("radiusKm" IS NULL OR ("radiusKm" BETWEEN 5 AND 500));
+
 -- CreateTable
 CREATE TABLE "MatchRun" (
     "id" TEXT NOT NULL,
@@ -13,6 +24,9 @@ CREATE TABLE "MatchRun" (
     CONSTRAINT "MatchRun_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateEnum
+CREATE TYPE "MatchPriceState" AS ENUM ('PRICED', 'ON_REQUEST', 'UNAVAILABLE');
+
 -- CreateTable
 CREATE TABLE "MatchResult" (
     "id" TEXT NOT NULL,
@@ -23,6 +37,7 @@ CREATE TABLE "MatchResult" (
     "scoreBreakdown" JSONB NOT NULL,
     "priceCalculationId" TEXT,
     "priceOnRequest" BOOLEAN NOT NULL DEFAULT false,
+    "priceState" "MatchPriceState" NOT NULL DEFAULT 'ON_REQUEST',
     "distanceKm" DOUBLE PRECISION,
 
     CONSTRAINT "MatchResult_pkey" PRIMARY KEY ("id")
@@ -51,4 +66,26 @@ ALTER TABLE "MatchResult" ADD CONSTRAINT "MatchResult_companyId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "MatchResult" ADD CONSTRAINT "MatchResult_priceCalculationId_fkey" FOREIGN KEY ("priceCalculationId") REFERENCES "PriceCalculation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- CreateTable · 04 §Messaging's Notification, pulled forward by 5.7's zero-result
+-- subscription (09 §Zero-result handling). NotificationPreference stays with Phase 7.
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "payload" JSONB NOT NULL,
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Notification_type_idx" ON "Notification"("type");
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

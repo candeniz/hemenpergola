@@ -54,65 +54,18 @@ const SEED_EMAILS = {
   manufacturer: 'owner@marmaracam.local',
 } as const
 
-/**
- * A session **fixture**, not a login.
- *
- * These two tests are about the shells' accessibility, not about signing in — the login flow
- * has its own specs. Going through the form here would also spend the auth surface's rate
- * budget (`06` §Rate limits: 10 / 15 min per IP), which the suite's *real* login tests
- * already consume: two more UI logins is exactly what tipped the suite over the limit when
- * `ADR-024`'s gates made these routes need a session at all. So the session row is written
- * directly — the same opaque-token shape `web-session.ts` writes — and the cookie is set on
- * the context. The gate still runs: a wrong or expired token would redirect to `/giris` and
- * the scan would fail on the wrong page.
- */
-async function seedSession(email: string): Promise<{ token: string; expires: Date }> {
-  const { Client } = await import('pg')
-  const { randomBytes } = await import('node:crypto')
-
-  const client = new Client({
-    connectionString:
-      process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
-  })
-  await client.connect()
-
-  try {
-    const token = randomBytes(32).toString('base64url')
-    const expires = new Date(Date.now() + 60 * 60 * 1000)
-
-    const inserted = await client.query(
-      `INSERT INTO "Session" ("id", "sessionToken", "userId", "expires")
-       SELECT gen_random_uuid()::text, $1, u."id", $2
-       FROM "User" u WHERE u."email" = $3
-       RETURNING "sessionToken"`,
-      [token, expires, email],
-    )
-
-    if (inserted.rowCount !== 1) {
-      throw new Error(`no seeded user with email ${email} — run \`pnpm seed demo\` first`)
-    }
-
-    return { token, expires }
-  } finally {
-    await client.end()
-  }
-}
-
 for (const route of ROUTES) {
-  test(`${route.name} (${route.path}) has no WCAG 2 A/AA violations`, async ({ page, baseURL }) => {
+  test(`${route.name} (${route.path}) has no WCAG 2 A/AA violations`, async ({ page }) => {
     if ('signInAs' in route) {
-      const session = await seedSession(SEED_EMAILS[route.signInAs])
-
-      await page.context().addCookies([
-        {
-          name: 'pergola.session',
-          value: session.token,
-          url: baseURL ?? 'http://127.0.0.1:3100',
-          httpOnly: true,
-          sameSite: 'Lax',
-          expires: Math.floor(session.expires.getTime() / 1000),
-        },
-      ])
+      /*
+       * A session fixture, not a login: these tests are about the shells' accessibility,
+       * and a form login would spend the auth surface's rate budget on a flow that has its
+       * own specs. See `session-fixture.ts` for the mechanism and the reasoning; the gate
+       * still runs — a bad token meets `ADR-024`'s redirect and the scan fails on the
+       * wrong page.
+       */
+      const { seedSessionCookie } = await import('./session-fixture')
+      await seedSessionCookie(page, SEED_EMAILS[route.signInAs])
     }
 
     await page.goto(route.path)

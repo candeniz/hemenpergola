@@ -4,18 +4,32 @@ import { z } from 'zod'
 
 import type { ActorContext } from '@/shared/context/actor'
 import { prisma } from '@/shared/db'
-import { eligibleCompaniesForProject } from '@/shared/geo'
+import {
+  companiesServingLocationWithoutProduct,
+  eligibleCompaniesForProject,
+  type EligibleCompanyRow,
+} from '@/shared/geo'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
-import { calculateEstimate, type ProjectInput } from '@/modules/pricing/domain/engine'
+import {
+  calculateEstimate,
+  ENGINE_VERSION,
+  type BandSettings,
+  type ProjectInput,
+} from '@/modules/pricing/domain/engine'
 import { bandSettings } from '@/modules/pricing/infrastructure/band-settings'
 
-import { scoreCandidate, type CandidateSignals, type ScoreBreakdown } from '../domain/scoring'
+import {
+  scoreCandidate,
+  type CandidateSignals,
+  type MatchWeights,
+  type ScoreBreakdown,
+} from '../domain/scoring'
 import { matchWeights, platformMeanRating } from '../infrastructure/match-settings'
 
 /**
- * The match pipeline — tasks 5.1–5.5, `09-manufacturer-matching.md` §Pipeline:
+ * The match pipeline — tasks 5.1–5.8, `09-manufacturer-matching.md` §Pipeline:
  *
  *   eligibility (one SQL) → scoring (pure) → pricing pass → ranking → MatchRun + results
  *
@@ -31,9 +45,10 @@ import { matchWeights, platformMeanRating } from '../infrastructure/match-settin
  *
  * `08` §Failure modes, `PRC-06`, and the whole reason `09` separates the two passes. Every
  * shape of "no price" — no published book, product not in the book, the engine throwing —
- * lands the company in the results as `priceOnRequest`, ranked below priced companies.
- * Silently dropping it would tell the customer "no manufacturers in your area" about a
- * manufacturer who is there and reachable.
+ * lands the company in the results, ranked below priced companies. `priceState` keeps the
+ * shapes apart for display (5.8): `ON_REQUEST` is a company's choice or a book gap,
+ * `UNAVAILABLE` is our engine failing, and telling a customer to "ask the manufacturer" for
+ * a price we failed to compute would be the second, dressed as the first.
  *
  * ## Determinism
  *
@@ -52,11 +67,22 @@ const ownedBy = (actor: ActorContext) => {
   return null
 }
 
+/** `09` §Zero-result handling's "widened by one step", in kilometres. */
+export const WIDEN_STEP_KM = 25
+
 export const runMatchSchema = z.object({ projectId: z.string().min(1) })
 export type RunMatchInput = z.infer<typeof runMatchSchema>
 
 export const getMatchRunSchema = z.object({ projectId: z.string().min(1) })
 export type GetMatchRunInput = z.infer<typeof getMatchRunSchema>
+
+export const zeroResultFallbackSchema = z.object({ projectId: z.string().min(1) })
+export type ZeroResultFallbackInput = z.infer<typeof zeroResultFallbackSchema>
+
+export const watchSupplyGapSchema = z.object({ projectId: z.string().min(1) })
+export type WatchSupplyGapInput = z.infer<typeof watchSupplyGapSchema>
+
+export type MatchPriceState = 'PRICED' | 'ON_REQUEST' | 'UNAVAILABLE'
 
 /**
  * What the **customer** sees per result. Band only, never line items (`ADR-006`), and no
@@ -69,6 +95,9 @@ export type MatchResultView = {
   bandLowKurus: number | null
   bandHighKurus: number | null
   priceOnRequest: boolean
+  priceState: MatchPriceState
+  /** An option the book does not price contributed zero — shown as a caveat, not hidden. */
+  incomplete: boolean
   distanceKm: number | null
 }
 
@@ -80,11 +109,12 @@ export type MatchRunView = {
   results: MatchResultView[]
 }
 
-type PricedCandidate = {
-  priceCalculationId: string | null
-  bandLowKurus: number | null
-  bandHighKurus: number | null
-  priceOnRequest: boolean
+export type ZeroResultFallbackView = {
+  /** `09` step 1 — the radius test widened by one step, labelled by the caller. */
+  widened: MatchResultView[]
+  /** `09` step 2 — serve the area, do not offer the product. Names only, no bands. */
+  nearby: { companyId: string; displayName: string }[]
+  widenedByKm: number
 }
 
 /** Deterministic ranking — the exact ORDER BY, in one comparator. */
@@ -102,6 +132,313 @@ export function compareForRank(
   return a.companyId < b.companyId ? -1 : a.companyId > b.companyId ? 1 : 0
 }
 
+type LoadedProject = {
+  id: string
+  productId: string
+  areaM2: number | null
+  widthMm: number | null
+  depthMm: number | null
+  heightMm: number | null
+  quantity: number
+  cityId: string | null
+  districtId: string | null
+  product: { basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT' }
+  values: { optionId: string | null }[]
+}
+
+type ScoredCandidate = {
+  companyId: string
+  displayName: string
+  score: number
+  breakdown: ScoreBreakdown
+  distanceKm: number | null
+  priceState: MatchPriceState
+  bandLowKurus: number | null
+  bandHighKurus: number | null
+  incomplete: boolean
+  calculation: {
+    priceBookId: string
+    priceBookVersion: number
+    netKurus: number
+    bandLowKurus: number
+    bandHighKurus: number
+    breakdown: object
+    engineVersion: number
+  } | null
+}
+
+/**
+ * Stages 2–4 for one candidate set: batched signal loads, the pure score, the pricing pass,
+ * the deterministic sort. Shared by `runMatch` (which persists a `MatchRun`) and
+ * `zeroResultFallback` (which persists only the `PriceCalculation` rows `ADR-006` requires
+ * for any estimate a customer is shown).
+ */
+async function scoreAndPrice(
+  project: LoadedProject,
+  candidates: EligibleCompanyRow[],
+  context: { weights: MatchWeights; meanRating: number; settings: BandSettings },
+): Promise<ScoredCandidate[]> {
+  if (candidates.length === 0) return []
+
+  const companyIds = candidates.map((candidate) => candidate.companyId)
+  const selectedOptionIds = project.values
+    .map((value) => value.optionId)
+    .filter((optionId): optionId is string => optionId !== null)
+
+  // Batched — no per-candidate queries (`09` §Performance).
+  const [companies, offeredCounts, portfolioCounts, books, companyProducts] = await Promise.all([
+    prisma.company.findMany({
+      where: { id: { in: companyIds } },
+      select: { id: true, displayName: true, updatedAt: true, priceOnRequest: true },
+    }),
+    selectedOptionIds.length === 0
+      ? Promise.resolve([])
+      : prisma.companyProductOption.groupBy({
+          by: ['companyProductId'],
+          where: {
+            optionId: { in: selectedOptionIds },
+            isOffered: true,
+            companyProduct: { companyId: { in: companyIds }, productId: project.productId },
+          },
+          _count: { _all: true },
+        }),
+    prisma.portfolioItem.groupBy({
+      by: ['companyId'],
+      where: { companyId: { in: companyIds }, productId: project.productId },
+      _count: { _all: true },
+    }),
+    prisma.priceBook.findMany({
+      where: { companyId: { in: companyIds }, status: 'PUBLISHED' },
+      include: { items: true, optionPrices: true, adjustments: true, rules: true },
+    }),
+    prisma.companyProduct.findMany({
+      where: { companyId: { in: companyIds }, productId: project.productId },
+      select: { id: true, companyId: true },
+    }),
+  ])
+
+  const companyById = new Map(companies.map((company) => [company.id, company]))
+  const bookByCompany = new Map(books.map((book) => [book.companyId, book]))
+  const portfolioByCompany = new Map(portfolioCounts.map((row) => [row.companyId, row._count._all]))
+
+  // groupBy keys on companyProductId; map it back to the company.
+  const companyByCompanyProduct = new Map(companyProducts.map((row) => [row.id, row.companyId]))
+  const offeredByCompany = new Map<string, number>()
+  for (const row of offeredCounts) {
+    const companyId = companyByCompanyProduct.get(row.companyProductId)
+    if (companyId !== undefined) offeredByCompany.set(companyId, row._count._all)
+  }
+
+  const engineProject: ProjectInput = {
+    productId: project.productId,
+    basisType: project.product.basisType,
+    areaM2: project.areaM2,
+    lengthM: null,
+    units: project.product.basisType === 'UNIT' ? project.quantity : null,
+    perimeterM:
+      project.widthMm !== null && project.depthMm !== null
+        ? (2 * (project.widthMm + project.depthMm)) / 1000
+        : null,
+    heightM: project.heightMm === null ? null : project.heightMm / 1000,
+    quantity: project.quantity,
+    selectedOptionIds,
+    cityId: project.cityId,
+    districtId: project.districtId,
+  }
+
+  const now = new Date()
+  const scored: ScoredCandidate[] = []
+
+  for (const candidate of candidates) {
+    const company = companyById.get(candidate.companyId)
+    if (company === undefined) continue
+
+    const distanceKm = candidate.distanceMetres === null ? null : candidate.distanceMetres / 1000
+
+    const signals: CandidateSignals = {
+      companyId: candidate.companyId,
+      distanceKm,
+      radiusKm: candidate.radiusKm,
+      selectedOptionCount: selectedOptionIds.length,
+      offeredOptionCount: offeredByCompany.get(candidate.companyId) ?? 0,
+      // Reviews are Phase 7: everyone sits on the Bayesian prior, by design.
+      ratingSum: 0,
+      ratingCount: 0,
+      // OfferRequest is Phase 6: no response history exists to be medianed.
+      medianResponseMinutes: null,
+      completedEngagements: 0,
+      portfolioCount: portfolioByCompany.get(candidate.companyId) ?? 0,
+      priceBookPublishedAt: bookByCompany.get(candidate.companyId)?.publishedAt ?? null,
+      profileUpdatedAt: company.updatedAt,
+      verifiedAt: candidate.verifiedAt,
+    }
+
+    const { score, breakdown } = scoreCandidate(signals, {
+      weights: context.weights,
+      platformMeanRating: context.meanRating,
+      now,
+    })
+
+    // ── the pricing pass. Every failure shape is a result, never a removal ────
+    let priceState: MatchPriceState = 'ON_REQUEST'
+    let bandLowKurus: number | null = null
+    let bandHighKurus: number | null = null
+    let incomplete = false
+    let calculation: ScoredCandidate['calculation'] = null
+
+    const book = bookByCompany.get(candidate.companyId)
+
+    if (book !== undefined && !company.priceOnRequest) {
+      try {
+        const item = book.items.find((row) => row.productId === project.productId) ?? null
+        const result = calculateEstimate(
+          engineProject,
+          {
+            version: book.version,
+            item:
+              item === null
+                ? null
+                : {
+                    basePriceKurus: item.basePriceKurus,
+                    minProjectPriceKurus: item.minProjectPriceKurus,
+                    setupFeeKurus: item.setupFeeKurus,
+                  },
+            optionPrices: book.optionPrices,
+            regionAdjustments: book.adjustments,
+            rules: book.rules,
+          },
+          context.settings,
+        )
+
+        if (result.status === 'priced') {
+          priceState = 'PRICED'
+          bandLowKurus = result.bandLowKurus
+          bandHighKurus = result.bandHighKurus
+          incomplete = result.incomplete
+          calculation = {
+            priceBookId: book.id,
+            priceBookVersion: book.version,
+            netKurus: result.netKurus,
+            bandLowKurus: result.bandLowKurus,
+            bandHighKurus: result.bandHighKurus,
+            breakdown: JSON.parse(JSON.stringify(result.breakdown)) as object,
+            engineVersion: result.engineVersion,
+          }
+        }
+        // 'price-on-request' and 'unpriceable' keep ON_REQUEST: in the list, no band.
+      } catch (error) {
+        /*
+         * `08` §Failure modes: engine throws → match returned without a price,
+         * `system_error_price_unavailable`, logged with the engine version. The company
+         * stays in the results, and the state stays distinct from ON_REQUEST so the page
+         * can say "cannot be calculated right now" instead of "ask them" (5.8).
+         */
+        priceState = 'UNAVAILABLE'
+        console.error(
+          `pricing failed for company ${candidate.companyId} on project ${project.id} ` +
+            `(engineVersion ${ENGINE_VERSION}):`,
+          error,
+        )
+      }
+    }
+
+    scored.push({
+      companyId: candidate.companyId,
+      displayName: company.displayName,
+      score,
+      breakdown,
+      distanceKm,
+      priceState,
+      bandLowKurus,
+      bandHighKurus,
+      incomplete,
+      calculation,
+    })
+  }
+
+  // ── ranking — `priceOnRequest` for the sort is "has no band", whatever the reason ──
+  scored.sort((a, b) =>
+    compareForRank(
+      { ...a, priceOnRequest: a.priceState !== 'PRICED' },
+      { ...b, priceOnRequest: b.priceState !== 'PRICED' },
+    ),
+  )
+
+  return scored
+}
+
+/**
+ * `ADR-006`: every calculation a customer may see is persisted with actor and IP. Returns
+ * calculation ids keyed by company. `createManyAndReturn` — one statement, not one per row.
+ */
+async function persistCalculations(
+  tx: Pick<typeof prisma, 'priceCalculation'>,
+  projectId: string,
+  actor: ActorContext,
+  scored: ScoredCandidate[],
+): Promise<Map<string, string>> {
+  const withCalculation = scored.filter((entry) => entry.calculation !== null)
+  if (withCalculation.length === 0) return new Map()
+
+  const rows = await tx.priceCalculation.createManyAndReturn({
+    data: withCalculation.map((entry) => ({
+      projectId,
+      companyId: entry.companyId,
+      priceBookId: entry.calculation!.priceBookId,
+      priceBookVersion: entry.calculation!.priceBookVersion,
+      netKurus: entry.calculation!.netKurus,
+      bandLowKurus: entry.calculation!.bandLowKurus,
+      bandHighKurus: entry.calculation!.bandHighKurus,
+      breakdown: entry.calculation!.breakdown,
+      engineVersion: entry.calculation!.engineVersion,
+      actorUserId: actor.userId,
+      requestIp: actor.ip === 'unknown' ? null : actor.ip,
+    })),
+    select: { id: true, companyId: true },
+  })
+
+  return new Map(rows.map((row) => [row.companyId, row.id]))
+}
+
+function toView(entry: ScoredCandidate, rank: number): MatchResultView {
+  return {
+    rank,
+    companyId: entry.companyId,
+    displayName: entry.displayName,
+    bandLowKurus: entry.bandLowKurus,
+    bandHighKurus: entry.bandHighKurus,
+    priceOnRequest: entry.priceState !== 'PRICED',
+    priceState: entry.priceState,
+    incomplete: entry.incomplete,
+    distanceKm: entry.distanceKm,
+  }
+}
+
+async function loadOwnedReadyProject(
+  actor: ActorContext,
+  projectId: string,
+): Promise<{ ok: true; project: LoadedProject } | { ok: false; error: 'not-found' | 'not-ready' }> {
+  const owner = ownedBy(actor)
+  if (owner === null) return { ok: false, error: 'not-found' }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, ...owner },
+    include: { product: { select: { basisType: true } }, values: { select: { optionId: true } } },
+  })
+  if (project === null) return { ok: false, error: 'not-found' }
+
+  /*
+   * `08` §Failure modes: a project without a basis is `PRECONDITION`, blocked here rather
+   * than surfacing per candidate. DRAFT means readiness was never established; CLOSED means
+   * the customer ended it.
+   */
+  if (project.status !== 'READY' && project.status !== 'SUBMITTED') {
+    return { ok: false, error: 'not-ready' }
+  }
+
+  return { ok: true, project }
+}
+
 export const runMatch = serviceMethod<RunMatchInput, MatchRunView>(
   'matching',
   'runMatch',
@@ -113,262 +450,24 @@ export const runMatch = serviceMethod<RunMatchInput, MatchRunView>(
   async (actor, input) => {
     const started = Date.now()
 
-    const owner = ownedBy(actor)
-    if (owner === null) return err(notFound('Project'))
-
-    const project = await prisma.project.findFirst({
-      where: { id: input.projectId, ...owner },
-      include: { product: true, values: true },
-    })
-    if (project === null) return err(notFound('Project'))
-
-    /*
-     * `08` §Failure modes: a project without a basis is `PRECONDITION`, blocked here rather
-     * than surfacing per candidate. DRAFT means readiness was never established; CLOSED
-     * means the customer ended it.
-     */
-    if (project.status !== 'READY' && project.status !== 'SUBMITTED') {
-      return err(precondition('matching runs on a READY project'))
+    const loaded = await loadOwnedReadyProject(actor, input.projectId)
+    if (!loaded.ok) {
+      return loaded.error === 'not-found'
+        ? err(notFound('Project'))
+        : err(precondition('matching runs on a READY project'))
     }
-
-    const selectedOptionIds = project.values
-      .map((value) => value.optionId)
-      .filter((optionId): optionId is string => optionId !== null)
+    const project = loaded.project
 
     // ── 1 · eligibility, one SQL query ────────────────────────────────────────
-    const candidates = await eligibleCompaniesForProject(project.id)
+    const [candidates, weights, meanRating, settings] = await Promise.all([
+      eligibleCompaniesForProject(project.id),
+      matchWeights(),
+      platformMeanRating(),
+      bandSettings(),
+    ])
 
-    const weights = await matchWeights()
-
-    if (candidates.length === 0) {
-      /*
-       * A legitimate outcome, persisted like any other: `09` §Zero-result handling's
-       * widening and "notify me" are the results *page's* behaviour (5.6–5.9); the run
-       * itself records that this project, at this moment, matched nobody.
-       */
-      const emptyRun = await prisma.matchRun.create({
-        data: {
-          projectId: project.id,
-          weightsVersion: weights.version,
-          resultCount: 0,
-          durationMs: Date.now() - started,
-        },
-      })
-
-      return ok({
-        matchRunId: emptyRun.id,
-        projectId: project.id,
-        createdAt: emptyRun.createdAt,
-        resultCount: 0,
-        results: [],
-      })
-    }
-
-    const companyIds = candidates.map((candidate) => candidate.companyId)
-
-    // ── batched signal loads — no per-candidate queries ───────────────────────
-    const [companies, offeredCounts, portfolioCounts, books, meanRating, settings] =
-      await Promise.all([
-        prisma.company.findMany({
-          where: { id: { in: companyIds } },
-          select: { id: true, displayName: true, updatedAt: true, priceOnRequest: true },
-        }),
-        selectedOptionIds.length === 0
-          ? Promise.resolve([])
-          : prisma.companyProductOption.groupBy({
-              by: ['companyProductId'],
-              where: {
-                optionId: { in: selectedOptionIds },
-                isOffered: true,
-                companyProduct: { companyId: { in: companyIds }, productId: project.productId },
-              },
-              _count: { _all: true },
-            }),
-        prisma.portfolioItem.groupBy({
-          by: ['companyId'],
-          where: { companyId: { in: companyIds }, productId: project.productId },
-          _count: { _all: true },
-        }),
-        prisma.priceBook.findMany({
-          where: { companyId: { in: companyIds }, status: 'PUBLISHED' },
-          include: { items: true, optionPrices: true, adjustments: true, rules: true },
-        }),
-        platformMeanRating(),
-        bandSettings(),
-      ])
-
-    const companyById = new Map(companies.map((company) => [company.id, company]))
-    const bookByCompany = new Map(books.map((book) => [book.companyId, book]))
-    const portfolioByCompany = new Map(
-      portfolioCounts.map((row) => [row.companyId, row._count._all]),
-    )
-
-    // groupBy keys on companyProductId; map it back to the company.
-    const companyProducts = await prisma.companyProduct.findMany({
-      where: { companyId: { in: companyIds }, productId: project.productId },
-      select: { id: true, companyId: true },
-    })
-    const companyByCompanyProduct = new Map(companyProducts.map((row) => [row.id, row.companyId]))
-    const offeredByCompany = new Map<string, number>()
-    for (const row of offeredCounts) {
-      const companyId = companyByCompanyProduct.get(row.companyProductId)
-      if (companyId !== undefined) offeredByCompany.set(companyId, row._count._all)
-    }
-
-    const engineProject: ProjectInput = {
-      productId: project.productId,
-      basisType: project.product.basisType,
-      areaM2: project.areaM2,
-      lengthM: null,
-      units: project.product.basisType === 'UNIT' ? project.quantity : null,
-      perimeterM:
-        project.widthMm !== null && project.depthMm !== null
-          ? (2 * (project.widthMm + project.depthMm)) / 1000
-          : null,
-      heightM: project.heightMm === null ? null : project.heightMm / 1000,
-      quantity: project.quantity,
-      selectedOptionIds,
-      cityId: project.cityId,
-      districtId: project.districtId,
-    }
-
-    const now = new Date()
-
-    // ── 2 · score, 3 · price — per candidate, in memory ──────────────────────
-    const scored: Array<{
-      companyId: string
-      score: number
-      breakdown: ScoreBreakdown
-      distanceKm: number | null
-      priced: PricedCandidate
-      calculation: {
-        priceBookId: string
-        priceBookVersion: number
-        netKurus: number
-        bandLowKurus: number
-        bandHighKurus: number
-        breakdown: unknown
-        engineVersion: number
-      } | null
-    }> = []
-
-    for (const candidate of candidates) {
-      const company = companyById.get(candidate.companyId)
-      if (company === undefined) continue
-
-      const distanceKm = candidate.distanceMetres === null ? null : candidate.distanceMetres / 1000
-
-      const signals: CandidateSignals = {
-        companyId: candidate.companyId,
-        distanceKm,
-        radiusKm: candidate.radiusKm,
-        selectedOptionCount: selectedOptionIds.length,
-        offeredOptionCount: offeredByCompany.get(candidate.companyId) ?? 0,
-        // Reviews are Phase 7: everyone sits on the Bayesian prior, by design.
-        ratingSum: 0,
-        ratingCount: 0,
-        // OfferRequest is Phase 6: no response history exists to be medianed.
-        medianResponseMinutes: null,
-        completedEngagements: 0,
-        portfolioCount: portfolioByCompany.get(candidate.companyId) ?? 0,
-        priceBookPublishedAt: bookByCompany.get(candidate.companyId)?.publishedAt ?? null,
-        profileUpdatedAt: company.updatedAt,
-        verifiedAt: candidate.verifiedAt,
-      }
-
-      const { score, breakdown } = scoreCandidate(signals, {
-        weights,
-        platformMeanRating: meanRating,
-        now,
-      })
-
-      // ── the pricing pass. Every failure shape is a result, never a removal ──
-      let priced: PricedCandidate = {
-        priceCalculationId: null,
-        bandLowKurus: null,
-        bandHighKurus: null,
-        priceOnRequest: true,
-      }
-      let calculation: (typeof scored)[number]['calculation'] = null
-
-      const book = bookByCompany.get(candidate.companyId)
-
-      if (book !== undefined && !company.priceOnRequest) {
-        try {
-          const item = book.items.find((row) => row.productId === project.productId) ?? null
-          const result = calculateEstimate(
-            engineProject,
-            {
-              version: book.version,
-              item:
-                item === null
-                  ? null
-                  : {
-                      basePriceKurus: item.basePriceKurus,
-                      minProjectPriceKurus: item.minProjectPriceKurus,
-                      setupFeeKurus: item.setupFeeKurus,
-                    },
-              optionPrices: book.optionPrices,
-              regionAdjustments: book.adjustments,
-              rules: book.rules,
-            },
-            settings,
-          )
-
-          if (result.status === 'priced') {
-            priced = {
-              priceCalculationId: null, // filled after the row is written
-              bandLowKurus: result.bandLowKurus,
-              bandHighKurus: result.bandHighKurus,
-              priceOnRequest: false,
-            }
-            calculation = {
-              priceBookId: book.id,
-              priceBookVersion: book.version,
-              netKurus: result.netKurus,
-              bandLowKurus: result.bandLowKurus,
-              bandHighKurus: result.bandHighKurus,
-              breakdown: JSON.parse(JSON.stringify(result.breakdown)) as object,
-              engineVersion: result.engineVersion,
-            }
-          }
-          // 'price-on-request' and 'unpriceable' keep the default: in the list, no band.
-        } catch (error) {
-          /*
-           * `08` §Failure modes: engine throws → match returned without a price,
-           * `system_error_price_unavailable`, logged with the engine version. The company
-           * stays in the results.
-           */
-          const { ENGINE_VERSION } = await import('@/modules/pricing/domain/engine')
-          console.error(
-            `pricing failed for company ${candidate.companyId} on project ${project.id} ` +
-              `(engineVersion ${ENGINE_VERSION}):`,
-            error,
-          )
-        }
-      }
-
-      scored.push({
-        companyId: candidate.companyId,
-        score,
-        breakdown: {
-          ...breakdown,
-          // Q22's other half, for §Explainability: how accurate each end of the distance was.
-          proximityBand: breakdown.proximityBand,
-        },
-        distanceKm,
-        priced,
-        calculation,
-      })
-    }
-
-    // ── 4 · ranking ───────────────────────────────────────────────────────────
-    scored.sort((a, b) =>
-      compareForRank(
-        { ...a, priceOnRequest: a.priced.priceOnRequest },
-        { ...b, priceOnRequest: b.priced.priceOnRequest },
-      ),
-    )
+    // ── 2–4 · score, price, rank ──────────────────────────────────────────────
+    const scored = await scoreAndPrice(project, candidates, { weights, meanRating, settings })
 
     // ── 5 · persistence — the run, its calculations and its results, atomically ──
     const view = await prisma.$transaction(async (tx) => {
@@ -376,58 +475,31 @@ export const runMatch = serviceMethod<RunMatchInput, MatchRunView>(
         data: {
           projectId: project.id,
           weightsVersion: weights.version,
+          /*
+           * Zero is a legitimate, persisted outcome: `09` §Zero-result handling's ladder is
+           * the results *page's* behaviour, and the run records that this project, at this
+           * moment, matched nobody.
+           */
           resultCount: scored.length,
           durationMs: Date.now() - started,
         },
       })
 
-      const results: MatchResultView[] = []
+      const calculationIds = await persistCalculations(tx, project.id, actor, scored)
 
-      for (const [index, entry] of scored.entries()) {
-        let priceCalculationId: string | null = null
-
-        if (entry.calculation !== null) {
-          const row = await tx.priceCalculation.create({
-            data: {
-              projectId: project.id,
-              companyId: entry.companyId,
-              priceBookId: entry.calculation.priceBookId,
-              priceBookVersion: entry.calculation.priceBookVersion,
-              netKurus: entry.calculation.netKurus,
-              bandLowKurus: entry.calculation.bandLowKurus,
-              bandHighKurus: entry.calculation.bandHighKurus,
-              breakdown: entry.calculation.breakdown as object,
-              engineVersion: entry.calculation.engineVersion,
-              actorUserId: actor.userId,
-              requestIp: actor.ip === 'unknown' ? null : actor.ip,
-            },
-          })
-          priceCalculationId = row.id
-        }
-
-        const rank = index + 1
-
-        await tx.matchResult.create({
-          data: {
+      if (scored.length > 0) {
+        await tx.matchResult.createMany({
+          data: scored.map((entry, index) => ({
             matchRunId: run.id,
             companyId: entry.companyId,
             score: entry.score,
-            rank,
+            rank: index + 1,
             scoreBreakdown: JSON.parse(JSON.stringify(entry.breakdown)) as object,
-            priceCalculationId,
-            priceOnRequest: entry.priced.priceOnRequest,
+            priceCalculationId: calculationIds.get(entry.companyId) ?? null,
+            priceOnRequest: entry.priceState !== 'PRICED',
+            priceState: entry.priceState,
             distanceKm: entry.distanceKm,
-          },
-        })
-
-        results.push({
-          rank,
-          companyId: entry.companyId,
-          displayName: companyById.get(entry.companyId)?.displayName ?? '',
-          bandLowKurus: entry.priced.bandLowKurus,
-          bandHighKurus: entry.priced.bandHighKurus,
-          priceOnRequest: entry.priced.priceOnRequest,
-          distanceKm: entry.distanceKm,
+          })),
         })
       }
 
@@ -436,7 +508,7 @@ export const runMatch = serviceMethod<RunMatchInput, MatchRunView>(
         projectId: project.id,
         createdAt: run.createdAt,
         resultCount: scored.length,
-        results,
+        results: scored.map((entry, index) => toView(entry, index + 1)),
       }
     })
 
@@ -469,7 +541,14 @@ export const getMatchRun = serviceMethod<GetMatchRunInput, MatchRunView>(
           orderBy: { rank: 'asc' },
           include: {
             company: { select: { displayName: true } },
-            priceCalculation: { select: { bandLowKurus: true, bandHighKurus: true } },
+            /*
+             * `breakdown` is selected to derive ONE boolean and is not returned: whether an
+             * unpriced option contributed zero (`08` §Failure modes' caveat). The line
+             * items themselves never cross this boundary (`ADR-006`).
+             */
+            priceCalculation: {
+              select: { bandLowKurus: true, bandHighKurus: true, breakdown: true },
+            },
           },
         },
       },
@@ -481,17 +560,146 @@ export const getMatchRun = serviceMethod<GetMatchRunInput, MatchRunView>(
       projectId: run.projectId,
       createdAt: run.createdAt,
       resultCount: run.resultCount,
-      results: run.results.map((result) => ({
-        rank: result.rank,
-        companyId: result.companyId,
-        displayName: result.company.displayName,
-        bandLowKurus: result.priceCalculation?.bandLowKurus ?? null,
-        bandHighKurus: result.priceCalculation?.bandHighKurus ?? null,
-        priceOnRequest: result.priceOnRequest,
-        distanceKm: result.distanceKm,
-      })),
+      results: run.results.map((result) => {
+        const breakdown = result.priceCalculation?.breakdown as
+          { unpricedOptionIds?: unknown[] } | undefined
+
+        return {
+          rank: result.rank,
+          companyId: result.companyId,
+          displayName: result.company.displayName,
+          bandLowKurus: result.priceCalculation?.bandLowKurus ?? null,
+          bandHighKurus: result.priceCalculation?.bandHighKurus ?? null,
+          priceOnRequest: result.priceOnRequest,
+          priceState: result.priceState,
+          incomplete: (breakdown?.unpricedOptionIds?.length ?? 0) > 0,
+          distanceKm: result.distanceKm,
+        }
+      }),
     })
   },
 )
 
-export const matchService = { runMatch, getMatchRun } satisfies Record<string, { meta: unknown }>
+/**
+ * `09` §Zero-result handling, steps 1 and 2 — computed for the page when the stored run is
+ * empty, **not persisted as matches**: a widened result is an offer of the page, not a fact
+ * about the project, and writing it to `MatchRun` would make `resultCount: 0` a lie. The
+ * `PriceCalculation` rows are persisted — any band a customer sees is logged (`ADR-006`).
+ */
+export const zeroResultFallback = serviceMethod<ZeroResultFallbackInput, ZeroResultFallbackView>(
+  'matching',
+  'zeroResultFallback',
+  {
+    kind: 'customer-owned',
+    describe: 'the fallback is read through the project that owns it',
+    scopedBy: ['userId', 'anonymousKey'],
+  },
+  async (actor, input) => {
+    const loaded = await loadOwnedReadyProject(actor, input.projectId)
+    if (!loaded.ok) {
+      return loaded.error === 'not-found'
+        ? err(notFound('Project'))
+        : err(precondition('the fallback runs on a READY project'))
+    }
+    const project = loaded.project
+
+    const [widenedCandidates, nearbyRows, weights, meanRating, settings] = await Promise.all([
+      eligibleCompaniesForProject(project.id, { widenRadiusKm: WIDEN_STEP_KM }),
+      companiesServingLocationWithoutProduct(project.id),
+      matchWeights(),
+      platformMeanRating(),
+      bandSettings(),
+    ])
+
+    const scored = await scoreAndPrice(project, widenedCandidates, {
+      weights,
+      meanRating,
+      settings,
+    })
+    await persistCalculations(prisma, project.id, actor, scored)
+
+    const nearbyCompanies =
+      nearbyRows.length === 0
+        ? []
+        : await prisma.company.findMany({
+            where: { id: { in: nearbyRows.map((row) => row.companyId) } },
+            select: { id: true, displayName: true },
+            orderBy: { id: 'asc' },
+          })
+
+    return ok({
+      widened: scored.map((entry, index) => toView(entry, index + 1)),
+      nearby: nearbyCompanies.map((company) => ({
+        companyId: company.id,
+        displayName: company.displayName,
+      })),
+      widenedByKm: WIDEN_STEP_KM,
+    })
+  },
+)
+
+/**
+ * `09` §Zero-result handling step 3 — "notify me when a manufacturer covers my area",
+ * stored as a `Notification` subscription. One per user per project; repeating the click
+ * reports `watching: true` rather than stacking rows. Repeated zero-result districts are
+ * the supply-acquisition backlog, which is why the payload carries the location and the
+ * product rather than just the project id.
+ */
+export const watchSupplyGap = serviceMethod<WatchSupplyGapInput, { watching: true }>(
+  'matching',
+  'watchSupplyGap',
+  {
+    kind: 'customer-owned',
+    describe: 'a supply-gap watch belongs to the project that produced the gap',
+    scopedBy: ['userId', 'anonymousKey'],
+  },
+  async (actor, input) => {
+    if (actor.userId === null) {
+      // The results page is behind the account wall (`ADR-021`), so this is unreachable in
+      // the UI — but a subscription with nobody to notify is a row that can never fire.
+      return err(precondition('watching a supply gap needs an account to notify'))
+    }
+
+    const owner = ownedBy(actor)
+    if (owner === null) return err(notFound('Project'))
+
+    const project = await prisma.project.findFirst({
+      where: { id: input.projectId, ...owner },
+      select: { id: true, productId: true, cityId: true, districtId: true },
+    })
+    if (project === null) return err(notFound('Project'))
+
+    const existing = await prisma.notification.findFirst({
+      where: {
+        userId: actor.userId,
+        type: 'supply_gap_watch',
+        payload: { path: ['projectId'], equals: project.id },
+      },
+      select: { id: true },
+    })
+
+    if (existing === null) {
+      await prisma.notification.create({
+        data: {
+          userId: actor.userId,
+          type: 'supply_gap_watch',
+          payload: {
+            projectId: project.id,
+            productId: project.productId,
+            cityId: project.cityId,
+            districtId: project.districtId,
+          },
+        },
+      })
+    }
+
+    return ok({ watching: true })
+  },
+)
+
+export const matchService = {
+  runMatch,
+  getMatchRun,
+  zeroResultFallback,
+  watchSupplyGap,
+} satisfies Record<string, { meta: unknown }>

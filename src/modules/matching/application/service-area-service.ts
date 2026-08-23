@@ -305,14 +305,19 @@ export const listCitiesSchema = z.object({ companyId: z.string().min(1) })
 export type ListCitiesInput = z.infer<typeof listCitiesSchema>
 
 /**
- * The provinces, for any screen that needs to name one — service areas and the price book's
- * regional table.
+ * The provinces, for any screen that needs to name one — service areas, the price book's
+ * regional table, and the public configurator's location step.
  *
  * A service method rather than a `prisma.city.findMany` in the page, because
  * `CLAUDE.md` non-negotiable 2 says pages call application services and nothing below them.
- * The data is public reference data seeded in Phase 0, so the only gate is membership: it is
- * on the company-scoped surface and there is no reason for an anonymous caller to reach it
- * here rather than through the public catalogue.
+ *
+ * **Anonymous since Phase 5, and the history is a bug worth recording.** Phase 3 gated this
+ * behind `MEMBER_READ`, reasoning that only company screens read it — which `ADR-021`
+ * quietly invalidated: the public wizard's location step reads it too, with a customer or
+ * no session at all. The page's fallback for a failed load is an empty list, so the symptom
+ * was two selects offering nothing, and the phase-4 gate never noticed because it never
+ * chose a location. 81 seeded provinces are public reference data; there is nothing here a
+ * permission protects.
  */
 export const listCities = serviceMethod<
   ListCitiesInput,
@@ -320,11 +325,13 @@ export const listCities = serviceMethod<
 >(
   'matching',
   'listCities',
-  { kind: 'permission', permission: PERMISSIONS.MEMBER_READ },
+  {
+    kind: 'anonymous',
+    why: 'public reference data (81 seeded provinces); the public configurator location step reads it with no session (ADR-021)',
+  },
   async (actor, input) => {
+    void actor
     void input
-    const allowed = authorize(actor, PERMISSIONS.MEMBER_READ)
-    if (!allowed.ok) return err(allowed.error)
 
     // Turkish collation is on the column, so `İ` and `ı` order the way a Turkish reader
     // expects rather than the way ASCII does.
@@ -351,11 +358,13 @@ export const listDistricts = serviceMethod<
 >(
   'matching',
   'listDistricts',
-  { kind: 'permission', permission: PERMISSIONS.MEMBER_READ },
+  {
+    kind: 'anonymous',
+    why: 'public reference data (974 seeded districts); the public configurator location step reads it with no session (ADR-021)',
+  },
   async (actor, input) => {
+    void actor
     void input
-    const allowed = authorize(actor, PERMISSIONS.MEMBER_READ)
-    if (!allowed.ok) return err(allowed.error)
 
     const districts = await prisma.district.findMany({
       select: { id: true, cityId: true, name: true },

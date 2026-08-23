@@ -331,8 +331,103 @@ async function seedDemo(prisma: PrismaClient): Promise<SeedSummary> {
   })
 
   await seedPilotManufacturer(prisma)
+  await seedMatchableSupply(prisma)
 
   return { profile: 'demo', ...common, users: emails.size, companies, memberships }
+}
+
+/**
+ * Two companies with the whole supply side filled in — offers, an İstanbul service area and
+ * a **published price book** — so `GET OFFERS` on a demo project returns ranked, *priced*
+ * results (task 5.6, core-flow step 3).
+ *
+ * Marmara Cam is deliberately left out: the pilot stays bookless (`seedPilotManufacturer`'s
+ * own comment), which also means the results page always shows one honest
+ * `priceOnRequest` row next to the priced ones — `PRC-06` exercised by the demo data
+ * rather than by a contrived fixture.
+ *
+ * Idempotent: keyed on `(companyId, version)` for the book, natural uniques elsewhere.
+ */
+async function seedMatchableSupply(prisma: PrismaClient): Promise<void> {
+  const istanbul = await prisma.city.findFirst({ where: { plateCode: 34 } })
+  if (istanbul === null) return
+
+  const suppliers = [
+    { slug: 'ege-pergola', basePriceKurus: 4_500_00, minProjectPriceKurus: 60_000_00 },
+    { slug: 'anadolu-gunes-kontrol', basePriceKurus: 5_200_00, minProjectPriceKurus: 75_000_00 },
+  ]
+
+  const products = await prisma.product.findMany({
+    include: { attributes: { include: { options: true } } },
+  })
+
+  for (const supplier of suppliers) {
+    const company = await prisma.company.findUnique({ where: { slug: supplier.slug } })
+    if (company === null) continue
+
+    // Everything offered, like the pilot — the demo is about the results page, not about a
+    // company that half-answers its catalogue.
+    for (const product of products) {
+      const companyProduct = await prisma.companyProduct.upsert({
+        where: { companyId_productId: { companyId: company.id, productId: product.id } },
+        create: { companyId: company.id, productId: product.id, isActive: true },
+        update: { isActive: true },
+      })
+
+      for (const attribute of product.attributes) {
+        for (const option of attribute.options) {
+          await prisma.companyProductOption.upsert({
+            where: {
+              companyProductId_optionId: {
+                companyProductId: companyProduct.id,
+                optionId: option.id,
+              },
+            },
+            create: { companyProductId: companyProduct.id, optionId: option.id, isOffered: true },
+            update: { isOffered: true },
+          })
+        }
+      }
+    }
+
+    const existingArea = await prisma.serviceArea.findFirst({
+      where: { companyId: company.id, kind: 'CITY', cityId: istanbul.id },
+    })
+    if (existingArea === null) {
+      await prisma.serviceArea.create({
+        data: { companyId: company.id, kind: 'CITY', cityId: istanbul.id, isActive: true },
+      })
+    }
+
+    const existingBook = await prisma.priceBook.findUnique({
+      where: { companyId_version: { companyId: company.id, version: 1 } },
+    })
+    if (existingBook !== null) continue
+
+    await prisma.priceBook.create({
+      data: {
+        companyId: company.id,
+        version: 1,
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        publishedBy: null,
+        items: {
+          create: products.map((product) => ({
+            productId: product.id,
+            basePriceKurus: supplier.basePriceKurus,
+            unit: 'PER_M2',
+            minProjectPriceKurus: supplier.minProjectPriceKurus,
+          })),
+        },
+        optionPrices: {
+          create: products
+            .flatMap((product) => product.attributes)
+            .flatMap((attribute) => attribute.options)
+            .map((option) => ({ optionId: option.id, mode: 'FLAT' as const, valueKurus: 250_00 })),
+        },
+      },
+    })
+  }
 }
 
 /**

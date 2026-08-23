@@ -751,3 +751,62 @@ second copy of that rule — two checks that agree today and disagree after the 
 **Reverses if.** A gated segment ever needs to render something for an anonymous visitor. That
 would be `ADR-021`'s situation again, and the answer there was to move the route out of the
 segment rather than to cut a hole in it.
+
+---
+
+## ADR-025 — The radius containment query carries a constant-ceiling pre-filter, and the ceiling is a CHECK constraint
+
+**Context.** Phase 5's eligibility filter had to prove, with EXPLAIN, that the `RADIUS`
+branch uses `ServiceArea.centerPoint`'s GiST index — the index `ADR-002` and `ADR-015` put
+there so a match run is never a sequential scan over every company. The proof failed: `09`
+§Service-area coverage's own SQL, `ST_DWithin(sa.center_point, :point, sa.radius_km * 1000)`,
+plans as a **row filter**, not an index condition.
+
+The reason is structural, not statistical. PostGIS turns an indexable `ST_DWithin(col,
+:point, d)` into `col && _st_expand(:point, d)`, and an index condition must be constant with
+respect to the scanned relation. `radius_km` is a column *of the table being scanned*, so
+there is nothing constant to expand by, and the planner cannot use the index no matter how
+large the table grows — which is precisely when it would be needed.
+
+**Decision.** Two `ST_DWithin` calls, in order:
+
+1. `ST_DWithin(center_point, :point, 500000)` — a **constant** 500 km ceiling. This is the
+   index condition; EXPLAIN shows `Index Scan using "ServiceArea_centerPoint_gist"` with
+   `center_point && _st_expand(:point, 500000)`.
+2. `ST_DWithin(center_point, :point, radius_km * 1000)` — the exact per-area test, now
+   running only over rows the index already narrowed.
+
+And the ceiling is made a property of the **data**: migration 7 adds
+`CONSTRAINT "ServiceArea_radiusKm_range" CHECK (radius_km IS NULL OR radius_km BETWEEN 5
+AND 500)`. Until then the 5–500 range lived only in `addServiceAreaSchema` — a Zod refinement
+one raw insert, one seed script or one future import job away from a row with `radius_km =
+800`, which the pre-filter would then silently exclude from every match. The symptom would be
+"no manufacturers in your area" for a manufacturer who is there; the cause would be invisible
+from the outside. This repository has met that failure shape once already (`Project.point`,
+`04` §Project), and the lesson was the same: an invariant a query depends on belongs in the
+database that runs the query.
+
+**Why not the alternatives.**
+
+- *A per-row functional index* (e.g. on `ST_Expand(center_point, radius_km * 1000)`) —
+  expands every row's box at write time. Workable, but it ties the index shape to the
+  predicate's exact form and is rebuilt wholesale when the ceiling moves; the constant
+  pre-filter needs no new index at all.
+- *Trusting Zod* — validation is a property of one code path; the constraint is a property of
+  the table. The query's correctness must not depend on which path wrote the row.
+- *No ceiling, accept the sequential scan* — refuses `ADR-002`'s whole point on the one query
+  it was written for.
+
+**Consequences.**
+
+- The bounds exist twice (Zod and CHECK) on purpose: Zod turns a typo into a form error, the
+  CHECK turns every other writer's mistake into a loud insert failure instead of a silent
+  match gap. They are the same numbers, and the CHECK is the one the query may rely on.
+- Raising the 500 km ceiling is now a three-place change — CHECK, the two query constants,
+  Zod — and grepping `500000` or `ADR-025` finds them. That cost is accepted: the ceiling has
+  moved zero times, and `radiusKm` ≤ 500 already spans Turkey from any point in it.
+- `companiesCovering` (Phase 3) gained the same pre-filter, same reasoning, comment pointing
+  here.
+
+**Reverses if.** Service areas ever legitimately exceed 500 km — at which point the CHECK,
+the constants and the Zod bound move together, in one commit, with this ADR amended.

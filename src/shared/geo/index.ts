@@ -149,9 +149,9 @@ export async function companiesCovering(input: {
         OR (
           sa."kind" = 'RADIUS'
           AND sa."centerPoint" IS NOT NULL
-          -- The constant ceiling first (the schema caps radiusKm at 500), so the GiST index
-          -- has a usable condition; the per-row test the index cannot see runs second. Same
-          -- pattern as eligibleCompaniesForProject, documented there.
+          -- The constant ceiling first (ServiceArea_radiusKm_range CHECKs radiusKm to
+          -- 5..500), so the GiST index has a usable condition; the per-row test the index
+          -- cannot see runs second. Same pattern as eligibleCompaniesForProject (ADR-025).
           AND ST_DWithin(sa."centerPoint", ${pointSql(input.point)}, 500000)
           AND ST_DWithin(sa."centerPoint", ${pointSql(input.point)}, sa."radiusKm" * 1000)
         )
@@ -207,10 +207,19 @@ export type EligibleCompanyRow = {
  * distance, which ranks last within its tier rather than being invented.
  *
  * Price, rating and response time are **not here** (`09` §1: "Not filters").
+ *
+ * `widenRadiusKm` is `09` §Zero-result handling step 1: the RADIUS test alone runs with the
+ * given slack added to every area's own radius, and the caller labels what it shows. CITY
+ * and DISTRICT areas have no radius to widen; widening them would mean inventing a
+ * neighbouring-province rule nobody wrote.
  */
 export async function eligibleCompaniesForProject(
   projectId: string,
+  options: { widenRadiusKm?: number } = {},
 ): Promise<EligibleCompanyRow[]> {
+  const widenKm = options.widenRadiusKm ?? 0
+  // The GiST pre-filter's constant must stay a ceiling for the widened test too.
+  const ceilingMetres = 500_000 + widenKm * 1000
   const rows = await prisma.$queryRaw<
     {
       companyId: string
@@ -253,14 +262,17 @@ export async function eligibleCompaniesForProject(
            * 09's own SQL -- ST_DWithin(..., sa."radiusKm" * 1000) -- cannot use the GiST
            * index by itself: the expansion distance is a column of the indexed table, and
            * an index condition must be constant with respect to the scanned relation
-           * (EXPLAIN shows it demoted to a row filter). The first call uses the schema's
-           * own ceiling -- addServiceAreaSchema caps radiusKm at 500 -- as a constant,
-           * which the planner turns into "centerPoint && _st_expand(point, 500000)", an
-           * index condition. The second call is the exact per-area test the first one
-           * over-approximates.
+           * (EXPLAIN shows it demoted to a row filter). The first call uses the database's
+           * own ceiling -- ServiceArea_radiusKm_range, migration 7's CHECK, 5..500 km --
+           * as a constant, which the planner turns into
+           * "centerPoint && _st_expand(point, 500000)", an index condition. The second
+           * call is the exact per-area test the first one over-approximates. The ceiling
+           * is a CONSTRAINT, not a Zod convention: a raw row with radiusKm > 500 would
+           * silently fall out of every match, so the database refuses to hold one
+           * (ADR-025).
            */
-          AND ST_DWithin(sa."centerPoint", p."point", 500000)
-          AND ST_DWithin(sa."centerPoint", p."point", sa."radiusKm" * 1000)
+          AND ST_DWithin(sa."centerPoint", p."point", ${ceilingMetres})
+          AND ST_DWithin(sa."centerPoint", p."point", (sa."radiusKm" + ${widenKm}) * 1000)
         )
       )
     LEFT JOIN "CompanyContact" cc ON cc."companyId" = c."id"
@@ -291,6 +303,43 @@ export async function eligibleCompaniesForProject(
     // `array_agg(DISTINCT …::text)` folds SQL NULLs in; keep them — a null precision is a
     // legacy row whose accuracy is unknown, and unknown is information (Q22).
   }))
+}
+
+/**
+ * `09` §Zero-result handling step 2: verified companies whose service area covers the
+ * project's location but who do **not** offer its product — "may be able to help", clearly
+ * separated from matches by the caller. Same coverage predicate as eligibility, product
+ * join inverted into a NOT EXISTS.
+ */
+export async function companiesServingLocationWithoutProduct(
+  projectId: string,
+): Promise<{ companyId: string }[]> {
+  return prisma.$queryRaw<{ companyId: string }[]>`
+    SELECT DISTINCT c."id" AS "companyId"
+    FROM "Project" p
+    JOIN "Company" c
+      ON c."status" = 'VERIFIED' AND c."deletedAt" IS NULL
+    JOIN "ServiceArea" sa
+      ON sa."companyId" = c."id" AND sa."isActive" = true
+      AND (
+        (sa."kind" = 'CITY'     AND sa."cityId"     = p."cityId")
+        OR (sa."kind" = 'DISTRICT' AND sa."districtId" = p."districtId")
+        OR (
+          sa."kind" = 'RADIUS'
+          AND sa."centerPoint" IS NOT NULL
+          AND p."point" IS NOT NULL
+          AND ST_DWithin(sa."centerPoint", p."point", 500000)
+          AND ST_DWithin(sa."centerPoint", p."point", sa."radiusKm" * 1000)
+        )
+      )
+    WHERE p."id" = ${projectId}
+      AND p."deletedAt" IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM "CompanyProduct" cp
+        WHERE cp."companyId" = c."id" AND cp."productId" = p."productId" AND cp."isActive" = true
+      )
+    ORDER BY c."id"
+  `
 }
 
 /** Metres from a service area's centre to a point. `null` when the area has no centre. */

@@ -84,6 +84,36 @@ export type BoundsContext = {
 /** Fallbacks when the catalogue does not state a bound. Wide enough not to reject real work. */
 const DEFAULT_BOUNDS: DimensionBounds = { minMm: 500, maxMm: 30_000 }
 
+/**
+ * Which catalogue attribute keys ARE the three dimensions — the join Phase 4 never made.
+ *
+ * The catalogue stores its bounds on attributes named in domain Turkish (`genislik_mm`,
+ * `cikinti_mm`, `yukseklik_mm`; the guillotine product uses two of them), while the project
+ * row and readiness speak `widthMm`/`depthMm`/`heightMm`. Until Phase 5 nothing translated:
+ * `dimensionBounds` looked attributes up by the *field* name, found nothing, and fell back
+ * to the defaults — so no catalogue bound was ever enforced (Q12's ranges included) — and
+ * the required-attribute rule then demanded an `optionId`-style answer to a question the
+ * dimensions step had already answered, which made every real catalogue product
+ * permanently un-READY. Both readers now resolve through this table, so the next dimension
+ * spelling is one line here rather than a second silent miss.
+ */
+export const DIMENSION_ATTRIBUTE_KEYS: Record<
+  'widthMm' | 'depthMm' | 'heightMm',
+  readonly string[]
+> = {
+  widthMm: ['widthMm', 'genislik_mm'],
+  depthMm: ['depthMm', 'cikinti_mm', 'derinlik_mm'],
+  heightMm: ['heightMm', 'yukseklik_mm'],
+}
+
+/** The project field a catalogue attribute key answers, or null when it is a real question. */
+export function dimensionFieldFor(key: string): 'widthMm' | 'depthMm' | 'heightMm' | null {
+  for (const [field, keys] of Object.entries(DIMENSION_ATTRIBUTE_KEYS)) {
+    if (keys.includes(key)) return field as 'widthMm' | 'depthMm' | 'heightMm'
+  }
+  return null
+}
+
 export function dimensionBounds(
   attribute: { min: number | null; max: number | null } | null,
   context: BoundsContext = {},

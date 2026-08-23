@@ -51,6 +51,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
       - name: Lint
         run: pnpm lint
 
@@ -79,6 +88,15 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
       - run: pnpm test
 
   # ── Stage 3 · integration ────────────────────────────────────────────────────
@@ -96,6 +114,15 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
       - run: node scripts/ci-integration.mjs
 
   # ── Stage 4 · build ──────────────────────────────────────────────────────────
@@ -111,6 +138,15 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
       # No .env here on purpose: since the env parse moved to instrumentation.ts, the build
       # needs no secrets (23 §Configuration, §Runtime). If this step ever starts needing
@@ -140,10 +176,29 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
       # `next start` DOES need configuration, unlike `next build`. Real secrets are not
       # involved and must not be: this is the local-stack example, and .env is gitignored.
       - name: Write .env from .env.example
         run: cp .env.example .env
+
+      # The suite drives a real server against a real stack: the same compose file the
+      # developer machine uses, then migrations and the demo seed the specs sign in with.
+      # This was the first thing the first real runner ever proved missing — ci-local.mjs
+      # ran on a machine where the stack was already up, so nothing noticed.
+      - name: Start the local stack (PostGIS + MinIO)
+        run: docker compose up -d --wait
+
+      - name: Migrate and seed
+        run: pnpm prisma migrate deploy && pnpm seed demo
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -172,4 +227,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate the Prisma client
+        # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
+        # the first real runner proved it by failing typecheck on missing Prisma types.
+        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
+        # never connects, so a placeholder satisfies it in jobs that have no stack.
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
       - run: node scripts/ci-lighthouse.mjs

@@ -1,6 +1,13 @@
 import { isAttributeVisible, type AnswersByKey } from '@/modules/catalog/domain/authoring-rules'
 
-import { dimensionBounds, stageOf, type Stage, type Step } from './steps'
+import {
+  DIMENSION_ATTRIBUTE_KEYS,
+  dimensionBounds,
+  dimensionFieldFor,
+  stageOf,
+  type Stage,
+  type Step,
+} from './steps'
 
 /**
  * The readiness check — `10-project-configurator.md` §Validation, task 4.7.
@@ -132,7 +139,11 @@ export function checkReadiness(input: ReadinessInput): ReadinessResult {
       // Narrowed by `missingDimension` above; the tuple loses that, so restate it.
       if (value === null) continue
 
-      const attribute = input.attributes.find((row) => row.key === field) ?? null
+      // Resolved through the key table in `steps.ts`: the catalogue names these attributes
+      // `genislik_mm` etc., and looking them up by the field name alone is the miss that
+      // left every catalogue bound unenforced through Phase 4.
+      const attribute =
+        input.attributes.find((row) => DIMENSION_ATTRIBUTE_KEYS[field].includes(row.key)) ?? null
       const bounds = dimensionBounds(attribute, context)
 
       if (value < bounds.minMm || value > bounds.maxMm) {
@@ -158,6 +169,14 @@ export function checkReadiness(input: ReadinessInput): ReadinessResult {
   // ── required attributes, but only the ones actually shown ───────────────────
   for (const attribute of input.attributes) {
     if (!attribute.isRequired) continue
+
+    /*
+     * A dimension attribute is answered by the dimensions step — its whole existence is the
+     * bounds read above — and demanding a second, `optionId`-shaped answer to it made every
+     * real catalogue product permanently un-READY (see `DIMENSION_ATTRIBUTE_KEYS`). The
+     * dimensions rules a few lines up are its required-ness.
+     */
+    if (dimensionFieldFor(attribute.key) !== null) continue
 
     /*
      * A hidden attribute cannot be required. `showIf` means the customer was never asked, and
