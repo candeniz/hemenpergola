@@ -129,9 +129,11 @@ jobs:
           set -o pipefail
           node scripts/ci-integration.mjs 2>&1 | tee integration.log
 
-      # Full step logs need repository access to read; the job summary does not. On a
-      # failure the tail lands where anyone debugging a public run can actually see it.
-      - name: Publish output tail to the job summary
+      # Full step logs — and, it turns out, job summaries — need repository access to read.
+      # Annotations are the one channel an anonymous reader of a public run can see, so on a
+      # failure the output tail is published as one annotation (newlines %0A-encoded; a step
+      # may carry at most ten annotations, hence one big one rather than a line each).
+      - name: Publish output tail as an annotation
         if: ${{ failure() }}
         run: |
           {
@@ -140,6 +142,8 @@ jobs:
             tail -c 60000 integration.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          msg=$(tail -c 3500 integration.log | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=integration output (tail)::${msg}"
 
   # ── Stage 4 · build ──────────────────────────────────────────────────────────
   build:
