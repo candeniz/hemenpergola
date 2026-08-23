@@ -655,3 +655,99 @@ already makes. An architecture note cannot outrank a security requirement it can
 **Reverses if.** The session lookup ever shows up in a latency budget, at which point the
 answer is a cache in front of the row — not a stateless token, which would give the revocation
 problem back.
+
+---
+
+## ADR-023 — The anonymous draft key is a field on `ActorContext`, not a service input
+
+**Context.** `10-project-configurator.md` §Anonymous drafts lets a visitor configure a project
+without an account, and `04-data-model.md` §Project makes the owner *exactly one of*
+`customerId` / `anonymousKey` with a CHECK constraint. Phase 4's first half built every
+`where` clause to carry both identities; the second half had to supply the second one.
+
+The key arrives as an httpOnly cookie. Something has to read it, and `05-system-architecture.md`
+§ActorContext is explicit that services never read cookies — *"that is what makes them callable
+from a job, from a route handler, from a server action and from a test with the same
+signature."*
+
+Two shapes were available.
+
+**Decision.** A ninth field on `ActorContext`, resolved by `resolveActor` from the `Cookie`
+header alongside the session.
+
+**Why not thread it through each service's input.** `project-service.ts` already carried a
+vestigial `ownedBy(actor, anonymousKey?)` signature pointing that way, and it is the smaller
+diff. It is also the shape where a caller can forget: nine methods, five transports, and the
+failure mode of forgetting is not an error but a **silent `NOT_FOUND`** — the row is simply not
+matched, which reads exactly like "no such project". `12` §Authorization already puts identity
+resolution in one place for one reason, and an identity resolved in two places is two places
+for it to be resolved differently.
+
+**Consequences.**
+
+- `ActorContext` has nine fields; `05` §ActorContext is updated, and `actor.test.ts`'s
+  eight-field assertion becomes a nine-field one. The count is asserted rather than the
+  presence of each field, so a tenth is a deliberate edit with a decision behind it.
+- The key is **carried through sign-in** rather than cleared. `POST /projects/{id}/claim` needs
+  the account that will own the draft and the cookie that owns it now, in the same request;
+  clearing it would push the claim endpoint back to reading the cookie itself. Ownership stays
+  unambiguous because `ownedBy()` gives `userId` precedence — the constraint keeps the *row*
+  unambiguous, precedence keeps the *query* unambiguous.
+- `anonymous-key.ts` lives in `shared/context`, beside the resolver, not in
+  `modules/project/domain`. Projects are the only rows that use it *today*; that is a fact
+  about Phase 4, not about the concept.
+- Minting stays in `app/actions/project.ts`, because only a server action or a route handler
+  may set a cookie — and only in `createProjectAction`, so a browser never acquires a
+  thirty-day identifier without a row to go with it.
+
+**Reverses if.** Anonymous drafts are dropped from V1. The field goes with them, and so does
+`ADR-021`'s reason for existing.
+
+---
+
+## ADR-024 — "Auth-gated" is a layout per segment, and the services keep the authorisation
+
+**Context.** `07-frontend-architecture.md` §Rendering strategy has described `(customer)` as
+*"SSR, dynamic, auth-gated"* and `(manufacturer)` as *"auth + company-scoped"* since Phase 0.
+Neither was gated by anything. `middleware.ts` does locale negotiation only — correctly, since
+it runs on the edge and authorisation needs the database — and no layout resolved an actor.
+`/hesap` rendered for anybody who typed it (**Q24**).
+
+Nothing leaked in four phases, because every page loads its data through a service that scopes
+by ownership or permission: an unauthenticated visitor met an empty shell. Task 4.8 is what
+changed the arithmetic. A dashboard that lists a customer's projects is not harmless when it
+renders for anyone, and "the page is safe because it shows nothing" is a property of the pages
+that happened to exist rather than of the segment.
+
+It was found by writing a test. The natural assertion for session revocation is *"a protected
+page redirects"*, and against this codebase it proved nothing at all.
+
+**Decision.** A `layout.tsx` per gated segment that resolves the actor and redirects to
+`/giris` when there is no user. `(customer)` and `(manufacturer)` both get one.
+`07` §Rendering strategy now names the mechanism rather than the intention.
+
+**Why not the middleware.** `12-authentication-authorization.md` §Authorization splits the
+jobs: middleware authenticates and redirects; it does not authorise. A matcher for `/hesap`
+would have to either trust an unverified cookie — a signed-out user with a stale value walks
+straight in — or open a database connection on the edge, which `23` §Runtime does not provide.
+
+**Why the layout is not the authorisation.** It decides who is shown a *shell*. The services
+remain the only thing between a request and a row, and the company half of `(manufacturer)`
+stays with them on purpose: `resolveActor` reads `[companyId]` from the route and
+`authorize()` turns a missing membership into `FORBIDDEN`, which `02` §Enforcement rule
+requires to happen in exactly one place. A layout that also checked membership would be a
+second copy of that rule — two checks that agree today and disagree after the next change.
+
+**Consequences.**
+
+- `/hesap` and `/panel/**` redirect an anonymous visitor to `/giris` rather than rendering an
+  empty shell. `/giris` and not `/yetkisiz`: an anonymous visitor has not been refused, they
+  have not been asked.
+- `(public-owner)` is deliberately outside this, per `ADR-021`. The configurator is public and
+  the account wall stands at "get offers".
+- `e2e/phase4-gate.spec.ts` asserts the redirect. Asserting that no data is visible would pass
+  against an unguarded page with nothing to show, which is how this survived four phases.
+
+**Reverses if.** A gated segment ever needs to render something for an anonymous visitor. That
+would be `ADR-021`'s situation again, and the answer there was to move the route out of the
+segment rather than to cut a hole in it.

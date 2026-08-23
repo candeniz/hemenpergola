@@ -24,7 +24,10 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         footer={
           <>
             {t('login.noAccount')}{' '}
-            <Link href="/kayit" className="text-action underline-offset-4 hover:underline">
+            {/* Underlined always, not on hover: inside a sentence the underline is what makes
+                the link visible to someone who cannot see the colour difference (WCAG 1.4.1;
+                axe: link-in-text-block). */}
+            <Link href="/kayit" className="text-action underline underline-offset-4">
               {t('login.register')}
             </Link>
           </>

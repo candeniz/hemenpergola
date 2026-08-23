@@ -72,6 +72,7 @@ mobile client would need exists under `/api/v1` — see `06-api-specification.md
 type ActorContext = {
   userId: string | null
   globalRole: 'CUSTOMER' | 'ADMIN' | null
+  anonymousKey: string | null       // the draft cookie's key (ADR-023); see below
   companyId: string | null          // resolved from the route, never from session state
   companyRole: CompanyRole | null
   companyStatus: CompanyStatus | null
@@ -83,6 +84,18 @@ type ActorContext = {
 
 Built once per request in `src/shared/context/actor.ts`. Services never read cookies,
 headers or `auth()` themselves — that is what makes them callable from jobs and tests.
+
+**`anonymousKey` is the ninth field and the only one added since Phase 0** (`ADR-023`,
+Phase 4 task 4.5). A visitor may configure a project without an account
+(`10-project-configurator.md` §Anonymous drafts), so a `Project` row is owned by *exactly one
+of* `customerId` / `anonymousKey` — `04-data-model.md` §Project enforces it with a CHECK
+constraint. The key is an identity, so it is resolved here with the others rather than
+threaded through each service's input, where a call site could forget it.
+
+It is **present even when `userId` is set**, because `POST /projects/{id}/claim` needs the
+account that will own the draft and the cookie that owns it now in the same request. Ownership
+is still unambiguous: the project service's `ownedBy()` gives `userId` precedence. The CHECK
+constraint keeps the *row* unambiguous; precedence keeps the *query* unambiguous.
 
 ## Errors
 

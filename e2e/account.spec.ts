@@ -172,21 +172,18 @@ test.describe('F2 · customer account', () => {
      * opened at the top of this test must be dead — a reset that leaves the intruder signed
      * in has fixed nothing.
      *
-     * Checked against a gate that actually exists. `/hesap` is *described* as auth-gated in
-     * `07` §Rendering strategy but nothing enforces it — no middleware check, no layout guard —
-     * so asserting a redirect there would prove nothing (Q24). `createProject` does enforce
-     * identity, refusing a caller with none, so the old cookie is tested by trying to use it.
+     * Checked against a gate that actually exists — and which gate that is has changed twice.
+     * Originally `createProject` refused a caller with no identity, and this test clicked
+     * "configure" expecting the refusal; task 4.5 made that click mint an anonymous draft
+     * instead, so the refusal no longer distinguishes a dead session from a live one. What
+     * does, since `ADR-024`, is the `(customer)` layout: `/hesap` renders for a session and
+     * redirects an anonymous visitor to `/giris` — the guard Q24 observed was missing, built
+     * and itself asserted in `phase4-gate.spec.ts`. A dead session must take the redirect.
      */
-    await page.goto('/proje/yeni')
-    await page
-      .getByRole('button', { name: /yapılandır|configure/i })
-      .first()
-      .click()
+    await page.goto('/hesap')
+    await page.waitForURL(/\/giris/, { timeout: 30_000 })
 
-    await expect(
-      page.getByText('sign in to start a project'),
-      'the session opened before the reset is dead',
-    ).toBeVisible({ timeout: 30_000 })
+    expect(page.url(), 'the session opened before the reset is dead').toContain('/giris')
 
     // ── The new password works and the old one does not ───────────────────────
     await page.goto('/giris')

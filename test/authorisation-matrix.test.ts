@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import { authorize } from '@/modules/iam/application/authorization'
 import {
@@ -282,6 +282,13 @@ async function importEveryService(root: string): Promise<void> {
 
 describe('every service method has a matrix entry', () => {
   const modulesRoot = fileURLToPath(new URL('../src/modules', import.meta.url))
+
+  // The first import of the full service graph transforms every module in it, which on a
+  // cold vitest cache takes longer than the 5 s default *test* timeout. It happens once,
+  // here, with a budget of its own; the per-test calls below are then cache hits. This also
+  // removes an ordering dependency: two tests read `registeredMethods()` without importing,
+  // which only worked while an earlier test in the same file had already done so.
+  beforeAll(() => importEveryService(modulesRoot), 120_000)
 
   it('registers at least the Phase 1 methods', async () => {
     await importEveryService(modulesRoot)

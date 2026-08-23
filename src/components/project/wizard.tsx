@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { WizardStepper, type StepperStage } from '@/components/ui/wizard-stepper'
+import { Link } from '@/i18n/navigation'
 import { isAttributeVisible } from '@/modules/catalog/domain/authoring-rules'
 import type { ProjectView } from '@/modules/project/application/project-service'
+
 import type { ReadinessIssue } from '@/modules/project/domain/readiness'
 import {
   deriveAreaM2,
@@ -21,6 +23,8 @@ import {
   type Stage,
   type Step,
 } from '@/modules/project/domain/steps'
+
+import { ProjectAttachments } from './attachments'
 
 /**
  * The configurator — `create_project_wizard_refined_style`, tasks 4.1 to 4.4 and 4.7.
@@ -61,11 +65,31 @@ export function ProjectWizard({
   attributes,
   cities,
   districts,
+  uploadPolicy,
+  signedIn,
 }: {
   project: ProjectView
   attributes: WizardAttribute[]
   cities: { id: string; name: string }[]
   districts: { id: string; cityId: string; name: string }[]
+  /**
+   * `14` §Limits for `PROJECT`, passed from the server rather than imported here.
+   *
+   * The policy table lives in `modules/media/domain`, and a client component importing a
+   * module's domain would put it in the browser bundle along with everything it references.
+   * The page reads it once and hands over three numbers — the same three the service enforces,
+   * so the button and the server cannot disagree about what is allowed.
+   */
+  uploadPolicy: { accept: string; maxBytes: number; maxCount: number }
+  /**
+   * Whether the visitor has an account, resolved on the server.
+   *
+   * Passed rather than detected, because the only honest source is the session cookie and it
+   * is `httpOnly` — a client component cannot see it, and anything it could see (a
+   * localStorage flag, a non-httpOnly mirror) would be a second, forgeable answer to a
+   * question the server already answered correctly.
+   */
+  signedIn: boolean
 }) {
   const t = useTranslations('wizard')
   const [pending, startTransition] = useTransition()
@@ -343,7 +367,24 @@ export function ProjectWizard({
 
         {current === 'attachments' ? (
           <div className="flex flex-col gap-base">
-            {/* Attachments themselves are 4.6, in the second half. The note is here. */}
+            {/*
+             * Task 4.6. `PHOTO` and `DOCUMENT` both — the kind is derived from the file's
+             * MIME type server-side, never asked for here (`14` §Limits: MIME comes from
+             * content, not from what the client said).
+             *
+             * `onChange` replaces the whole view because `addAttachment` and
+             * `removeAttachment` return one, and a component holding its own copy of the
+             * attachment list is a second source of truth for a step whose entire point is
+             * that the server holds the state (`07` §Forms).
+             */}
+            <ProjectAttachments
+              project={view}
+              accept={uploadPolicy.accept}
+              maxBytes={uploadPolicy.maxBytes}
+              maxCount={uploadPolicy.maxCount}
+              onChange={setView}
+            />
+
             <Label htmlFor="note">{t('field.note')}</Label>
             <Textarea
               id="note"
@@ -372,7 +413,33 @@ export function ProjectWizard({
             </Button>
 
             {issues === null ? null : issues.length === 0 ? (
-              <p className="text-body-md">{t('ready')}</p>
+              <div className="flex flex-col gap-base">
+                <p className="text-body-md">{t('ready')}</p>
+
+                {/*
+                 * **The account wall**, and this is the only place it stands (`ADR-021`,
+                 * `10` §Anonymous drafts). Configuring is public; requesting offers is not.
+                 *
+                 * `signedIn` comes from the server, so an anonymous visitor sees the
+                 * sign-in call to action and a signed-in one sees the request itself. The
+                 * draft id rides along in `?proje=`, which is what `claimThen` in the auth
+                 * forms reads — so the visitor comes back to *this* project owned by their
+                 * new account rather than to a dashboard that lists it among others.
+                 *
+                 * The request itself is Phase 6. What exists now is the wall and the claim
+                 * that gets a customer past it, which is exactly what the phase gate asks
+                 * for and nothing more.
+                 */}
+                {signedIn ? (
+                  <p className="text-body-sm text-muted">{t('offersNext')}</p>
+                ) : (
+                  <Button asChild>
+                    <Link href={`/kayit?proje=${encodeURIComponent(view.projectId)}`}>
+                      {t('signInForOffers')}
+                    </Link>
+                  </Button>
+                )}
+              </div>
             ) : (
               <ul className="flex flex-col gap-xs">
                 {issues.map((issue, index) => (

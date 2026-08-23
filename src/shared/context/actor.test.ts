@@ -40,10 +40,17 @@ describe('resolveActor · step 1, identify', () => {
     expect(isAuthenticated(actor)).toBe(false)
   })
 
-  it('has exactly the eight fields 05 §ActorContext defines', async () => {
+  /*
+   * Nine since `ADR-023`, and the count is asserted rather than the presence of each field so
+   * that adding a tenth is a deliberate edit here with a decision behind it. `05`
+   * §ActorContext defined eight; the ninth is `anonymousKey`, and the ADR says why an
+   * identity belongs in the context rather than in every service's input.
+   */
+  it('has exactly the nine fields 05 §ActorContext defines', async () => {
     const actor = await resolveActor(headers({}), {}, deps())
 
     expect(Object.keys(actor).sort()).toEqual([
+      'anonymousKey',
       'companyId',
       'companyRole',
       'companyStatus',
@@ -53,6 +60,56 @@ describe('resolveActor · step 1, identify', () => {
       'userAgent',
       'userId',
     ])
+  })
+
+  describe('the anonymous draft key', () => {
+    const KEY = 'q'.repeat(43)
+
+    it('is read from the cookie when nobody is signed in', async () => {
+      const actor = await resolveActor(headers({ cookie: `pergola.anon=${KEY}` }), {}, deps())
+
+      expect(actor.anonymousKey).toBe(KEY)
+      expect(actor.userId).toBeNull()
+    })
+
+    it('survives sign-in, because claiming needs both identities at once', async () => {
+      /*
+       * `POST /projects/{id}/claim` runs immediately after sign-in and moves a row from the
+       * key to the account. Clearing the key here would force the claim endpoint to read the
+       * cookie itself — a second identity resolver, which is what this field exists to avoid.
+       */
+      const actor = await resolveActor(
+        headers({ cookie: `pergola.anon=${KEY}` }),
+        {},
+        asUser('usr_7', 'CUSTOMER'),
+      )
+
+      expect(actor.userId).toBe('usr_7')
+      expect(actor.anonymousKey).toBe(KEY)
+    })
+
+    it('reads the __Host- name too, which is the one production sets', async () => {
+      const actor = await resolveActor(
+        headers({ cookie: `other=1; __Host-pergola.anon=${KEY}; more=2` }),
+        {},
+        deps(),
+      )
+
+      expect(actor.anonymousKey).toBe(KEY)
+    })
+
+    it('treats a malformed value as absent rather than passing it to a where clause', async () => {
+      for (const value of ['', 'short', 'a'.repeat(200), 'has spaces in it']) {
+        const actor = await resolveActor(headers({ cookie: `pergola.anon=${value}` }), {}, deps())
+        expect(actor.anonymousKey, value).toBeNull()
+      }
+    })
+
+    it('is null when the request carries no cookie header at all', async () => {
+      const actor = await resolveActor(headers({}), {}, deps())
+
+      expect(actor.anonymousKey).toBeNull()
+    })
   })
 
   it('carries the identified user through', async () => {

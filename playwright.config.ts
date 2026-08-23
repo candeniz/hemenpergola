@@ -11,6 +11,8 @@ const isCI = Boolean(process.env.CI)
 
 export default defineConfig({
   testDir: './e2e',
+  // Fresh rate-limit windows per run — see the file's own comment.
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,

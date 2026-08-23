@@ -10,7 +10,7 @@ Reading the whole set for one feature wastes context and produces worse code, no
 
 | Path | What |
 |---|---|
-| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`26`. Every bare `NN` reference below resolves here |
+| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`28`. Every bare `NN` reference below resolves here |
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | the 77-screen design reference |
 | `README.md`, `CLAUDE.md` | repository root |
 | `src/`, `prisma/`, `e2e/`, `test/` | application code, from Phase 0 onward |
@@ -43,6 +43,7 @@ tested).
 | Personal data, consent, KVKK, security | `19`, `12`, `11` |
 | Writing tests | `20`, the module doc |
 | Planning, sequencing, "what's next" | `21`, `26`, `25` |
+| Picking the project up cold, on a new account | `28`, then `CLAUDE.md` |
 | Design tokens, components, theming | `22`, `07` |
 | Deploy, env vars, migrations, backups | `23`, `05` |
 | "Why is it built this way?" | `24` |
@@ -76,10 +77,11 @@ tested).
 | 21 | `21-development-roadmap.md` | phases, gates, risks |
 | 22 | `22-design-system.md` | canonical theme, tokens, patterns |
 | 23 | `23-deployment-and-environments.md` | envs, migrations, backups, runbooks |
-| 24 | `24-decisions-log.md` | ADR-001..021 |
+| 24 | `24-decisions-log.md` | ADR-001..024 |
 | 25 | `25-progress.md` | current state, log, open questions |
 | 26 | `26-execution-plan.md` | how to start each phase: ordered tasks, evidence, decision calendar |
 | 27 | `27-d3-pilot-guide.md` | running the D3 session: pilot login, what to observe, which open questions it answers |
+| 28 | `28-handover.md` | cold-start handover: where everything is, what is built, what enforces it |
 
 ## Design reference
 

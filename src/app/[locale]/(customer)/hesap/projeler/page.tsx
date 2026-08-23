@@ -7,25 +7,18 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 
 /**
- * `/hesap` — the customer dashboard, task 4.8.
+ * `/hesap/projeler` — the customer's own project list (`07` §Route map, task 4.8).
  *
- * Screens: `customer_dashboard_final` (canonical), `customer_dashboard_empty_state`,
- * `customer_dashboard_tablet_view`.
- *
- * Auth-gated by `(customer)/layout.tsx` rather than by anything here — **Q24**. Before task
- * 4.8 this page rendered a placeholder card and the missing gate was invisible; a page that
- * lists a customer's projects is what made it matter.
- *
- * `noindex` and dynamic: personal data, never cached (`07` §Rendering strategy). The
- * `(customer)` segment has always been described that way, and now the description has a
- * mechanism under it.
+ * The same list the dashboard leads with, at the route the navigation points at. It is not a
+ * redirect to `/hesap`, because `07` §Route map gives the two rows different screens and
+ * Phase 5 gives this one filters the dashboard will not have.
  *
  * Imports are dynamic (`CLAUDE.md` non-negotiable 9).
  */
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
 
-export default async function CustomerDashboardPage({
+export default async function CustomerProjectsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -50,21 +43,15 @@ export default async function CustomerDashboardPage({
   const listed = await listProjects(actor, {})
 
   return (
-    <DashboardShell title={nav('dashboard')}>
+    <DashboardShell title={nav('projects')}>
       <div className="flex flex-col gap-md">
         <div className="flex flex-wrap items-center justify-between gap-base">
-          <h1 className="font-heading text-headline-md">{t('title')}</h1>
+          <h1 className="font-heading text-headline-md">{nav('projects')}</h1>
           <Button asChild>
             <Link href="/proje/yeni">{t('startNew')}</Link>
           </Button>
         </div>
 
-        {/*
-         * A failed read renders the empty state rather than an error page. The only way
-         * `listProjects` fails for a caller who reached this layout is a database problem,
-         * and `07` §System states wants the empty state and the error state to be different
-         * things — so the message below is the empty one and the error surfaces in logs.
-         */}
         <ProjectList projects={listed.ok ? listed.value.projects : []} />
       </div>
     </DashboardShell>

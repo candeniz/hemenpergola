@@ -13,6 +13,10 @@ import { getStorage } from '@/shared/storage'
 
 import { checkUpload, storageKey, UPLOAD_POLICY, type OwnerType } from '../domain/upload-policy'
 
+// Pages hand the client the three numbers it needs to disable the button the server would
+// refuse; they read them here because the application layer is app/'s only entry point.
+export { UPLOAD_POLICY }
+
 /**
  * Uploads — `14-file-storage-and-media.md` §Upload flow, §Limits, §Access control.
  *
@@ -72,6 +76,18 @@ async function mayUploadFor(
   ownerType: OwnerType,
   ownerId: string,
 ): Promise<boolean> {
+  /*
+   * `PROJECT` is checked **before** the signed-in test, because task 4.6 has to work for a
+   * visitor who has no account (`10` §Anonymous drafts, `ADR-021`). Every other owner type
+   * belongs to a company, and a company membership implies a user.
+   *
+   * This ordering is the whole fix. The original `if (actor.userId === null) return false`
+   * was correct for Phase 3, where every uploader was a manufacturer — and it would have
+   * turned "attach a photo to your draft" into a silent `FORBIDDEN` for exactly the visitor
+   * `ADR-021` went to the trouble of letting configure.
+   */
+  if (ownerType === 'PROJECT') return ownsProject(actor, ownerId)
+
   if (actor.userId === null) return false
   if (actor.globalRole === 'ADMIN') return true
 
@@ -92,10 +108,44 @@ async function mayUploadFor(
       return (await loadMembership(actor.userId, item.companyId)) !== null
     }
     default:
-      // `PROJECT`, `CMS` and `OFFER_ATTACHMENT` belong to phases that are not built. Refusing
-      // is the safe default; allowing "for later" is how an unowned upload path ships.
+      // `CMS` and `OFFER_ATTACHMENT` belong to phases that are not built. Refusing is the
+      // safe default; allowing "for later" is how an unowned upload path ships.
       return false
   }
+}
+
+/**
+ * Does this actor own that project? — the ownership rule of `modules/project`, asked from
+ * here.
+ *
+ * Expressed as a `where` clause on both identities, exactly as `project-service` does, and
+ * for the same reason: a post-fetch comparison would confirm the project exists to somebody
+ * who does not own it (`CLAUDE.md` non-negotiable 3).
+ *
+ * **The storage key never sees a `customerId`.** `storageKey()` addresses an object by
+ * `ownerType/ownerId`, and `ownerId` here is the *project* id — so a draft that changes hands
+ * in `claimProject` keeps every object exactly where it was. That is not luck: keying by the
+ * owner would have meant re-keying every attachment at claim time, which is a storage
+ * migration inside a request a customer is waiting on.
+ */
+async function ownsProject(actor: ActorContext, projectId: string): Promise<boolean> {
+  if (actor.globalRole === 'ADMIN') return true
+
+  const owner =
+    actor.userId !== null
+      ? { customerId: actor.userId }
+      : actor.anonymousKey !== null && actor.anonymousKey !== ''
+        ? { anonymousKey: actor.anonymousKey }
+        : null
+
+  if (owner === null) return false
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, ...owner },
+    select: { id: true },
+  })
+
+  return project !== null
 }
 
 export const presignUpload = serviceMethod<PresignUploadInput, PresignResult>(
@@ -238,7 +288,15 @@ export const fileUrl = serviceMethod<FileUrlInput, FileUrlResult>(
   'fileUrl',
   { kind: 'owner', describe: 'the File row, via its owner company; admins bypass' },
   async (actor, input) => {
-    if (actor.userId === null) return err(forbidden('media:read'))
+    /*
+     * No longer "signed in or nothing". A project attachment belongs to a draft that may have
+     * no account behind it yet (`ADR-021`, task 4.5), and the owner of that draft has to be
+     * able to see the photo they just uploaded. Every other access class still requires a
+     * user, and `mayReadPrivate` is where that is decided per owner type rather than here.
+     */
+    if (actor.userId === null && actor.anonymousKey === null) {
+      return err(forbidden('media:read'))
+    }
 
     const file = await prisma.file.findUnique({ where: { id: input.fileId } })
     if (file === null) return err(notFound('File'))
@@ -295,14 +353,24 @@ async function mayReadPrivate(
   ownerId: string,
 ): Promise<boolean> {
   if (actor.globalRole === 'ADMIN') return true
+
+  /*
+   * `14` §Access control puts project photos in the **semi-private** class: *"signed URL, 15
+   * min, only for the customer and manufacturers whose request is `ACCEPTED`+"*.
+   *
+   * The customer half is built now. The manufacturer half is Phase 6's, because `OfferRequest`
+   * does not exist yet — and the honest answer for a table that does not exist is no, not a
+   * placeholder that returns `true` and gets forgotten. That distinction is the same one
+   * Q19 keeps visible for the virus scanner.
+   */
+  if (ownerType === 'PROJECT') return ownsProject(actor, ownerId)
+
   if (actor.userId === null) return false
 
   if (ownerType === 'COMPANY_DOCUMENT') {
     return (await loadMembership(actor.userId, ownerId)) !== null
   }
 
-  // Project photos become readable to a manufacturer when their request is `ACCEPTED`,
-  // which is Phase 6. Until that table exists the honest answer is no.
   return false
 }
 

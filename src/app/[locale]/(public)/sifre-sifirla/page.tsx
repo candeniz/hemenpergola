@@ -22,7 +22,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         title={t('forgot.title')}
         description={t('forgot.subtitle')}
         footer={
-          <Link href="/giris" className="text-action underline-offset-4 hover:underline">
+          <Link href="/giris" className="text-action underline underline-offset-4">
             {t('forgot.backToLogin')}
           </Link>
         }

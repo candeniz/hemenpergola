@@ -182,7 +182,8 @@
       "done": "Your account is ready",
       "doneBody": "We sent a verification link to your email address. It is valid for 24 hours.",
       "haveAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "continueDraft": "Continue to your draft"
     },
     "login": {
       "title": "Sign in",
@@ -435,6 +436,26 @@
     "title": "Pricing",
     "subtitle": "Your product prices, options, regional differences and rules."
   },
+  "projects": {
+    "title": "My projects",
+    "startNew": "New project",
+    "startFirst": "Start your first project",
+    "emptyTitle": "No projects yet",
+    "emptyBody": "Enter your dimensions and location to get a price range from matching manufacturers.",
+    "untitled": "Untitled project",
+    "area": "{area} m²",
+    "noDimensions": "Dimensions not entered yet",
+    "attachments": "{count} attachments",
+    "updated": "Updated {when}",
+    "open": "Open",
+    "duplicate": "Duplicate",
+    "status": {
+      "DRAFT": "Draft",
+      "READY": "Ready",
+      "SUBMITTED": "Submitted",
+      "CLOSED": "Closed"
+    }
+  },
   "shell": {
     "placeholderUser": "Example User",
     "placeholderCompany": "Example Manufacturer Ltd.",
@@ -602,6 +623,26 @@
       "project-type-missing": "No project type selected",
       "installation-type-missing": "No installation type selected",
       "email-unverified": "Your email address is not verified"
+    },
+    "offersNext": "Requesting offers opens soon.",
+    "signInForOffers": "Create an account to get offers",
+    "attachments": {
+      "choose": "Add a photo or document",
+      "limits": "Up to {count} files, {megabytes} MB each.",
+      "full": "You have reached the {count} file limit.",
+      "empty": "No attachments yet.",
+      "remove": "Remove",
+      "uploadFailed": "The file could not be uploaded. Try again?",
+      "kind": {
+        "PHOTO": "Photo",
+        "DOCUMENT": "Document"
+      },
+      "scan": {
+        "PENDING": "Scanning",
+        "INFECTED": "Rejected",
+        "FAILED": "Scan failed"
+      },
+      "size": "{kilobytes} KB"
     }
   }
 }

@@ -182,7 +182,8 @@
       "done": "Hesabınız oluşturuldu",
       "doneBody": "E-posta adresinize bir doğrulama bağlantısı gönderdik. Bağlantı 24 saat geçerli.",
       "haveAccount": "Zaten hesabınız var mı?",
-      "signIn": "Giriş yapın"
+      "signIn": "Giriş yapın",
+      "continueDraft": "Taslağına devam et"
     },
     "login": {
       "title": "Giriş yap",
@@ -435,6 +436,26 @@
     "title": "Fiyatlandırma",
     "subtitle": "Ürün fiyatlarınız, opsiyonlarınız, bölgesel farklarınız ve kurallarınız."
   },
+  "projects": {
+    "title": "Projelerim",
+    "startNew": "Yeni proje",
+    "startFirst": "İlk projeni oluştur",
+    "emptyTitle": "Henüz projen yok",
+    "emptyBody": "Ölçülerini gir, konumunu seç; eşleşen üreticilerden fiyat aralığı al.",
+    "untitled": "Adsız proje",
+    "area": "{area} m²",
+    "noDimensions": "Ölçüler henüz girilmedi",
+    "attachments": "{count} ek",
+    "updated": "Son güncelleme {when}",
+    "open": "Aç",
+    "duplicate": "Kopyala",
+    "status": {
+      "DRAFT": "Taslak",
+      "READY": "Hazır",
+      "SUBMITTED": "Gönderildi",
+      "CLOSED": "Kapandı"
+    }
+  },
   "shell": {
     "placeholderUser": "Örnek Kullanıcı",
     "placeholderCompany": "Örnek Üretici A.Ş.",
@@ -602,6 +623,26 @@
       "project-type-missing": "Proje tipi seçilmemiş",
       "installation-type-missing": "Montaj tipi seçilmemiş",
       "email-unverified": "E-posta adresiniz doğrulanmamış"
+    },
+    "offersNext": "Teklif alma adımı yakında açılıyor.",
+    "signInForOffers": "Teklif almak için hesap oluştur",
+    "attachments": {
+      "choose": "Fotoğraf veya belge ekle",
+      "limits": "En fazla {count} dosya, dosya başına {megabytes} MB.",
+      "full": "{count} dosya sınırına ulaşıldı.",
+      "empty": "Henüz ek yok.",
+      "remove": "Kaldır",
+      "uploadFailed": "Dosya yüklenemedi. Tekrar dener misin?",
+      "kind": {
+        "PHOTO": "Fotoğraf",
+        "DOCUMENT": "Belge"
+      },
+      "scan": {
+        "PENDING": "Taranıyor",
+        "INFECTED": "Reddedildi",
+        "FAILED": "Taranamadı"
+      },
+      "size": "{kilobytes} KB"
     }
   }
 }

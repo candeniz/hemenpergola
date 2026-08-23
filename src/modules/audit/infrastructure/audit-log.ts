@@ -57,6 +57,16 @@ export type AuditAction =
   | 'price_book_published'
   | 'company_products_changed'
   | 'portfolio_changed'
+  /**
+   * Phase 4 · an anonymous draft changes hands (`10` §Anonymous drafts, task 4.5).
+   *
+   * Worth an entry because it is the only place in the product where a row's **owner**
+   * changes, and because the two questions it will be asked later — "how did this account
+   * come to hold this project?" and "was this draft claimed by the visitor who created it?" —
+   * are unanswerable from the row afterwards: a successful claim nulls the very key that
+   * would have connected them.
+   */
+  | 'project_claimed'
 
 export type AuditEntry = {
   action: AuditAction

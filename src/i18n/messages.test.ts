@@ -102,7 +102,11 @@ describe('message catalogues', () => {
      * already localised. `{low} – {high}` differing per locale would mean one of them was
      * wrong, not that one of them was translated.
      */
-    const SAME_IN_BOTH = ['auth.phonePlaceholder', 'estimate.range']
+    /*
+     * And the attachment size, for the same reason as the range: `{kilobytes} KB` is a unit
+     * after a number the formatter has already localised, and "KB" is "KB" in Turkish.
+     */
+    const SAME_IN_BOTH = ['auth.phonePlaceholder', 'estimate.range', 'wizard.attachments.size']
 
     const identical = trPaths.filter((path) => {
       if (SAME_IN_BOTH.includes(path)) return false

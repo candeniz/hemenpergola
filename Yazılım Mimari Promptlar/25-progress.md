@@ -45,7 +45,7 @@ proven — not when the code is written.
 | 1 | Identity | **✅ gate met · 9/9** | authorisation matrix covers every service method — proven, see 2026-08-16 |
 | 2 | Catalogue + admin skeleton | **✅ gate met · 7/7** | admin adds a product with no deploy — proven, see 2026-08-16 |
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
-| 4 | Project configurator | **🟡 in progress · 5/9** | a customer walks the wizard to READY and it survives a restart — first half proven, see 2026-08-17 |
+| 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
 | 5 | Matching + pricing | ⬜ | `GET OFFERS` returns ranked priced results |
 | 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
@@ -2195,6 +2195,208 @@ configurable product — and says so rather than pretending.
 - **`ServiceArea` still discards its `precision`**, so a radius comparison has one end that
   knows its accuracy and one that does not. Phase 5's migration is where the column is cheap.
 
+### 2026-08-23 — Phase 4 tasks 4.5, 4.6, 4.8, 4.9 (commit `P4.5-4.9 · Faz 4 kapanışı`)
+
+**The phase gate is NOT proven.** Read that first. Every task below is written, and none of
+the five local commands, neither test suite and no e2e spec has been executed against this
+work — the session that wrote it had no shell on the development machine and no package
+registry in its own container, so `pnpm install` was impossible and with it typecheck, lint,
+vitest and `next build`. The phase row therefore reads **🟡 9/9**: nine tasks landed, gate
+undemonstrated. `26` §8 is explicit that a phase moves to ✅ only when its gate is
+*demonstrated — commands run, output reported*, and asserting it here because the code looks
+right is exactly the failure that rule exists to prevent. The first person with a working
+checkout runs the list in §Verification below and moves the row.
+
+Expect compile errors. This is the first half-phase in the project written without a single
+green run behind it.
+
+#### 4.5 · anonymous drafts and claiming
+
+`ADR-023`: **the draft key is a ninth field on `ActorContext`**, resolved by `resolveActor`
+from the cookie header alongside the session. The alternative — threading it through each
+service's input, which `ownedBy(actor, anonymousKey?)` had been shaped for since the first
+half — is the shape where a caller can forget, and forgetting produces a **silent
+`NOT_FOUND`** rather than an error: the row is simply not matched, which reads exactly like
+"no such project". Identity is resolved in one place for the same reason `12` gives.
+
+The key is **carried through sign-in** rather than cleared, because claiming needs both
+identities in one request. `ownedBy()` gives `userId` precedence, so ownership stays
+unambiguous: `04`'s CHECK constraint keeps the row unambiguous and precedence keeps the query
+unambiguous. Those are different questions and conflating them is what made the first draft of
+this wrong.
+
+**Claiming is one `updateMany`.** `04`'s `CHECK ((customerId IS NULL) <> (anonymousKey IS
+NULL))` rejects the intermediate state where both columns are set, so a write-then-clear
+implementation fails at the *first* statement — which presents as a broken constraint rather
+than as an ordering mistake, and is why the integration test asserts the **row** rather than
+the return value. Both columns are read back.
+
+The cookie must still match: `where: { id, anonymousKey: key, customerId: null }`. That clause
+is the whole authorisation, and without it any signed-in account could claim a draft by
+guessing an id — the ids being the only thing between a stranger and somebody's dimensions,
+address note and site photos. Tested from the attacker's side, not only the owner's.
+
+Three drafts per key, counted in **rows** (`10` §Anonymous drafts). Counted rather than
+tracked in the cookie, because the cookie is attacker-controlled; `04`'s XOR constraint is
+what makes the count well-defined at all. `duplicateProject` checks the same ceiling, or
+"duplicate" is an unauthenticated way past a limit the create path enforces.
+
+Claiming is idempotent — a double submit reports `claimed: false` rather than telling a
+customer their own project does not exist — and it writes the only `project_claimed` audit
+entry there will ever be, because a successful claim **destroys its own evidence**: the key
+that connected the draft to the visitor who made it is the column the claim nulls.
+
+The cookie is not deleted afterwards. It may address two more drafts, and deleting it would
+strand them: reachable by nobody, removed by nothing until Q25's sweep.
+
+#### 4.6 · attachments
+
+`PHOTO` and `DOCUMENT`, with the kind **derived from the MIME type** rather than asked for —
+`14` §Limits decides MIME from content, and a client-declared kind would send a PDF through
+the image pipeline.
+
+The interesting part was `mayUploadFor`, which opened with `if (actor.userId === null) return
+false`. Correct for Phase 3, where every uploader was a manufacturer, and it would have turned
+"attach a photo to your draft" into a silent `FORBIDDEN` for precisely the visitor `ADR-021`
+went to the trouble of letting configure. `PROJECT` is now checked **before** that line.
+
+**The storage key never needed re-keying**, which was the trap this task was warned about.
+`storageKey()` addresses an object by `ownerType/ownerId`, and `ownerId` for a project
+attachment is the *project* id — so a draft changing hands moves no objects. Had it embedded
+the customer, `claimProject` would have had to migrate storage inside a request a customer is
+waiting on.
+
+Access class is semi-private, per `14` §Access control. The customer half of *"the customer and
+manufacturers whose request is `ACCEPTED`+"* is built; the manufacturer half is Phase 6's,
+because `OfferRequest` does not exist — and the honest answer for a table that does not exist
+is no, not a placeholder returning `true` that gets forgotten.
+
+#### 4.8 · customer dashboard, and Q24
+
+`ADR-024`: a `layout.tsx` per gated segment resolves the actor and redirects to `/giris`.
+`07` §Rendering strategy had called `(customer)` auth-gated since Phase 0 with nothing gating
+it. Nothing leaked in four phases because every page loaded its data through a service that
+scopes by ownership — an unauthenticated visitor met an empty shell. **Task 4.8 is what
+changed the arithmetic**: a page that lists a customer's projects is not harmless when it
+renders for anyone.
+
+Not the middleware: `12` §Authorization splits the jobs, and a matcher would have to trust an
+unverified cookie or open a database connection on the edge. The layout is not the
+authorisation either — services remain the only thing between a request and a row — and the
+company half of `(manufacturer)` stays with them, because `02` §Enforcement rule wants one
+place.
+
+`/giris` and not `/yetkisiz`: an anonymous visitor has not been refused, they have not been
+asked. Conflating the two tells a signed-out customer they lack a permission they hold.
+
+`listProjects` is scoped by the same `ownedBy()` as everything else, so **an anonymous visitor
+gets a list too** — the drafts their cookie holds. Not scope creep: refusing would have meant
+a second ownership rule reading "except for lists".
+
+#### 4.9 · duplicate
+
+`10` §Reuse — everything except attachments and status. Both exclusions have reasons worth not
+re-deriving. Attachments are excluded because a `ProjectAttachment` points at a `File` whose
+key embeds the owning project, so copying the row would give two projects one object and make
+the semi-private read rule answer for both at once. Status is excluded because readiness was
+established against the old values and the customer is duplicating in order to change some —
+which is the rule `statusAfterEdit` already states for the same reason.
+
+The point is re-resolved rather than copied, so `pointPrecision` keeps describing how *this*
+row's location was determined.
+
+#### Documents moved
+
+- `ADR-023` (the ninth `ActorContext` field), `ADR-024` (segment auth gates)
+- `05` §ActorContext — nine fields, with the precedence rule
+- `07` §Rendering strategy — names the mechanism instead of the intention
+- `README.md`, `CLAUDE.md` — the document set is `00`–`28`, not `00`–`26`; the decision log
+  runs to ADR-024, not ADR-021. Both had drifted since Phase 3.
+
+#### Verification — the list somebody has to run
+
+```
+docker compose up -d && pnpm install && pnpm prisma migrate deploy && pnpm seed demo
+pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build
+pnpm test:integration
+pnpm test:e2e
+```
+
+The gate itself is `e2e/phase4-gate.spec.ts`: an anonymous visitor configures, the browser
+restarts, the draft survives, they register and sign in, the draft becomes theirs, and the
+cookie alone can no longer reach it. The restart is modelled as a new browser context seeded
+from `storageState()` — cookies restored, memory gone — because `page.reload()` proves only
+that the *server* holds the state, which the first half already proved. What 4.5 adds is that
+the **identity** survives, and a session cookie would fail that.
+
+The last assertion is the one that is easy to fake: *"and from that moment `anonymousKey` is
+null"* cannot be read from a browser, so what is asserted is its only consequence — a context
+holding just the old draft cookie gets a 404 on a project it owned a moment ago.
+
+#### Carried forward
+
+- **Q25** — the retention sweep. The rule is written and unit-tested; nothing runs it. Phase 9.
+- **Q21 was closed in the log on 2026-08-16 and never in the table**, where it sat live for a
+  week. Struck through now. `CLAUDE.md` §Definition of done requires a deferral to reach the
+  table; it does not require the closure to, and that asymmetry is what left it there.
+- `mayReadPrivate` still answers no for a manufacturer reading a project photo. Phase 6.
+- Q19 unchanged: `scan()` returns `CLEAN` unconditionally, so the attachment gate is built and
+  the scanner is not chosen. The uploader shows a scan status, which stays useful the day a
+  real scanner lands.
+
+### 2026-08-23 — Phase 4 gate proven (commit `P4.5-4.9 · Faz 4 kapanışı`)
+
+The verification list from the previous entry ran, on a working checkout with containers.
+**Everything is green and the gate is demonstrated**: typecheck, lint, format, 977 unit
+tests, `next build` with no `.env`, `check:routes`, 265 integration tests
+(`project-claim` included), and the full Playwright suite — 43 passed, `phase4-gate.spec.ts`
+among them: the anonymous draft survives a context restart, the claim moves it, and the
+context holding only the old cookie gets its 404. `prisma migrate diff` reported no drift,
+as predicted — no migration belonged to this half-phase.
+
+The predicted compile errors **did not materialise**: `tsc --noEmit` was clean on the first
+run, including `PROJECT_INCLUDE`, the `_count` select, the nested `duplicateProject` create
+and the ninth `ActorContext` field. What actually broke, and was fixed:
+
+- **One lint error, and it was real**: `proje/[id]/page.tsx` dynamically imported
+  `modules/media/domain/upload-policy` from `app/` — the layer rule bans domain imports even
+  dynamically. `UPLOAD_POLICY` is now re-exported through `media/application/file-service.ts`
+  and the page reads it there; same table, one authority, right layer.
+- **`authorisation-matrix.test.ts` timed out on a cold vitest cache** — importing the whole
+  service graph now takes longer than the 5 s default *test* timeout, and two tests read the
+  registry without importing at all (an ordering dependency that happened to hold). A
+  `beforeAll` with its own 120 s budget imports once; no assertion changed.
+- **`wizard.attachments.size`** (`{kilobytes} KB`) is identical in both locales for the same
+  reason `estimate.range` is — punctuation around a localised number — and joined the named
+  exception list in `messages.test.ts`.
+- **Prettier**: the predicted 3.8.1 → 3.9.6 drift, three files, reformatted, no diff beyond
+  whitespace.
+- **`core-flow.spec.ts` step 2 raced its own save**: the derived "20 m²" is visible before
+  the PATCH round-trips, so `page.reload()` could beat the write on a cold server and read
+  an empty row. Both it and the same latent race in `phase4-gate.spec.ts` now wait for the
+  wizard's own "Kaydedildi." status line before reloading/capturing state. The assertions
+  are unchanged — the wait is sequencing, not loosening.
+- **`account.spec.ts` asserted a behaviour 4.5 deliberately changed**: "a dead session
+  clicking *configure* is refused" stopped being true the moment an anonymous visitor may
+  configure. The dead-session assertion now uses the gate that exists for exactly this —
+  `ADR-024`'s layout redirect on `/hesap` — which `phase4-gate.spec.ts` proves genuine.
+- **The a11y suite was scanning the login page twice under two wrong names**: `ADR-024`'s
+  gates redirect an anonymous visitor, so the `/hesap` and `/panel` scans now run with a
+  seeded session — written directly to the `Session` table as a fixture, because two more UI
+  logins is exactly what pushed the suite over the auth surface's 10-per-15-min IP budget.
+  `/giris` joined the scan list under its own name, and its one real violation — the
+  register link distinguishable only by colour inside a sentence — is fixed with a
+  persistent underline on all three auth-footer links (WCAG 1.4.1, axe `link-in-text-block`).
+- **A Playwright `globalSetup` truncates `RateLimitHit`** before each run: two local runs
+  inside fifteen minutes stacked onto one rate window and the second failed on correct
+  logins. In-run limits are untouched.
+- One transient: three `audit-and-abuse` integration tests dropped their connection on the
+  first cold 338 s run and passed alone and on the second full run. Environmental, watched,
+  not chased.
+
+No design decision moved. The single `UPDATE` claim, the `where`-clause ownership, the
+carried key, and the matrix rule all survived contact with the compiler unchanged.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2218,10 +2420,11 @@ configurable product — and says so rather than pretending.
 | Q7 | SLA window — 48 h is a guess about manufacturer behaviour | Phase 6 | 48 h, `PlatformSetting`, tune after real data |
 | Q9 | **District-name spelling spot check.** 442 of 974 district names are pure ASCII. Most genuinely are (Ceyhan, Alanya, Kozan), but the build cannot tell those apart from a diacritic GeoNames never recorded. Needs a native Turkish reader to scan the list once. | Phase 3 (service areas) and Phase 8 (public URLs) — a misspelt district is visible to customers | ship as-is; the names come from GeoNames and are correct for 698 of them by construction |
 | Q10 | **CAPTCHA provider, and its KVKK assessment.** `12` §Abuse controls calls for a CAPTCHA after 10 failed logins from one IP, but names no provider. reCAPTCHA and hCaptcha both send visitor data to a third party, which under `19` is a processor relationship needing a named purpose in the privacy notice and an agreement behind it — a decision, not an implementation detail. Turnstile is the usual answer for a lighter data footprint; that still needs the same assessment. | **Nothing, now.** Phase 1 shipped without it, deliberately: the port, the call site and the failure counter are all built, and `enforcing: false` means login proceeds past ten failures rather than locking the account out. Revisit before launch. | no challenge. `noopCaptchaProvider` reports `enforcing: false`, so login proceeds past 10 failures rather than locking the account out — a missing decision must not become an outage |
-| Q21 | `src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`? | nothing today; a second violation is one careless page away | Extend the rule and fix the page in the first Phase 4 commit that touches `app/`. |
+| ~~Q21~~ | ~~`src/app/[locale]/(manufacturer)/panel/[companyId]/hizmet-bolgeleri/page.tsx` calls `prisma.city.findMany` directly, which `CLAUDE.md` non-negotiable 2 forbids. The lint rule only inspects static imports, so a dynamic `import('@/shared/db')` inside `src/app` passes. Should the rule be extended to dynamic imports, and that page switched to `matching.listCities`?~~ **CLOSED 2026-08-16 — and the closure never reached this table, which is the point.** The rule was extended to `ImportExpression`, four violations were found and fixed, and two-way fixtures prove both directions; the dated log entry says so. The row stayed live here for a week because closing a question is a second edit nobody is prompted to make. `CLAUDE.md` §Definition of done requires the deferral to be in the table; it should require the closure to be too. | — | — |
 | Q22 | Is district-centroid precision good enough for the **proximity score**? `ADR-019` argues centroid precision is sufficient, and that argument is sound for containment — `ST_DWithin` is a boolean. `09` §Scoring gives proximity 25/100 as a *continuous* function of distance normalised over the radius, where a centroid-grade error moves the ranking rather than being rounded away. Also: `ServiceArea` computes a `precision` and discards it, so one end of the comparison cannot report its own accuracy. | Phase 5 ranking — wrong order is invisible and unfalsifiable from the outside | Score proximity in bands rather than continuously, and add `precision` to `ServiceArea` in Phase 5's migration. |
 | ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
-| Q24 | **The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong — a per-segment layout that resolves the actor and redirects, or is "every page is empty without data" the actual design and `07` the thing that is wrong? | nothing today; the risk is the first page that renders something before its service call | Add a `layout.tsx` per gated segment that resolves the actor and redirects to `/giris`, and make `07` say which mechanism enforces the gate. |
+| ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
+| Q25 | **The anonymous-draft retention sweep has no scheduler.** `19` §Retention gives unclaimed drafts thirty days and says retention is *"enforced by the `audit.retention_sweep` job, not by manual cleanup"*. Task 4.5 wrote the **rule** — `expiredAnonymousDraftsWhere()` in `shared/context/anonymous-key.ts`, measured from `updatedAt`, restricted to rows that are still anonymous and not soft-deleted — and deliberately did not write half a sweeper: one table, no schedule, no audit entry, to be reconciled with Phase 9's own retention set later. Nothing deletes an expired draft today. | **Faz 9** (retention set). Not a leak — the rows are unreachable once the cookie expires — but it is *storage that grows and personal data that outlives its stated retention*, which `19` treats as a KVKK obligation rather than a housekeeping preference. | The rule exists and is unit-tested; Phase 9 adds the schedule and the audit entry. Recorded here rather than only in the log, per `CLAUDE.md` §Definition of done. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

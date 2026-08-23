@@ -2,6 +2,8 @@ import type { CompanyRole, CompanyStatus } from '@prisma/client'
 
 import type { Locale } from '@/i18n/routing'
 
+import { ANONYMOUS_COOKIE, ANONYMOUS_COOKIE_DEV, isAnonymousKey } from './anonymous-key'
+
 /**
  * `05-system-architecture.md` §ActorContext, verbatim.
  *
@@ -12,6 +14,29 @@ import type { Locale } from '@/i18n/routing'
 export type ActorContext = {
   userId: string | null
   globalRole: 'CUSTOMER' | 'ADMIN' | null
+  /**
+   * The anonymous draft key, when the request carries one and no user is signed in
+   * (`ADR-023`, `10` §Anonymous drafts).
+   *
+   * The **ninth** field, and the first added since `05` §ActorContext was written. It is here
+   * rather than in each service's input because it is an identity, and identity is resolved
+   * once per request by this function — the rule the other eight fields already follow. A key
+   * threaded through call sites is a key a call site can forget, and `04`'s XOR constraint
+   * makes forgetting it look like "no such project" rather than like a bug.
+   *
+   * **Present even when `userId` is set**, and that is not an oversight — it is what makes
+   * claiming possible. `POST /projects/{id}/claim` runs immediately after sign-in, and its
+   * whole job is to move a row from one identity to the other: it needs the account that will
+   * own the draft *and* the cookie that owns it now, in the same request. Nulling the key on
+   * sign-in would leave the claim endpoint reading the cookie itself, which is the second
+   * identity resolver this field exists to avoid.
+   *
+   * Ownership is not ambiguous as a result, because `ownedBy()` gives `userId` precedence:
+   * once you are signed in, you own rows by `customerId` and the key addresses nothing of
+   * yours. `04`'s XOR constraint keeps the *row* unambiguous; precedence keeps the *query*
+   * unambiguous. They are different questions.
+   */
+  anonymousKey: string | null
   /** Resolved from the route, never from session state. See §Context resolution below. */
   companyId: string | null
   companyRole: CompanyRole | null
@@ -80,6 +105,36 @@ function readUserAgent(request: ActorRequestLike): string {
 }
 
 /**
+ * The anonymous draft key, read straight from the `Cookie` header.
+ *
+ * Parsed here rather than via `next/headers` for the same reason `identify.ts` parses the
+ * session cookie itself: `resolveActor` runs in route handlers, server actions, pages and
+ * jobs, and a request-context helper is unavailable in a job. One parser, every surface.
+ *
+ * A malformed value is treated as absent rather than passed through — `isAnonymousKey`
+ * decides. That is not a security control (the database would not match a forged key either)
+ * but it keeps a 4 KB cookie out of a `where` clause and makes "no identity at all"
+ * unambiguous for `ownedBy()`.
+ */
+function readAnonymousKey(request: ActorRequestLike): string | null {
+  const header = request.headers.get('cookie')
+  if (header === null) return null
+
+  for (const pair of header.split(';')) {
+    const index = pair.indexOf('=')
+    if (index === -1) continue
+
+    const name = pair.slice(0, index).trim()
+    if (name !== ANONYMOUS_COOKIE && name !== ANONYMOUS_COOKIE_DEV) continue
+
+    const value = decodeURIComponent(pair.slice(index + 1).trim())
+    if (isAnonymousKey(value)) return value
+  }
+
+  return null
+}
+
+/**
  * Resolve the actor for this request — `12-authentication-authorization.md`
  * §Context resolution, all four steps.
  *
@@ -110,6 +165,7 @@ export async function resolveActor(
   const base: ActorContext = {
     userId: null,
     globalRole: null,
+    anonymousKey: readAnonymousKey(request),
     companyId: params.companyId ?? null,
     companyRole: null,
     companyStatus: null,
@@ -121,6 +177,13 @@ export async function resolveActor(
   const identified = await identify(request)
   if (identified === null) return base
 
+  /*
+   * `anonymousKey` is carried through from `base` rather than cleared. A signed-in request
+   * whose browser still holds the cookie is the normal case for the whole first minute of an
+   * account's life — that is the claim flow — and it stays true afterwards, because claiming
+   * one draft does not delete a cookie that may address two more (`10` §Anonymous drafts
+   * allows three).
+   */
   const withUser: ActorContext = {
     ...base,
     userId: identified.userId,
@@ -157,6 +220,7 @@ export function anonymousActor(overrides: Partial<ActorContext> = {}): ActorCont
   return {
     userId: null,
     globalRole: null,
+    anonymousKey: null,
     companyId: null,
     companyRole: null,
     companyStatus: null,

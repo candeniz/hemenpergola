@@ -20,9 +20,32 @@ rather than an image; for those screens `code.html` is the only reference.
 |---|---|---|
 | `(public)` · content | SSR + ISR, tag-revalidated | `SEO-01`; catalogue and profiles must be crawlable |
 | `(public-owner)` | SSR, **dynamic, never cached** | `ADR-021` put the configurator here so a visitor can configure without an account. It carries personal data — dimensions, location, notes, attachments — so it is exactly as uncacheable as `(customer)`. See below |
-| `(customer)` | SSR, dynamic, auth-gated | personal data, never cached |
-| `(manufacturer)` | SSR, dynamic, auth + company-scoped | same |
+| `(customer)` | SSR, dynamic, auth-gated by `(customer)/layout.tsx` | personal data, never cached |
+| `(manufacturer)` | SSR, dynamic, auth-gated by `(manufacturer)/layout.tsx`; company scope is the services' | same |
 | `(admin)` | SSR, dynamic, `noindex` | same |
+
+### What actually enforces "auth-gated" (`ADR-024`)
+
+A **layout per gated segment**, resolving the actor and redirecting to `/giris`. Not the
+middleware: `middleware.ts` does locale negotiation only, because it runs on the edge and
+authorisation needs the database (`12-authentication-authorization.md` §Authorization —
+middleware authenticates and redirects, it does not authorise).
+
+This row described a gate that did not exist from Phase 0 until Phase 4 (**Q24**). Nothing
+leaked, because every page loads its data through a service that scopes by ownership or
+permission, so an unauthenticated visitor met an empty shell. Task 4.8's dashboard is what
+changed the arithmetic — a page that lists a customer's projects is not harmless when it
+renders for anyone.
+
+The gate is not the authorisation and must not be mistaken for it. Services remain the only
+thing standing between a request and a row; the layout decides who is shown a *shell*. The
+company half of `(manufacturer)` stays in the services deliberately: `resolveActor` reads
+`[companyId]` from the route and `authorize()` turns a missing membership into `FORBIDDEN`,
+which `02-user-roles-and-permissions.md` §Enforcement rule requires to happen in exactly one
+place.
+
+`(public-owner)` is **not** gated, and that is `ADR-021`: the configurator is public and
+ownership is the project's own.
 
 ### `(public)` is not uniform — the configurator is the exception
 

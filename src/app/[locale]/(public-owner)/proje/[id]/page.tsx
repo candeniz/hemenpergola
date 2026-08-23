@@ -81,9 +81,20 @@ export default async function ProjectWizardPage({
         }))
       : []
 
-  const [cityResult, districtResult] = await Promise.all([
+  const [cityResult, districtResult, { UPLOAD_POLICY }] = await Promise.all([
     matching.listCities(actor, { companyId: 'public' }),
     matching.listDistricts(actor, { companyId: 'public' }),
+    /*
+     * `14` §Limits, read on the server and handed to the client as three plain values.
+     *
+     * The wizard is a client component; importing the policy table there would put
+     * `modules/media/domain` — and everything it references — into the browser bundle. Passing
+     * the numbers keeps the *same* table authoritative on both sides, which is the property
+     * that matters: the disabled button and `checkUpload` cannot disagree about what is
+     * allowed because they are reading one source. The table is read through the application
+     * layer, which re-exports it — app/ never reaches into a module's domain.
+     */
+    import('@/modules/media/application/file-service'),
   ])
 
   return (
@@ -99,6 +110,12 @@ export default async function ProjectWizardPage({
               : []
           }
           districts={districtResult.ok ? districtResult.value.districts : []}
+          signedIn={actor.userId !== null}
+          uploadPolicy={{
+            accept: UPLOAD_POLICY.PROJECT.mimeTypes.join(','),
+            maxBytes: UPLOAD_POLICY.PROJECT.maxBytes,
+            maxCount: UPLOAD_POLICY.PROJECT.maxCount,
+          }}
         />
       </main>
     </PublicShell>

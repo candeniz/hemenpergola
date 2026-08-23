@@ -92,6 +92,15 @@ test.describe('F1 · core flow (release gate)', () => {
     // The area is derived and shown live; the customer never types it (`10` §Field specifics).
     await expect(page.getByText(/20/)).toBeVisible()
 
+    /*
+     * Wait for the wizard's own confirmation before reloading. The area above is derived
+     * client-side and is visible before the PATCH round-trips, so without this the reload
+     * races the write it is about to assert on — and on a cold server the reload's render
+     * wins, reading the row before the save commits. The confirmation is the observable
+     * form of "the write landed"; the assertion below is unchanged.
+     */
+    await expect(page.getByRole('status')).toHaveText(/kaydedildi|saved/i, { timeout: 30_000 })
+
     // ── the assertion this step exists for ────────────────────────────────────
     await page.reload()
     await expect(

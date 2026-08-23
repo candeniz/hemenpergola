@@ -13,6 +13,7 @@ import {
   startPhoneVerificationAction,
   verifyEmailAction,
 } from '@/app/actions/auth'
+import { claimProjectAction } from '@/app/actions/project'
 import { AuthNotice } from '@/components/auth/auth-card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -97,6 +98,50 @@ function Field({
   )
 }
 
+/**
+ * The draft the visitor was configuring when they hit the account wall, if there was one.
+ *
+ * `10` §Anonymous drafts puts the wall between *configure* and *get offers*, so the wizard
+ * sends an anonymous visitor here as `/giris?proje=<id>` or `/kayit?proje=<id>` and this is
+ * how the id survives the round trip. A query parameter rather than a stashed cookie value:
+ * it is visible in the URL the customer can see, it dies with the navigation, and a visitor
+ * who edits it claims nothing — `claimProject` matches on the draft cookie, so a wrong id is
+ * simply `NOT_FOUND`.
+ */
+function draftFromQuery(): string | null {
+  if (typeof window === 'undefined') return null
+
+  const value = new URLSearchParams(window.location.search).get('proje')
+  return value === null || value === '' ? null : value
+}
+
+/**
+ * Claim that draft, then go where the customer was going.
+ *
+ * Failure is deliberately **not** surfaced. The customer has just signed in successfully and
+ * the account is real; a draft that cannot be claimed — because the cookie expired, because
+ * another account already claimed it, because the id was edited — is not a reason to hold
+ * them on the sign-in screen with an error about a project they may not remember starting.
+ * They land on the dashboard, where `listProjects` shows them what they do own.
+ *
+ * The claim is a separate call rather than something `login` does, because `05` §Shape keeps
+ * services to one use case and "sign in" is not "take ownership of a row". `claimProject` has
+ * its own matrix entry, its own audit line and its own `where` clause for exactly that reason.
+ */
+async function claimThen(projectId: string | null, fallback: string): Promise<void> {
+  if (projectId !== null) {
+    const claimed = (await claimProjectAction({ projectId })) as
+      { data: { projectId: string } } | { error: unknown }
+
+    if ('data' in claimed) {
+      window.location.assign(`/proje/${claimed.data.projectId}`)
+      return
+    }
+  }
+
+  window.location.assign(fallback)
+}
+
 export function RegisterForm() {
   const t = useTranslations('auth')
   const common = useTranslations('common')
@@ -104,12 +149,20 @@ export function RegisterForm() {
   const [done, setDone] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [consented, setConsented] = useState(false)
+  const [draftAfterRegister, setDraftAfterRegister] = useState<string | null>(null)
   const fields = useFields({ fullName: '', email: '', password: '' })
 
   if (done) {
     return (
       <AuthNotice tone="success" title={t('register.done')}>
         {t('register.doneBody')}
+        {draftAfterRegister === null ? null : (
+          <p className="mt-base text-body-sm">
+            <Link href={`/giris?proje=${encodeURIComponent(draftAfterRegister)}`}>
+              {t('register.continueDraft')}
+            </Link>
+          </p>
+        )}
       </AuthNotice>
     )
   }
@@ -137,6 +190,19 @@ export function RegisterForm() {
             setProblem(outcome.error.code === 'CONFLICT' ? t('passwordHint') : common('errorBody'))
             return
           }
+
+          /*
+           * Registration does not open a session — `03` §F-auth sends the new account to its
+           * inbox first, and `register` returns no tokens. So there is nobody to claim *as*
+           * yet, and the draft id is carried forward on the sign-in link instead: the claim
+           * happens on the first successful login, which is the first moment an account
+           * exists to own anything.
+           *
+           * Doing it here would mean claiming for an unverified account, and `10`
+           * §Validation makes email verification part of readiness — a draft claimed by an
+           * account that never confirms is a draft nobody can take to offers.
+           */
+          setDraftAfterRegister(draftFromQuery())
           setDone(true)
         })
       }}
@@ -217,8 +283,12 @@ export function LoginForm() {
            *
            * Until `ADR-022` this line did not exist and neither did the session: the form
            * showed a tick and stayed where it was, which is how Q23 survived three phases.
+           *
+           * Task 4.5 puts the claim between the two: a visitor who was sent here from a draft
+           * goes back to that draft, now owned by their account, rather than to a dashboard
+           * that would list it and make them find it again.
            */
-          window.location.assign('/hesap')
+          await claimThen(draftFromQuery(), '/hesap')
         })
       }}
     >
