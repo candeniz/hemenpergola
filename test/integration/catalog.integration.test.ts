@@ -47,8 +47,15 @@ beforeAll(async () => {
 
   const created = await createCategory(admin, {
     translations: {
-      tr: { name: 'Pergola Sistemleri' },
-      en: { name: 'Pergola Systems' },
+      /*
+       * NOT the seed's names. The suites share one container, and the demo seed upserts its
+       * categories by deterministic id while `(locale, slug)` stays unique — so a fixture
+       * named "Pergola Sistemleri" and the seed's own category collide whenever this file
+       * runs first. Locally twelve workers happened to order it the safe way for three
+       * phases; CI's two cores found the other order on the first real run.
+       */
+      tr: { name: 'Katalog Testi Sistemleri' },
+      en: { name: 'Catalog Test Systems' },
     },
     sortOrder: 0,
     isActive: true,
@@ -85,7 +92,8 @@ async function newSelectAttribute(productId: string, key: string): Promise<strin
 
 describe('CAT-03 · an admin adds a product with no deployment', () => {
   it('creates a category, a product, an attribute and an option, and reads them back', async () => {
-    const productId = await newProduct('Bioklimatik Pergola', 'Bioclimatic Pergola')
+    // "Veranda", not "Pergola": the seed owns `bioklimatik-pergola` — see the category note.
+    const productId = await newProduct('Bioklimatik Veranda', 'Bioclimatic Veranda')
     const attributeId = await newSelectAttribute(productId, 'roof_type')
 
     const option = await createOption(admin, {
