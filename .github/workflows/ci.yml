@@ -124,6 +124,16 @@ jobs:
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
+      # The database is testcontainers' own, but the storage tests talk to the compose
+      # stack's MinIO on :9000 — the second thing ci-local.mjs never noticed, for the same
+      # reason as the e2e job's stack: on the developer machine it was already running.
+      # `compose run` executes the bucket-creating init synchronously, so the tests start
+      # against a bucket that exists.
+      - name: Start MinIO
+        run: |
+          docker compose up -d --wait minio
+          docker compose run --rm minio-init
+
       - name: Integration
         run: |
           set -o pipefail
