@@ -1,5 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 
+import { assertReady, startDraft, walkWizardToReady } from './wizard-walk'
+
 /**
  * PHASE 4 GATE — `21-development-roadmap.md`: *a project reaches `READY` and survives a
  * browser restart mid-wizard.*
@@ -59,49 +61,27 @@ async function verificationLink(page: Page, address: string): Promise<string> {
   return `${url.pathname}${url.search}`
 }
 
-/** Start a draft as whoever this page currently is, and return its URL. */
-async function startDraft(page: Page): Promise<string> {
-  await page.goto('/proje/yeni')
-
-  await page
-    .getByRole('button', { name: /yapılandır|configure/i })
-    .first()
-    .click()
-
-  // `(?!yeni)`: the entry point itself matches `/proje/<something>`, so the lookahead is what
-  // stops this resolving before the redirect — the same trap `core-flow.spec.ts` documents.
-  await page.waitForURL(/\/proje\/(?!yeni)[^/]+$/)
-
-  return page.url()
-}
-
 test.describe('Phase 4 gate · an anonymous draft survives a restart and is claimed', () => {
-  test('anonymous → restart → register → claim → the cookie alone cannot reach it', async ({
+  test('anonymous → READY → restart → register → claim → the cookie alone cannot reach it', async ({
     browser,
   }) => {
     const email = uniqueEmail()
 
-    // ── 1 · an anonymous visitor configures ───────────────────────────────────
+    // ── 1 · an anonymous visitor configures — all the way to READY ────────────
+    /*
+     * The whole wizard, not just the dimensions step. `21`'s gate text is *"a project
+     * reaches `READY` and survives a browser restart"*, and the earlier version of this
+     * spec proved the restart and the claim while never running the readiness check — which
+     * is exactly how "no real catalogue product could ever reach READY" passed this gate in
+     * Phase 4 and was found by Phase 5's e2e instead. The walk is shared with
+     * `core-flow.spec.ts` (`wizard-walk.ts`), so the two gates cannot drift apart, and it
+     * ends by asserting the wizard's own verdict.
+     */
     const first: BrowserContext = await browser.newContext()
     const page = await first.newPage()
 
     const draftUrl = await startDraft(page)
-
-    await page.getByLabel(/genişlik|width/i).fill('5000')
-    await page.getByLabel(/derinlik|depth/i).fill('4000')
-    await page.getByLabel(/yükseklik|height/i).fill('2800')
-    await page
-      .getByRole('button', { name: /kaydet|save/i })
-      .first()
-      .click()
-
-    // Derived, never typed (`10` §Field specifics). 5 m × 4 m = 20 m².
-    await expect(page.getByText(/20/)).toBeVisible()
-
-    // The wizard's own confirmation, before the context is captured and closed: the area is
-    // derived client-side and visible before the PATCH round-trips, so without this the
-    // restart below races the write whose survival it asserts (same wait as core-flow step 2).
-    await expect(page.getByRole('status')).toHaveText(/kaydedildi|saved/i, { timeout: 30_000 })
+    await walkWizardToReady(page, 'İstanbul')
 
     /*
      * The cookie is the identity, and `10` §Anonymous drafts makes it `httpOnly` — so the
@@ -127,6 +107,12 @@ test.describe('Phase 4 gate · an anonymous draft survives a restart and is clai
       reopened.getByLabel(/genişlik|width/i),
       'the draft survives a browser restart because the cookie does and the row does',
     ).toHaveValue('5000')
+
+    // …and `READY` survives with it: the restarted context re-runs the readiness check on
+    // the summary step and gets the same verdict. This is the half of `21`'s gate sentence
+    // the width assertion alone does not carry.
+    await reopened.getByRole('button', { name: 'Özet' }).click()
+    await assertReady(reopened)
 
     // ── 3 · the account wall, and the draft rides along ───────────────────────
     await reopened.goto('/kayit')

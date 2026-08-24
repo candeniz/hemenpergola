@@ -210,6 +210,8 @@ describe('migration scope', () => {
 
     expect(tables).toEqual([
       'Account',
+      // Phase 6 · migration 8 — the lifecycle
+      'Appointment',
       'AuditLog',
       // Phase 1 · migration 2
       'AuthToken',
@@ -227,6 +229,8 @@ describe('migration scope', () => {
       'ConfiguratorQuestion',
       'ConfiguratorRule',
       'Consent',
+      // Phase 6 · migration 8
+      'ContactDisclosure',
       'District',
       'File',
       // Phase 3 · migration 4
@@ -237,6 +241,10 @@ describe('migration scope', () => {
       'MatchRun',
       // Phase 5 · migration 7 — 04 §Messaging's Notification, pulled forward by 5.7
       'Notification',
+      // Phase 6 · migration 8
+      'Offer',
+      'OfferLine',
+      'OfferRequest',
       'Payment',
       'Plan',
       'PlatformSetting',
@@ -275,9 +283,9 @@ describe('migration scope', () => {
       'spatial_ref_sys',
     ])
 
-    // The project, pricing, matching, offer, messaging, review and content tables arrive
-    // with their phases — their absence here is the assertion.
-    expect(tables).not.toContain('OfferRequest')
+    // The messaging, review and content tables arrive with their phases — their absence
+    // here is the assertion. (`OfferRequest` left this list when migration 8 landed.)
+    expect(tables).not.toContain('Thread')
     expect(tables).not.toContain('Review')
 
     /*
@@ -307,13 +315,16 @@ describe('migration scope', () => {
     expect(tables).toContain('ProjectAttributeValue')
     expect(tables).toContain('ProjectAttachment')
 
-    // Migration 7 is Phase 5's — the boundary this assertion used to hold moved with it.
+    // Migration 7 is Phase 5's, migration 8 is Phase 6's — each moved this boundary when it
+    // landed, which is the deliberate edit the comment at the top of this test promises.
     expect(tables).toContain('MatchRun')
-    expect(tables).toContain('MatchResult')
+    expect(tables).toContain('OfferRequest')
+    expect(tables).toContain('ContactDisclosure')
 
-    // Phase 6's lifecycle tables are the next boundary, and their absence is the assertion now.
-    expect(tables).not.toContain('OfferRequest')
-    expect(tables).not.toContain('ContactDisclosure')
+    // Phase 7's messaging and review tables are the next boundary; their absence is the
+    // assertion now.
+    expect(tables).not.toContain('Thread')
+    expect(tables).not.toContain('Review')
   })
 })
 

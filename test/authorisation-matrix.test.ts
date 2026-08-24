@@ -379,7 +379,7 @@ describe('every service method has a matrix entry', () => {
       'matching.listServiceAreas',
       'matching.addServiceArea',
       'matching.removeServiceArea',
-      'matching.companiesCoveringPoint',
+      'matching.listCompaniesCoveringPoint',
       'matching.listCities',
       'matching.listDistricts',
       // Phase 4 · the configurator
@@ -441,6 +441,36 @@ describe('every service method has a matrix entry', () => {
 
       const spec = meta.authorisation as { kind: 'customer-owned'; scopedBy: readonly string[] }
       expect([...spec.scopedBy].sort()).toEqual(['anonymousKey', 'userId'])
+    }
+  })
+
+  it('keeps matching’s anonymous surface to the two reference-data reads', () => {
+    /*
+     * `listCities` and `listDistricts` went `anonymous` when Phase 5 found the public
+     * wizard's location step reading them with no session (`ADR-021`) — 81 provinces and
+     * 974 districts are public reference data. Same discipline as `catalog`'s
+     * `PUBLIC_READ`: the set is named and counted, so the next anonymous matching method is
+     * a deliberate edit here rather than a quiet widening, and a name that is not a
+     * `get*`/`list*` read cannot slip in at all.
+     */
+    /*
+     * `listCompaniesCoveringPoint` has been anonymous since Phase 3 (it fed the phase
+     * gate's boundary probe, and which verified companies serve a point is public
+     * directory data); pinning this list is what surfaced it, and the pin renamed it from
+     * `companiesCoveringPoint` so the read-shape rule below holds with no exception.
+     */
+    const MATCHING_PUBLIC_READ = ['listCities', 'listDistricts', 'listCompaniesCoveringPoint']
+
+    const anonymous = registeredMethods().filter(
+      (meta) => meta.service === 'matching' && meta.authorisation.kind === 'anonymous',
+    )
+
+    expect(anonymous.map((meta) => meta.method).sort()).toEqual([...MATCHING_PUBLIC_READ].sort())
+
+    for (const meta of anonymous) {
+      expect(meta.method, `${meta.method} is anonymous but not shaped like a read`).toMatch(
+        /^(get|list)/,
+      )
     }
   })
 

@@ -242,6 +242,28 @@ describe('affectsPrice is a decision, not a default', () => {
     }
   })
 
+  it('resolves every NUMBER attribute through DIMENSION_ATTRIBUTE_KEYS — Q27', async () => {
+    /*
+     * Phase 5 found that readiness and the catalogue had never agreed on what a dimension
+     * attribute is called, and the bridge is a fixed alias table in `steps.ts`. That table
+     * is code, and `CAT-03` promises catalogue changes are DATA changes — so until Q27's
+     * semantic-role column lands (Phase 8), this test is the tripwire: an admin-authored
+     * `en_mm` that the table cannot resolve would make its product silently un-READY, and
+     * this failure is where that surfaces as a named problem instead.
+     */
+    const { dimensionFieldFor } = await import('@/modules/project/domain/steps')
+
+    for (const product of specified) {
+      for (const attribute of product.attributes) {
+        if (attribute.inputType !== 'NUMBER') continue
+        expect(
+          dimensionFieldFor(attribute.key),
+          `${product.slug.tr}.${attribute.key} is a NUMBER attribute no dimension field resolves — readiness would demand an answer the wizard cannot give (Q27)`,
+        ).not.toBeNull()
+      }
+    }
+  })
+
   it('has at least one optional attribute, so `isRequired` is a decision too', () => {
     // If every attribute were required, readiness (`10` §Validation) would be trivially
     // "all of them" and the flag would be carrying no information.

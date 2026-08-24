@@ -44,7 +44,7 @@ proven — not when the code is written.
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
-| 6 | Offer request lifecycle | ⬜ | `e2e/core-flow.spec.ts` green |
+| 6 | Offer request lifecycle | **🟡 in progress · 6/10** | `e2e/core-flow.spec.ts` green — machine, service, consent, disclosure, DTO boundary and the concurrency proof landed 2026-08-24; surface + SLA job + offers (6.6–6.9) remain |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
@@ -2499,7 +2499,7 @@ tested from the attacker's side with both a wrong user and a wrong cookie.
 - **`09` §Service-area coverage now shows the two-call SQL** and says why the one-call
   version cannot use the GiST index; **`ADR-025`** records the decision, the alternatives
   and the reversal condition.
-- **The remote exists and CI is green** — six red runs, then run #6 green with all six
+- **The remote exists and CI is green** — seven red runs (#1–#7), then run #8 green with all six
   stages (static 0.8m · unit 0.5m · integration 1.7m, the p95 assertion included · build
   1m · e2e+a11y 2.7m · lighthouse 0.4m). Every red found something real; the handover's §4
   lists them (missing `prisma generate` under pnpm 11's script blocking; two
@@ -2594,6 +2594,97 @@ whole wizard against the real catalogue:
 - The compare screen shows band + distance only; portfolio and rating columns arrive with
   the data that fills them (Phases 6–7).
 
+### 2026-08-24 — Phase 6 tasks 6.1–6.5 + 6.10, and five carried gaps (commit `P6.1-6.5+6.10 · talep yaşam döngüsü ve ifşa`)
+
+**Entry condition.** Q7 proceeded on its sanctioned default (48 h in `PlatformSetting`).
+**Q6 proceeded on the 20% default too — flagged, not decided**: the decision calendar says
+"confirm with an accountant", that confirmation has not happened, and the rate rides real
+money on real offers. The setting exists (`tax.kdv_default_percent`), the human step is
+open.
+
+**The five gaps:**
+
+- CI run **#9** (`ffa544b`, docs-only) completed **success**; the earlier log entry
+  mis-numbered the first green run as #6 — it was **#8**, and the reds were #1–#7. Both
+  documents corrected.
+- The "no deploy stage" test's inline `replaceAll` became `DEPLOY_WORD_EXEMPTIONS` — a
+  named list plus a test asserting it contains exactly `prisma migrate deploy`, the same
+  shape as `OPERATIONAL_PROBES` and for the same reason.
+- `matching`'s anonymous surface is pinned: named, counted, and shape-checked
+  (`get*`/`list*` only). The pin's first catch was real — `companiesCoveringPoint` had been
+  anonymous since Phase 3 (public directory data; it fed the phase gate's boundary probe)
+  and is now `listCompaniesCoveringPoint`, so the read-shape rule holds with no exception.
+- `catalogue-data.test.ts` now proves every seed `NUMBER` attribute resolves through
+  `DIMENSION_ATTRIBUTE_KEYS` — the tripwire for the alias table's `CAT-03` gap, recorded as
+  **Q27** in the table (semantic-role column, Phase 8).
+- `phase4-gate.spec.ts` walks the whole wizard through the shared `wizard-walk.ts` and
+  asserts **`READY` twice** — before the restart (reached) and after it (survived) — which
+  is the half of `21`'s gate sentence the old spec never carried, and exactly the hole the
+  un-READY-able-catalogue bug walked through. `core-flow` 3–4 sign in through the **real
+  form** again, budgeted the way `account.spec.ts` does (one `x-forwarded-for` per test);
+  the session fixture remains only in `a11y.spec.ts`, whose subject is the shells.
+
+#### 6.1 · the machine
+
+`offer/domain/state-machine.ts`: `11` §Transition table row for row, pure, table-driven,
+with the actor column enforced and every guard in the table. The unit suite sweeps all
+13 × 14 × 4 (state, event, actor) combinations: everything off the table is `CONFLICT`,
+terminal states have no outgoing edge, and `(from, event)` is unique so order cannot change
+an answer.
+
+#### 6.2 · the service shape
+
+`FOR UPDATE` load (company in the WHERE — ownership stays in the query) → `transition` →
+in-transaction side effects → **notifications after commit**. The proof is behavioural: the
+loser of 6.10's race returns before the post-commit step and writes no notification row.
+
+#### 6.3 · consent
+
+`ConsentCheckbox` (never pre-checked; the body says revocation cannot recall what was
+shared) hands back `CONTACT_SHARING_TEXT_VERSION` from `shared/legal/consent-version.ts`;
+`createOfferRequests` records the `Consent` row in the same transaction as the requests and
+**refuses a stale text version** — a tab left open across a text change re-asks instead of
+recording consent to unseen words. The per-project cap counts live requests only
+(DECLINED/EXPIRED/CANCELLED free their slots, per `11` §SLA).
+
+#### 6.4 · the disclosure
+
+`PENDING → ACCEPTED`, exactly once: `ContactDisclosure` (exact fields) + **two audit rows
+written inside the transaction as plain inserts** — `19` calls them mandatory, so the
+best-effort `recordAudit` is deliberately not used and an audit failure rolls the
+acceptance back — + the customer notification after commit. Belt and braces:
+`ContactDisclosure.offerRequestId` is UNIQUE in migration 8, so a second row is impossible
+even if every lock failed. A second accept is a 409 that writes nothing.
+
+#### 6.5 · the DTO boundary
+
+`lead-dto.ts`, the `estimate-dto` construction: `NoContactFields<T>` makes any
+contact-shaped key `never` at compile time, `PendingLeadView` cannot carry one, and the
+pending read **never SELECTs the customer relation at all**. The tests are on the DTO's
+shape — type-level in `lead-dto.test.ts`, serialised-JSON in the integration suite — not on
+a rendered page, which would stay green over leaking JSON.
+
+#### 6.10 · the race
+
+`Promise.all([accept, decline])` on one PENDING row: exactly one succeeds, the loser gets
+`CONFLICT`, the row holds the winner's status, and when decline wins the disclosure count
+is zero and no notification exists — the row lock and the machine doing exactly what `11`
+§Implementation promises.
+
+#### Carried forward
+
+- **The production disclosure path is blocked on Q2 and open.** Contact disclosure wants a
+  verified phone; real phone verification wants the alphanumeric SMS sender, which wants
+  İYS registration, which wants the legal entity — the chain `28` §9 already names. All
+  code runs against the log adapters.
+- The SLA expiry job (`offer_request.sla_expire`) has a queue name and a machine edge and
+  no worker handler — 6.6–6.9, with the reminders at 50%/90%.
+- `slaExpiresAt` is plain hours, not yet business-hours-aware for `Europe/Istanbul` (`11`
+  §SLA) — second half, alongside the job that enforces it.
+- Appointment/Offer/OfferLine tables shipped in migration 8; their services and the
+  remaining machine edges' callers are 6.6–6.9. `Project.status → SUBMITTED` on request
+  creation is deliberately untouched until the surface lands.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2621,6 +2712,7 @@ whole wizard against the real catalogue:
 | ~~Q22~~ | ~~Is district-centroid precision good enough for the **proximity score**?~~ **CLOSED 2026-08-23 by doing exactly what this row's default prescribed.** Proximity is scored in bands (`matching/domain/scoring.ts` — ratio-of-radius bands on a RADIUS match, absolute km bands otherwise, neutral for unknown), so centroid-grade error moves a score only when it crosses a band edge, and the unit suite asserts two centroid-grade-apart distances land in one band. `ServiceArea.precision` arrived in migration 7 and the geocode job now persists what it always computed; null means "geocoded before the column existed". Closed in the table in the same phase, per the Q21 lesson. | — | — |
 | ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
+| Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
 | Q25 | **The anonymous-draft retention sweep has no scheduler.** `19` §Retention gives unclaimed drafts thirty days and says retention is *"enforced by the `audit.retention_sweep` job, not by manual cleanup"*. Task 4.5 wrote the **rule** — `expiredAnonymousDraftsWhere()` in `shared/context/anonymous-key.ts`, measured from `updatedAt`, restricted to rows that are still anonymous and not soft-deleted — and deliberately did not write half a sweeper: one table, no schedule, no audit entry, to be reconciled with Phase 9's own retention set later. Nothing deletes an expired draft today. | **Faz 9** (retention set). Not a leak — the rows are unreachable once the cookie expires — but it is *storage that grows and personal data that outlives its stated retention*, which `19` treats as a KVKK obligation rather than a housekeeping preference. | The rule exists and is unit-tested; Phase 9 adds the schedule and the audit entry. Recorded here rather than only in the log, per `CLAUDE.md` §Definition of done. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

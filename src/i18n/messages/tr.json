@@ -680,5 +680,11 @@
     "distanceUnknown": "—",
     "empty": "Karşılaştırılacak firma seçilmedi.",
     "maxNote": "En fazla 3 firma yan yana karşılaştırılır; fazlası dikkate alınmaz."
+  },
+  "consent": {
+    "contactSharing": {
+      "label": "İletişim bilgilerimin, talebimi kabul eden üreticiyle paylaşılmasına onay veriyorum.",
+      "body": "Talebinizi kabul eden üretici; adınızı, e-posta adresinizi ve telefon numaranızı görür. Onayınızı hesap ayarlarından dilediğiniz an geri çekebilirsiniz; geri çekme, o ana kadar paylaşılmış bilgileri geri almaz, yalnızca sonraki paylaşımları durdurur."
+    }
   }
 }

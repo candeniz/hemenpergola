@@ -97,15 +97,31 @@ describe('CI workflow', () => {
     expect(guard, 'static must run the release-gate guard').toBeDefined()
   })
 
+  /*
+   * Named, not inlined — the same shape as the authorisation matrix's `OPERATIONAL_PROBES`,
+   * and for the same reason: an exemption that lives inline in an assertion is an exemption
+   * the next one silently joins. `prisma migrate deploy` applies migrations to the job's own
+   * throwaway database and deploys nothing anywhere; the word this test hunts is the deploy
+   * *stage* from `23` §Pipeline's tail, which still must not exist.
+   */
+  const DEPLOY_WORD_EXEMPTIONS = ['prisma migrate deploy'] as const
+
+  it('keeps the deploy-word exemption list to the one migration command', () => {
+    // If this fails, someone exempted a second phrase. That may be right — but it is a
+    // decision, and it should be argued for in the pull request rather than discovered.
+    expect(DEPLOY_WORD_EXEMPTIONS).toEqual(['prisma migrate deploy'])
+  })
+
   it('does not deploy — there is no environment to deploy to yet', () => {
-    const everyRun = Object.values(workflow.jobs)
+    let everyRun = Object.values(workflow.jobs)
       .flatMap((job) => job.steps)
       .map((step) => step.run ?? '')
       .join('\n')
 
-    // `prisma migrate deploy` is exempt by name: it applies migrations to the job's own
-    // throwaway database and deploys nothing anywhere. The word this test hunts is the
-    // deploy *stage* from `23` §Pipeline's tail, which still must not exist.
-    expect(everyRun.replaceAll('prisma migrate deploy', '')).not.toMatch(/deploy|staging|smoke/i)
+    for (const exemption of DEPLOY_WORD_EXEMPTIONS) {
+      everyRun = everyRun.replaceAll(exemption, '')
+    }
+
+    expect(everyRun).not.toMatch(/deploy|staging|smoke/i)
   })
 })

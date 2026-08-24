@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { startDraft, walkWizardToReady } from './wizard-walk'
+
 /**
  * THE RELEASE GATE.
  *
@@ -20,110 +22,39 @@ import { expect, test, type Page } from '@playwright/test'
  * Do not delete a step to make the suite green. Do not add a step that F1 does not have.
  */
 
-/**
- * The seeded customer's session, as a fixture rather than a form login: step 2 *tests* the
- * login; steps 3–4 merely need to be signed in, and two more form logins is what pushed
- * the suite past the auth surface's 10-per-15-min budget (see `session-fixture.ts`).
+/*
+ * One client address per test — the same discipline `account.spec.ts` documents at length.
+ * Steps 3–4 briefly used a session *fixture* instead of the form, because their two extra
+ * logins pushed the suite past the auth surface's 10-per-15-min-per-IP budget; that was the
+ * wrong fix. The release gate signing in through the real form is precisely what caught Q23
+ * (a login that validated, rendered a tick and set nothing), so the form is back and the
+ * budget is solved the way the limiter intends: each test is its own visitor.
  */
-async function signIn(page: Page): Promise<void> {
-  const { seedSessionCookie } = await import('./session-fixture')
-  await seedSessionCookie(page, 'musteri@pergola.local')
-}
+const RUN = Math.floor(Math.random() * 250)
+let addresses = 0
 
-/**
- * Walk the whole wizard to `READY` for a fresh draft, choosing the first answer wherever a
- * choice exists. Sequencing leans on **server-backed signals**, not on the "Kaydedildi."
- * text (which persists between saves and therefore sequences nothing after the first): a
- * `ChoiceStep` advances itself on save, so the next step's controls appearing is the
- * round-trip; an options checkbox reflects `view.values`, so `toBeChecked` is the save.
- */
-async function configureToReady(page: Page, cityName: string): Promise<void> {
-  await page.goto('/proje/yeni')
-
-  /*
-   * By product name, not `.first()`: the chooser lists every configurable product and the
-   * first one is whatever sorts first in this database — on a long-lived dev database that
-   * can be a half-specified leftover whose required attribute has no options, which no
-   * amount of clicking completes. "Bioklimatik Pergola" is one of the seed's two fully
-   * specified products (`catalogue-data.test.ts` asserts it stays that way).
-   */
-  await page
-    .getByRole('heading', { name: 'Bioklimatik Pergola', exact: true })
-    .first()
-    .locator('..')
-    .getByRole('button', { name: /yapılandır|configure/i })
-    .click()
-  await page.waitForURL(/\/proje\/(?!yeni)[^/]+$/)
-
-  // ── dimensions, then Devam (which saves) ──────────────────────────────────
-  await page.getByLabel(/genişlik|width/i).fill('5000')
-  await page.getByLabel(/derinlik|depth/i).fill('4000')
-  await page.getByLabel(/yükseklik|height/i).fill('2800')
-  await page.getByRole('button', { name: 'Devam' }).click()
-
-  // ── project type → installation type: choosing saves and advances ─────────
-  await page.getByRole('button', { name: 'Yeni yapı' }).click()
-  await page.getByRole('button', { name: 'Duvara montaj' }).click()
-
-  // ── options: first answer per question; `showIf` may reveal followers, so
-  //    sweep until a pass finds nothing unanswered ────────────────────────────
-  await expect(page.getByRole('button', { name: 'Devam' })).toBeVisible({ timeout: 30_000 })
-
-  for (let pass = 0; pass < 5; pass += 1) {
-    const fieldsets = page.locator('fieldset')
-    const count = await fieldsets.count()
-    let answered = 0
-
-    for (let index = 0; index < count; index += 1) {
-      const group = fieldsets.nth(index)
-      // Nothing to click, nothing owed: an optionless group is not a question.
-      if ((await group.locator('input').count()) === 0) continue
-      if ((await group.locator('input:checked').count()) > 0) continue
-
-      const input = group.locator('input').first()
-      // `click`, not `check`: these are controlled inputs whose checked state arrives with
-      // the server's view, and `check()`'s built-in "state changed immediately" assertion
-      // calls that round-trip a failure. The expect below is the real wait.
-      await input.click()
-      await expect(input).toBeChecked({ timeout: 30_000 })
-      answered += 1
-    }
-
-    if (answered === 0) break
-  }
-
-  await page.getByRole('button', { name: 'Devam' }).click()
-
-  // ── location ──────────────────────────────────────────────────────────────
-  /*
-   * By role, not by label: `getByLabel` failed to resolve these selects even while the
-   * accessibility snapshot showed `combobox "İl"` on screen — the dotted capital İ plus a
-   * wrapping <label><span> is apparently a combination its matching does not survive.
-   * `getByRole` matches the computed accessible name, which is what the snapshot proves.
-   * `exact`, because "İl" is a prefix of "İlçe".
-   */
-  const citySelect = page.getByRole('combobox', { name: 'İl', exact: true })
-  const districtSelect = page.getByRole('combobox', { name: 'İlçe', exact: true })
-
-  await citySelect.selectOption({ label: cityName })
-  // The district list renders after the city is chosen; take the first real one.
-  await expect
-    .poll(async () => districtSelect.locator('option').count(), { timeout: 30_000 })
-    .toBeGreaterThan(1)
-  await districtSelect.selectOption({ index: 1 })
-  await page.getByRole('button', { name: 'Devam' }).click()
-
-  // ── timing (advances itself) → attachments → summary ─────────────────────
-  await page.getByRole('button', { name: 'En kısa sürede' }).click()
-  await expect(page.getByLabel('Eklemek istedikleriniz')).toBeVisible({ timeout: 30_000 })
-  await page.getByRole('button', { name: 'Devam' }).click()
-
-  await page.getByRole('button', { name: 'Hazır mı, kontrol et' }).click()
-  // `.first()`: the wizard announces readiness in its status line AND in the summary body.
-  await expect(page.getByText('Projeniz teklif almaya hazır.').first()).toBeVisible({
-    timeout: 30_000,
+test.beforeEach(async ({ page }, testInfo) => {
+  addresses += 1
+  await page.setExtraHTTPHeaders({
+    'x-forwarded-for': `10.${RUN}.${testInfo.workerIndex + 101}.${addresses % 250}`,
   })
+})
+
+/** The seeded customer, signed in through the real form — the same login step 2 tests. */
+async function signIn(page: Page): Promise<void> {
+  await page.goto('/giris')
+  await page.getByLabel('E-posta').fill('musteri@pergola.local')
+  await page.getByLabel('Şifre').fill('phase4-core-flow-customer-password')
+  await page.getByRole('button', { name: 'Giriş yap' }).click()
+  await page.waitForURL(/\/hesap/, { timeout: 30_000 })
 }
+
+/** The shared walk — see `wizard-walk.ts`; both gates assert the same READY. */
+async function configureToReady(page: Page, cityName: string): Promise<void> {
+  await startDraft(page)
+  await walkWizardToReady(page, cityName)
+}
+
 test.describe('F1 · core flow (release gate)', () => {
   test('1 · discover: a visitor reaches a configurable product without an account', async ({
     page,

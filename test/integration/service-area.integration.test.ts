@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import {
   addServiceArea,
-  companiesCoveringPoint,
+  listCompaniesCoveringPoint,
   listServiceAreas,
   removeServiceArea,
 } from '@/modules/matching/application/service-area-service'
@@ -96,7 +96,7 @@ describe('the three kinds', () => {
     const added = await addServiceArea(actor, { kind: 'CITY', companyId, cityId })
     expect(added.ok).toBe(true)
 
-    const covering = await companiesCoveringPoint(anonymousActor(), {
+    const covering = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId,
       ...ISTANBUL,
@@ -112,12 +112,12 @@ describe('the three kinds', () => {
 
     await addServiceArea(actor, { kind: 'DISTRICT', companyId, districtId })
 
-    const inside = await companiesCoveringPoint(anonymousActor(), {
+    const inside = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId,
       ...ISTANBUL,
     })
-    const elsewhere = await companiesCoveringPoint(anonymousActor(), {
+    const elsewhere = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId: otherDistrictId,
       ...northOf(ISTANBUL, 60_000),
@@ -174,12 +174,12 @@ describe('RADIUS · the boundary', () => {
     const justInside = northOf(ISTANBUL, 39_000)
     const justOutside = northOf(ISTANBUL, 41_000)
 
-    const inside = await companiesCoveringPoint(anonymousActor(), {
+    const inside = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId: otherDistrictId,
       ...justInside,
     })
-    const outside = await companiesCoveringPoint(anonymousActor(), {
+    const outside = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId: otherDistrictId,
       ...justOutside,
@@ -200,7 +200,7 @@ describe('RADIUS · the boundary', () => {
 
     await addServiceArea(actor, { kind: 'RADIUS', companyId, cityId, districtId, radiusKm: 50 })
 
-    const covering = await companiesCoveringPoint(anonymousActor(), {
+    const covering = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId: otherDistrictId,
       ...ISTANBUL,
@@ -244,7 +244,7 @@ describe('coverage is filtered by verification state', () => {
       data: { companyId: pending.id, kind: 'CITY', cityId, isActive: true },
     })
 
-    const covering = await companiesCoveringPoint(anonymousActor(), {
+    const covering = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId,
       ...ISTANBUL,
@@ -258,7 +258,7 @@ describe('coverage is filtered by verification state', () => {
     const actor = await owner(companyId)
     await addServiceArea(actor, { kind: 'CITY', companyId, cityId })
 
-    const before = await companiesCoveringPoint(anonymousActor(), {
+    const before = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId,
       ...ISTANBUL,
@@ -267,7 +267,7 @@ describe('coverage is filtered by verification state', () => {
 
     await getPrisma().company.update({ where: { id: companyId }, data: { status: 'SUSPENDED' } })
 
-    const after = await companiesCoveringPoint(anonymousActor(), {
+    const after = await listCompaniesCoveringPoint(anonymousActor(), {
       cityId,
       districtId,
       ...ISTANBUL,

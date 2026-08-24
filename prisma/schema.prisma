@@ -131,6 +131,8 @@ model User {
   authTokens    AuthToken[]
   refreshTokens RefreshToken[]
   projects      Project[]
+  // Phase 6 · migration 8
+  offerRequests OfferRequest[]
   // Phase 5 · migration 7 — the zero-result subscription (5.7)
   notifications Notification[]
 
@@ -217,6 +219,9 @@ model Company {
   calculations  PriceCalculation[]
   // Phase 5 · migration 7
   matchResults  MatchResult[]
+  // Phase 6 · migration 8
+  offerRequests OfferRequest[]
+  disclosures   ContactDisclosure[]
 
   @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
@@ -376,7 +381,9 @@ model Consent {
   ip          String
   userAgent   String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offerRequests OfferRequest[]
+  disclosures   ContactDisclosure[]
 
   @@index([userId, type])
 }
@@ -1138,9 +1145,10 @@ model PriceCalculation {
   actorUserId      String?
   requestIp        String?
 
-  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  priceBook    PriceBook     @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
-  matchResults MatchResult[]
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  priceBook     PriceBook      @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
+  matchResults  MatchResult[]
+  offerRequests OfferRequest[]
 
   @@index([companyId, calculatedAt])
   @@index([priceBookId])
@@ -1207,6 +1215,7 @@ model MatchResult {
   /// no located point; nulls rank last within their tier.
   distanceKm Float?
 
+  offerRequests    OfferRequest[]
   matchRun         MatchRun          @relation(fields: [matchRunId], references: [id], onDelete: Cascade)
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   priceCalculation PriceCalculation? @relation(fields: [priceCalculationId], references: [id], onDelete: SetNull)
@@ -1235,6 +1244,170 @@ model Notification {
 
   @@index([userId, createdAt])
   @@index([type])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Offer request lifecycle — migration 8, Phase 6 (`04-data-model.md` §Offer request
+// lifecycle, `11-offer-request-lifecycle.md`)
+//
+// The state machine the whole product hangs on. Nothing writes `status` directly —
+// every transition goes through `modules/offer/domain/state-machine.ts` (`CLAUDE.md`
+// non-negotiable 4). The whole phase's tables ship in one migration (`ADR-014`);
+// Appointment/Offer/OfferLine gain their services in the second half.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OfferRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+  SURVEY_SCHEDULED
+  SURVEY_COMPLETED
+  OFFER_SENT
+  OFFER_ACCEPTED
+  OFFER_REJECTED
+  WON
+  LOST
+  CLOSED
+}
+
+model OfferRequest {
+  id         String             @id @default(cuid())
+  projectId  String
+  customerId String
+  companyId  String
+  status     OfferRequestStatus @default(PENDING)
+
+  /// Which ranked result this request came from, when it came from one (`09`).
+  matchResultId      String?
+  /// The estimate the customer saw when they sent it (`PRC-02` makes it permanent).
+  priceCalculationId String?
+
+  /// `createdAt + PlatformSetting('offer_request.sla_hours')` — Q7's 48 h default.
+  slaExpiresAt DateTime
+  respondedAt  DateTime?
+
+  declineReason String?
+  /// Set exactly once, at PENDING → ACCEPTED, in the same transaction as the
+  /// `ContactDisclosure` row (`11` §Contact disclosure).
+  contactDisclosedAt DateTime?
+  /// The CONTACT_SHARING consent captured at creation (`19` §Consent). Required: a request
+  /// with no consent to disclose under must never exist.
+  consentId    String
+  closedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  customer         User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  consent          Consent           @relation(fields: [consentId], references: [id], onDelete: Restrict)
+  matchResult      MatchResult?      @relation(fields: [matchResultId], references: [id], onDelete: SetNull)
+  priceCalculation PriceCalculation? @relation(fields: [priceCalculationId], references: [id], onDelete: SetNull)
+  disclosure       ContactDisclosure?
+  appointments     Appointment[]
+  offers           Offer[]
+
+  /// One request per project per company — re-sending is a `CONFLICT`, not a duplicate.
+  @@unique([projectId, companyId])
+  @@index([companyId, status, slaExpiresAt])
+  @@index([customerId, status])
+  @@index([status, slaExpiresAt])
+}
+
+/**
+ * `19` §Disclosure record. `offerRequestId` is UNIQUE — "exactly once" is a property of the
+ * table, not only of the code path: a second acceptance racing the first cannot write a
+ * second row even if every lock failed.
+ */
+model ContactDisclosure {
+  id             String   @id @default(cuid())
+  offerRequestId String   @unique
+  companyId      String
+  disclosedAt    DateTime @default(now())
+  /// Exactly which fields were released (`19`: who, what, when, under which consent).
+  disclosedFields String[]
+  consentId       String
+
+  offerRequest OfferRequest @relation(fields: [offerRequestId], references: [id], onDelete: Restrict)
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  consent      Consent      @relation(fields: [consentId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, disclosedAt])
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  offerRequestId String
+  scheduledAt    DateTime
+  durationMin    Int               @default(60)
+  status         AppointmentStatus @default(SCHEDULED)
+  note           String?
+  completedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  offerRequest OfferRequest @relation(fields: [offerRequestId], references: [id], onDelete: Cascade)
+
+  @@index([offerRequestId, scheduledAt])
+}
+
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  /// A revised offer supersedes but never overwrites (`11` §Offers and KDV).
+  SUPERSEDED
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  offerRequestId String
+  /// Human-readable per-company sequence (`GSF-2026-0042`), unique platform-wide.
+  number    String      @unique
+  status    OfferStatus @default(DRAFT)
+  netKurus  Int
+  /// Basis points would be overkill: the KDV rate is a percentage with at most two
+  /// decimals, stored as `Float` for display and applied once on the net total.
+  taxRate    Float
+  taxKurus   Int
+  grossKurus Int
+  validUntil DateTime
+  note       String?
+  sentAt     DateTime?
+  decidedAt  DateTime?
+  decisionNote String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  offerRequest OfferRequest @relation(fields: [offerRequestId], references: [id], onDelete: Restrict)
+  lines        OfferLine[]
+
+  @@index([offerRequestId, status])
+}
+
+model OfferLine {
+  id            String @id @default(cuid())
+  offerId       String
+  sortOrder     Int    @default(0)
+  description   String
+  quantity      Float
+  unit          String
+  unitPriceKurus Int
+  lineNetKurus   Int
+
+  offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, sortOrder])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1333,9 +1506,10 @@ model Project {
   product     Product                 @relation(fields: [productId], references: [id], onDelete: Restrict)
   city        City?                   @relation(fields: [cityId], references: [id], onDelete: SetNull)
   district    District?               @relation(fields: [districtId], references: [id], onDelete: SetNull)
-  values      ProjectAttributeValue[]
-  attachments ProjectAttachment[]
-  matchRuns   MatchRun[]
+  values        ProjectAttributeValue[]
+  attachments   ProjectAttachment[]
+  matchRuns     MatchRun[]
+  offerRequests OfferRequest[]
 
   /// `04` §Indexes. The GiST index arrives with the table rather than with Phase 5's
   /// matching, because an index added later is an index somebody adds by hand in production.

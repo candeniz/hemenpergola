@@ -260,9 +260,9 @@ export const coversPointSchema = z.object({
 })
 export type CoversPointInput = z.infer<typeof coversPointSchema>
 
-export const companiesCoveringPoint = serviceMethod<CoversPointInput, { companyIds: string[] }>(
+export const listCompaniesCoveringPoint = serviceMethod<CoversPointInput, { companyIds: string[] }>(
   'matching',
-  'companiesCoveringPoint',
+  'listCompaniesCoveringPoint',
   {
     kind: 'anonymous',
     why: 'coverage is a property of the public directory; a visitor may ask who works in their district',
@@ -298,7 +298,7 @@ export const serviceAreaService = {
   listServiceAreas,
   addServiceArea,
   removeServiceArea,
-  companiesCoveringPoint,
+  listCompaniesCoveringPoint,
 } satisfies Record<string, { meta: unknown }>
 
 export const listCitiesSchema = z.object({ companyId: z.string().min(1) })

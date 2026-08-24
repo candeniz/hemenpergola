@@ -680,5 +680,11 @@
     "distanceUnknown": "—",
     "empty": "No companies selected to compare.",
     "maxNote": "At most 3 companies are compared side by side; extras are ignored."
+  },
+  "consent": {
+    "contactSharing": {
+      "label": "I consent to my contact details being shared with the manufacturer who accepts my request.",
+      "body": "The manufacturer who accepts your request will see your name, email address and phone number. You can withdraw consent at any time in account settings; withdrawal does not recall what has already been shared — it only stops future disclosures."
+    }
   }
 }

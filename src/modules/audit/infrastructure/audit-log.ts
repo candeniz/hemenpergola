@@ -67,6 +67,16 @@ export type AuditAction =
    * would have connected them.
    */
   | 'project_claimed'
+  /*
+   * Phase 6 · the lifecycle (`19` §Audit: "contact disclosures … offer sends and
+   * decisions" are logged). `contact_disclosed` is in the mandatory class — it is written
+   * inside the accepting transaction by the offer service, not through this best-effort
+   * writer; it appears in this union so the viewer can name it.
+   */
+  | 'offer_request_created'
+  | 'offer_request_accepted'
+  | 'offer_request_declined'
+  | 'contact_disclosed'
 
 export type AuditEntry = {
   action: AuditAction
