@@ -40,11 +40,12 @@ test.describe('F4 · request handling', () => {
   })
 })
 
-test.describe('F6 · reviews', () => {
-  test.fixme('review is possible only after SURVEY_COMPLETED, and is moderated', async () => {
-    // Phase 7. One review per OfferRequest, enforced by a unique index (16).
-  })
-})
+/*
+ * F5 (messaging) and F6 (reviews) left this file in Phase 9 — they are no longer owed
+ * work, they are `messaging-reviews.spec.ts`, walked in a browser against real surfaces.
+ * The entries are gone rather than pointing at the new file, because a `fixme` that
+ * says "done elsewhere" is the kind of stale note this list exists to avoid.
+ */
 
 test.describe('03 §Failure paths — each row is a test', () => {
   test.fixme('no manufacturer matches → widen radius, unpriced-but-capable, notify me', async () => {

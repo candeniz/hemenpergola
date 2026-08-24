@@ -129,3 +129,10 @@ export async function markLostAction(
   const service = await offers()
   return run(service.markOutcomeSchema, (a, d) => service.markLost(a, d), input)
 }
+
+export async function closeOfferRequestAction(
+  input: unknown,
+): Promise<ActionResult<{ offerRequestId: string; status: OfferRequestStatus }>> {
+  const service = await requests()
+  return run(service.closeOfferRequestSchema, (a, d) => service.closeOfferRequest(a, d), input)
+}

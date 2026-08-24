@@ -399,20 +399,22 @@ describe('pg-boss is really there', () => {
      * The second half of the SLA lesson: `enqueue()` rightly never throws, but for a
      * whole phase its only failure signal was a stdout line nobody read. Now every
      * failure lands in a ring buffer that `/api/health` reports as `degraded`. The
-     * trigger is the PERMANENT sentinel `probe.queue_that_must_never_exist`: the first
-     * draft sent to `search.reindex_company`, which Phase 8 creates — and the day that
-     * queue existed this test would have silently proven nothing (`28` §11's
-     * landmine-with-a-date). The sentinel's name is its own documentation.
+     * trigger is a permanently INVALID queue name (spaces), which pg-boss refuses at
+     * validation — so neither `send` nor `createQueue` can succeed on it, whatever the
+     * database holds. The earlier sentinels were repaired out from under this test twice:
+     * `search.reindex_company` (Phase 8 would have created it) and a merely-uncreated
+     * name (Phase 9 taught `enqueue()` to create missing queues on demand). Invalidity
+     * is the one property no future change can heal.
      */
     await ensureQueues()
 
     const before = recentEnqueueFailures().length
-    const jobId = await enqueue(JOB.neverCreatedProbe, {})
+    const jobId = await enqueue(JOB.invalidProbe, {})
 
     expect(jobId).toBeNull()
     const failures = recentEnqueueFailures()
     expect(failures.length).toBe(before + 1)
-    expect(failures[failures.length - 1]?.queue).toBe(JOB.neverCreatedProbe)
+    expect(failures[failures.length - 1]?.queue).toBe(JOB.invalidProbe)
     expect(failures[failures.length - 1]?.message.length).toBeGreaterThan(0)
   }, 120_000)
 })

@@ -161,6 +161,15 @@
       "reason": "Reason",
       "context": "IP and browser",
       "entityIdNeedsType": "Choose an entity type before searching by id."
+    },
+    "requests": {
+      "title": "Request closing",
+      "lead": "Requests that ended without an outcome (declined, expired, cancelled) are closed here; the closing reason is recorded.",
+      "empty": "Nothing to close.",
+      "close": "Close",
+      "reasonLabel": "Closing reason",
+      "closed": "Request closed.",
+      "forbidden": "You do not have permission to view this page."
     }
   },
   "auth": {
@@ -760,7 +769,9 @@
     "markLost": "Mark as lost",
     "won": "Congratulations — recorded as won.",
     "dimensions": "{w} × {d} × {h} mm",
-    "phoneLabel": "Phone"
+    "phoneLabel": "Phone",
+    "lost": "Recorded as lost.",
+    "lostReasonLabel": "Loss reason (required)"
   },
   "messaging": {
     "title": "Messages",

@@ -38,7 +38,7 @@ application code and are excluded from the build, from `tsconfig` and from lint:
 
 | Path | What |
 |---|---|
-| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`28`. **Every bare `NN-*.md` reference in any document resolves here**, including inside the documents |
+| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`29`. **Every bare `NN-*.md` reference in any document resolves here**, including inside the documents |
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | 77 Stitch design screens, `code.html` + `screen.png` each, plus four `DESIGN.md` themes |
 | `CLAUDE.md`, `README.md` | repository root |
 | `src/`, `prisma/`, `e2e/`, `test/`, `scripts/` | application code |
@@ -148,25 +148,26 @@ Ten phases, defined in `21-development-roadmap.md` (scope and gates) and
 | 4 Project configurator | ✅ gate met · 9/9 |
 | 5 Matching + pricing | ✅ gate met · 9/9 |
 | 6 Offer request lifecycle | ✅ gate met · 10/10 — `core-flow.spec.ts` walks all nine F1 steps |
-| 7 Communication + trust | ✅ gate met · 3/3 — every event renders (catalogue + `auth.*` family), messaging behind `ADR-028`, moderated reviews feeding the recompute-tested aggregates |
-| 8 Public site + SEO | ✅ gate met · 5/5 — the five-template Lighthouse gate ran strict in CI (run #15) and passed; slugs 308 forever, cities from supply, the block CMS |
-| 9 Hardening + launch | not started |
+| 7 Communication + trust | ✅ gate met · 3/3 |
+| 8 Public site + SEO | ✅ gate met · 5/5 — the five-template Lighthouse gate runs strict in CI |
+| 9 Hardening + launch | 🟡 **code complete, launch not** — 18 checklist items evidenced, 18 waiting on people and infrastructure (`29-launch-checklist.md`) |
 
-**The gate was proven on 2026-08-23**, on the first working checkout after the blind
-session: the full pipeline ran green — typecheck clean on the first pass, one real lint
-error (a domain import from `app/`), two test-infrastructure fixes and three spec updates
-for behaviour Phase 4 itself changed. `e2e/phase4-gate.spec.ts` passed as written: the
-anonymous draft survives a context restart, the claim moves it, and the cookie alone gets a
-404 afterwards. `25-progress.md`'s second 2026-08-23 entry has the full list of what broke
-and what did not.
+### The distinction this table exists to make
 
-Nine of ten phases closed. The weight that remains is 9 (hardening and launch) — plus
-the human-decision chain Q2 → Q3 → Q6 that no phase can close from a keyboard. `21` called
-Phase 5 "the first demo worth showing anyone"; that demo exists, and Phase 6's
-`e2e/core-flow.spec.ts` is the release gate.
+**The code is finished. The product is not launched.** Those are different sentences and
+Phase 9 is where they separate.
 
-**Sequencing note:** `26` §Sequencing puts Phase 3 before Phase 4 for a single developer,
-against `21`'s claim that they are parallel. That is done; Phase 3 is closed.
+Everything a programmer can do is done: the nine-step release gate is green, the five
+public templates meet their budgets in CI, KVKK export/erasure/retention work end to end,
+the security headers are on, every queue has a handler, every notification event has both
+a template and a trigger. **There is no remaining code task** — not "none prioritised",
+none. If you are a coding session and looking for the next feature, there isn't one; read
+§12 and check whether the thing actually blocking launch is something you can help with
+(mostly it is not).
+
+What remains is a company, a lawyer, an SMS provider, a hosting account, an editorial
+afternoon with a real manufacturer, and half an hour with an Android phone. `29` lists
+each with its owner.
 
 ### What exists and works
 
@@ -386,35 +387,127 @@ Recorded so they do not bite twice. Each cost real time.
 
 ---
 
-## 12. What is next
+## 12. What is next — and it is not code
 
-**Phase 9 — hardening and launch.** Phases 4–8 all closed on 2026-08-24 with their gates
-proven; the release gate walks all nine F1 steps and the five-template performance gate
-runs strict in CI. What Phase 9 owns:
+The next actor on this project is not writing software. They are registering a company,
+talking to a lawyer, choosing a host, and sitting down with a pilot manufacturer. This
+section is written for that person.
 
-- **The retention set** — Q25 (anonymous drafts) and Q28 (notification delivery log) both
-  have tested rules and no sweeper; `audit.retention_sweep` is the one queue with a name
-  and no handler.
-- **Search** — `search.reindex_company` gets its handler and queue; the loud-enqueue
-  test's sentinel means wiring it flips nothing silently.
-- **Ops**: the worker's production bundle (`node dist/worker.js` has no Dockerfile), the
-  pre-launch checklist in `21`, backups, monitoring beyond `/api/health`.
-- **Content at launch** (`18`): price guides, per-role how-it-works, city coverage — the
-  CMS exists; the content is editorial work.
-- Small carried debts: `mark_lost`/admin `close` surfaces; SLA business-hours under Q7;
-  message digest + unread-email follow-up with a real mail provider;
-  `appointment_reminder`/`offer_expiring` schedulers; F5/F6 e2e specs still `fixme`;
-  `Product.Offer.priceRange` JSON-LD once a price renders on the product page.
+**The one document to work from is `29-launch-checklist.md`.** Every pre-launch item is
+there with either its evidence (a test or run name) or the named thing it waits on. 18
+items are evidenced; 18 are waiting; none are unstarted. This section is the map of those
+18, in the order the dependencies actually allow.
 
+### Chain 1 — Q2 legal. Start today; everything else is shorter.
 
-**The human-decision chain is the other half of "next":** Q2 (legal entity → İYS) → Q3 (SMS
-sender) gate the production disclosure path, and Q6's 20% KDV default still wants an
-accountant's confirmation. No phase closes these from a keyboard.
+```
+legal entity  →  İYS registration  →  SMS sender ID  →  real phone verification
+                                                     →  production contact disclosure
+```
+
+This is the longest wall-clock chain in the project and **none of it can be
+parallelised**. An alphanumeric Turkish SMS sender ID is issued only to an İYS-registered
+business; İYS registration needs a registered company. The provider's own approval of the
+header is the short part (commonly 1–3 business days) — the lead time everyone worries
+about is the wrong one.
+
+What it unblocks: `29` rows A5 (privacy notice, cookie notice, terms, consent text —
+reviewed by a Turkish lawyer, versioned in `shared/legal/`), A6 (VERBİS), A7 (processor
+agreements for mail, SMS, hosting, storage, geocoding, error tracking), C2 (an error
+tracker may not be wired before its processor agreement exists — `19` §Data location),
+E5 (an SMS and an email actually arriving).
+
+Note for the sender ID: **the brand is "Hemen Pergola" and it does not fit** — the GSM
+alphanumeric field is 11 characters. The abbreviation is a decision to make with the İYS
+application. It lives in configuration; nothing in the code hardcodes it.
+
+### Chain 2 — Provisioning. Nothing blocks it. Nothing scheduled it either.
+
+Hosting, managed Postgres (with PostGIS), object storage, a mail provider, an SMS
+provider. **This was never named as a task in any document until `29` existed** — it is
+not a phase, so no phase owned it, and it is the single most likely thing to be discovered
+late.
+
+Every one of them sits behind a port or an environment variable that already exists:
+`StorageProvider`, `Mailer`, `SmsSender`, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL`. Choosing
+a provider is a configuration change plus, for mail and SMS, one adapter file each.
+
+It unblocks `29` rows C4 (backup restore rehearsal — there is nothing to rehearse against
+today), C5 (the worker's production image: `23` §Runtime specifies `node dist/worker.js`
+and no Dockerfile target exists — Q20), C6, A8 (the append-only GRANT on `AuditLog` needs
+a production role), C10 (capacity sizing on real hardware) and B6 (Dependabot: one
+repository setting).
+
+**Domain name:** undecided, and deliberately not hardcoded anywhere. `NEXT_PUBLIC_SITE_URL`
+feeds every canonical URL, the sitemap and the JSON-LD through `shared/seo/site-url.ts`.
+Choosing it is a one-line `.env` change.
+
+### Chain 3 — Editorial. Needs a manufacturer in a room, not a keyboard.
+
+`27-d3-pilot-guide.md` is a one-page script for that session, with a seeded login and
+Q11–Q17 phrased as questions to ask. The pilot account deliberately has **no price book** —
+building one from nothing is the thing being observed.
+
+It unblocks `29` rows D5 (the catalogue's open questions), D2 (a price guide per seed
+product), D4 (three portfolio-bearing profiles per launch city). And it feeds Q5: which
+cities launch is answerable from real data — `MatchRun` records zero-result runs per city
+and the query works today.
+
+### Chain 4 — Product decisions. Each is a choice with a cost.
+
+- **B3b — the 5 offer-requests/hour limit** was written before the flow existed. A
+  customer comparing three quotes legitimately sends three requests in one sitting. Wired
+  as specified; changing the number is a product call, not a bug fix.
+- **B3 — `publicRead` 300/min/IP** needs an edge or CDN layer: a database-backed limiter
+  cannot see requests that ISR serves from cache.
+- **B4 (Q10)** — CAPTCHA provider and its KVKK assessment. The port exists; today there is
+  progressive delay and a lockout notice, no hard lock.
+- **B5 (Q19)** — virus scanner. `virusScanStatus` already gates serving; nothing scans.
+- **B1** — the public pages carry no `script-src`, and those are exactly the pages that
+  render third-party text. Closing it means PPR or a JS-free public shell.
+
+### Chain 5 — One device, half an hour.
+
+`29` row E6: one full pass on a mid-range Android over a slow connection. The CI budgets
+are lab numbers under a fixed condition and say so (`18` §Performance budgets); they are
+not a claim about what a real phone on a real network sees. This is the cheapest item on
+the entire list and the only one that needs nothing bought and nobody consulted.
+
+---
+
+## 12b. If a coding session lands here months from now
+
+Do these four things before touching anything:
+
+1. **Run the suites.** `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`,
+   then `pnpm test:integration` and `pnpm test:e2e`. They were green at handover
+   (1000+ unit, 340+ integration, 60+ e2e). A red suite is the first thing to understand —
+   dependency drift is the likely cause, not a regression in logic.
+2. **Look at CI.** `github.com/candeniz/hemenpergola` — the pipeline runs the whole thing
+   on every push, including the performance gate. On a public repository an anonymous
+   reader sees only *annotations*, which is why the Lighthouse stage publishes its numbers
+   and the runner's `benchmarkIndex` as one.
+3. **Read `25-progress.md` §Open questions.** It is short, it is the table nobody re-reads
+   the log for, and it holds what was deliberately deferred with the reason and the phase
+   that owns it. Then read the last two dated log entries in full — not the whole log.
+4. **Read `29-launch-checklist.md`** to find out whether the work in front of you is
+   actually code. Most of what remains is not, and building the wrong thing well is the
+   expensive mistake available here.
+
+Then `README.md` routes your specific task to its two or three documents. **Do not read the
+whole documentation set for one feature** — `CLAUDE.md` means that literally.
 
 ---
 
 ## 13. If you read only one thing after this
 
-`CLAUDE.md`. Nine non-negotiables, and every one of them has a mechanism behind it rather than
-an intention. Then `25-progress.md`'s tracker and open questions, then the two or three
-documents `README.md` routes your task to.
+**If you are here to launch:** `29-launch-checklist.md`. Eighteen items are done and
+evidenced; eighteen are waiting on you, each with an owner and the thing it depends on.
+Start Chain 1 (the legal entity) today, because it is the only one that cannot be hurried
+later.
+
+**If you are here to write code:** `CLAUDE.md`. Nine non-negotiables, and every one of
+them has a mechanism behind it rather than an intention. Then `25-progress.md`'s tracker
+and open questions, then the two or three documents `README.md` routes your task to. And
+read §12b above first — the honest answer to "what should I build next" is currently
+"nothing; the build is done".

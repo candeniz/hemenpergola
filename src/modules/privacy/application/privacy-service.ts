@@ -166,12 +166,24 @@ export const requestDataExport = serviceMethod<Record<string, never>, DataExport
     if (actor.userId === null) return err(notFound('User'))
 
     const pkg = await buildExportPackage(actor.userId)
-    const key = `private/exports/${actor.userId}/${Date.now()}.json`
+    const stamp = Date.now()
+    const key = `private/exports/${actor.userId}/${stamp}.json`
 
     await getStorage().putObject({
       key,
       body: new TextEncoder().encode(JSON.stringify(pkg, null, 2)),
       mime: 'application/json',
+    })
+
+    // 19 §Access asks for "JSON + PDF": the JSON is the complete machine-readable copy,
+    // the PDF the readable summary. Both from the SAME package object, so they cannot
+    // disagree; both behind the same token.
+    const { renderExportPdf } = await import('../infrastructure/export-pdf')
+    const pdfKey = `private/exports/${actor.userId}/${stamp}.pdf`
+    await getStorage().putObject({
+      key: pdfKey,
+      body: await renderExportPdf(pkg),
+      mime: 'application/pdf',
     })
 
     const issued = await issueAuthToken(actor.userId, 'DATA_EXPORT', key)
@@ -188,7 +200,8 @@ export const requestDataExport = serviceMethod<Record<string, never>, DataExport
         '',
         `${brandName()} hesabınızdaki kişisel verilerin dışa aktarımı hazırlandı. Aşağıdaki bağlantı 30 gün geçerlidir:`,
         '',
-        `/api/v1/privacy/export?token=${issued.token}`,
+        `/api/v1/privacy/export?token=${issued.token}` + ' (JSON)',
+        `/api/v1/privacy/export?token=${issued.token}&format=pdf` + ' (PDF)',
         '',
         'Bu talebi siz yapmadıysanız lütfen bize ulaşın.',
       ].join('\n'),
@@ -272,7 +285,11 @@ export const anonymiseAccount = serviceMethod<AnonymiseAccountInput, { anonymise
   },
 )
 
-export const downloadDataExportSchema = z.object({ token: z.string().min(16) })
+export const downloadDataExportSchema = z.object({
+  token: z.string().min(16),
+  /** The same package in either shape — the token's target is the JSON key. */
+  format: z.enum(['json', 'pdf']).default('json'),
+})
 
 /**
  * Resolve an export link — anonymous BY the token: possession of the 256-bit value is the
@@ -281,8 +298,8 @@ export const downloadDataExportSchema = z.object({ token: z.string().min(16) })
  * must be retryable without a support ticket.
  */
 export const downloadDataExport = serviceMethod<
-  { token: string },
-  { fileName: string; body: Uint8Array }
+  { token: string; format?: 'json' | 'pdf' },
+  { fileName: string; body: Uint8Array; mime: string }
 >(
   'privacy',
   'downloadDataExport',
@@ -303,7 +320,14 @@ export const downloadDataExport = serviceMethod<
       return err(precondition('Bağlantının süresi doldu.'))
     }
 
-    const body = await getStorage().getObject(row.target)
-    return ok({ fileName: 'hemen-pergola-verileriniz.json', body })
+    const wantsPdf = input.format === 'pdf'
+    const key = wantsPdf ? row.target.replace(/.json$/, '.pdf') : row.target
+    const body = await getStorage().getObject(key)
+
+    return ok({
+      fileName: wantsPdf ? 'hemen-pergola-verileriniz.pdf' : 'hemen-pergola-verileriniz.json',
+      body,
+      mime: wantsPdf ? 'application/pdf' : 'application/json; charset=utf-8',
+    })
   },
 )

@@ -86,6 +86,7 @@ export type AuditAction =
   // Phase 9 · KVKK rights (19 §Access, §Erasure)
   | 'data_exported'
   | 'account_anonymised'
+  | 'offer_request_closed'
 
 export type AuditEntry = {
   action: AuditAction

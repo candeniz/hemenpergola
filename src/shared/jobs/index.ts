@@ -26,7 +26,15 @@ import { env } from '@/shared/config/env'
  * asserted by `jobs.integration.test.ts` rather than assumed.
  */
 
-/** The six jobs of `05` §Background work. Two are implemented in Phase 3. */
+/**
+ * The jobs of `05` §Background work — every name here has a worked queue and a handler.
+ * `search.reindex_company` was REMOVED 2026-08-25 rather than given an empty handler:
+ * today's search is the trigram index on `Company.displayName`, which is synchronous
+ * with the column — there is no tsvector to refresh and therefore no work for the job to
+ * do. A queue with a name and no purpose is the SLA-drop pattern one step earlier; the
+ * name returns together with the tsvector column, if search ever needs one (`05`
+ * updated in the same change).
+ */
 export const JOB = {
   /** Fills `ServiceArea.centerPoint` for a `RADIUS` area. Phase 3. */
   geocodeServiceArea: 'geo.geocode_service_area',
@@ -41,18 +49,31 @@ export const JOB = {
    * (`16` §Aggregates). Added to `05` §Background work in the same change.
    */
   analyticsRefresh: 'company.analytics_refresh',
-  /** Phase 8. */
-  searchReindexCompany: 'search.reindex_company',
   /** Phase 9. */
   auditRetentionSweep: 'audit.retention_sweep',
   /**
-   * NEVER created, on purpose — the permanent trigger for the loud-enqueue-failure test.
-   * The test originally sent to `search.reindex_company`, which Phase 8 creates: the day
-   * that queue exists, the test would silently prove nothing (`28` §11: "a stub for a
-   * table that is coming is a landmine with a date on it"). This name is its own
-   * documentation; adding it to `ensureQueues`/`WORKED_QUEUES` defeats a test.
+   * Phase 9's trigger back-fill: 13's row 7 — both parties reminded before the survey
+   * visit. Scheduled at appointment creation for scheduledAt − 24 h.
    */
-  neverCreatedProbe: 'probe.queue_that_must_never_exist',
+  appointmentReminder: 'appointment.reminder',
+  /**
+   * Phase 9's trigger back-fill: 13's row 10 — the customer (and the sender) warned
+   * before an offer's validUntil passes. Scheduled at offer send for validUntil − 48 h.
+   */
+  offerExpiring: 'offer.expiring_reminder',
+  /**
+   * The permanent trigger for the loud-enqueue-failure test — a name pg-boss refuses at
+   * VALIDATION (spaces are not allowed in a queue name), so both `send` and
+   * `createQueue` fail on it whatever the database contains.
+   *
+   * It has been rewritten twice, and each rewrite is the mechanism working. First it was
+   * `search.reindex_company` — until Phase 8 would have created that queue and quietly
+   * emptied the test (`28` §11's landmine-with-a-date). Then it was a
+   * "never created" name — until Phase 9 made `enqueue()` create missing queues on
+   * demand, at which point "does not exist" stopped being a failure mode at all. A
+   * structurally invalid name cannot be repaired by any future change.
+   */
+  invalidProbe: 'probe queue that can never be valid',
 } as const
 
 export type JobName = (typeof JOB)[keyof typeof JOB]
@@ -67,9 +88,10 @@ export type JobPayloads = {
   }
   [JOB.notificationDispatch]: { notificationId: string }
   [JOB.analyticsRefresh]: { companyId: string }
-  [JOB.searchReindexCompany]: { companyId: string }
-  [JOB.neverCreatedProbe]: Record<string, never>
+  [JOB.invalidProbe]: Record<string, never>
   [JOB.auditRetentionSweep]: { dryRun?: boolean }
+  [JOB.appointmentReminder]: { appointmentId: string }
+  [JOB.offerExpiring]: { offerId: string }
 }
 
 /**
@@ -133,6 +155,8 @@ export const WORKED_QUEUES = [
   JOB.notificationDispatch,
   JOB.analyticsRefresh,
   JOB.auditRetentionSweep,
+  JOB.appointmentReminder,
+  JOB.offerExpiring,
 ] as const
 
 export async function ensureQueues(): Promise<void> {
@@ -198,14 +222,7 @@ export async function enqueue<T extends JobName>(
 ): Promise<string | null> {
   try {
     const boss = await startBoss()
-    return await boss.send(name, payload, {
-      ...(options.singletonKey === undefined ? {} : { singletonKey: options.singletonKey }),
-      ...(options.startAfterSeconds === undefined ? {} : { startAfter: options.startAfterSeconds }),
-      retryLimit: 5,
-      retryDelay: 30,
-      retryBackoff: true,
-      expireInSeconds: 15 * 60,
-    })
+    return await sendOrCreateThenSend(boss, name, payload, options)
   } catch (error) {
     console.error('[jobs] enqueue failed', name, error)
     const log = failureLog()
@@ -217,6 +234,55 @@ export async function enqueue<T extends JobName>(
     if (log.length > ENQUEUE_FAILURE_BUFFER) log.splice(0, log.length - ENQUEUE_FAILURE_BUFFER)
     return null
   }
+}
+
+/**
+ * Send, and if the queue does not exist yet, create it and send once more.
+ *
+ * **Found by the loud-failure buffer this file added in 7.1** — the mechanism catching
+ * exactly the class it was built for. `ensureQueues()` runs in `worker.ts` only, so the
+ * WEB tier could send to a queue nobody had created: in development and e2e (where no
+ * worker runs) every `notification.dispatch` enqueue was refused and dropped, and in
+ * production it is a startup race — the first request that beats the worker's first boot
+ * loses its job silently.
+ *
+ * Creating on demand removes the ordering dependency rather than documenting it.
+ * `createQueue` is idempotent and carries the same `stately` policy `ensureQueues` uses,
+ * so a queue born here is identical to one born there. The retry happens once and only
+ * for this error; anything else propagates to the caller's catch and lands in the buffer.
+ */
+async function sendOrCreateThenSend<T extends JobName>(
+  boss: PgBoss,
+  name: T,
+  payload: JobPayloads[T],
+  options: EnqueueOptions,
+): Promise<string | null> {
+  try {
+    return await sendJob(boss, name, payload, options)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (!/does not exist/i.test(message)) throw error
+
+    console.warn('[jobs] queue missing, creating on demand', name)
+    await boss.createQueue(name, { policy: 'stately' })
+    return await sendJob(boss, name, payload, options)
+  }
+}
+
+async function sendJob<T extends JobName>(
+  boss: PgBoss,
+  name: T,
+  payload: JobPayloads[T],
+  options: EnqueueOptions,
+): Promise<string | null> {
+  return boss.send(name, payload, {
+    ...(options.singletonKey === undefined ? {} : { singletonKey: options.singletonKey }),
+    ...(options.startAfterSeconds === undefined ? {} : { startAfter: options.startAfterSeconds }),
+    retryLimit: 5,
+    retryDelay: 30,
+    retryBackoff: true,
+    expireInSeconds: 15 * 60,
+  })
 }
 
 /** Tests and the worker's own shutdown path. */

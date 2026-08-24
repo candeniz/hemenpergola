@@ -9,6 +9,7 @@ import { prisma } from '@/shared/db'
 import { notify } from '@/modules/notification/infrastructure/notify'
 import { conflict, err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+import { enqueue, JOB } from '@/shared/jobs'
 
 import { computeOfferTotals } from '../domain/offer-math'
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
@@ -297,6 +298,20 @@ export const sendOffer = serviceMethod<SendOfferInput, OfferView>(
               validUntil: input.validUntil.toLocaleDateString('tr-TR'),
             },
           })
+        }
+
+        // 13 row 10: warn before validUntil passes — scheduled at send, fired by the
+        // worker 48 h out; a validity shorter than that has nothing sane to schedule.
+        const expiringAt = input.validUntil.getTime() - 48 * 3_600_000
+        if (expiringAt > Date.now()) {
+          await enqueue(
+            JOB.offerExpiring,
+            { offerId: outcome.offer.id },
+            {
+              startAfterSeconds: Math.floor((expiringAt - Date.now()) / 1000),
+              singletonKey: `offexp:${outcome.offer.id}`,
+            },
+          )
         }
 
         return ok(toOfferView(outcome.offer))

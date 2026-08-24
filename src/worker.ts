@@ -156,8 +156,35 @@ async function main(): Promise<void> {
     },
   )
 
+  await boss.work<JobPayloads[typeof JOB.appointmentReminder]>(
+    JOB.appointmentReminder,
+    { batchSize: 10 },
+    async (jobs) => {
+      const { runAppointmentReminder } =
+        await import('@/modules/offer/infrastructure/reminder-jobs')
+
+      for (const job of jobs) {
+        const outcome = await runAppointmentReminder(job.data.appointmentId)
+        console.info(`[worker] ${JOB.appointmentReminder}`, job.data.appointmentId, outcome.status)
+      }
+    },
+  )
+
+  await boss.work<JobPayloads[typeof JOB.offerExpiring]>(
+    JOB.offerExpiring,
+    { batchSize: 10 },
+    async (jobs) => {
+      const { runOfferExpiring } = await import('@/modules/offer/infrastructure/reminder-jobs')
+
+      for (const job of jobs) {
+        const outcome = await runOfferExpiring(job.data.offerId)
+        console.info(`[worker] ${JOB.offerExpiring}`, job.data.offerId, outcome.status)
+      }
+    },
+  )
+
   console.info(
-    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch, company.analytics_refresh, audit.retention_sweep',
+    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch, company.analytics_refresh, audit.retention_sweep, appointment.reminder, offer.expiring_reminder',
   )
 
   for (const signal of SHUTDOWN_SIGNALS) {

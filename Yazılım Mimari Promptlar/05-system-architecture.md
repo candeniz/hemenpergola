@@ -135,12 +135,16 @@ second implementation in sight.
 
 pg-boss on the same Postgres. No Redis, no separate broker in V1.
 
+(`search.reindex_company` was removed from this table 2026-08-25: V1's search is the
+synchronous trigram index on `Company.displayName` — no tsvector exists to refresh, and a
+named queue with no work is the pattern that silently dropped the SLA jobs once already.
+It returns with the tsvector column, if search ever needs one.)
+
 | Job | Trigger | Notes |
 |---|---|---|
 | `offer_request.sla_expire` | scheduled on request creation | auto-decline, notify both sides |
 | `notification.dispatch` | on domain event | email/SMS/in-app fan-out |
 | `media.process` | on upload | variants, dimensions, virus scan status |
-| `search.reindex_company` | on profile/portfolio change | refreshes tsvector column |
 | `geo.geocode_service_area` | on radius service area save | fills `centerPoint` |
 | `company.analytics_refresh` | on review publish/reject/response, offer decisions | recomputes `Company`'s denormalised aggregates from source (`16` §Aggregates) |
 | `audit.retention_sweep` | nightly | applies the retention policy in `19-security-and-kvkk.md` |

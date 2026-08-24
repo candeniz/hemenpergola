@@ -84,6 +84,43 @@ describe('notification catalogue (phase gate)', () => {
     expect(MANDATORY_EVENTS).toEqual(pinned)
   })
 
+  it('every event has a TRIGGER — a template without a notify() call site cannot stay listed', () => {
+    /*
+     * The gap Phase 7's gate left and Phase 9 closed: the gate proved every event
+     * RENDERS, and `appointment_reminder`/`offer_expiring` lived for two phases with
+     * templates and no code that could ever fire them — a product promise with no
+     * product. This scan walks src/ for `type: '<event>'` literals (the only way
+     * `notify()` is ever called names its event inline), so an event added to the
+     * catalogue without a trigger fails HERE, not in a customer conversation.
+     */
+    const sources: string[] = []
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry)
+        if (statSync(full).isDirectory()) {
+          walk(full)
+          continue
+        }
+        if (!/\.tsx?$/.test(entry) || /\.test\.tsx?$/.test(entry)) continue
+        sources.push(readFileSync(full, 'utf8'))
+      }
+    }
+    walk(join(process.cwd(), 'src'))
+    const everything = sources.join('\n')
+
+    const untriggered = ALL_NOTIFICATION_TYPES.filter(
+      (type) =>
+        // The direct form, plus the two arms a ternary call site produces
+        // (offer-service's revise-vs-received is real code, not a loophole). Bare
+        // string-literal mentions (the audit-action union shares some names) do NOT
+        // count — only shapes a notify() type argument can take.
+        !everything.includes(`type: '${type}'`) &&
+        !everything.includes(`? '${type}'`) &&
+        !everything.includes(`: '${type}'`),
+    )
+    expect(untriggered).toEqual([])
+  })
+
   it('keeps notify.ts the only Notification writer in src/', () => {
     const writers: string[] = []
     const walk = (dir: string): void => {

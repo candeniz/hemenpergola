@@ -11,6 +11,7 @@ import {
   documentsRequestedEmail,
 } from '@/modules/notification/domain/templates'
 import { getMailer } from '@/modules/notification/infrastructure/mailer'
+import { notify as notifyUser } from '@/modules/notification/infrastructure/notify'
 import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
@@ -228,6 +229,21 @@ async function companyRecipient(companyId: string): Promise<string | null> {
   return contact?.email ?? null
 }
 
+/** The in-app half (13 rows 14–15): a Notification row per OWNER, beside the direct mail. */
+async function notifyOwnersInApp(
+  companyId: string,
+  type: 'company_verified' | 'company_rejected',
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const owners = await prisma.companyMembership.findMany({
+    where: { companyId, role: 'OWNER' },
+    select: { userId: true },
+  })
+  for (const owner of owners) {
+    await notifyUser({ userId: owner.userId, type, payload: { companyId, ...payload } })
+  }
+}
+
 async function notify(companyId: string, body: { subject: string; text: string }): Promise<void> {
   const to = await companyRecipient(companyId)
   if (to === null) {
@@ -291,6 +307,9 @@ export const verifyCompany = serviceMethod<VerifyCompanyInput, DecisionResult>(
     })
 
     await notify(input.companyId, companyVerifiedEmail(before.displayName, brandName()))
+    await notifyOwnersInApp(input.companyId, 'company_verified', {
+      companyName: before.displayName,
+    })
 
     return ok({ companyId: input.companyId, status: 'VERIFIED', notified: true })
   },
@@ -335,6 +354,10 @@ export const rejectCompany = serviceMethod<RejectCompanyInput, DecisionResult>(
       input.companyId,
       companyRejectedEmail(before.displayName, input.reason, brandName()),
     )
+    await notifyOwnersInApp(input.companyId, 'company_rejected', {
+      companyName: before.displayName,
+      reason: input.reason,
+    })
 
     return ok({ companyId: input.companyId, status: 'REJECTED', notified: true })
   },

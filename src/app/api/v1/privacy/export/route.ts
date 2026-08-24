@@ -20,14 +20,15 @@ export async function GET(request: NextRequest) {
     import('@/shared/result'),
   ])
 
-  const result = await downloadDataExport(anonymousActor(), { token })
+  const format = request.nextUrl.searchParams.get('format') === 'pdf' ? 'pdf' : 'json'
+  const result = await downloadDataExport(anonymousActor(), { token, format })
   if (!result.ok) {
     return NextResponse.json({ error: result.error.kind }, { status: httpStatusFor(result.error) })
   }
 
   return new NextResponse(Buffer.from(result.value.body), {
     headers: {
-      'content-type': 'application/json; charset=utf-8',
+      'content-type': result.value.mime,
       'content-disposition': `attachment; filename="${result.value.fileName}"`,
       'cache-control': 'no-store',
     },

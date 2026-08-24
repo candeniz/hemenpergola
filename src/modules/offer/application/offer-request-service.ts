@@ -842,3 +842,92 @@ export const offerRequestService = {
   listLeadsForCompany,
   listRequestsForProject,
 } satisfies Record<string, { meta: unknown }>
+
+// ── admin close (task 9's carried debt: the machine edge existed, no service did) ────
+
+export const closeOfferRequestSchema = z.object({
+  offerRequestId: z.string().min(1),
+  reason: z.string().trim().min(1).max(500),
+})
+export type CloseOfferRequestInput = z.infer<typeof closeOfferRequestSchema>
+
+export const listClosableRequests = serviceMethod<
+  Record<string, never>,
+  {
+    offerRequestId: string
+    status: OfferRequestStatus
+    companyName: string
+    updatedAt: Date
+  }[]
+>('offer', 'listClosableRequests', { kind: 'admin' }, async (actor) => {
+  const { requireAdmin } = await import('@/modules/iam/application/authorization')
+  const allowed = requireAdmin(actor)
+  if (!allowed.ok) return err(allowed.error)
+
+  const rows = await prisma.offerRequest.findMany({
+    where: { status: { in: ['DECLINED', 'EXPIRED', 'CANCELLED'] } },
+    orderBy: { updatedAt: 'asc' },
+    take: 100,
+    select: {
+      id: true,
+      status: true,
+      updatedAt: true,
+      company: { select: { displayName: true } },
+    },
+  })
+  return ok(
+    rows.map((row) => ({
+      offerRequestId: row.id,
+      status: row.status,
+      companyName: row.company.displayName,
+      updatedAt: row.updatedAt,
+    })),
+  )
+})
+
+export const closeOfferRequest = serviceMethod<
+  CloseOfferRequestInput,
+  { offerRequestId: string; status: OfferRequestStatus }
+>('offer', 'closeOfferRequest', { kind: 'admin' }, async (actor, input) => {
+  const { requireAdmin } = await import('@/modules/iam/application/authorization')
+  const allowed = requireAdmin(actor)
+  if (!allowed.ok) return err(allowed.error)
+
+  const outcome = await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<
+      { id: string; status: OfferRequestStatus; slaExpiresAt: Date }[]
+    >`
+      SELECT "id", "status", "slaExpiresAt" FROM "OfferRequest"
+      WHERE "id" = ${input.offerRequestId}
+      FOR UPDATE
+    `
+    const row = rows[0]
+    if (row === undefined) return { kind: 'missing' as const }
+
+    const next = transition(row.status, 'close', {
+      now: new Date(),
+      actor: 'admin',
+      slaExpiresAt: row.slaExpiresAt,
+      reason: input.reason,
+    })
+    if (!next.ok) return { kind: 'conflict' as const, error: next.error }
+
+    await tx.offerRequest.update({
+      where: { id: row.id },
+      data: { status: next.value, closedReason: input.reason },
+    })
+    return { kind: 'closed' as const, status: next.value }
+  })
+
+  if (outcome.kind === 'missing') return err(notFound('OfferRequest'))
+  if (outcome.kind === 'conflict') return err(outcome.error)
+
+  await recordAudit(actor, {
+    action: 'offer_request_closed',
+    entityType: 'OfferRequest',
+    entityId: input.offerRequestId,
+    reason: input.reason,
+  })
+
+  return ok({ offerRequestId: input.offerRequestId, status: outcome.status })
+})

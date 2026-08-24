@@ -15,7 +15,7 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | A1 | Data export works end to end, subject-only content, signed 30-day link | ✅ | `privacy.integration.test.ts` — export → mail → token download; no line items, no received messages |
 | A2 | Erasure works and is anonymisation, never hard delete | ✅ | `privacy.integration.test.ts` — personal fields cleared, commercial ids survive, replay refused |
 | A3 | Retention sweep runs, dry-run first, legal-hold untouchable | ✅ | `retention-policy.test.ts` (empty intersection, structurally) + `privacy.integration.test.ts` (dry-run = applied, evidence survives, idempotent) |
-| A4 | Export PDF rendering | ⏳ | bekliyor: an embeddable Turkish-glyph font decision — JSON ships today; the package shape (`data-export.v1`) is the PDF's input |
+| A4 | Export PDF rendering | ✅ | `export-pdf.ts` + `privacy.integration.test.ts` — a real PDF with an EMBEDDED OFL subset (`fonts/LICENSE-noto-sans.md`) that carries `ı İ ş Ş ğ Ğ ₺`; the standard-14 faces cannot, and the first font found in the tree was rejected after reading its cmap |
 | A5 | Privacy notice, cookie notice, terms, consent text — lawyer-reviewed, versioned | ⏳ | bekliyor: **9.2 / Q2** — Turkish counsel; `shared/legal/` carries the versioned texts to review |
 | A6 | VERBİS registration assessed | ⏳ | bekliyor: **Q2** — legal entity first |
 | A7 | Processor agreements (mail, SMS, hosting, storage, geocoding, error tracking) | ⏳ | bekliyor: **Q2 chain + provisioning** — no processor is wired that is not contracted; the ports (`Mailer`, `SmsSender`, `ErrorTracker`, `StorageProvider`) are the seams |
@@ -25,9 +25,10 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| B1 | CSP without `unsafe-inline` for scripts, nonce-based, app still works | ✅ (two-profile) | `public-directory.spec.ts` §9.3 — nonce on strict surfaces, headers asserted, login interactive under policy; release gate 9/9 under it. ISR public pages omit `script-src` honestly — see `19` §Headers for the structural reason and the PPR/JS-free follow-up |
+| B1 | CSP without `unsafe-inline` for scripts, nonce-based, app still works | ✅ (two-profile) | `public-directory.spec.ts` §9.3 — nonce on strict surfaces, headers asserted, login interactive under policy; release gate 9/9 under it. **Read the gap precisely:** the pages that carry NO `script-src` are exactly the pages that render third-party-authored content — CMS blocks, manufacturer display names, portfolio titles, review bodies. The residual risk is narrow because the block union refuses raw HTML and React escapes every string (`blocks.test.ts` asserts both), but the defence-in-depth layer is missing precisely where untrusted text is rendered. Closing it: PPR or a JS-free public shell — see `19` §Headers |
 | B2 | HSTS, nosniff, referrer-policy, permissions-policy on every response | ✅ | `public-directory.spec.ts` §9.3 header assertions |
 | B3 | Rate limits live on the surfaces `06` names | ✅ (3 of 5) | auth since Phase 1; `offerRequestCreate` 5/h/user and `priceEstimate` 30/h-user + 60/h-IP wired 2026-08-24 in the services. `messages` 60/h/thread lives in `message-service`. `publicRead` 300/min/IP: ⏳ bekliyor: edge/CDN layer — a DB-backed limiter cannot see ISR cache hits |
+| B3b | **`06`'s 5 offer-requests/hour/user may be too tight for the real flow** | ⏳ product decision | The limit was written before the flow existed. A customer comparing three quotes legitimately sends 3 requests in one sitting, and a second round after a decline puts them at the ceiling — the limiter cannot tell that from abuse. Wired as specified in 9.3 and **deliberately not changed in code**; bekliyor: **a product decision** on the number (and whether the window should be per-project rather than per-user) |
 | B4 | CAPTCHA / lockout after failed logins | ⏳ | bekliyor: **Q10** — provider choice + KVKK assessment; `noopCaptchaProvider` port is in place, progressive delay + lockout notice work today |
 | B5 | Virus scanning on uploads | ⏳ | bekliyor: **Q19** — scanner choice; `virusScanStatus` gates serving today (PENDING files serve only to their uploader) |
 | B6 | Dependency audit in CI | ⏳ | bekliyor: enable Dependabot on the repo (one setting); lockfile committed |
@@ -42,9 +43,10 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | C4 | Backup restore rehearsed, incl. point-in-time | ⏳ | bekliyor: **9.4 — no production environment exists**; the compose stack is not the thing to rehearse against |
 | C5 | Worker production image (`node dist/worker.js`) | ⏳ | bekliyor: **Q20 / provisioning** — no Dockerfile target exists; `pnpm worker` is the dev path |
 | C6 | Hosting, managed Postgres, object storage, mail, SMS provisioned | ⏳ | bekliyor: **provisioning — never yet named as a task anywhere**; every one sits behind an existing port or env var |
-| C7 | Load test of the matching path | ✅ | `scripts/load-test-matching.ts` — 2026-08-24: 0 errors through 120 concurrent; p95 crosses the 2.5 s SLA between 40 (1.36 s) and 80 (3.4 s) concurrent on the dev machine — linear pool queueing, no collapse, no lock contention observed |
+| C7 | Load test of the matching path | ✅ | `scripts/load-test-matching.ts` — 2026-08-24: 0 errors through 120 concurrent, no pool exhaustion or lock contention. **The number that matters is the knee, not the absence of errors** — see C10 |
 | C8 | Matching p95 budget in CI | ✅ | `match-performance.integration.test.ts`, every CI run |
 | C9 | Performance budgets on the five templates in CI | ✅ | the lighthouse job, every CI run since #15 |
+| C10 | **Capacity of the matching path — stated, not implied** | ✅ measured, ⏳ sized | Phase 5's gate promise (p95 ≤ 2.5 s) holds **to roughly 40 concurrent users on the dev machine**: p95 was 1.36 s at 40 and 3.4 s at 80, so the SLA line is crossed between them. Degradation is linear queueing, not collapse. bekliyor: **provisioning** — the same measurement on the real host is what turns "~40 here" into a capacity plan, and `scripts/load-test-matching.ts` is the instrument |
 
 ## D · Content at launch (`18` §Content that has to exist)
 
@@ -62,16 +64,29 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 |---|---|---|---|
 | E1 | tr + en copy on the five public templates | ✅ | `public-directory.spec.ts` renders both locales; `messages.test.ts` parity |
 | E2 | Turkish characters in slugs and names | ✅ | `slug.ts` tests; e2e İstanbul city page |
-| E3 | Turkish characters in PDFs | ⏳ | bekliyor: A4 (the PDF itself) |
+| E3 | Turkish characters in PDFs | ✅ | `privacy.integration.test.ts` — the export PDF renders `Işıl Şahingöz`, `İstanbul`, `Ağustos` and `₺` through the embedded subset; pdfkit refuses a character the subset lacks, so a narrowed subset fails there rather than in a download |
 | E4 | KDV arithmetic on a real offer vs hand calculation | ✅ | `offer-math.test.ts` + core-flow step 7's on-screen totals |
 | E5 | An SMS and an email actually arriving | ⏳ | bekliyor: **Q2→Q3** — providers; log adapters prove the seams |
 | E6 | Full pass on a mid-range Android over a slow connection | ⏳ | bekliyor: **9.8 — a physical device**; the lab budgets are not this (`18` §What these numbers claim) |
 
 ## Summary
 
-Evidenced: **16** · Waiting on a named human/infra step: **17** · Not started: **0**.
+**Evidenced: 18 · Waiting on a named human or infrastructure step: 18 · Not started: 0.**
+(Two rows count in both columns — B3 has one of five surfaces waiting on an edge layer,
+C10 is measured here and unsized on real hardware.)
 
-The waiting set decomposes into five named chains: **Q2 legal** (A5–A7, C2, E5 upstream),
-**provisioning** (C4–C6, A8 — hosting/DB/storage/mail/SMS, never previously named as a
-task), **editorial** (D2, D4, D5/Q11–17), **product decisions** (Q10 CAPTCHA, Q19 scanner,
-A4 font, B3's edge layer, B1's PPR follow-up), and **a device in a hand** (E6).
+**There is no remaining code work.** Every waiting row names a person or a purchase, not a
+programmer. The waiting set decomposes into five chains, and this is who owns each:
+
+| Chain | Owner | Rows | Note |
+|---|---|---|---|
+| **Q2 legal** | founder + Turkish counsel | A5, A6, A7, C2 (provider), E5 | The longest chain by wall-clock, and the one everything else waits behind: legal entity → İYS registration → SMS sender ID → real phone verification → the production contact-disclosure path |
+| **Provisioning** | founder / whoever holds the accounts | C4, C5, C6, A8, C10 (sizing), B6 | Hosting, managed Postgres, object storage, mail, SMS. **Never named as a task in any document before `29` existed** — it is not a phase, so nothing scheduled it |
+| **Editorial** | founder + pilot manufacturer | D2, D4, D5 | Price guides, real portfolios, and the catalogue answers Q11–Q17 (`27-d3-pilot-guide.md` is the script for that session) |
+| **Product decisions** | founder | B3 (edge layer), B3b (request limit), B4 (Q10), B5 (Q19), B1 (PPR follow-up) | Each is a choice with a cost, not a gap in the build |
+| **A device in a hand** | anyone with an Android phone | E6 | Half an hour, and the only item here that needs nothing bought and nobody consulted |
+
+The dependency that matters: **nothing in the Q2 chain can be parallelised away.** SMS
+cannot be tested before a sender ID exists; a sender ID needs İYS registration; İYS needs a
+registered company. Everything else — provisioning, editorial, the device — can start
+today, in any order.

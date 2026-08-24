@@ -8,6 +8,7 @@ import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
 import { conflict, err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+import { notify } from '@/modules/notification/infrastructure/notify'
 
 import type { PriceBookInput } from '../domain/engine'
 
@@ -414,6 +415,22 @@ export const publishPriceBook = serviceMethod<
 
       return live
     })
+
+    // 13 row 16's in-app record — Phase 9's trigger scan found the event listed with
+    // no call site. Owners only; publishing is their own act, the row is the receipt.
+    {
+      const owners = await prisma.companyMembership.findMany({
+        where: { companyId, role: 'OWNER' },
+        select: { userId: true },
+      })
+      for (const owner of owners) {
+        await notify({
+          userId: owner.userId,
+          type: 'price_book_published',
+          payload: { companyId, version: draft.version },
+        })
+      }
+    }
 
     await recordAudit(actor, {
       action: 'price_book_published',

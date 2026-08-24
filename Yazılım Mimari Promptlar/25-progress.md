@@ -6,16 +6,20 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phases 0–8 are complete with proven gates** (Phase 8 closed
-2026-08-24, CI run #15): the public site is live in shape — homepage, categories,
-products, manufacturer profiles, supply-driven city pages and the block-CMS pages, with
-per-locale slugs that answer renames with permanent redirects, sitemap and JSON-LD from
-one origin value, and the five-template Lighthouse gate running STRICT in CI against
-`18`'s budgets and named conditions. Beneath it, the full F1 journey remains proven end to
-end (release gate 9/9), notifications dispatch idempotently, messaging opens with the
-disclosure (`ADR-028`), and moderated reviews feed the matching score through
-recompute-tested aggregates. Only Phase 9 (hardening + launch) remains. The repository is
-public at `github.com/candeniz/hemenpergola` and CI runs the whole pipeline on every push.
+**Current phase:** **Phases 0–8 are complete with proven gates; Phase 9's code is complete
+and its launch is not** (2026-08-25). The build is finished: the release gate walks all
+nine F1 steps, the five public templates meet `18`'s budgets in CI, KVKK export (JSON +
+Turkish-rendering PDF), erasure-as-anonymisation and the retention sweep work end to end,
+the two-profile CSP is on with no `unsafe-inline` for scripts, every queue has a handler
+and every notification event has both a template and a trigger. **There is no remaining
+code task.**
+
+What remains is not code: 18 of `29-launch-checklist.md`'s 36 items wait on a legal
+entity, processor agreements, hosting and provider accounts, an editorial session with a
+pilot manufacturer, five product decisions, and one Android phone. `28-handover.md` §12 is
+written for the person doing that, with owners and dependencies. The repository is public
+at `github.com/candeniz/hemenpergola` and CI runs the whole pipeline — including the
+performance gate — on every push.
 
 **The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
 it, with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as
@@ -25,9 +29,9 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **1061 unit tests, 330 integration tests** against real PostGIS and MinIO
+price their work. **1081 unit tests, 340 integration tests** against real PostGIS and MinIO
 containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
-(54 Playwright tests green, 11 skipped for later phases). Mail and
+(64 Playwright tests green, 10 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
 
 ## Phase tracker
@@ -51,7 +55,7 @@ proven — not when the code is written.
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
-| 9 | Hardening + launch | **🟡 in progress · 4/8** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` holds every item: **16 evidenced, 17 waiting on named human/infra steps** across five chains — Q2 legal (lawyer, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS + backup rehearsal + worker image, 9.4/Q20), editorial (price guides, pilot catalogue Q11–17, real manufacturers), product decisions (Q10 CAPTCHA, Q19 scanner, export-PDF font, edge rate-limit, public-CSP PPR follow-up), and a physical Android device (9.8). Code-side 9.1/9.3/9.5/9.6 landed 2026-08-24 |
+| 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 
 ## Log
 
@@ -3084,6 +3088,85 @@ benchmarkIndex fix exists for): runner **benchmarkIndex 2849** — 4.4× this de
 0.70–0.75 s, TBT 53–69 ms, CLS 0.000, TTFB-hit 12–29 ms — every budget cleared with 3–4×
 headroom. If a future runner reports a materially lower index alongside a TBT failure,
 suspect the host before the code.
+
+### 2026-08-25 — Phase 9's last code pass, and the handover (commit `P9 · son kod turu ve devir`)
+
+**There is no remaining code work.** Every task in `26-execution-plan.md` is done, every
+gate through Phase 8 is proven, and Phase 9's remaining 18 checklist items each name a
+person or a purchase. That sentence is the point of this entry; the rest is what it took.
+
+**Two events had templates and no trigger.** Phase 7's gate proved every event *renders* —
+`appointment_reminder` and `offer_expiring` lived for two phases in the gap between
+rendering and firing, which is a product promise with no product behind it. Both now have
+scheduled jobs on the SLA handler's pattern (enqueued with `startAfterSeconds` at the
+moment the deadline is created, state-checked at fire time, idempotent through `notify()`'s
+dedupe). **And the gate grew the assertion that was missing**: the catalogue test now scans
+`src/` for a `notify()` call site per event, so a listed event with no trigger fails there.
+Running it immediately found five more untriggered events — `offer_received`,
+`offer_revised`, `offer_accepted`, `offer_rejected` were false positives (a ternary call
+site, now matched), but `company_verified`, `company_rejected` and `price_book_published`
+were real: three catalogue rows nothing could ever write. They have call sites now, and
+the two verification events dropped to `in_app`-only channels because their email already
+goes directly from the admin service — dispatching it again would have doubled it.
+
+**LOST and admin close.** The machine had both edges since Phase 6 and neither had a
+surface: `mark_lost` (with its required reason) is now on the manufacturer's lead actions
+beside `mark_won`, and `/yonetim/talepler` is the admin close queue — listing only
+requests that ended *without* an outcome, because the machine refuses to close a won or
+lost engagement and offering a button that cannot work is worse than offering none.
+
+**F5 and F6 stopped being `fixme`.** `messaging-reviews.spec.ts` walks both in a browser:
+a customer writes into an `ACCEPTED` thread and sees it appear; a `PENDING` request offers
+**no message box at all** (`ADR-028` on the surface, not merely in the service); the review
+form is absent before `SURVEY_COMPLETED`, present after, and what it submits lands
+`PENDING` in moderation.
+
+**The PDF half of the export.** `19` §Access says "JSON + PDF" and only the JSON existed,
+blocked on a font. Resolved properly rather than skipped: the first candidate found in the
+tree (`@vercel/og`'s bundled Noto Sans) was **rejected after reading its cmap** — the
+Google "latin" subset carries `ı` but not `İ ş Ş ğ Ğ ₺`, so it would have rendered Turkish
+names as tofu, silently. Noto Sans (OFL 1.1) subsetted through the same documented Google
+Fonts route the icon font uses: 1.06 MB → 48.9 KB, licence and provenance recorded in
+`fonts/LICENSE-noto-sans.md` beside the files. The integration test renders `Işıl
+Şahingöz`, `İstanbul` and `₺` through it and asserts the embedded `FontFile2`.
+
+**`search.reindex_company` was deleted, not implemented.** V1's search is the synchronous
+trigram index on `Company.displayName`; there is no tsvector to refresh, so the job had no
+work to do. A named queue with an empty handler is the SLA-drop pattern one step earlier —
+the name returns with the column, if search ever needs one (`05` updated).
+
+**Two findings the mechanisms produced, both real.**
+
+*The web tier never created its queues.* The loud-failure buffer added in 7.1 caught
+exactly the class it was built for: `[jobs] enqueue failed notification.dispatch · Queue
+does not exist` in the e2e log. `ensureQueues()` runs in `worker.ts` only, so in
+development and e2e — where no worker runs — every dispatch enqueue was refused, and in
+production it is a startup race the first request can lose. `enqueue()` now creates a
+missing queue on demand and sends again, which removes the ordering dependency instead of
+documenting it. **That repaired the sentinel out from under its own test** for the second
+time: "does not exist" is no longer a failure mode, so the probe is now a structurally
+invalid queue name (spaces), which no future change can heal.
+
+*The suite's auth budget was overspent by the new spec.* Three full-suite runs failed in
+three different places before the pattern resolved: `messaging-reviews` logged in through
+the real form three times as the seeded customer, and `06`'s 10 attempts / 15 min (per IP
+**and** per account) is spent mostly by the specs whose subject *is* signing in. The
+casualty was `phase4-gate`'s email verification — which is verbatim the failure
+`session-fixture.ts`'s own comment was written about. The spec now uses the fixture. Two
+lessons the codebase had already learned and this turn re-learned: shared-account budgets
+are a finite resource, and a test that plants rows must clean up its own fixtures (the
+review test hit `16`'s legitimate two-per-company-per-year cap on its third run — the cap
+was right; the test was not idempotent).
+
+**`29-launch-checklist.md` is the handover's spine now**, and `28-handover.md` was
+rewritten for an actor who is not writing code: §5 states "the code is finished, the
+product is not launched" as two different sentences, §12 is the five chains with their
+owners and the dependency that cannot be parallelised (entity → İYS → sender ID → phone
+verification → production disclosure), and a new §12b tells a coding session that lands
+here months from now what to run and read first — and that the honest answer to "what
+should I build next" is currently "nothing".
+
+Suite counts: **1081 unit / 340 integration / 64 e2e green (10 skipped)**.
 
 ## Open questions — need a human answer before the phase that hits them
 

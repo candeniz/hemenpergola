@@ -345,3 +345,57 @@ describe('9.1 · export and erasure', () => {
     expect(again.ok).toBe(false)
   }, 60_000)
 })
+
+describe('9.1 · the export PDF renders Turkish', () => {
+  it('produces a real PDF whose embedded font carries the Turkish repertoire', async () => {
+    const { renderExportPdf } = await import('@/modules/privacy/infrastructure/export-pdf')
+
+    // The names that break a WinAnsi font: dotted/dotless i, ş, ğ — plus the lira sign.
+    const bytes = await renderExportPdf({
+      exportedAt: '2026-08-25T09:00:00.000Z',
+      profile: { fullName: 'Işıl Şahingöz', email: 'isil@example.com' },
+      projects: [
+        {
+          product: 'Bioklimatik Pergola',
+          city: 'İstanbul',
+          status: 'SUBMITTED',
+          note: 'Ağustos’ta montaj',
+        },
+      ],
+      offerRequests: [
+        {
+          company: 'Ege Pergola',
+          status: 'WON',
+          createdAt: '2026-08-01',
+          offers: [{ number: 'EGE-2026-0002', grossKurus: 12000000 }],
+        },
+      ],
+      consents: [],
+      reviews: [],
+      messagesSent: [],
+    })
+
+    // A real PDF, not a stub.
+    expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe('%PDF-')
+    expect(bytes.length).toBeGreaterThan(2000)
+
+    const raw = Buffer.from(bytes).toString('latin1')
+    // The font is EMBEDDED (a FontFile2 stream) — without it the Turkish glyphs would be
+    // missing whatever the text layer says.
+    expect(raw).toContain('FontFile2')
+    expect(raw).toMatch(/NotoSans/)
+
+    // And the glyphs actually resolved: pdfkit refuses to encode a character the
+    // embedded subset lacks, so reaching here with these strings is the assertion. A
+    // narrowed subset fails HERE rather than in a customer's download.
+    const narrowed = await renderExportPdf({
+      profile: { fullName: 'ĞÜŞİÖÇ ğüşiöç ₺' },
+      consents: [],
+      projects: [],
+      offerRequests: [],
+      reviews: [],
+      messagesSent: [],
+    })
+    expect(narrowed.length).toBeGreaterThan(2000)
+  }, 60_000)
+})

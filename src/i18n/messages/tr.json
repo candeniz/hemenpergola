@@ -161,6 +161,15 @@
       "reason": "Gerekçe",
       "context": "IP ve tarayıcı",
       "entityIdNeedsType": "Varlık kimliğiyle arama yapmak için önce varlık tipini seçin."
+    },
+    "requests": {
+      "title": "Talep kapatma",
+      "lead": "Sonuçlanmadan sonlanmış talepler (reddedilen, süresi dolan, iptal edilen) burada kapatılır; kapatma gerekçesi kayda geçer.",
+      "empty": "Kapatılacak talep yok.",
+      "close": "Kapat",
+      "reasonLabel": "Kapatma gerekçesi",
+      "closed": "Talep kapatıldı.",
+      "forbidden": "Bu sayfayı görüntüleme yetkiniz yok."
     }
   },
   "auth": {
@@ -760,7 +769,9 @@
     "markLost": "Kaybedildi olarak işaretle",
     "won": "Tebrikler — anlaşma kazanıldı olarak kaydedildi.",
     "dimensions": "{w} × {d} × {h} mm",
-    "phoneLabel": "Telefon"
+    "phoneLabel": "Telefon",
+    "lost": "Kaybedildi olarak kaydedildi.",
+    "lostReasonLabel": "Kayıp gerekçesi (zorunlu)"
   },
   "messaging": {
     "title": "Mesajlar",

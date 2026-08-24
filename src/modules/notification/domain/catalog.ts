@@ -149,16 +149,19 @@ export const NOTIFICATION_EVENTS = {
     sample: { reason: 'Üçüncü kişilere ait kişisel veri içeriyor' },
   },
   // ── platform (`13` rows 14–15) ─────────────────────────────────────────────
+  // in_app only: the verification decision's EMAIL is a direct send from the admin
+  // service (Phase 2's templates.ts path, preference-exempt) — dispatching email here too
+  // would double it. The row is the in-app record Phase 9's trigger scan demanded.
   company_verified: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app'],
     sample: { companyName: 'Ege Pergola' },
   },
   company_rejected: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app'],
     sample: { companyName: 'Ege Pergola', reason: 'Vergi levhası okunaklı değil' },
   },
   price_book_published: {

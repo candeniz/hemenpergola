@@ -8,6 +8,7 @@ import {
   acceptOfferRequestAction,
   completeAppointmentAction,
   declineOfferRequestAction,
+  markLostAction,
   markWonAction,
   scheduleAppointmentAction,
   sendOfferAction,
@@ -38,6 +39,7 @@ export function LeadActions({
 }) {
   const t = useTranslations('leads')
   const router = useRouter()
+  const [lostReason, setLostReason] = useState('')
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -260,19 +262,48 @@ export function LeadActions({
         </div>
       ) : null}
 
-      {status === 'OFFER_ACCEPTED' ? (
-        <Button
-          variant="confirm"
-          disabled={pending}
-          onClick={() =>
-            call(
-              () => markWonAction({ offerRequestId, companyId }),
-              () => setNotice(t('won')),
-            )
-          }
-        >
-          {t('markWon')}
-        </Button>
+      {status === 'OFFER_ACCEPTED' || status === 'OFFER_REJECTED' ? (
+        <div className="flex flex-col gap-xs">
+          <div className="flex flex-wrap items-center gap-base">
+            {status === 'OFFER_ACCEPTED' ? (
+              <Button
+                variant="confirm"
+                disabled={pending}
+                onClick={() =>
+                  call(
+                    () => markWonAction({ offerRequestId, companyId }),
+                    () => setNotice(t('won')),
+                  )
+                }
+              >
+                {t('markWon')}
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              disabled={pending || lostReason.trim() === ''}
+              onClick={() =>
+                call(
+                  () => markLostAction({ offerRequestId, companyId, reason: lostReason.trim() }),
+                  () => setNotice(t('lost')),
+                )
+              }
+            >
+              {t('markLost')}
+            </Button>
+          </div>
+          {/* The machine's guard requires a reason — won/lost tracking is only as good
+              as the reasons it stores (11 §Outcome). */}
+          <label className="flex flex-col gap-xs text-body-sm">
+            {t('lostReasonLabel')}
+            <input
+              value={lostReason}
+              onChange={(event) => setLostReason(event.target.value)}
+              maxLength={500}
+              className="rounded-md border border-control-border bg-panel p-base text-body-sm"
+            />
+          </label>
+        </div>
       ) : null}
     </div>
   )

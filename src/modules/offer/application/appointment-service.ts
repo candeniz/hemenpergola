@@ -94,6 +94,20 @@ export const scheduleAppointment = serviceMethod<
 
     if (outcome.kind === 'error') return err(outcome.error)
 
+    // 13 row 7: both parties reminded 24 h before the visit. Scheduled now, fired by
+    // the worker; if the visit is nearer than 24 h there is nothing sane to schedule.
+    const reminderAt = input.scheduledAt.getTime() - 24 * 3_600_000
+    if (reminderAt > Date.now() && outcome.kind === 'scheduled') {
+      await enqueue(
+        JOB.appointmentReminder,
+        { appointmentId: outcome.appointmentId },
+        {
+          startAfterSeconds: Math.floor((reminderAt - Date.now()) / 1000),
+          singletonKey: `apptrem:${outcome.appointmentId}`,
+        },
+      )
+    }
+
     // After commit — `11` §Transition table's "both notified".
     await notify({
       userId: outcome.customerId,
