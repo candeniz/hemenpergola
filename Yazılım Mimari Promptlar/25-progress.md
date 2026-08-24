@@ -2499,9 +2499,14 @@ tested from the attacker's side with both a wrong user and a wrong cookie.
 - **`09` §Service-area coverage now shows the two-call SQL** and says why the one-call
   version cannot use the GiST index; **`ADR-025`** records the decision, the alternatives
   and the reversal condition.
-- **The remote exists and CI runs** — see the handover's §4 for the first-run findings
-  (missing `prisma generate` under pnpm 11's script blocking; an e2e job with no database;
-  a unit test tripping on the string "migrate deploy"). The repository is **public** at
+- **The remote exists and CI is green** — six red runs, then run #6 green with all six
+  stages (static 0.8m · unit 0.5m · integration 1.7m, the p95 assertion included · build
+  1m · e2e+a11y 2.7m · lighthouse 0.4m). Every red found something real; the handover's §4
+  lists them (missing `prisma generate` under pnpm 11's script blocking; two
+  file-ordering test races the suites had carried since Phase 2/3; the storage tests'
+  unstated MinIO dependency; `--wait` versus the one-shot init container; and the
+  discovery that on a public repo only *annotations* are readable without access, which
+  the integration job now uses for its failure tail). The repository is **public** at
   `github.com/candeniz/hemenpergola`, branch `master`, secrets scan over the full history
   clean before the first push.
 
