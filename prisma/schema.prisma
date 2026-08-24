@@ -1429,6 +1429,28 @@ model Message {
  * old slug points at exactly one entity; a slug that comes back into live use has its
  * redirect row deleted by the same service that assigned it.
  */
+/**
+ * `18-cms-seo.md` §Content model, task 8.3 — the structured-block CMS. `blocks` is a JSON
+ * array validated by `modules/content/domain/blocks.ts`'s closed Zod union (heading,
+ * paragraph, list, image, cta). **Raw HTML is not a block type and cannot become one
+ * quietly**: the union is closed, the admin service parses before writing, and the
+ * renderer never uses `dangerouslySetInnerHTML` — the same no-sanitizer argument that
+ * rejects SVG uploads (`19` §App security, Q19): a sanitizer we do not have protects
+ * nothing, so the format must not need one.
+ */
+model ContentPage {
+  id        String   @id @default(cuid())
+  /// The route key: 'nasil-calisir', 'hakkimizda', 'iletisim'.
+  key       String
+  locale    String
+  title     String
+  blocks    Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([key, locale])
+}
+
 model SlugRedirect {
   id         String   @id @default(cuid())
   /// 'category' | 'product' — 'company' joins if company slugs ever become editable.

@@ -316,7 +316,8 @@
       "manufacturers": "Manufacturers",
       "projects": "Projects",
       "signIn": "Sign In",
-      "contactSales": "Contact Sales"
+      "contactSales": "Contact Sales",
+      "cities": "Cities"
     },
     "customer": {
       "section": "My account",
@@ -824,6 +825,31 @@
     "companyResponse": "Company response",
     "foundedYear": "Founded: {year}",
     "employeeRange": "Employees: {range}",
-    "loadError": "Content cannot be loaded right now. Please try again later."
+    "loadError": "Content cannot be loaded right now. Please try again later.",
+    "citiesTitle": "Cities we serve",
+    "citiesLead": "We list only the cities where verified manufacturers actually operate.",
+    "citiesEmpty": "No served cities yet.",
+    "cityManufacturerCount": "{count, plural, one {# manufacturer} other {# manufacturers}}",
+    "cityTitle": "Pergola and outdoor systems in {city}",
+    "cityLead": "Verified manufacturers serving {city}. Configure your project and get comparable offers."
+  },
+  "adminContent": {
+    "title": "Content pages",
+    "lead": "Edited as structured blocks; raw HTML is not accepted. Publishing is immediate.",
+    "forbidden": "You do not have permission to view this page.",
+    "titleLabel": "Page title",
+    "removeBlock": "Remove",
+    "addBlock": "+ {type}",
+    "save": "Save and publish",
+    "saved": "Saved.",
+    "imageAlt": "Image description (alt)",
+    "ctaLabel": "Button label",
+    "blockType": {
+      "heading": "Heading",
+      "paragraph": "Paragraph",
+      "list": "List",
+      "image": "Image",
+      "cta": "Button (CTA)"
+    }
   }
 }

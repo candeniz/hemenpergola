@@ -19,6 +19,17 @@
  *
  * So this reads Next's own build output and fails the build stage.
  *
+ * ## What the 2026-08-24 breakage probe found (Phase 8)
+ *
+ * Injecting `revalidate = 60` into the group layout did NOT flip the routes: every page
+ * in the group calls `cookies()` (the anonymous draft key), and Next ranks dynamic-API
+ * usage above `revalidate`. So today this check is the THIRD layer, masked by the first —
+ * its own failure path was proven by injecting a route into `.next/prerender-manifest.json`
+ * directly (it fails with the message below). It is not redundant: the day a page in the
+ * group stops calling `cookies()`, the masking layer evaporates, a parent `revalidate`
+ * becomes live, and this check is the only guard left. `07` §Rendering strategy carries
+ * the same finding.
+ *
  * ## Why it enumerates a directory rather than a list of routes
  *
  * The first version named two routes. The second half of Phase 4 adds `POST /claim`,

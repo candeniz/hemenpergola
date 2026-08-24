@@ -474,7 +474,7 @@ describe('every service method has a matrix entry', () => {
     }
   })
 
-  it('keeps the public directory anonymous surface to the six pinned reads', () => {
+  it('keeps the public directory anonymous surface to the eight pinned reads', () => {
     /*
      * Task 8.1's directory module is anonymous BY DESIGN — its whole job is public
      * canonical URLs — which is exactly why it gets the same pin as `MATCHING_PUBLIC_READ`
@@ -493,6 +493,10 @@ describe('every service method has a matrix entry', () => {
       // The sitemap's slug feed — public by definition, and the reason app/sitemap.ts
       // needs no database client of its own (05 §Shape).
       'listPublicSlugs',
+      // 8.2 — city landing pages, which exist ONLY where real supply exists; both reads
+      // apply the same supply predicate, so an unsupplied city is a 404 everywhere.
+      'listPublicCities',
+      'getPublicCity',
     ]
 
     const anonymous = registeredMethods().filter((meta) => meta.service === 'directory')
@@ -505,6 +509,18 @@ describe('every service method has a matrix entry', () => {
         /^(get|list)/,
       )
     }
+  })
+
+  it('keeps the CMS split admin-writes / anonymous-read, pinned', () => {
+    // Task 8.3: the admin writes structured blocks, the public reads them. Exactly two
+    // methods; a third is a reviewed diff. The XSS control is upstream of authorisation —
+    // the closed block union — but the split matters too: nothing anonymous may write.
+    const content = registeredMethods().filter((meta) => meta.service === 'content')
+
+    expect(content.map((meta) => `${meta.method}:${meta.authorisation.kind}`).sort()).toEqual([
+      'getPublicContentPage:anonymous',
+      'upsertContentPage:admin',
+    ])
   })
 
   it('keeps every pricing method company-scoped, never admin', () => {

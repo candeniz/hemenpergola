@@ -133,6 +133,10 @@ const ENV_BOUNDARY_FILES = [
   // `23` §Configuration removed. `CDN_BASE_URL` is a public hostname, and an unset one falls
   // back rather than failing — see the comment in the file.
   'next.config.ts',
+  // The Lighthouse stage: a CLI script like the other ci-*.mjs runners — it targets an
+  // arbitrary stack (LH_BASE_URL/DATABASE_URL) that the application's typed env does not
+  // describe. Structural, not a src/ decision (the pin test covers src/** only).
+  'scripts/ci-lighthouse.mjs',
   // Test tooling, not application code: Playwright reads `CI` to decide retries and
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',

@@ -27,12 +27,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...entry('/', 1),
     ...entry('/kategoriler', 0.8),
     ...entry('/ureticiler', 0.8),
+    ...entry('/sehirler', 0.8),
     ...entry('/proje/yeni', 0.9),
+    // The CMS launch pages (8.3) — static routes, content from the database.
+    ...entry('/nasil-calisir', 0.6),
+    ...entry('/hakkimizda', 0.5),
+    ...entry('/iletisim', 0.5),
   ]
 
   try {
-    const { listPublicSlugs } = await import('@/modules/directory/application/directory-service')
+    const { listPublicSlugs, listPublicCities } =
+      await import('@/modules/directory/application/directory-service')
     const { anonymousActor } = await import('@/shared/context/actor')
+
+    const cities = await listPublicCities(anonymousActor(), {})
+    if (cities.ok) {
+      // Only supplied cities exist as pages (8.2), so only they enter the sitemap.
+      for (const city of cities.value) {
+        for (const locale of LOCALES) {
+          entries.push({
+            url: absoluteUrl(localePath(locale, `/sehirler/${city.slug}`)),
+            changeFrequency: 'weekly',
+            priority: 0.7,
+          })
+        }
+      }
+    }
+
     const result = await listPublicSlugs(anonymousActor(), {})
     if (!result.ok) return entries
 

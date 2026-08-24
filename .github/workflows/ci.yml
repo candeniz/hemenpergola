@@ -248,8 +248,10 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-  # ── Stage 6b · Lighthouse ────────────────────────────────────────────────────
-  # Skips loudly until Phase 8 writes the budget file.
+  # ── Stage 6b · Lighthouse — Phase 8's gate ───────────────────────────────────
+  # The five templates from scripts/performance-budget.mjs (the machine-readable half of
+  # 18 §Performance budgets), measured against a real stack. No skip path: the templates
+  # exist, so the stage measures or fails.
   lighthouse:
     name: lighthouse
     runs-on: ubuntu-latest
@@ -266,9 +268,29 @@ jobs:
       - name: Generate the Prisma client
         # pnpm 11 blocks postinstall scripts, so nothing generates the client on install -
         # the first real runner proved it by failing typecheck on missing Prisma types.
-        # prisma.config.ts resolves DATABASE_URL when the CLI loads; `generate` itself
-        # never connects, so a placeholder satisfies it in jobs that have no stack.
         run: pnpm prisma generate
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-      - run: node scripts/ci-lighthouse.mjs
+
+      - name: Write .env from .env.example
+        run: cp .env.example .env
+
+      - name: Start the local stack (PostGIS + MinIO)
+        run: |
+          docker compose up -d --wait postgres minio
+          docker compose run --rm minio-init
+
+      - name: Migrate and seed
+        run: pnpm prisma migrate deploy && pnpm seed demo
+
+      - name: Build and start the server
+        run: |
+          pnpm build
+          nohup pnpm start --port 3100 > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:3100/ > /dev/null; then break; fi
+            sleep 1
+          done
+
+      - name: Measure the five templates against the budgets
+        run: node scripts/ci-lighthouse.mjs

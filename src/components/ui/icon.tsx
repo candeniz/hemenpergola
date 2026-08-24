@@ -31,6 +31,7 @@ export type IconName =
   | 'info'
   | 'inventory_2'
   | 'language'
+  | 'location_city'
   | 'logout'
   | 'menu'
   | 'more_vert'

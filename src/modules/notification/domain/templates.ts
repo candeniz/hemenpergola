@@ -6,8 +6,9 @@
  * governs user-facing strings in the UI, and a mail body is composed on the server for a
  * recipient whose locale is a column on their row, not a URL segment.
  *
- * `{brand}` is deliberately absent — Q1 is open, so the sender name comes from
- * configuration and the body does not hardcode a name that will change.
+ * The brand arrives as a parameter (`brandName()` reads the catalogue's `brand.name` —
+ * "Hemen Pergola" since Q1 closed 2026-08-24) rather than being hardcoded per template,
+ * so a rename stays a one-entry change.
  */
 
 type EmailBody = { subject: string; text: string }

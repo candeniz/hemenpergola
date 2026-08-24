@@ -1,6 +1,7 @@
 import type { CompanyRole, CompanyStatus, PrismaClient } from '@prisma/client'
 
 import { seedCatalogue } from './catalogue/seed-catalogue'
+import { seedContent } from './content'
 import { seedGeography } from './geo/seed-geo'
 import { seedPlatformSettings } from './platform-settings'
 
@@ -187,6 +188,9 @@ async function seedCommon(prisma: PrismaClient, adminId?: string) {
    * ids derive from their slugs, so `e2e` gets its determinism for free.
    */
   const catalogue = await seedCatalogue(prisma)
+
+  // Task 8.3: the CMS launch pages, in every profile — a nav link to a 404 advertises a page.
+  await seedContent(prisma)
 
   /*
    * Argon2 directly, with the work factor from `domain/password.ts`.

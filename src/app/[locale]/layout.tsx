@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { Inter, Montserrat } from 'next/font/google'
 import localFont from 'next/font/local'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 
+import { pickClientMessages } from '@/i18n/client-namespaces'
 import { routing } from '@/i18n/routing'
 
 import './globals.css'
@@ -70,13 +71,18 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale)
 
+  // Only the namespaces client components actually read cross the wire — the full
+  // catalogue in every flight payload was ~70 KB per page (Phase 8's gate work; the list
+  // is defended by client-namespaces.test.ts). Server components keep reading everything.
+  const clientMessages = pickClientMessages(await getMessages())
+
   return (
     <html
       lang={locale}
       className={`${montserrat.variable} ${inter.variable} ${materialSymbols.variable}`}
     >
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={clientMessages}>{children}</NextIntlClientProvider>
       </body>
     </html>
   )

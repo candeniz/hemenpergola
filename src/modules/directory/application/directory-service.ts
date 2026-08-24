@@ -4,6 +4,7 @@ import { prisma } from '@/shared/db'
 import { err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 import { resolveSlugRedirect } from '@/shared/slug-redirect'
+import { slugify } from '@/shared/text/slug'
 
 /**
  * The public directory — task 8.1, `07` §Route map's public half. Every method here is
@@ -406,6 +407,92 @@ export const getPublicManufacturer = serviceMethod<{ slug: string }, PublicManuf
             ? null
             : { body: review.response.body, createdAt: review.response.createdAt },
       })),
+    })
+  },
+)
+
+// ── city landing pages (task 8.2) ─────────────────────────────────────────────
+
+/**
+ * The supply predicate IS the page-existence rule: a city page exists only where an
+ * active service area of a VERIFIED, undeleted company points. 81 provinces ×
+ * products with nothing behind them is the doorway-page pattern search engines punish
+ * (`18`) — so an unsupplied city is a 404, not a thin page, and the count of city pages
+ * is READ FROM SUPPLY, never from a launch list that goes stale (Q5).
+ */
+const SUPPLIED_CITY_WHERE = {
+  serviceAreas: {
+    some: {
+      isActive: true,
+      company: { status: 'VERIFIED' as const, deletedAt: null },
+    },
+  },
+} as const
+
+export type PublicCity = { slug: string; name: string; manufacturerCount: number }
+
+export const listPublicCities = serviceMethod<Record<string, never>, PublicCity[]>(
+  'directory',
+  'listPublicCities',
+  { kind: 'anonymous', why: 'city landing pages exist only where real supply exists (18, Q5)' },
+  async () => {
+    const rows = await prisma.city.findMany({
+      where: SUPPLIED_CITY_WHERE,
+      orderBy: { plateCode: 'asc' },
+      select: {
+        name: true,
+        serviceAreas: {
+          where: { isActive: true, company: { status: 'VERIFIED', deletedAt: null } },
+          select: { companyId: true },
+        },
+      },
+    })
+    return ok(
+      rows.map((row) => ({
+        slug: slugify(row.name),
+        name: row.name,
+        manufacturerCount: new Set(row.serviceAreas.map((area) => area.companyId)).size,
+      })),
+    )
+  },
+)
+
+export type PublicCityDetail = {
+  city: PublicCity
+  manufacturers: PublicManufacturerCard[]
+}
+
+export const getPublicCity = serviceMethod<{ slug: string }, PublicCityDetail>(
+  'directory',
+  'getPublicCity',
+  { kind: 'anonymous', why: 'a supplied city landing page is a public canonical URL (18)' },
+  async (_actor, input) => {
+    // 81 rows: resolving slug→city by scanning is cheaper than storing a slug column for
+    // names that never change.
+    const cities = await prisma.city.findMany({
+      where: SUPPLIED_CITY_WHERE,
+      select: { id: true, name: true },
+    })
+    const city = cities.find((row) => slugify(row.name) === input.slug)
+    if (city === undefined) return err(notFound('City'))
+
+    const companies = await prisma.company.findMany({
+      where: {
+        status: 'VERIFIED',
+        deletedAt: null,
+        serviceAreas: { some: { isActive: true, cityId: city.id } },
+      },
+      orderBy: [{ reviewCount: 'desc' }, { displayName: 'asc' }],
+      select: MANUFACTURER_CARD_SELECT,
+    })
+
+    return ok({
+      city: {
+        slug: input.slug,
+        name: city.name,
+        manufacturerCount: companies.length,
+      },
+      manufacturers: companies.map(toCard),
     })
   },
 )

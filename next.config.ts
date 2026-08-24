@@ -60,6 +60,15 @@ function imageHosts(): NonNullable<NonNullable<NextConfig['images']>['remotePatt
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  /*
+   * Phase 8's gate (`18` §Performance budgets) — `experimental.inlineCss` was TRIED here
+   * and reverted: it removed the render-blocking CSS fetch, but Next also serialises the
+   * inlined stylesheet into the RSC flight payload, so every page carried the full 136 KB
+   * raw Tailwind sheet TWICE (a <style> tag + the flight copy) — the homepage HTML grew
+   * from ~60 KB to ~340 KB and LCP got worse, not better. The external stylesheet (~21 KB
+   * compressed, cached across navigations) wins.
+   */
+
   images: {
     remotePatterns: imageHosts(),
     // The ladder `media.process` already renders (`IMAGE_VARIANTS`), so the optimiser and the

@@ -24,6 +24,25 @@ rather than an image; for those screens `code.html` is the only reference.
 | `(manufacturer)` | SSR, dynamic, auth-gated by `(manufacturer)/layout.tsx`; company scope is the services' | same |
 | `(admin)` | SSR, dynamic, `noindex` | same |
 
+### What actually keeps `(public-owner)` dynamic — three layers, found in that order
+
+The 2026-08-24 breakage probe (Phase 8) sharpened this row. Adding `revalidate = 60` to
+the group's layout did **not** flip the routes to prerendered, because every
+`(public-owner)` page calls `cookies()` (the anonymous draft key) and Next puts dynamic-API
+usage above any `revalidate` — the layers, outermost first:
+
+1. the pages' `cookies()` calls force request-time rendering regardless of `revalidate`;
+2. the group layout's `export const dynamic = 'force-dynamic'` states the intent;
+3. `check-dynamic-routes.mjs` reads Next's own build manifests and fails the build if a
+   route in the group is ever prerendered — proven to fire by manifest injection, since
+   layer 1 masks the layout-level breakage today.
+
+The order matters for the future: **the day a `(public-owner)` page stops calling
+`cookies()`** — a refactor that reads the draft key some other way — layer 1 evaporates, a
+parent `revalidate` becomes live, and the build check is the only guard left standing.
+That is not a weakness to fix; it is why the check exists and reads the manifests rather
+than the source.
+
 ### What actually enforces "auth-gated" (`ADR-024`)
 
 A **layout per gated segment**, resolving the actor and redirecting to `/giris`. Not the

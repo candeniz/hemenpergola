@@ -139,6 +139,9 @@
 
   /* ---- Container ---------------------------------------------------------- */
   --container-page: 1200px;
+  /* Prose measure for CMS/body content — the named-token rule bans max-w-2xl in
+     components (the 24px trap family), so the CMS renderer gets a real token. */
+  --container-content: 42rem;
   /*
    * A single form column — sign in, register, reset. 28rem is Tailwind's own `md` container
    * width, declared here under a name of its own for a reason worth writing down:

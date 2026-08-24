@@ -75,7 +75,23 @@ export default async function setup(project: TestProject): Promise<() => Promise
     .withDatabase('pergola_test')
     .withUsername('pergola')
     .withPassword('pergola')
-    .withCommand(['postgres', '-c', 'fsync=off', '-c', 'full_page_writes=off'])
+    .withCommand([
+      'postgres',
+      '-c',
+      'fsync=off',
+      '-c',
+      'full_page_writes=off',
+      // Phase 8 pushed the shared-container run to 27 files; under Docker Desktop's
+      // default memory the 200-candidate performance fixture started killing backends
+      // ("Server has closed the connection") when it ran late in the sequence. Explicit,
+      // modest limits keep the container inside its cgroup instead of trusting defaults.
+      '-c',
+      'max_connections=200',
+      '-c',
+      'shared_buffers=192MB',
+      '-c',
+      'work_mem=8MB',
+    ])
     .withEnvironment({ POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8' })
     .start()
 

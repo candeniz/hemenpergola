@@ -122,3 +122,36 @@ test.describe('8.5 · a moved slug answers with a permanent redirect', () => {
     await pgQuery(`DELETE FROM "SlugRedirect" WHERE "oldSlug" = $1`, [oldSlug])
   })
 })
+
+test.describe('8.2 + 8.3 · cities and CMS pages', () => {
+  test('every public nav link answers 200 — no 404 advertised', async ({ request }) => {
+    for (const path of ['/kategoriler', '/nasil-calisir', '/ureticiler', '/sehirler']) {
+      const response = await request.get(path)
+      expect(response.status(), path).toBe(200)
+    }
+  })
+
+  test('the CMS pages render seeded structured content, in both locales', async ({ page }) => {
+    await page.goto('/nasil-calisir')
+    await expect(page.getByRole('heading', { level: 1, name: 'Nasıl çalışır?' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Projeni yapılandır' })).toBeVisible()
+
+    await page.goto('/en/nasil-calisir')
+    await expect(page.getByRole('heading', { level: 1, name: 'How it works' })).toBeVisible()
+  })
+
+  test('a supplied city page renders; an unsupplied city 404s', async ({ page, request }) => {
+    await page.goto('/sehirler')
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Hizmet verilen şehirler' }),
+    ).toBeVisible()
+
+    // The seed puts İstanbul CITY areas behind Ege + Anadolu — the supplied case.
+    await page.goto('/sehirler/istanbul')
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('İstanbul')
+
+    // A real province with no seeded supply: the doorway-page rule says 404, not thin page.
+    const response = await request.get('/sehirler/hakkari')
+    expect(response.status()).toBe(404)
+  })
+})

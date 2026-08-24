@@ -231,6 +231,8 @@ describe('migration scope', () => {
       'Consent',
       // Phase 6 · migration 8
       'ContactDisclosure',
+      // Phase 8 · migration 12 — the structured-block CMS (18, task 8.3)
+      'ContentPage',
       'District',
       'File',
       // Phase 3 · migration 4
@@ -294,10 +296,9 @@ describe('migration scope', () => {
       'spatial_ref_sys',
     ])
 
-    // The content tables arrive with their phases — their absence here is the assertion.
-    // (`OfferRequest` left this list at migration 8; `Thread`/`Review` at migration 10.)
+    // Later-phase tables arrive with their phases — their absence here is the assertion.
+    // (`OfferRequest` left at migration 8; `Thread`/`Review` at 10; `ContentPage` at 12.)
     expect(tables).not.toContain('ComplaintCase')
-    expect(tables).not.toContain('ContentPage')
 
     /*
      * `CompanyProduct` and `CompanyProductOption` arrived in migration 4, which is the
@@ -340,10 +341,9 @@ describe('migration scope', () => {
     expect(tables).toContain('Review')
     expect(tables).toContain('ReviewResponse')
 
-    // Phase 8's content and complaint tables are the next boundary; their absence is the
-    // assertion now.
+    // Phase 9's complaint tables are the next boundary; their absence is the assertion now.
+    // (`ContentPage` left this list at migration 12.)
     expect(tables).not.toContain('ComplaintCase')
-    expect(tables).not.toContain('ContentPage')
   })
 })
 

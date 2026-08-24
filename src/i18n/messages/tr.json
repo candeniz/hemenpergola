@@ -316,7 +316,8 @@
       "manufacturers": "Üreticiler",
       "projects": "Projeler",
       "signIn": "Giriş yap",
-      "contactSales": "Bize ulaşın"
+      "contactSales": "Bize ulaşın",
+      "cities": "Şehirler"
     },
     "customer": {
       "section": "Hesabım",
@@ -824,6 +825,31 @@
     "companyResponse": "Firma yanıtı",
     "foundedYear": "Kuruluş: {year}",
     "employeeRange": "Çalışan: {range}",
-    "loadError": "İçerik şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin."
+    "loadError": "İçerik şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.",
+    "citiesTitle": "Hizmet verilen şehirler",
+    "citiesLead": "Yalnızca doğrulanmış üreticilerin gerçekten hizmet verdiği şehirleri listeliyoruz.",
+    "citiesEmpty": "Henüz hizmet verilen şehir yok.",
+    "cityManufacturerCount": "{count, plural, one {# üretici} other {# üretici}}",
+    "cityTitle": "{city} pergola ve dış mekân sistemleri",
+    "cityLead": "{city} bölgesinde hizmet veren doğrulanmış üreticiler. Projenizi yapılandırın, karşılaştırmalı teklif alın."
+  },
+  "adminContent": {
+    "title": "İçerik sayfaları",
+    "lead": "Yapılandırılmış bloklarla düzenlenir; ham HTML kabul edilmez. Yayın anında canlıdır.",
+    "forbidden": "Bu sayfayı görüntüleme yetkiniz yok.",
+    "titleLabel": "Sayfa başlığı",
+    "removeBlock": "Kaldır",
+    "addBlock": "+ {type}",
+    "save": "Kaydet ve yayınla",
+    "saved": "Kaydedildi.",
+    "imageAlt": "Görsel açıklaması (alt)",
+    "ctaLabel": "Buton metni",
+    "blockType": {
+      "heading": "Başlık",
+      "paragraph": "Paragraf",
+      "list": "Liste",
+      "image": "Görsel",
+      "cta": "Buton (CTA)"
+    }
   }
 }

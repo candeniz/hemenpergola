@@ -136,6 +136,16 @@ describe('09 §Performance — the p95 budget, measured', () => {
     `p95 of a full run over ${CANDIDATES} priced candidates stays within ${BUDGET_MS} ms`,
     { timeout: 300_000 },
     async () => {
+      /*
+       * Refresh the application client's pool first. This file runs late in the
+       * sequential suite, and on Windows Docker an idle pooled connection can be silently
+       * dropped by the NAT proxy — the first heavy query then dies with "Server has
+       * closed the connection", which reads as a performance failure and is a stale
+       * socket. Disconnecting forces fresh connections; on Linux/CI it is a no-op cost.
+       */
+      const { prisma: appPrisma } = await import('@/shared/db')
+      await appPrisma.$disconnect()
+
       for (let index = 0; index < WARMUP_RUNS; index += 1) {
         const warm = await runMatch(owner(), { projectId })
         expect(warm.ok).toBe(true)

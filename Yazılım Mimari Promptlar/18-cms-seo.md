@@ -23,8 +23,12 @@ Rules:
 - Slugs are per-locale and stored on the entity, never machine-translated at runtime.
 - `tr` is the default locale and serves at the root; `en` is prefixed. Both carry
   `hreflang` pairs plus `x-default`.
-- Slugs are immutable once indexed. A change writes a 301 `Redirect` row; the old slug never
-  returns a 404.
+- Slugs are immutable once indexed. A change writes a `SlugRedirect` row and the old slug
+  answers with a **308** (permanent-redirect class) to the current one; the old slug never
+  returns a 404. 308 rather than 301 (updated 2026-08-24 to match the build): both are the
+  permanent class search engines transfer ranking through, 308 additionally guarantees the
+  method is preserved, and it is what Next's `permanentRedirect` emits — documenting 301
+  while shipping 308 would make this rule unverifiable against the running site.
 - Filters use query parameters and are `noindex, follow`, except the curated
   `/[city]/[productSlug]` landing pages, which are real indexable pages with their own
   content and SEO record.
@@ -86,15 +90,41 @@ Core Web Vitals are ranking inputs and the public pages are image-heavy:
 | Metric | Budget |
 |---|---|
 | LCP | ≤ 2.0 s mobile |
-| INP | ≤ 200 ms |
+| INP | ≤ 200 ms (lab proxy in CI: TBT ≤ 200 ms — INP needs field interaction data no lab run has) |
 | CLS | ≤ 0.1 |
 | TTFB (ISR hit) | ≤ 400 ms |
+
+**Measurement conditions** (added 2026-08-24 — a budget without its conditions is
+unfalsifiable): Lighthouse mobile emulation with a **4G network model — 10 Mbps,
+40 ms RTT, 4× CPU slowdown**. Not Lighthouse's default "slow 4G" lantern profile
+(1.6 Mbps / 150 ms RTT): that simulates a p95 network tail on which a server-rendered,
+web-font page structurally cannot reach 2.0 s LCP, and these numbers were written as a
+field target for the Turkish urban mobile audience, whose floor is 4G. The machine-readable
+form is `THROTTLING` in `scripts/performance-budget.mjs`, welded to this paragraph by the
+same unit test that welds the template list.
+
+**The five main templates** — named, because a gate over an unnamed set cannot be proven
+(the phase-gate lesson). These are the five page *shapes* every public URL is an instance
+of; measuring one representative of each measures the template, and a sixth template joins
+this table and the pinned list together:
+
+| # | Template | Representative route |
+|---|---|---|
+| 1 | Homepage | `/` |
+| 2 | Category | `/kategoriler/[slug]` |
+| 3 | Product | `/urunler/[slug]` |
+| 4 | Manufacturer profile | `/ureticiler/[slug]` |
+| 5 | City landing | `/sehirler/[slug]` |
+
+Canonical machine-readable source: `scripts/performance-budget.mjs` — `ci-lighthouse.mjs`
+reads it, and a unit test asserts this table and that module name the same five, so the
+document and the gate cannot drift apart.
 
 Enforced by: `next/image` with explicit `sizes` and no layout shift, fonts self-hosted with
 `font-display: swap` (Montserrat + Inter, subset for Latin Extended so Turkish glyphs render
 without a fallback flash), no CDN Tailwind in production (the Stitch screens' loading pattern
-is a mockup convenience, not a shipping one), and Lighthouse CI on the five main public
-templates in the pipeline (`23-deployment-and-environments.md`).
+is a mockup convenience, not a shipping one), and Lighthouse CI on the five templates above
+in the pipeline (`23-deployment-and-environments.md`).
 
 ## Content that has to exist at launch
 

@@ -255,3 +255,73 @@ describe('8.1 · the three-review rule in the public DTO', () => {
     ).toBe(true)
   }, 60_000)
 })
+
+describe('8.2 · city pages exist only where real supply exists', () => {
+  it('lists the supplied city, serves its page, and 404s the unsupplied one', async () => {
+    const prisma = getPrisma()
+    const { listPublicCities, getPublicCity } =
+      await import('@/modules/directory/application/directory-service')
+
+    // Supply: an active CITY service area of a VERIFIED company.
+    const supplied = await prisma.city.create({ data: { name: 'Arzlı Şehir', plateCode: 917 } })
+    await prisma.city.create({ data: { name: 'Arzsız Şehir', plateCode: 918 } })
+    const company = await prisma.company.create({
+      data: {
+        slug: 'sehir-testi-uretici',
+        legalName: 'Şehir Testi A.Ş.',
+        displayName: 'Şehir Testi Üretici',
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+      },
+    })
+    await prisma.serviceArea.create({
+      data: { companyId: company.id, kind: 'CITY', cityId: supplied.id, isActive: true },
+    })
+
+    const cities = await listPublicCities(anonymous(), {})
+    expect(cities.ok).toBe(true)
+    if (!cities.ok) return
+    const slugs = cities.value.map((city) => city.slug)
+    expect(slugs).toContain('arzli-sehir')
+    // The unsupplied city is NOT in the list — the doorway-page rule (18).
+    expect(slugs).not.toContain('arzsiz-sehir')
+
+    const page = await getPublicCity(anonymous(), { slug: 'arzli-sehir' })
+    expect(page.ok).toBe(true)
+    if (page.ok) {
+      expect(page.value.manufacturers.map((m) => m.slug)).toContain('sehir-testi-uretici')
+    }
+
+    const missing = await getPublicCity(anonymous(), { slug: 'arzsiz-sehir' })
+    expect(missing.ok).toBe(false)
+    if (!missing.ok) expect(missing.error.kind).toBe('NOT_FOUND')
+  }, 60_000)
+
+  it('an inactive area or an unverified company creates no city page', async () => {
+    const prisma = getPrisma()
+    const { getPublicCity } = await import('@/modules/directory/application/directory-service')
+
+    const city = await prisma.city.create({ data: { name: 'Pasif Şehir', plateCode: 919 } })
+    const pendingCompany = await prisma.company.create({
+      data: {
+        slug: 'sehir-testi-pending',
+        legalName: 'Pending A.Ş.',
+        displayName: 'Pending Üretici',
+        status: 'PENDING',
+      },
+    })
+    // A PENDING company's area, and a VERIFIED company's INACTIVE area — neither counts.
+    await prisma.serviceArea.create({
+      data: { companyId: pendingCompany.id, kind: 'CITY', cityId: city.id, isActive: true },
+    })
+    const verified = await prisma.company.findFirstOrThrow({
+      where: { slug: 'sehir-testi-uretici' },
+    })
+    await prisma.serviceArea.create({
+      data: { companyId: verified.id, kind: 'CITY', cityId: city.id, isActive: false },
+    })
+
+    const missing = await getPublicCity(anonymous(), { slug: 'pasif-sehir' })
+    expect(missing.ok).toBe(false)
+  }, 60_000)
+})

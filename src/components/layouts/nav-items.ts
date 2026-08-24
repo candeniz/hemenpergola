@@ -17,11 +17,18 @@ export type NavItem = {
   icon: IconName
 }
 
+/*
+ * Task 8.3 closed the nav's 404s: `/urunler` (a listing that never existed — the route
+ * map only has `/urunler/[slug]`) became `/kategoriler`, and `/projeler` (a portfolio
+ * showcase nothing builds yet) became `/sehirler` — a real page with real supply behind
+ * it. A link to a 404 advertises a page the same way a disabled link advertises a
+ * feature.
+ */
 export const publicNav: readonly NavItem[] = [
-  { href: '/urunler', labelKey: 'products', icon: 'inventory_2' },
+  { href: '/kategoriler', labelKey: 'products', icon: 'inventory_2' },
   { href: '/nasil-calisir', labelKey: 'howItWorks', icon: 'info' },
   { href: '/ureticiler', labelKey: 'manufacturers', icon: 'factory' },
-  { href: '/projeler', labelKey: 'projects', icon: 'description' },
+  { href: '/sehirler', labelKey: 'cities', icon: 'location_city' },
 ]
 
 export const customerNav: readonly NavItem[] = [
