@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import {
   acceptOfferRequest,
@@ -94,6 +94,15 @@ async function freshReadyProject(): Promise<string> {
 }
 
 const CONSENT = { accepted: true as const, textVersion: CONTACT_SHARING_TEXT_VERSION }
+
+beforeEach(async () => {
+  // 9.3 wired 06's 5-creations/hour/user limit into createOfferRequests; this suite makes
+  // eight legitimate creations with one customer, which is exactly what the limit exists
+  // to stop in production and exactly what a test fixture may do freely.
+  await getPrisma().rateLimitHit.deleteMany({
+    where: { bucket: { startsWith: 'offerRequestCreate:' } },
+  })
+})
 
 beforeAll(async () => {
   const prisma = getPrisma()

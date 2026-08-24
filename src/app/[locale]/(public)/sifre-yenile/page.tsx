@@ -12,6 +12,10 @@ import { PublicShell } from '@/components/layouts/public-shell'
  * about the token is the string in the URL, and the service is what decides whether it is
  * real. A missing or empty token renders the invalid state rather than an empty form.
  */
+// Task 9.3: request-time render so the CSP nonce lands on the inline scripts — the
+// auth surfaces are exactly where the strict script-src profile matters.
+export const dynamic = 'force-dynamic'
+
 export default async function Page({
   params,
   searchParams,

@@ -30,6 +30,8 @@ export const AUTH_TOKEN_TTL_SECONDS: Record<AuthTokenType, number> = {
   EMAIL_VERIFICATION: 24 * 60 * 60,
   PASSWORD_RESET: 60 * 60,
   PHONE_OTP: 5 * 60,
+  // 19 §Access: the export download link lives 30 days (multi-use — verified, not consumed).
+  DATA_EXPORT: 30 * 24 * 60 * 60,
 }
 
 export const OTP_MAX_ATTEMPTS = 5

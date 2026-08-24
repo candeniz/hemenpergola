@@ -93,10 +93,28 @@ sanitised CMS renderer (`18-cms-seo.md`). SVG uploads are sanitised or rejected.
 **CSRF.** Server actions carry Auth.js protection; `/api/v1` accepts only Bearer tokens, so
 it has no ambient authority to forge (`12-authentication-authorization.md`).
 
-**Headers.** `Content-Security-Policy` with nonces and no `unsafe-inline` (which the Stitch
-mockups rely on and the app does not), `Strict-Transport-Security` with preload,
-`X-Content-Type-Options`, `Referrer-Policy: strict-origin-when-cross-origin`,
-`Permissions-Policy` denying camera/microphone/geolocation except where the map picker asks.
+**Headers.** `Content-Security-Policy` with nonces and no `unsafe-inline` for scripts,
+`Strict-Transport-Security` with preload, `X-Content-Type-Options`,
+`Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` denying
+camera/microphone/geolocation except where the map picker asks.
+
+*How the CSP actually ships (task 9.3, 2026-08-24)* — **two profiles**, because a
+per-request nonce and an ISR-cached page are mutually exclusive by construction (Next
+stamps the nonce onto its inline flight scripts only at request-time render; a cached page
+is the same bytes for every request):
+
+- Every personal-data surface — auth (made `force-dynamic` for this), the configurator,
+  `/hesap`, `/panel`, `/yonetim` — carries the **strict profile**: nonce'd `script-src`
+  with `'strict-dynamic'`, no `unsafe-inline` anywhere near scripts, proven by e2e both at
+  the header and by the release gate running under it.
+- The ISR public pages carry every directive **except `script-src`** — omitted honestly
+  rather than shipped as `'unsafe-inline'` (which a nonce-bearing browser ignores anyway)
+  or as a policy the cached HTML cannot satisfy (which kills hydration). `style-src` keeps
+  `'unsafe-inline'` on both profiles: style *attributes* are outside CSP entirely, the
+  framework's `<style>` tags have no nonce path in Next, and inline style is not script
+  execution.
+- Closing the public-page gap means a JS-free public shell or PPR — an architecture
+  decision on the launch checklist, not a middleware tweak.
 
 **IDOR.** Ownership is expressed in the `where` clause, never checked after fetching
 (`12-authentication-authorization.md` §Authorization). This is the failure mode most likely

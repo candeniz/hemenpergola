@@ -523,6 +523,24 @@ describe('every service method has a matrix entry', () => {
     ])
   })
 
+  it('keeps the privacy service to its three pinned methods — two owned, one token-authorised', () => {
+    /*
+     * Task 9.1: the KVKK rights surface. Export and erasure are customer-owned (userId in
+     * the where clause); the download link is `anonymous` because possession of the
+     * emailed 256-bit token IS the authorisation — the verification-link trust model. A
+     * fourth method here, or a second anonymous one, is a reviewed diff.
+     */
+    const privacy = registeredMethods().filter((meta) => meta.service === 'privacy')
+
+    expect(privacy.map((meta) => `${meta.method}:${meta.authorisation.kind}`).sort()).toEqual(
+      [
+        'anonymiseAccount:customer-owned',
+        'downloadDataExport:anonymous',
+        'requestDataExport:customer-owned',
+      ].sort(),
+    )
+  })
+
   it('keeps every pricing method company-scoped, never admin', () => {
     /*
      * A price book belongs to the manufacturer who wrote it. `ADR-006` lets an admin read a

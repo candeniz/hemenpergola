@@ -98,10 +98,17 @@ Core Web Vitals are ranking inputs and the public pages are image-heavy:
 unfalsifiable): Lighthouse mobile emulation with a **4G network model — 10 Mbps,
 40 ms RTT, 4× CPU slowdown**. Not Lighthouse's default "slow 4G" lantern profile
 (1.6 Mbps / 150 ms RTT): that simulates a p95 network tail on which a server-rendered,
-web-font page structurally cannot reach 2.0 s LCP, and these numbers were written as a
-field target for the Turkish urban mobile audience, whose floor is 4G. The machine-readable
+web-font page structurally cannot reach 2.0 s LCP. The machine-readable
 form is `THROTTLING` in `scripts/performance-budget.mjs`, welded to this paragraph by the
 same unit test that welds the template list.
+
+**What these numbers claim — and what they do not.** These are lab numbers under one
+fixed condition: they catch *regressions* (a change that pushes a template over the line
+fails CI), and that is all they claim. They are **not** a statement about field p75 —
+"LCP ≤ 2.0 s mobile" as experienced by real users on real networks is a CrUX/field
+question that only field data can answer, and 10 Mbps / 40 ms is a favourable mobile
+condition, not a representative one. Reading the table as "our mobile users see ≤ 2.0 s"
+would be reading it as stronger than what is tested.
 
 **The five main templates** — named, because a gate over an unnamed set cannot be proven
 (the phase-gate lesson). These are the five page *shapes* every public URL is an instance

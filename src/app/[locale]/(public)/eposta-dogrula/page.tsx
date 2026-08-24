@@ -11,6 +11,10 @@ import { PublicShell } from '@/components/layouts/public-shell'
  * user already clicked once and a second confirmation button would exist only because it was
  * easier to build.
  */
+// Task 9.3: request-time render so the CSP nonce lands on the inline scripts — the
+// auth surfaces are exactly where the strict script-src profile matters.
+export const dynamic = 'force-dynamic'
+
 export default async function Page({
   params,
   searchParams,

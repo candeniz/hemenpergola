@@ -155,3 +155,55 @@ test.describe('8.2 + 8.3 · cities and CMS pages', () => {
     expect(response.status()).toBe(404)
   })
 })
+
+test.describe('9.3 · security headers and the two-profile CSP', () => {
+  test('strict surfaces carry a nonce`d script-src with no unsafe-inline', async ({ request }) => {
+    for (const path of ['/giris', '/proje/yeni']) {
+      const response = await request.get(path)
+      const csp = response.headers()['content-security-policy'] ?? ''
+      expect(csp, path).toContain("script-src 'self' 'nonce-")
+      expect(csp, path).toContain("'strict-dynamic'")
+      // The whole point: no unsafe-inline in script-src, ever.
+      const scriptSrc = /script-src[^;]*/.exec(csp)?.[0] ?? ''
+      expect(scriptSrc, path).not.toContain('unsafe-inline')
+      expect(csp, path).toContain("frame-ancestors 'none'")
+    }
+  })
+
+  test('the nonce actually lands on the inline scripts of a strict page', async ({ request }) => {
+    const response = await request.get('/proje/yeni')
+    const csp = response.headers()['content-security-policy'] ?? ''
+    const nonce = /'nonce-([^']+)'/.exec(csp)?.[1]
+    expect(nonce).toBeDefined()
+    const html = await response.text()
+    // Every inline script Next emits must carry this request's nonce, or the browser
+    // blocks hydration under the policy above.
+    expect(html).toContain(`nonce="${nonce}"`)
+  })
+
+  test('ISR public pages get every directive except script-src — the honest profile', async ({
+    request,
+  }) => {
+    const response = await request.get('/kategoriler')
+    const csp = response.headers()['content-security-policy'] ?? ''
+    // A per-request nonce and a cached page are mutually exclusive; the profile omits
+    // script-src rather than shipping 'unsafe-inline' or breaking hydration. Everything
+    // else still binds.
+    expect(csp).not.toContain('script-src')
+    expect(csp).not.toContain('unsafe-eval')
+    expect(csp).toContain("frame-ancestors 'none'")
+    expect(csp).toContain("object-src 'none'")
+    expect(response.headers()['x-content-type-options']).toBe('nosniff')
+    expect(response.headers()['strict-transport-security']).toContain('max-age=')
+  })
+
+  test('a strict page still works under its CSP — the login form is interactive', async ({
+    page,
+  }) => {
+    // Chromium enforces the CSP; if the nonce wiring broke, hydration would be blocked
+    // and this form would be dead. The release gate's real-form login is the deeper proof.
+    await page.goto('/giris')
+    await page.getByLabel('Şifre').fill('csp-probe')
+    await expect(page.getByLabel('Şifre')).toHaveValue('csp-probe')
+  })
+})

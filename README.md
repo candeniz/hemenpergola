@@ -6,6 +6,8 @@ gardens, glass systems, shading) with verified manufacturers in Turkey.
 **Start with `00-project-overview.md`. Then read only the files your task names below.**
 Reading the whole set for one feature wastes context and produces worse code, not better.
 
+**Launch state:** `29-launch-checklist.md` — every pre-launch item with its evidence or the named thing it waits on. The Phase 9 gate is that file fully ticked.
+
 ## Where things are
 
 | Path | What |

@@ -69,7 +69,7 @@ export type JobPayloads = {
   [JOB.analyticsRefresh]: { companyId: string }
   [JOB.searchReindexCompany]: { companyId: string }
   [JOB.neverCreatedProbe]: Record<string, never>
-  [JOB.auditRetentionSweep]: Record<string, never>
+  [JOB.auditRetentionSweep]: { dryRun?: boolean }
 }
 
 /**
@@ -132,6 +132,7 @@ export const WORKED_QUEUES = [
   JOB.slaExpire,
   JOB.notificationDispatch,
   JOB.analyticsRefresh,
+  JOB.auditRetentionSweep,
 ] as const
 
 export async function ensureQueues(): Promise<void> {

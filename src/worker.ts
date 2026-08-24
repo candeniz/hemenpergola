@@ -48,7 +48,9 @@ async function main(): Promise<void> {
 
   boss.on('error', (error) => {
     // pg-boss surfaces connection trouble here rather than throwing into a handler.
-    console.error('[worker] queue error', error)
+    void import('@/shared/observability/error-tracker').then(({ captureError }) =>
+      captureError('worker:queue', error),
+    )
   })
 
   // The policy lives with the queue names, not here — see `ensureQueues`.
@@ -132,8 +134,30 @@ async function main(): Promise<void> {
     },
   )
 
+  await boss.work<JobPayloads[typeof JOB.auditRetentionSweep]>(
+    JOB.auditRetentionSweep,
+    { batchSize: 1 },
+    async (jobs) => {
+      const { runRetentionSweep } =
+        await import('@/modules/privacy/infrastructure/retention-sweep-job')
+
+      for (const job of jobs) {
+        const report = await runRetentionSweep({ dryRun: job.data.dryRun ?? true })
+        for (const line of report.lines) {
+          console.info(
+            `[worker] ${JOB.auditRetentionSweep}`,
+            report.dryRun ? 'DRY-RUN' : 'APPLIED',
+            line.table,
+            line.action,
+            line.affected,
+          )
+        }
+      }
+    },
+  )
+
   console.info(
-    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch, company.analytics_refresh',
+    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch, company.analytics_refresh, audit.retention_sweep',
   )
 
   for (const signal of SHUTDOWN_SIGNALS) {

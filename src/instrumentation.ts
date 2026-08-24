@@ -20,3 +20,17 @@ export async function register(): Promise<void> {
   // when the instrumentation file is first loaded.
   await import('./shared/config/env')
 }
+
+/**
+ * Next's server-error hook (task 9.5): every unhandled error in a render, action or
+ * route handler lands in the error-tracking PORT. The adapter is `log` until the Q2
+ * chain clears and a contracted provider exists (`19` §Data location) — then the real
+ * adapter is one file and this hook does not change.
+ */
+export async function onRequestError(
+  error: unknown,
+  request: { path: string; method: string },
+): Promise<void> {
+  const { captureError } = await import('@/shared/observability/error-tracker')
+  captureError(`${request.method} ${request.path}`, error)
+}

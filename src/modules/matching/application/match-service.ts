@@ -10,7 +10,7 @@ import {
   eligibleCompaniesForProject,
   type EligibleCompanyRow,
 } from '@/shared/geo'
-import { err, notFound, ok, precondition } from '@/shared/result'
+import { err, notFound, ok, precondition, rateLimited } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
 import {
@@ -463,6 +463,16 @@ export const runMatch = serviceMethod<RunMatchInput, MatchRunView>(
   },
   async (actor, input) => {
     const started = Date.now()
+
+    // 06 §Rate limits (ADR-006 anti-scraping): 30/h per user, 60/h per IP — every run
+    // computes estimates, and estimates are the thing the limit protects.
+    const { consumeRateLimit } = await import('@/shared/rate-limit')
+    if (actor.userId !== null) {
+      const perUser = await consumeRateLimit('priceEstimateUser', 'user', actor.userId)
+      if (!perUser.allowed) return err(rateLimited(perUser.retryAfterSeconds))
+    }
+    const perIp = await consumeRateLimit('priceEstimateIp', 'ip', actor.ip)
+    if (!perIp.allowed) return err(rateLimited(perIp.retryAfterSeconds))
 
     const loaded = await loadOwnedReadyProject(actor, input.projectId)
     if (!loaded.ok) {

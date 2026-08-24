@@ -120,15 +120,7 @@ async function main() {
       const tbtMs = median('tbt')
       const cls = median('cls')
 
-      rows.push({
-        key: template.key,
-        url,
-        lcpSeconds,
-        tbtMs,
-        cls,
-        ttfbMs,
-        benchmarkIndex: rows.length === 0 ? lastBenchmarkIndex : undefined,
-      })
+      rows.push({ key: template.key, url, lcpSeconds, tbtMs, cls, ttfbMs })
 
       if (lcpSeconds > BUDGETS.lcpSeconds)
         failures.push(`${template.key}: LCP ${lcpSeconds.toFixed(2)}s > ${BUDGETS.lcpSeconds}s`)
@@ -143,10 +135,15 @@ async function main() {
     chrome.kill()
   }
 
-  if (rows.length > 0 && rows[0].benchmarkIndex !== undefined) {
+  if (lastBenchmarkIndex !== undefined) {
     // Interpretability: observed TBT scales with host speed even under simulated
-    // throttling. A healthy runner sits ~1000+; a low index inflates TBT.
-    console.log(`\nlighthouse: host benchmarkIndex ${Math.round(rows[0].benchmarkIndex)}`)
+    // throttling — a healthy runner sits ~1000+, a low index inflates TBT, and the gate
+    // is only reproducible against a comparable index. Emitted as an ::notice so an
+    // anonymous reader of the public repository can see the number (annotations are the
+    // one channel they get), and 25-progress.md records the runner's baseline.
+    const index = Math.round(lastBenchmarkIndex)
+    console.log(`\nlighthouse: host benchmarkIndex ${index}`)
+    console.log(`::notice title=lighthouse host::benchmarkIndex ${index}`)
   }
   console.log('\nlighthouse: five-template gate (18 §Performance budgets)')
   console.log('  template               LCP(s)  TBT(ms)  CLS     TTFB-hit(ms)')
@@ -169,6 +166,16 @@ async function main() {
     for (const failure of failures) console.error(`  ${failure}`)
     process.exit(1)
   }
+
+  // The whole result table as one annotation too — anonymous readers of the public repo
+  // see only annotations, and a passing gate should still show its numbers.
+  const summary = rows
+    .map(
+      (row) =>
+        `${row.key}: LCP ${row.lcpSeconds.toFixed(2)}s TBT ${Math.round(row.tbtMs)}ms CLS ${row.cls.toFixed(3)} TTFB ${row.ttfbMs}ms`,
+    )
+    .join('%0A')
+  console.log(`::notice title=lighthouse five-template gate::${summary}`)
 
   console.log('\nlighthouse: OK — all five templates within budget')
 }

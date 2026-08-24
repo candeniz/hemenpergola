@@ -6,7 +6,7 @@ Guidance for any AI agent working in this repository.
 
 | Path | What |
 |---|---|
-| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`28`. **Every bare `NN-*.md` reference in any document resolves here**, including inside the documents themselves |
+| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`29`. **Every bare `NN-*.md` reference in any document resolves here**, including inside the documents themselves |
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | 77-screen design reference |
 | `src/`, `prisma/`, `e2e/`, `test/` | application code, at the repository root |
 

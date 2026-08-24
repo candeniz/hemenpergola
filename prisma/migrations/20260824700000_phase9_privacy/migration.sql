@@ -1,0 +1,5 @@
+ALTER TYPE "AuthTokenType" ADD VALUE 'DATA_EXPORT';
+
+-- AlterEnum
+ALTER TYPE "UserStatus" ADD VALUE 'DELETED';
+

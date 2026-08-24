@@ -28,6 +28,8 @@ enum GlobalRole {
 enum UserStatus {
   ACTIVE
   SUSPENDED
+  /// 19 §Erasure: anonymised, never hard-deleted — commercial records keep their ids.
+  DELETED
 }
 
 enum Locale {
@@ -546,6 +548,8 @@ enum AuthTokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
   PHONE_OTP
+  /// 19 §Access/portability: signed download link for the personal-data export, 30 days.
+  DATA_EXPORT
 }
 
 /**

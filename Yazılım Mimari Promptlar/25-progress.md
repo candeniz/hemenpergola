@@ -51,7 +51,7 @@ proven — not when the code is written.
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
-| 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
+| 9 | Hardening + launch | **🟡 in progress · 4/8** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` holds every item: **16 evidenced, 17 waiting on named human/infra steps** across five chains — Q2 legal (lawyer, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS + backup rehearsal + worker image, 9.4/Q20), editorial (price guides, pilot catalogue Q11–17, real manufacturers), product decisions (Q10 CAPTCHA, Q19 scanner, export-PDF font, edge rate-limit, public-CSP PPR follow-up), and a physical Android device (9.8). Code-side 9.1/9.3/9.5/9.6 landed 2026-08-24 |
 
 ## Log
 
@@ -3003,6 +3003,81 @@ proof. (Local numbers, on a slow host — benchmarkIndex ~650: LCP 1.1–1.9 s, 
 TTFB-hit 50–230 ms; TBT scaled with host speed locally and cleared 200 ms on the runner.)
 Phase 8 → ✅ 5/5.
 
+### 2026-08-24 — Phase 9's code half: KVKK, security, observability, load (commit `P9.1+9.3+9.5+9.6 · KVKK, güvenlik, gözlemlenebilirlik, yük`)
+
+**The two document fixes first.** `18` §Performance budgets now says what its numbers
+claim and do not: fixed-condition lab regression catching, NOT a field-p75 statement —
+10 Mbps/40 ms is a favourable mobile condition and reading the table as "our users see
+≤2.0 s" would be reading it stronger than what is tested. And the lighthouse stage now
+emits the runner's `benchmarkIndex` and its full result table as `::notice` annotations —
+the one channel an anonymous reader of the public repo can see — so the gate's
+machine-dependence has a comparable number when the runner changes.
+
+**9.1 — the sweeper, and why it cannot lose evidence.** `retention-policy.ts` is `19`
+§Retention as ONE closed structure with two disjoint halves: `LEGAL_HOLD_TABLES`
+(Consent, ContactDisclosure, Offer, OfferLine — 10y evidence/commercial; AuditLog — 2y
+hot then a cold archive V1 does not have, so no deletion either) and `SWEEP_RULES`
+(anonymous drafts 30d → delete, with their storage objects; dispatched notifications 90d
+→ delete, mandatory excluded; closed/lost requests 3y → **anonymise, never delete** — the
+row and status history survive, the free-text `declineReason`/`closedReason` go; rate-limit
+windows 12mo → delete). The unit test proves the intersection of the two table sets is
+EMPTY — structurally, from the policy's own halves — plus a source scan that the job
+touches no model outside the union. Dry-run is the DEFAULT; the destructive pass is a
+separate explicit call, and the integration test proves dry-run counts = applied counts,
+evidence survives bit-for-bit, and the replay finds nothing. `audit.retention_sweep` — the
+last named queue — has its handler; `WORKED_QUEUES`'s cross-check closes. **Q25 and Q28
+closed in the table**, by one sweeper over one policy file, which is why both waited.
+
+**9.1 — export and erasure.** `requestDataExport` builds a subject-only JSON package
+(`data-export.v1`): offer totals WITHOUT line items (`ADR-006` at export), messages the
+subject WROTE only, the manufacturer as a display name. Delivered to private storage with
+a 30-day multi-use signed link (DATA_EXPORT token — verified, deliberately not consumed:
+a download dying at 90% must be retryable) mailed to the account. `anonymiseAccount` is
+erasure as `19` defines it: `deleted-{hash}@anonymised.local`, personal fields and
+sessions/tokens/notifications gone, project notes cleared (the ADR-026 channel, closed at
+erasure too) — while commercial ids, consents, disclosures, reviews and transcripts
+survive. Both audit-logged (`data_exported`, `account_anonymised`). PDF rendering waits on
+an embeddable Turkish-glyph font decision — on the checklist, not silently dropped.
+
+**9.3 — the two-profile CSP, and the structural finding.** A per-request nonce and an
+ISR-cached page are mutually exclusive: Next stamps the nonce onto its inline flight
+scripts only at request-time render, so the first single-profile attempt left the ISR
+pages' inline bootstrap nonce-less — a policy the cached HTML can never satisfy. The
+resolution is two honest profiles (`19` §Headers carries the full argument): every
+personal-data surface — auth pages made `force-dynamic` for this — gets nonce'd
+`script-src` + `'strict-dynamic'` with no `unsafe-inline`, and the ISR public pages get
+every directive EXCEPT `script-src`, omitted rather than faked. e2e asserts the headers,
+asserts the nonce lands on the strict pages' scripts, and the whole suite — release gate
+included — runs under the policy. Rate limits: `06`'s `offerRequestCreate` (5/h/user) and
+`priceEstimate` (30/h/user + 60/h/IP) were DEFINED since Phase 1 and consumed by nothing —
+now wired into the services; `publicRead` needs an edge layer (a DB-backed limiter cannot
+see ISR cache hits) and is on the checklist.
+
+**9.5 — the port, not the provider.** `ErrorTracker` port + log adapter + ring buffer,
+wired into Next's `onRequestError` and the worker's queue-error path. The provider is
+deliberately unchosen: `19` §Data location requires a named, contracted processor first
+(the Q2 chain). Alerting likewise: `captureError` is the single hook; WHO is alerted and
+WHERE is a checklist blank no code can fill.
+
+**9.6 — load, and the Q5 telemetry verified.** `21`'s assumption checked against live
+data first: **yes** — `MatchRun` persists zero-result runs (anonymous ones included,
+`runMatch` is customer-owned by either identity), and the city query answers today
+(dev data: Trabzon 17/17 zero, İstanbul 0/57). Q5 can be decided from measurement. The
+load script (own project/key/IP per virtual user, so the new rate limits behave as in
+production): **zero errors through 120 concurrent** — no pool exhaustion, no MatchRun
+lock contention, clean linear queueing; the p95 crosses the 2.5 s service level between
+40 (1.36 s) and 80 (3.4 s) concurrent on the dev machine. No breaking point found below
+120; the knee is capacity, not correctness.
+
+**`29-launch-checklist.md` exists** — every `19`/`20`/`21` pre-launch item with an
+evidence field: a test/run name or `bekliyor: X`. 16 evidenced, 17 waiting, zero claim
+lines; the waiting set decomposes into five named chains (Q2 legal, provisioning —
+never previously named as a task — editorial, product decisions, a device). `CLAUDE.md`
+and `README.md` now route to it.
+
+Suite counts: **1080 unit / 339 integration / 61 e2e green (11 skipped)** — the e2e
+suite, release gate included, now runs under the CSP.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3030,9 +3105,9 @@ Phase 8 → ✅ 5/5.
 | ~~Q22~~ | ~~Is district-centroid precision good enough for the **proximity score**?~~ **CLOSED 2026-08-23 by doing exactly what this row's default prescribed.** Proximity is scored in bands (`matching/domain/scoring.ts` — ratio-of-radius bands on a RADIUS match, absolute km bands otherwise, neutral for unknown), so centroid-grade error moves a score only when it crosses a band edge, and the unit suite asserts two centroid-grade-apart distances land in one band. `ServiceArea.precision` arrived in migration 7 and the geocode job now persists what it always computed; null means "geocoded before the column existed". Closed in the table in the same phase, per the Q21 lesson. | — | — |
 | ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
-| Q28 | **The notification delivery log has a retention rule and no sweeper.** Task 7.1 wrote the rule — `retentionWhere()` in `modules/notification/domain/retention.ts`: dispatched rows older than **90 days** are eligible for deletion, mandatory events (`ADR-027`) excluded because their rows are legs of a legal record and follow the disclosure's own retention. Nothing runs it: no schedule, no audit entry — the same deliberate half Q25 chose, so Phase 9 builds ONE retention sweep over both tables rather than two ad-hoc ones. Until then dispatched rows accumulate. | **Faz 9** (retention set, with Q25) | The rule is a where-clause under unit test (`retention.test.ts` pins the 90 days and the mandatory-event exclusion), so the Phase 9 sweep consumes a tested decision instead of making one at 3am. |
+| ~~Q28~~ | ~~The notification delivery log has a retention rule and no sweeper.~~ **CLOSED 2026-08-24 (task 9.1):** the same sweep executes `retentionWhere()` — 90 days, mandatory events excluded — under the same dry-run/apply/idempotence proof. | ~~Faz 9~~ closed | Q25 and Q28 closed together, by ONE sweeper over ONE policy file, which was the reason both waited. |
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
-| Q25 | **The anonymous-draft retention sweep has no scheduler.** `19` §Retention gives unclaimed drafts thirty days and says retention is *"enforced by the `audit.retention_sweep` job, not by manual cleanup"*. Task 4.5 wrote the **rule** — `expiredAnonymousDraftsWhere()` in `shared/context/anonymous-key.ts`, measured from `updatedAt`, restricted to rows that are still anonymous and not soft-deleted — and deliberately did not write half a sweeper: one table, no schedule, no audit entry, to be reconciled with Phase 9's own retention set later. Nothing deletes an expired draft today. | **Faz 9** (retention set). Not a leak — the rows are unreachable once the cookie expires — but it is *storage that grows and personal data that outlives its stated retention*, which `19` treats as a KVKK obligation rather than a housekeeping preference. | The rule exists and is unit-tested; Phase 9 adds the schedule and the audit entry. Recorded here rather than only in the log, per `CLAUDE.md` §Definition of done. |
+| ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 
 ## Known deviations from the brief

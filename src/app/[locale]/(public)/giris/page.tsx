@@ -11,6 +11,10 @@ import { Link } from '@/i18n/navigation'
  * Server component around a client form: the shell, the copy and the links render on the
  * server in both locales; only the form is interactive.
  */
+// Task 9.3: request-time render so the CSP nonce lands on the inline scripts — the
+// auth surfaces are exactly where the strict script-src profile matters.
+export const dynamic = 'force-dynamic'
+
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)

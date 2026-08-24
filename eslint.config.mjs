@@ -137,6 +137,8 @@ const ENV_BOUNDARY_FILES = [
   // arbitrary stack (LH_BASE_URL/DATABASE_URL) that the application's typed env does not
   // describe. Structural, not a src/ decision (the pin test covers src/** only).
   'scripts/ci-lighthouse.mjs',
+  // The load-test runner: same class — a CLI targeting an arbitrary stack.
+  'scripts/load-test-matching.ts',
   // Test tooling, not application code: Playwright reads `CI` to decide retries and
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',

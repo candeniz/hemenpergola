@@ -83,6 +83,9 @@ export type AuditAction =
   // Phase 7 · review moderation (`16` §Moderation: an admin decision over user content)
   | 'review_published'
   | 'review_rejected'
+  // Phase 9 · KVKK rights (19 §Access, §Erasure)
+  | 'data_exported'
+  | 'account_anonymised'
 
 export type AuditEntry = {
   action: AuditAction

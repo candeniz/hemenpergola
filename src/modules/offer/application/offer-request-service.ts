@@ -9,7 +9,7 @@ import { prisma } from '@/shared/db'
 import { notify } from '@/modules/notification/infrastructure/notify'
 import { enqueue, JOB } from '@/shared/jobs'
 import { CONTACT_SHARING_TEXT_VERSION } from '@/shared/legal/consent-version'
-import { conflict, err, notFound, ok, precondition } from '@/shared/result'
+import { conflict, err, notFound, ok, precondition, rateLimited } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
 import { statusAfterSubmission } from '@/modules/project/domain/status'
@@ -188,6 +188,12 @@ export const createOfferRequests = serviceMethod<
     if (actor.userId === null) {
       return err(precondition('requesting offers requires an account'))
     }
+
+    // 06 §Rate limits: 5 request-creations / hour / user — wired in 9.3, defined since
+    // Phase 1 but consumed by nothing until now.
+    const { consumeRateLimit } = await import('@/shared/rate-limit')
+    const budget = await consumeRateLimit('offerRequestCreate', 'user', actor.userId)
+    if (!budget.allowed) return err(rateLimited(budget.retryAfterSeconds))
 
     /*
      * The exact text version shown must be the one the repo currently carries. A stale
