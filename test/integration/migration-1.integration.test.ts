@@ -241,6 +241,8 @@ describe('migration scope', () => {
       'MatchRun',
       // Phase 5 · migration 7 — 04 §Messaging's Notification, pulled forward by 5.7
       'Notification',
+      // Phase 7 · migration 9 — preferences; absence of a row means enabled
+      'NotificationPreference',
       // Phase 6 · migration 8
       'Offer',
       'OfferLine',

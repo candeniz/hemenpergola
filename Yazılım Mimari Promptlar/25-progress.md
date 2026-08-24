@@ -6,14 +6,15 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phases 0–5 are complete with proven gates**; **Phase 6's first half
-(6.1–6.5 + 6.10) landed 2026-08-24** — the state machine, the disclosure, the DTO boundary
-and the concurrency proof — with the surface, the SLA job and offers (6.6–6.9) in flight.
-A visitor configures to `READY` (anonymous or signed in), `GET OFFERS` returns ranked,
-priced manufacturers from the seeded supply, requests carry versioned consent, and
-`PENDING → ACCEPTED` discloses contact exactly once with its `ContactDisclosure`, audit and
-notification. The repository is public at `github.com/candeniz/hemenpergola` and CI runs
-the whole pipeline on every push.
+**Current phase:** **Phases 0–6 are complete with proven gates**; **Phase 7's first slice
+(7.1, notifications) landed 2026-08-24** — the closed event catalogue with `tr`/`en`
+templates, the single-writer `notify()`, the idempotent `notification.dispatch` worker job,
+and per-(channel, event) preferences with `ADR-027`'s closed mandatory list. The full F1
+journey is proven end to end: a visitor configures to `READY`, `GET OFFERS` returns ranked,
+priced manufacturers, requests carry versioned consent, `PENDING → ACCEPTED` discloses
+contact exactly once with its `ContactDisclosure`, audit and notification, and the offer
+lands beside the original estimate. The repository is public at
+`github.com/candeniz/hemenpergola` and CI runs the whole pipeline on every push.
 
 **The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
 it, with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as
@@ -23,9 +24,9 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **1021 unit tests, 296 integration tests** against real PostGIS and MinIO
+price their work. **1047 unit tests, 305 integration tests** against real PostGIS and MinIO
 containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
-(61 Playwright tests, 16 skipped for later phases). Mail and
+(50 Playwright tests green, 11 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
 
 ## Phase tracker
@@ -47,7 +48,7 @@ proven — not when the code is written.
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
-| 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
+| 7 | Communication + trust | **🟡 in progress · 1/3** | every notification event fires with a `tr` template — **proven 2026-08-24**: `notification-catalog.test.ts` renders all 19 events in both locales from the code's own catalogue; messaging and reviews (7.2–7.3) remain |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
 
@@ -2762,6 +2763,62 @@ explained where it appears (`ADR-007`).
 - Thread/Message, reviews (reading `SURVEY_COMPLETED`), and `mayReadPrivate`'s
   manufacturer half — Phase 7 as planned.
 
+### 2026-08-24 — Phase 7 task 7.1: the notification catalogue and dispatch, plus three gaps (commit `P7.1 · bildirim kataloğu ve dağıtım`)
+
+**The three carried gaps first.**
+
+- **Core-flow step 6 now reads the page source, not the render.** `page.content()` before
+  the accept asserts the customer's email, phone and the note trap are absent from the
+  *HTML*, where `not.toBeVisible()` would have passed over data hidden by CSS or riding in
+  an attribute. The trap value moved into `wizard-walk.ts` (`NOTE_TRAP`), so the release
+  gate's wizard walk plants the ADR-026 disguised-contact note on every run and step 6
+  proves it crosses only with the disclosure.
+- **`SAME_IN_BOTH` is pinned** the way `DEPLOY_WORD_EXEMPTIONS` is: a named list of the
+  four legitimately identical tr/en messages plus a `toEqual` content test, so the fifth
+  entry is a reviewed diff instead of a quiet growth.
+- **The companyId bug got its mechanism.** `authorisation-matrix.test.ts` now derives the
+  member-scoped method set from the matrix itself (permission-kind methods an OWNER holds)
+  and statically scans `src/app/actions/*.ts`: a file that names such a method must hand
+  `resolveActor` a company (zero one-arg calls, at least one two-arg call). The Phase 6
+  screen bug — pattern copied, rule not — can now fail the build instead of the demo.
+
+**Task 7.1.** Migration 9 (`Notification.dispatchedAt`, `NotificationPreference`,
+CHECK-free — plus a hand-written backfill: every pre-existing row is stamped
+`dispatchedAt = createdAt`, because months of accumulated rows becoming a retroactive email
+flood on the day dispatch ships serves nobody; the in-app page still shows them). The
+catalogue (`domain/catalog.ts`) is a **closed union** of 19 events + 1 subscription with
+per-event channels and a `sample` payload; templates (`notification-templates.ts`) are
+`Record<NotificationType, …>`, so an event without a template is a **typecheck failure**,
+and the gate test (`notification-catalog.test.ts`) renders every event in both locales from
+the catalogue's own keys — no hand-counted list — failing on emptiness or a leftover
+`{placeholder}`. `notify()` is the single `Notification` writer (a source scan in the gate
+test keeps it that way) and enqueues `notification.dispatch` in the same call; the worker's
+fourth handler claims **before** sending (`dispatchedAt` committed, then channels), so a
+drained-worker replay meets the stamp and sends nothing — at-most-once, proven in
+`notification-dispatch.integration.test.ts` including the crash-after-claim retry.
+Preferences: absence of a row = enabled, in-app never suppressible, and `ADR-027`'s closed
+`MANDATORY_EVENTS` list (`contact_disclosed`, pinned) both refuses the opt-out at the write
+and is ignored at dispatch if a row exists anyway. Phase 5/6 call sites all converted to
+`notify()`; `13` row 1's customer half (`offer_request_created`) turned out never to have
+been written and now is. SMS renders through the port against the log adapter — a smoke
+test of the seam, production path still behind Q2/Q3. Retention: 90-day rule written and
+unit-tested, **Q28** in the table, sweep deliberately Phase 9 with Q25.
+
+**Found in passing, the expensive kind.** `ensureQueues()` still ended at `media.process`,
+and `enqueue()` never throws — so **every `offer_request.sla_expire` enqueue since Phase 6
+was silently dropped**: handler, singleton keys and tests all existed, and no production
+job would ever have fired. The queue list is now `WORKED_QUEUES`, cross-checked against
+`worker.ts`'s registered handlers by an integration test that also proves an enqueue to
+each queue lands. Also fixed in passing: this file's §Status first paragraph still
+described 6.6–6.9 as in flight after Phase 6 closed — the same stale-paragraph class the
+previous entry fixed twice. And `notify()`'s dedupe takes an ANDed condition *list* because
+the first draft deduped SLA reminders on `kind` alone, which would have silenced request
+B's reminder because request A had one — caught before commit by re-reading the original
+semantics, now locked by an integration test.
+
+Suite counts: **1047 unit / 305 integration / 50 e2e green (11 skipped for later
+phases)**; CI run on this commit is the proof-of-record.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -2789,6 +2846,7 @@ explained where it appears (`ADR-007`).
 | ~~Q22~~ | ~~Is district-centroid precision good enough for the **proximity score**?~~ **CLOSED 2026-08-23 by doing exactly what this row's default prescribed.** Proximity is scored in bands (`matching/domain/scoring.ts` — ratio-of-radius bands on a RADIUS match, absolute km bands otherwise, neutral for unknown), so centroid-grade error moves a score only when it crosses a band edge, and the unit suite asserts two centroid-grade-apart distances land in one band. `ServiceArea.precision` arrived in migration 7 and the geocode job now persists what it always computed; null means "geocoded before the column existed". Closed in the table in the same phase, per the Q21 lesson. | — | — |
 | ~~Q23~~ | ~~Web sign-in establishes no session.~~ **CLOSED 2026-08-17 by `ADR-022`.** Entered retroactively, and the reason it is here at all is the point: Phase 1 *deliberately* deferred wiring a web session — "Auth.js wiring deferred; no screen required it" — and wrote that in the dated log rather than in this table. The log is over 130 KB; the table is what gets scanned. Three phases later Phase 4 found the login form validating credentials, rendering a tick and discarding the tokens, with `identify.ts` reading a cookie nothing ever wrote. `CLAUDE.md` §Definition of done now requires the table entry for any deferral. | — | — |
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
+| Q28 | **The notification delivery log has a retention rule and no sweeper.** Task 7.1 wrote the rule — `retentionWhere()` in `modules/notification/domain/retention.ts`: dispatched rows older than **90 days** are eligible for deletion, mandatory events (`ADR-027`) excluded because their rows are legs of a legal record and follow the disclosure's own retention. Nothing runs it: no schedule, no audit entry — the same deliberate half Q25 chose, so Phase 9 builds ONE retention sweep over both tables rather than two ad-hoc ones. Until then dispatched rows accumulate. | **Faz 9** (retention set, with Q25) | The rule is a where-clause under unit test (`retention.test.ts` pins the 90 days and the mandatory-event exclusion), so the Phase 9 sweep consumes a tested decision instead of making one at 3am. |
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
 | Q25 | **The anonymous-draft retention sweep has no scheduler.** `19` §Retention gives unclaimed drafts thirty days and says retention is *"enforced by the `audit.retention_sweep` job, not by manual cleanup"*. Task 4.5 wrote the **rule** — `expiredAnonymousDraftsWhere()` in `shared/context/anonymous-key.ts`, measured from `updatedAt`, restricted to rows that are still anonymous and not soft-deleted — and deliberately did not write half a sweeper: one table, no schedule, no audit entry, to be reconciled with Phase 9's own retention set later. Nothing deletes an expired draft today. | **Faz 9** (retention set). Not a leak — the rows are unreachable once the cookie expires — but it is *storage that grows and personal data that outlives its stated retention*, which `19` treats as a KVKK obligation rather than a housekeeping preference. | The rule exists and is unit-tested; Phase 9 adds the schedule and the audit entry. Recorded here rather than only in the log, per `CLAUDE.md` §Definition of done. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |

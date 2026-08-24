@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { startDraft, walkWizardToReady } from './wizard-walk'
+import { NOTE_TRAP, startDraft, walkWizardToReady } from './wizard-walk'
 
 /**
  * THE RELEASE GATE.
@@ -352,7 +352,17 @@ test.describe('F1 · core flow (release gate)', () => {
       await expect(page.getByText(/kabul ettiğinizde paylaşılır/)).toBeVisible({
         timeout: 30_000,
       })
-      await expect(page.getByText('musteri@pergola.local')).toBeHidden()
+      /*
+       * The page SOURCE, not visibility: getByText().toBeHidden() stays green while the
+       * email sits in the HTML or the RSC payload with display:none over it. The DTO-shape
+       * proof lives in the integration suite; this asserts the same rule through the wire
+       * the browser actually received — for the account email AND for the contact data
+       * hidden inside the free-text note (ADR-026).
+       */
+      const preAcceptHtml = await page.content()
+      expect(preAcceptHtml).not.toContain('musteri@pergola.local')
+      expect(preAcceptHtml).not.toContain('0532 555 0000')
+      expect(preAcceptHtml).not.toContain(NOTE_TRAP)
 
       expect(
         Number(
@@ -368,6 +378,9 @@ test.describe('F1 · core flow (release gate)', () => {
       // ── accept ────────────────────────────────────────────────────────────
       await page.getByRole('button', { name: 'Talebi kabul et' }).click()
       await expect(page.getByText('musteri@pergola.local')).toBeVisible({ timeout: 30_000 })
+      // …and the note crossed WITH the disclosure (ADR-026): same source-level check.
+      await expect(page.getByText(NOTE_TRAP)).toBeVisible()
+      expect(await page.content()).toContain('0532 555 0000')
 
       // Exactly once, with its record set: the row, the audit entries, the notification.
       const counts = await pgQuery<{ disclosures: string; audits: string; notes: string }>(

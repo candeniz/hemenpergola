@@ -851,3 +851,39 @@ never meant to publish early.
 **Reverses if.** A legal review concludes free-text project notes are not personal data even
 when they contain contact details — which would be surprising — or the structured-field
 alternative proves insufficient in pilots.
+
+---
+
+## ADR-027 — Mandatory notifications are a closed list, and it has one entry
+
+**Context.** Task 7.1 built notification preferences: per (channel, event type), absence of
+a row means enabled, and a user can switch email or SMS off for any convenience event. That
+model needs an exception, because at least one notification is not a convenience: `19`
+§Disclosure and `CLAUDE.md` non-negotiable 8 count the customer notification among the four
+things that make a contact disclosure lawful — consent, the `ContactDisclosure` row, the
+audit entry, and the notice. A preference row must not be able to switch a leg of a legal
+record off. The question is how to express the exception: a predicate ("anything legal- or
+security-flavoured ignores preferences") or a list.
+
+**Decision.** A **closed list**, `MANDATORY_EVENTS` in
+`modules/notification/domain/catalog.ts`, pinned by a `toEqual` test the way
+`DEPLOY_WORD_EXEMPTIONS` and `SAME_IN_BOTH` are: growing it means editing the pin and
+explaining the new entry in review. It has exactly one entry, `contact_disclosed`. The
+enforcement is doubled on purpose: `setNotificationPreference` refuses to write a disabling
+row for a mandatory event (`PRECONDITION`, so the user is told "no" rather than holding a
+preference the system ignores), and dispatch ignores such a row anyway if one exists —
+belt and braces, tested by planting the row directly.
+
+**Why a list and not a predicate.** A predicate is a judgement call made silently at every
+new event ("is `offer_expiring` legal-ish?"); a list is a decision someone wrote down. The
+pin makes the diff the review artefact.
+
+**Boundaries.** In-app is never suppressible for *any* event — the `Notification` row is
+the user's history and the product's evidence, and preferences govern only email/SMS. The
+`auth.*` family (verification, password reset) is outside the catalogue entirely: those are
+direct security emails from `domain/templates.ts`, never `Notification` rows, and ignore
+preferences by construction rather than by membership in this list.
+
+**Reverses if.** KVKK/İYS counsel identifies further notices that are part of a legal
+record (candidates: a future data-export confirmation, account deletion notice). They join
+the list by editing the pin — that friction is the mechanism working, not a cost.

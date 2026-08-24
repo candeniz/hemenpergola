@@ -135,6 +135,8 @@ model User {
   offerRequests OfferRequest[]
   // Phase 5 · migration 7 — the zero-result subscription (5.7)
   notifications Notification[]
+  // Phase 7 · migration 9
+  notificationPreferences NotificationPreference[]
 
   @@index([deletedAt])
   @@index([globalRole, status])
@@ -1234,16 +1236,43 @@ model MatchResult {
 model Notification {
   id        String    @id @default(cuid())
   userId    String
-  /// e.g. `supply_gap_watch` — the zero-result subscription (`09` §Zero-result handling).
+  /// A type from `modules/notification/domain/catalog.ts` — the closed list; `notify()`
+  /// is the only writer and takes the type from the catalogue's union.
   type      String
   payload   Json
   readAt    DateTime?
   createdAt DateTime  @default(now())
+  /// Phase 7 · migration 9. Set by `notification.dispatch` BEFORE the channels send
+  /// (claim-then-send): a drained-worker retry meets a non-null value and sends nothing,
+  /// which is the right failure for a channel that cannot be unsent. Null = not yet
+  /// dispatched. Rows written before dispatch existed were backfilled to their
+  /// `createdAt` — their moment had passed, and a retroactive email flood serves nobody.
+  dispatchedAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([type])
+  @@index([dispatchedAt])
+}
+
+/// `04` §Messaging, `13` §Preferences — per (user, channel, type). Absence of a row means
+/// enabled; a row exists to say "off". In-app is never suppressed (`13`: it is the
+/// history), and the mandatory events in `catalog.ts` ignore these rows entirely
+/// (`ADR-027`).
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  /// 'email' | 'sms' — in-app is not preference-governed.
+  channel   String
+  type      String
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channel, type])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -101,7 +101,27 @@ async function main(): Promise<void> {
     },
   )
 
-  console.info('[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire')
+  await boss.work<JobPayloads[typeof JOB.notificationDispatch]>(
+    JOB.notificationDispatch,
+    { batchSize: 10 },
+    async (jobs) => {
+      const { runNotificationDispatch } =
+        await import('@/modules/notification/infrastructure/dispatch-job')
+
+      for (const job of jobs) {
+        const outcome = await runNotificationDispatch(job.data.notificationId)
+        console.info(
+          `[worker] ${JOB.notificationDispatch}`,
+          job.data.notificationId,
+          outcome.status,
+        )
+      }
+    },
+  )
+
+  console.info(
+    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch',
+  )
 
   for (const signal of SHUTDOWN_SIGNALS) {
     process.on(signal, () => {

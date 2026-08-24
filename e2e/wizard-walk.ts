@@ -1,5 +1,8 @@
 import { expect, type Page } from '@playwright/test'
 
+/** Contact data disguised as a note — `ADR-026`'s reason, as a fixture every walk plants. */
+export const NOTE_TRAP = 'Zili çalışmıyor, beni 0532 555 0000 numaradan arayın'
+
 /**
  * The shared wizard walk — used by `core-flow.spec.ts` (signed in) and
  * `phase4-gate.spec.ts` (anonymous), because both gates end at the same claim: *the project
@@ -102,6 +105,9 @@ export async function walkWizardToReady(page: Page, cityName: string): Promise<v
   // ── timing (advances itself) → attachments → summary ─────────────────────
   await page.getByRole('button', { name: 'En kısa sürede' }).click()
   await expect(page.getByLabel('Eklemek istedikleriniz')).toBeVisible({ timeout: 30_000 })
+  // The ADR-026 trap, planted on every walk: contact data written INTO the free text,
+  // which must not surface anywhere pre-acceptance and must surface after it.
+  await page.getByLabel('Eklemek istedikleriniz').fill(NOTE_TRAP)
   await page.getByRole('button', { name: 'Devam' }).click()
 
   await assertReady(page)

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
+import { notify } from '@/modules/notification/infrastructure/notify'
 import { err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
@@ -93,11 +94,12 @@ export const scheduleAppointment = serviceMethod<
     if (outcome.kind === 'error') return err(outcome.error)
 
     // After commit — `11` §Transition table's "both notified".
-    await prisma.notification.create({
-      data: {
-        userId: outcome.customerId,
-        type: 'survey_scheduled',
-        payload: { offerRequestId: input.offerRequestId, scheduledAt: input.scheduledAt },
+    await notify({
+      userId: outcome.customerId,
+      type: 'survey_scheduled',
+      payload: {
+        offerRequestId: input.offerRequestId,
+        when: input.scheduledAt.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }),
       },
     })
 

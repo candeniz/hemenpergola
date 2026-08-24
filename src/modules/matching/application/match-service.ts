@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import type { ActorContext } from '@/shared/context/actor'
 import { prisma } from '@/shared/db'
+import { notify } from '@/modules/notification/infrastructure/notify'
 import {
   companiesServingLocationWithoutProduct,
   eligibleCompaniesForProject,
@@ -669,29 +670,17 @@ export const watchSupplyGap = serviceMethod<WatchSupplyGapInput, { watching: tru
     })
     if (project === null) return err(notFound('Project'))
 
-    const existing = await prisma.notification.findFirst({
-      where: {
-        userId: actor.userId,
-        type: 'supply_gap_watch',
-        payload: { path: ['projectId'], equals: project.id },
+    await notify({
+      userId: actor.userId,
+      type: 'supply_gap_watch',
+      payload: {
+        projectId: project.id,
+        productId: project.productId,
+        cityId: project.cityId,
+        districtId: project.districtId,
       },
-      select: { id: true },
+      dedupeOn: [{ path: ['projectId'], equals: project.id }],
     })
-
-    if (existing === null) {
-      await prisma.notification.create({
-        data: {
-          userId: actor.userId,
-          type: 'supply_gap_watch',
-          payload: {
-            projectId: project.id,
-            productId: project.productId,
-            cityId: project.cityId,
-            districtId: project.districtId,
-          },
-        },
-      })
-    }
 
     return ok({ watching: true })
   },

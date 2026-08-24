@@ -89,6 +89,28 @@ describe('message catalogues', () => {
     }
   })
 
+  /*
+   * Named at describe level and PINNED below, the `OPERATIONAL_PROBES` /
+   * `DEPLOY_WORD_EXEMPTIONS` discipline: each entry is a string with no words in it — a
+   * phone format, punctuation around localised numbers, unit abbreviations. A fifth entry
+   * is a decision to argue in the pull request, not a line to slip in.
+   */
+  const SAME_IN_BOTH = [
+    'auth.phonePlaceholder',
+    'estimate.range',
+    'wizard.attachments.size',
+    'leads.dimensions',
+  ]
+
+  it('keeps the identical-string exemption list to the four wordless formats', () => {
+    expect(SAME_IN_BOTH).toEqual([
+      'auth.phonePlaceholder',
+      'estimate.range',
+      'wizard.attachments.size',
+      'leads.dimensions',
+    ])
+  })
+
   it('keeps the Turkish and English strings actually different', () => {
     // Copying the Turkish into `en.json` to make the parity test pass is the obvious way to
     // fake this, and it produces a page that is "translated" and unreadable.
@@ -110,13 +132,6 @@ describe('message catalogues', () => {
      * And the dimension triple — three localised numbers, two × signs and a unit that is
      * 'mm' in both languages: nothing in it is words.
      */
-    const SAME_IN_BOTH = [
-      'auth.phonePlaceholder',
-      'estimate.range',
-      'wizard.attachments.size',
-      'leads.dimensions',
-    ]
-
     const identical = trPaths.filter((path) => {
       if (SAME_IN_BOTH.includes(path)) return false
       const a = messageAt(tr as Tree, path)

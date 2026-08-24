@@ -3,7 +3,10 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { runGeocodeServiceArea } from '@/modules/matching/infrastructure/geocode-job'
 import { administrativeGeocoder, setGeocoder } from '@/modules/matching/infrastructure/geocoder'
 import { runMediaProcess } from '@/modules/media/infrastructure/media-job'
-import { ensureQueues, enqueue, JOB, startBoss } from '@/shared/jobs'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import { ensureQueues, enqueue, JOB, startBoss, WORKED_QUEUES } from '@/shared/jobs'
 import { getPoint, setPoint } from '@/shared/geo'
 import { setStorage, type StorageProvider } from '@/shared/storage'
 
@@ -344,6 +347,44 @@ describe('pg-boss is really there', () => {
       SELECT COUNT(*)::bigint AS count FROM pg_tables WHERE schemaname = 'pgboss'
     `
     expect(Number(pgboss[0]?.count ?? 0)).toBeGreaterThan(0)
+  }, 120_000)
+
+  it('has a queue for every handler the worker registers — no silent-drop enqueues', async () => {
+    /*
+     * The 7.1 finding: `enqueue()` never throws (a failed enqueue must not roll back the
+     * write that triggered it), which means a `send` to a queue nobody created is *silent*.
+     * Phase 6 shipped `offer_request.sla_expire` complete with handler and tests, and every
+     * production enqueue of it was dropped because `ensureQueues` still ended at
+     * `media.process`. Two assertions so it cannot recur:
+     *
+     *   1. every `boss.work(JOB.x)` in `worker.ts` names a queue in `WORKED_QUEUES`;
+     *   2. an enqueue to each worked queue actually lands.
+     */
+    const workerSource = readFileSync(join(process.cwd(), 'src/worker.ts'), 'utf8')
+    const workedInSource = [...workerSource.matchAll(/boss\.work<[^>]*>\(\s*JOB\.(\w+)/g)].map(
+      (match) => JOB[match[1] as keyof typeof JOB],
+    )
+    expect(workedInSource.length).toBeGreaterThan(0)
+    expect([...workedInSource].sort()).toEqual([...WORKED_QUEUES].sort())
+
+    await ensureQueues()
+    const slaJobId = await enqueue(
+      JOB.slaExpire,
+      { offerRequestId: 'probe-sla', kind: 'expire' },
+      { singletonKey: 'probe-sla' },
+    )
+    expect(slaJobId).not.toBeNull()
+
+    const probeUser = await getPrisma().user.create({
+      data: { email: `queue-probe-${Date.now()}@example.com`, fullName: 'Queue Probe' },
+    })
+    const notification = await getPrisma().notification.create({
+      data: { userId: probeUser.id, type: 'probe', payload: {} },
+    })
+    const dispatchJobId = await enqueue(JOB.notificationDispatch, {
+      notificationId: notification.id,
+    })
+    expect(dispatchJobId).not.toBeNull()
   }, 120_000)
 })
 

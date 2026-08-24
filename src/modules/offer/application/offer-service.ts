@@ -6,6 +6,7 @@ import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
+import { notify } from '@/modules/notification/infrastructure/notify'
 import { conflict, err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
@@ -279,13 +280,24 @@ export const sendOffer = serviceMethod<SendOfferInput, OfferView>(
           action: 'offer_sent',
           after: { number: outcome.offer.number, grossKurus: outcome.offer.grossKurus },
         })
-        await prisma.notification.create({
-          data: {
+        {
+          const companyName = (
+            await prisma.company.findUniqueOrThrow({
+              where: { id: actor.companyId! },
+              select: { displayName: true },
+            })
+          ).displayName
+          await notify({
             userId: outcome.customerId,
             type: outcome.event === 'revise' ? 'offer_revised' : 'offer_received',
-            payload: { offerRequestId: input.offerRequestId, offerNumber: outcome.offer.number },
-          },
-        })
+            payload: {
+              offerRequestId: input.offerRequestId,
+              offerNumber: outcome.offer.number,
+              companyName,
+              validUntil: input.validUntil.toLocaleDateString('tr-TR'),
+            },
+          })
+        }
 
         return ok(toOfferView(outcome.offer))
       } catch (error) {
@@ -358,13 +370,19 @@ async function decide(
     where: { companyId: outcome.companyId, role: 'OWNER' },
     select: { userId: true },
   })
+  const offerNumber =
+    (
+      await prisma.offer.findFirst({
+        where: { offerRequestId: outcome.requestId },
+        orderBy: { createdAt: 'desc' },
+        select: { number: true },
+      })
+    )?.number ?? '—'
   for (const owner of owners) {
-    await prisma.notification.create({
-      data: {
-        userId: owner.userId,
-        type: event === 'accept_offer' ? 'offer_accepted' : 'offer_rejected',
-        payload: { offerRequestId: outcome.requestId },
-      },
+    await notify({
+      userId: owner.userId,
+      type: event === 'accept_offer' ? 'offer_accepted' : 'offer_rejected',
+      payload: { offerRequestId: outcome.requestId, offerNumber },
     })
   }
 

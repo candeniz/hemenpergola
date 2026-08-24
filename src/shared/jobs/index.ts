@@ -103,10 +103,24 @@ export async function startBoss(): Promise<PgBoss> {
  *
  * Idempotent by construction: `createQueue` on an existing queue is a no-op, so the worker
  * calling it on every boot is correct.
+ *
+ * **Every queue a handler works must be here.** Found the hard way in 7.1: `enqueue()`
+ * never throws (by design, see below), so a `send` to a queue nobody created fails
+ * *silently* — Phase 6 shipped `offer_request.sla_expire` with handler, singleton keys and
+ * tests, and every production-path enqueue of it was dropped on the floor because this
+ * list still ended at `media.process`. The worker smoke test now cross-checks this list
+ * against the handlers `worker.ts` registers.
  */
+export const WORKED_QUEUES = [
+  JOB.geocodeServiceArea,
+  JOB.mediaProcess,
+  JOB.slaExpire,
+  JOB.notificationDispatch,
+] as const
+
 export async function ensureQueues(): Promise<void> {
   const boss = await startBoss()
-  for (const name of [JOB.geocodeServiceArea, JOB.mediaProcess]) {
+  for (const name of WORKED_QUEUES) {
     await boss.createQueue(name, { policy: 'stately' })
   }
 }

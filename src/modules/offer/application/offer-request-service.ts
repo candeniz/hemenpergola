@@ -6,6 +6,7 @@ import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
+import { notify } from '@/modules/notification/infrastructure/notify'
 import { enqueue, JOB } from '@/shared/jobs'
 import { CONTACT_SHARING_TEXT_VERSION } from '@/shared/legal/consent-version'
 import { conflict, err, notFound, ok, precondition } from '@/shared/result'
@@ -316,25 +317,34 @@ export const createOfferRequests = serviceMethod<
       after: { companyIds: input.companyIds, slaExpiresAt },
     })
 
-    // The new-lead notifications, to each company's owners. Rows only — dispatch is
-    // Phase 7's job; what matters now is that a rolled-back create never writes one.
+    // Every recipient goes through notify(): the row AND its dispatch, after commit.
     const owners = await prisma.companyMembership.findMany({
       where: { companyId: { in: input.companyIds }, role: 'OWNER' },
       select: { userId: true, companyId: true },
     })
-    if (owners.length > 0) {
-      await prisma.notification.createMany({
-        data: owners.map((owner) => ({
-          userId: owner.userId,
-          type: 'offer_request_received',
-          payload: {
-            offerRequestId:
-              created.find((row) => row.companyId === owner.companyId)?.offerRequestId ?? null,
-            projectId: input.projectId,
-          },
-        })),
+    const projectPlace = await prisma.project.findUnique({
+      where: { id: input.projectId },
+      select: { areaM2: true, city: { select: { name: true } } },
+    })
+    for (const owner of owners) {
+      await notify({
+        userId: owner.userId,
+        type: 'offer_request_received',
+        payload: {
+          offerRequestId:
+            created.find((row) => row.companyId === owner.companyId)?.offerRequestId ?? null,
+          projectId: input.projectId,
+          cityName: projectPlace?.city?.name ?? '—',
+          areaM2: projectPlace?.areaM2 ?? 0,
+        },
       })
     }
+    // `13` row 1 has a customer half too — the confirmation Phase 6 never wrote.
+    await notify({
+      userId: actor.userId!,
+      type: 'offer_request_created',
+      payload: { projectId: input.projectId, companyCount: input.companyIds.length },
+    })
 
     /*
      * The SLA clock, scheduled at creation (`11` §SLA): reminders at 50% and 90% of the
@@ -508,16 +518,21 @@ export const acceptOfferRequest = serviceMethod<RespondInput, AcceptedLeadView>(
      * details were shared, with whom, and when. The integration suite's race test leans on
      * this ordering: the losing branch above returned before this line, so it wrote none.
      */
-    await prisma.notification.create({
-      data: {
-        userId: outcome.customerId,
-        type: 'contact_disclosed',
-        payload: {
-          offerRequestId: outcome.row.id,
-          companyId: outcome.companyId,
-          disclosedFields: outcome.disclosedFields,
-          disclosedAt: outcome.disclosedAt,
-        },
+    const companyName = (
+      await prisma.company.findUniqueOrThrow({
+        where: { id: outcome.companyId },
+        select: { displayName: true },
+      })
+    ).displayName
+    await notify({
+      userId: outcome.customerId,
+      type: 'contact_disclosed',
+      payload: {
+        offerRequestId: outcome.row.id,
+        companyId: outcome.companyId,
+        companyName,
+        disclosedFields: outcome.disclosedFields,
+        disclosedAt: outcome.disclosedAt,
       },
     })
 
@@ -597,11 +612,18 @@ export const declineOfferRequest = serviceMethod<
       action: 'offer_request_declined',
       reason: input.reason,
     })
-    await prisma.notification.create({
-      data: {
-        userId: outcome.customerId,
-        type: 'offer_request_declined',
-        payload: { offerRequestId: outcome.id, reason: input.reason },
+    await notify({
+      userId: outcome.customerId,
+      type: 'offer_request_declined',
+      payload: {
+        offerRequestId: outcome.id,
+        reason: input.reason,
+        companyName: (
+          await prisma.company.findUniqueOrThrow({
+            where: { id: actor.companyId! },
+            select: { displayName: true },
+          })
+        ).displayName,
       },
     })
 

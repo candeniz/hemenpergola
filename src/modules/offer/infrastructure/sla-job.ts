@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { prisma } from '@/shared/db'
+import { notify } from '@/modules/notification/infrastructure/notify'
 
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
 
@@ -70,29 +71,25 @@ async function runReminder(
     select: { userId: true },
   })
 
+  const hoursLeft = Math.max(
+    0,
+    Math.round((request.slaExpiresAt.getTime() - Date.now()) / 3_600_000),
+  )
+
   let wrote = false
   for (const owner of owners) {
-    // The dedupe that makes a re-run silent: one reminder of each kind per owner per
-    // request, however many times the job fires.
-    const existing = await prisma.notification.findFirst({
-      where: {
-        userId: owner.userId,
-        type: 'offer_request_sla_reminder',
-        payload: { path: ['offerRequestId'], equals: offerRequestId },
-        AND: { payload: { path: ['kind'], equals: kind } },
-      },
-      select: { id: true },
+    // notify()'s dedupe is the re-run silencer: one reminder of each kind per owner per
+    // request, however many times a drained worker replays the job.
+    const result = await notify({
+      userId: owner.userId,
+      type: 'offer_request_sla_reminder',
+      payload: { offerRequestId, kind, hoursLeft, slaExpiresAt: request.slaExpiresAt },
+      dedupeOn: [
+        { path: ['offerRequestId'], equals: offerRequestId },
+        { path: ['kind'], equals: kind },
+      ],
     })
-    if (existing !== null) continue
-
-    await prisma.notification.create({
-      data: {
-        userId: owner.userId,
-        type: 'offer_request_sla_reminder',
-        payload: { offerRequestId, kind, slaExpiresAt: request.slaExpiresAt },
-      },
-    })
-    wrote = true
+    if (!result.deduped) wrote = true
   }
 
   return wrote ? { status: 'reminded', kind } : { status: 'already-reminded' }
@@ -147,31 +144,21 @@ async function runExpiry(offerRequestId: string): Promise<SlaOutcome> {
     select: { userId: true },
   })
 
-  const recipients = [
-    { userId: outcome.customerId, type: 'offer_request_expired' },
-    ...owners.map((owner) => ({ userId: owner.userId, type: 'offer_request_expired' })),
-  ]
-
-  for (const recipient of recipients) {
-    // Same dedupe as the reminders, so a crash between commit and notify cannot double a
-    // row on the retry.
-    const existing = await prisma.notification.findFirst({
-      where: {
-        userId: recipient.userId,
-        type: recipient.type,
-        payload: { path: ['offerRequestId'], equals: offerRequestId },
-      },
-      select: { id: true },
+  const companyName = (
+    await prisma.company.findUniqueOrThrow({
+      where: { id: outcome.companyId },
+      select: { displayName: true },
     })
-    if (existing === null) {
-      await prisma.notification.create({
-        data: {
-          userId: recipient.userId,
-          type: recipient.type,
-          payload: { offerRequestId },
-        },
-      })
-    }
+  ).displayName
+
+  const recipients = [outcome.customerId, ...owners.map((owner) => owner.userId)]
+  for (const userId of recipients) {
+    await notify({
+      userId,
+      type: 'offer_request_expired',
+      payload: { offerRequestId, companyName },
+      dedupeOn: [{ path: ['offerRequestId'], equals: offerRequestId }],
+    })
   }
 
   return { status: 'expired' }

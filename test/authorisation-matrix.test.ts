@@ -652,6 +652,66 @@ describe('every service method has a matrix entry', () => {
     expect(OPERATIONAL_PROBES).toEqual(['health-service.ts'])
   })
 
+  it('makes every member-scoped action file hand resolveActor a company', async () => {
+    /*
+     * The mechanism Phase 6's screen-found bug earned. The manufacturer actions called
+     * member-permission services with an actor resolved WITHOUT the route's company, so
+     * `resolveActor` loaded no membership and every click met "Not permitted" — found by a
+     * browser, not by a test, because the pattern had been copied without the rule.
+     *
+     * The rule, statically: an `app/actions` file that names a member-permission service
+     * method (a `company:*` permission an OWNER holds and a global admin does not bypass
+     * exclusively — i.e. the manufacturer's own verbs) must call `resolveActor` with a
+     * second argument, which is where the company goes. Admin action files (verification,
+     * catalogue, settings) pass no company by design — the admin bypass needs none — so
+     * the scan keys on the *member* methods, not on the permission kind alone.
+     */
+    await importEveryService(modulesRoot)
+
+    // Member-scoped: permission-kind methods whose permission an OWNER holds. The admin
+    // surfaces (platform catalogue, settings, verification, audit) are not OWNER-holdable,
+    // so they fall out of this set without a hand-written list.
+    const memberMethods = registeredMethods()
+      .filter((meta) => meta.authorisation.kind === 'permission')
+      .filter((meta) => {
+        const spec = meta.authorisation as { kind: 'permission'; permission: Permission }
+        return roleHasPermission('OWNER', spec.permission)
+      })
+      .map((meta) => meta.method)
+
+    expect(memberMethods.length).toBeGreaterThan(10) // the scan is measuring something
+
+    const actionsDir = fileURLToPath(new URL('../src/app/actions', import.meta.url))
+    const offenders: string[] = []
+
+    for (const entry of readdirSync(actionsDir, { withFileTypes: true })) {
+      if (!entry.name.endsWith('.ts')) continue
+      const source = readFileSync(join(actionsDir, entry.name), 'utf8')
+
+      const callsMemberMethod = memberMethods.some((method) =>
+        new RegExp(`\\bservice\\.${method}\\b|\\b${method}\\s*\\(`).test(source),
+      )
+      if (!callsMemberMethod) continue
+
+      // "hands resolveActor a company": every resolveActor call site in the file passes a
+      // second argument. One-argument calls are what produced the membershipless actor.
+      const oneArgCalls = source.match(/resolveActor\(\s*\{[^)]*\}\s*\)/gs) ?? []
+      const twoArgCalls = source.match(/resolveActor\(\s*\{[\s\S]*?\}\s*,/g) ?? []
+
+      if (twoArgCalls.length === 0 || oneArgCalls.length > 0) {
+        offenders.push(entry.name)
+      }
+    }
+
+    expect(
+      offenders,
+      offenders.length === 0
+        ? ''
+        : `These action files call member-scoped services but resolve an actor with no ` +
+            `company argument — the exact shape of the Phase 6 bug:\n  ${offenders.join('\n  ')}`,
+    ).toEqual([])
+  })
+
   it('finds no exported service method outside the registry', async () => {
     await importEveryService(modulesRoot)
 
