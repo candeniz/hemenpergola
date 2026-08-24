@@ -26,9 +26,9 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **1060 unit tests, 323 integration tests** against real PostGIS and MinIO
+price their work. **1061 unit tests, 330 integration tests** against real PostGIS and MinIO
 containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
-(50 Playwright tests green, 11 skipped for later phases). Mail and
+(54 Playwright tests green, 11 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
 
 ## Phase tracker
@@ -51,7 +51,7 @@ proven — not when the code is written.
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
-| 8 | Public site + SEO | ⬜ | performance budgets met in CI |
+| 8 | Public site + SEO | **🟡 in progress · 2/5** | performance budgets met in CI — pending; landed 2026-08-24: slugs with permanent redirects (8.5), the public pages with sitemap + JSON-LD (8.1 + half of 8.4), brand swap (Q1 closed) |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
 
 ## Log
@@ -2881,11 +2881,66 @@ the way was not code: a stale `next start` survived on port 3100 (the Phase 4 le
 again), served the old build's chunk names against the new build's disk and every page
 died at hydration; killing the process made the suite green unchanged.
 
+### 2026-08-24 — Phase 8 first half: brand, slugs, public pages, three gaps (commit `P8.5+8.1 · marka, sluglar ve public sayfalar`)
+
+**Q1 closed: the brand is "Hemen Pergola".** The placeholder default did its job — the swap
+was one `brand.name` entry in both catalogues (mail reads the same entry via `brandName()`,
+so nothing else moved), plus a fifth `SAME_IN_BOTH` pin entry because a proper noun is
+identical in both locales by definition. No slug ever embedded the brand, so no URL
+changed. The SMS sender ID is deliberately untouched: the GSM alphanumeric field is 11
+characters, "Hemen Pergola" does not fit, and the abbreviation is decided with the İYS
+application — configuration, hardcoded nowhere. The domain is also undecided:
+canonical/sitemap/JSON-LD read `NEXT_PUBLIC_SITE_URL` through `shared/seo/site-url.ts`
+(soft read with a dev fallback — the eager Zod env cannot be used at build time), so the
+domain landing is a one-line `.env` change.
+
+**The three gaps.** `/api/health` no longer returns free-text error detail on an
+unauthenticated endpoint — messages go to the server log, the response keeps ok/duration
+and, for the queue check, count + queue name (`28` §6's "returns no user data" stays
+true). The loud-enqueue-failure test's trigger moved from `search.reindex_company` (which
+Phase 8 will create — `28` §11's landmine-with-a-date) to the permanent sentinel
+`probe.queue_that_must_never_exist`. And the rating component is now proven to *reorder*:
+`match-run.integration.test.ts` takes the deliberately tied pair, gives the tie-break
+loser a real rating history in the Company columns, and asserts the pair flips — the test
+that would have caught the hard-coded-zero years early.
+
+**8.5 — slugs first, pages second** (the order 26 had reversed): migration 11 adds
+`SlugRedirect`; `updateCategory`/`updateProduct` record the old slug inside the same
+transaction that changes it; public lookups are two-step (current slug, then redirect →
+`{kind:'moved'}` with the CURRENT slug — chains collapse to one hop, a reused slug stops
+redirecting, per-locale independence per `ADR-017`). Proven at the service level in
+`directory.integration.test.ts` and at the HTTP level in `public-directory.spec.ts`: the
+old URL answers **308** (the permanent class Next emits for `permanentRedirect`; `18`
+§URLs wants permanence, and 308 additionally preserves method) with the new location.
+
+**8.1 + half of 8.4** — `modules/directory` (six anonymous methods, pinned as
+`DIRECTORY_PUBLIC_READ`), pages for `/kategoriler[/slug]`, `/urunler/[slug]`,
+`/ureticiler[/slug]`, the homepage's real category grid, `sitemap.ts` fed by
+`listPublicSlugs` (no DB client in `app/`), and JSON-LD (Organization + WebSite on home,
+BreadcrumbList, Product without Offer until a price renders — `18`'s markup-matches-page
+rule — LocalBusiness with AggregateRating **only from three published reviews**, the same
+threshold the visible page uses). The three-review rule lives in the DTO
+(`avgRating: null` below three, asserted in `directory.integration.test.ts` with FULL
+columns), and `mayReadPrivate`'s manufacturer half landed: an `ACCEPTED`+ request opens
+the project photo, a PENDING one does not (`storage.integration.test.ts`).
+
+**ISR and the build without secrets.** The public pages are ISR (`revalidate` 900); the
+`[slug]` pages ship `generateStaticParams → []` so the build prerenders nothing that needs
+a database, and the listing pages catch the build-time absence of an environment and
+prerender their empty states — first revalidation on a running server fills them. The
+`(public-owner)` breakage probe was run as demanded, with a finding: adding
+`revalidate = 60` to the group layout did NOT flip the routes (the pages' `cookies()`
+usage keeps them request-time — the defence is layered), so the check's own failure path
+was proven by poisoning `.next/prerender-manifest.json` directly: `check:routes` went red
+with the ADR-021 message, and green again on restore.
+
+Suite counts: **1061 unit / 330 integration / 54 e2e green (11 skipped)**.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q1 | Brand name. The screens use *Outdoor Systems*, *Archivault*, *ARCHITECTURA*, *Arte Outdoor*, *ArchPortal*. | Phase 0 (i18n keys, logo, titles) — and **upstream of Q2/Q3**: the SMS sender ID is the brand | placeholder `{brand}` token everywhere, swapped once |
+| ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |
 | ~~Q4~~ | ~~Geocoding provider and budget~~ **NARROWED 2026-08-16 by `ADR-019`.** V1 needs no provider: the `Geocoder` port ships with an administrative-centroid adapter over the 974 district centroids Phase 0 seeded, plus optional coordinates a manufacturer can type. `09` §Service-area coverage already accepts a district centroid on the *project* side, so paying to place the other end to within ten metres buys nothing measurable. What remains open is narrower and belongs to Phase 8: **does the public directory need map tiles, and does a pin-drop picker come free with them?** | Phase 8 | administrative centroids; radius precision is stored and shown so a centroid is distinguishable from a pin |

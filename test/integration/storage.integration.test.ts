@@ -478,3 +478,86 @@ describe('a PENDING company can still upload its documents', () => {
     expect(blocked.error.kind).toBe('PRECONDITION')
   }, 60_000)
 })
+
+describe('mayReadPrivate · the manufacturer half (task 8.1, carried from Phase 7)', () => {
+  it('serves a project photo to a company with an ACCEPTED request, and to nobody with a PENDING one', async () => {
+    /*
+     * `14` §Access control, the semi-private class completed: "only for the customer and
+     * manufacturers whose request is ACCEPTED+". The manufacturer half returned a flat
+     * `false` until now — honest while OfferRequest did not exist, a gap once it did.
+     */
+    const prisma = getPrisma()
+
+    const customer = await prisma.user.create({
+      data: { email: `storage-project-customer-${companyId}@example.com` },
+    })
+    const customerActor = anonymousActor({ userId: customer.id, globalRole: 'CUSTOMER' })
+
+    const category = await prisma.category.create({ data: { sortOrder: 93 } })
+    const product = await prisma.product.create({
+      data: { categoryId: category.id, basisType: 'AREA_M2' },
+    })
+    const project = await prisma.project.create({
+      data: { customerId: customer.id, productId: product.id, status: 'SUBMITTED', quantity: 1 },
+    })
+
+    // The customer uploads a project photo directly (the wizard's attachment path).
+    const file = await prisma.file.create({
+      data: {
+        key: `project/${project.id}/site.png`,
+        bucket: 'test',
+        mime: 'image/png',
+        sizeBytes: 1024,
+        ownerType: 'PROJECT',
+        ownerId: project.id,
+        uploadedBy: customer.id,
+        virusScanStatus: 'CLEAN',
+      },
+    })
+
+    const consent = await prisma.consent.create({
+      data: {
+        userId: customer.id,
+        type: 'CONTACT_SHARING',
+        textVersion: 'test.v1',
+        ip: '203.0.113.90',
+        userAgent: 'vitest',
+      },
+    })
+    const request = await prisma.offerRequest.create({
+      data: {
+        projectId: project.id,
+        customerId: customer.id,
+        companyId,
+        status: 'PENDING',
+        slaExpiresAt: new Date(Date.now() + 48 * 3_600_000),
+        consentId: consent.id,
+      },
+    })
+
+    // PENDING: the manufacturer sees nothing — same boundary as the lead DTO.
+    const beforeAccept = await fileUrl(ownerActor, { fileId: file.id })
+    expect(beforeAccept.ok).toBe(false)
+    if (!beforeAccept.ok) expect(beforeAccept.error.kind).toBe('FORBIDDEN')
+
+    // The customer always could.
+    const asCustomer = await fileUrl(customerActor, { fileId: file.id })
+    expect(asCustomer.ok).toBe(true)
+    if (asCustomer.ok) expect(asCustomer.value.accessClass).toBe('semi-private')
+
+    await prisma.offerRequest.update({
+      where: { id: request.id },
+      data: { status: 'ACCEPTED', respondedAt: new Date(), contactDisclosedAt: new Date() },
+    })
+
+    const afterAccept = await fileUrl(ownerActor, { fileId: file.id })
+    expect(afterAccept.ok).toBe(true)
+    if (!afterAccept.ok) return
+    expect(afterAccept.value.accessClass).toBe('semi-private')
+    expect(afterAccept.value.expiresIn).toBe(15 * 60)
+
+    // A DIFFERENT company with no request stays out.
+    const denied = await fileUrl(outsiderActor, { fileId: file.id })
+    expect(denied.ok).toBe(false)
+  }, 60_000)
+})

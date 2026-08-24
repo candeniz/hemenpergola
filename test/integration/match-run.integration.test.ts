@@ -450,3 +450,45 @@ describe('ownership', () => {
     expect(run.error.kind).toBe('PRECONDITION')
   })
 })
+
+describe('7.3 gap · rating really reorders the ranking', () => {
+  it('flips the tied pair when only avgRating differs, read from Company columns', async () => {
+    /*
+     * The component read a hard-coded zero from Phase 5 to Phase 7.2 and nobody noticed,
+     * because no test asserted the ORDER moved. This one does, end to end: priced1 and
+     * priced2 tie by construction (the test above), and the tie resolves on companyId
+     * ascending — so give the company that LOSES the tie-break a real rating history in
+     * the columns `company.analytics_refresh` maintains, and it must come out on top.
+     */
+    const [tieWinner, tieLoser] = [priced1, priced2].sort()
+
+    await getPrisma().company.update({
+      where: { id: tieLoser! },
+      data: { ratingSum: 48, reviewCount: 10 }, // avg 4.8 over ten reviews
+    })
+
+    const run = await runMatch(owner(), { projectId })
+    expect(run.ok).toBe(true)
+    if (!run.ok) return
+
+    const pairInOrder = run.value.results
+      .filter((r) => r.companyId === priced1 || r.companyId === priced2)
+      .map((r) => r.companyId)
+    expect(pairInOrder).toEqual([tieLoser, tieWinner])
+
+    // And the breakdown names the signal, so the reorder is explainable (Q22).
+    const rated = await getPrisma().matchResult.findFirst({
+      where: { matchRunId: run.value.matchRunId, companyId: tieLoser! },
+    })
+    const breakdown = rated?.scoreBreakdown as {
+      components: { rating: { raw: number | null } }
+    }
+    expect(breakdown.components.rating.raw).not.toBeNull()
+
+    // Leave the board as found — determinism tests in this file must stay meaningful.
+    await getPrisma().company.update({
+      where: { id: tieLoser! },
+      data: { ratingSum: 0, reviewCount: 0 },
+    })
+  }, 60_000)
+})

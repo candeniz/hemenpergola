@@ -284,6 +284,8 @@ describe('migration scope', () => {
       // Phase 3 · migration 4
       'ServiceArea',
       'Session',
+      // Phase 8 · migration 11 — old slugs answer permanently (18 §URLs, task 8.5)
+      'SlugRedirect',
       'Subscription',
       // Phase 7 · migration 10
       'Thread',

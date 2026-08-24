@@ -254,7 +254,7 @@
     }
   },
   "brand": {
-    "name": "'{brand}'",
+    "name": "Hemen Pergola",
     "tagline": "Dış mekân mimari sistemleri pazaryeri"
   },
   "common": {
@@ -801,5 +801,29 @@
       "REJECTED": "Yorum reddedildi ve müşteri bilgilendirildi."
     },
     "ratingOf": "{value}/5"
+  },
+  "directory": {
+    "categoriesTitle": "Ürün kategorileri",
+    "categoriesLead": "Dış mekân mimari sistemlerini keşfedin; projenizi yapılandırın, doğrulanmış üreticilerden teklif alın.",
+    "categoriesEmpty": "Katalog hazırlanıyor — kategoriler yakında burada.",
+    "productCount": "{count, plural, =0 {Ürün yok} one {# ürün} other {# ürün}}",
+    "productsEmpty": "Bu kategoride henüz yayınlanmış ürün yok.",
+    "attributesTitle": "Özellikler ve seçenekler",
+    "categoryLabel": "Kategori",
+    "ctaConfigure": "Projeni yapılandır",
+    "manufacturersTitle": "Doğrulanmış üreticiler",
+    "manufacturersLead": "Belgeleri incelenmiş, hizmet bölgeleri tanımlı üreticiler.",
+    "manufacturersEmpty": "Henüz listelenecek üretici yok.",
+    "newOnPlatform": "Platformda yeni",
+    "reviewCount": "{count, plural, =0 {Henüz yorum yok} one {# yorum} other {# yorum}}",
+    "serves": "Hizmet bölgeleri",
+    "portfolioTitle": "Portföy",
+    "portfolioEmpty": "Henüz portföy kaydı eklenmemiş.",
+    "reviewsTitle": "Yorumlar",
+    "reviewsEmpty": "Henüz yayınlanmış yorum yok.",
+    "companyResponse": "Firma yanıtı",
+    "foundedYear": "Kuruluş: {year}",
+    "employeeRange": "Çalışan: {range}",
+    "loadError": "İçerik şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin."
   }
 }

@@ -254,7 +254,7 @@
     }
   },
   "brand": {
-    "name": "'{brand}'",
+    "name": "Hemen Pergola",
     "tagline": "Outdoor architectural systems marketplace"
   },
   "common": {
@@ -801,5 +801,29 @@
       "REJECTED": "Review rejected and the customer notified."
     },
     "ratingOf": "{value}/5"
+  },
+  "directory": {
+    "categoriesTitle": "Product categories",
+    "categoriesLead": "Explore outdoor architectural systems; configure your project and get offers from verified manufacturers.",
+    "categoriesEmpty": "The catalogue is being prepared — categories arrive here soon.",
+    "productCount": "{count, plural, =0 {No products} one {# product} other {# products}}",
+    "productsEmpty": "No published products in this category yet.",
+    "attributesTitle": "Attributes and options",
+    "categoryLabel": "Category",
+    "ctaConfigure": "Configure your project",
+    "manufacturersTitle": "Verified manufacturers",
+    "manufacturersLead": "Manufacturers with reviewed documents and defined service areas.",
+    "manufacturersEmpty": "No manufacturers to list yet.",
+    "newOnPlatform": "New on the platform",
+    "reviewCount": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",
+    "serves": "Service areas",
+    "portfolioTitle": "Portfolio",
+    "portfolioEmpty": "No portfolio entries yet.",
+    "reviewsTitle": "Reviews",
+    "reviewsEmpty": "No published reviews yet.",
+    "companyResponse": "Company response",
+    "foundedYear": "Founded: {year}",
+    "employeeRange": "Employees: {range}",
+    "loadError": "Content cannot be loaded right now. Please try again later."
   }
 }

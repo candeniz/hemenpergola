@@ -474,6 +474,39 @@ describe('every service method has a matrix entry', () => {
     }
   })
 
+  it('keeps the public directory anonymous surface to the six pinned reads', () => {
+    /*
+     * Task 8.1's directory module is anonymous BY DESIGN — its whole job is public
+     * canonical URLs — which is exactly why it gets the same pin as `MATCHING_PUBLIC_READ`
+     * and `catalog`'s `PUBLIC_READ`: the set is named and counted, every member is shaped
+     * like a read, and the sixth anonymous method is a reviewed diff. The DTOs it returns
+     * are the KVKK boundary here too: a public review carries text and score, never the
+     * author; the manufacturer card carries `avgRating: null` below three published
+     * reviews (`16` §Aggregates).
+     */
+    const DIRECTORY_PUBLIC_READ = [
+      'listPublicCategories',
+      'getPublicCategory',
+      'getPublicProduct',
+      'listPublicManufacturers',
+      'getPublicManufacturer',
+      // The sitemap's slug feed — public by definition, and the reason app/sitemap.ts
+      // needs no database client of its own (05 §Shape).
+      'listPublicSlugs',
+    ]
+
+    const anonymous = registeredMethods().filter((meta) => meta.service === 'directory')
+
+    expect(anonymous.map((meta) => meta.method).sort()).toEqual([...DIRECTORY_PUBLIC_READ].sort())
+
+    for (const meta of anonymous) {
+      expect(meta.authorisation.kind).toBe('anonymous')
+      expect(meta.method, `${meta.method} is anonymous but not shaped like a read`).toMatch(
+        /^(get|list)/,
+      )
+    }
+  })
+
   it('keeps every pricing method company-scoped, never admin', () => {
     /*
      * A price book belongs to the manufacturer who wrote it. `ADR-006` lets an admin read a

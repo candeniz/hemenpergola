@@ -122,6 +122,11 @@ const ENV_BOUNDARY_FILES = [
   'src/shared/config/env.test.ts',
   'src/instrumentation.ts',
   'vitest.config.ts',
+  // The site origin for canonical/sitemap/JSON-LD (task 8.4). Deliberately NOT the typed
+  // env: that parse is eager and this value is read while `next build` prerenders public
+  // pages, where `23` §Configuration guarantees no environment exists. A soft read with a
+  // dev fallback — the file's comment carries the full argument.
+  'src/shared/seo/site-url.ts',
   // The build configuration. `images.remotePatterns` needs the CDN host at build time, and
   // the typed env cannot be used here: it parses the *whole* environment and throws on the
   // first missing secret, which is precisely the build-needs-production-secrets failure

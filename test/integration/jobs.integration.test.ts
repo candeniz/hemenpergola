@@ -399,18 +399,20 @@ describe('pg-boss is really there', () => {
      * The second half of the SLA lesson: `enqueue()` rightly never throws, but for a
      * whole phase its only failure signal was a stdout line nobody read. Now every
      * failure lands in a ring buffer that `/api/health` reports as `degraded`. The
-     * trigger here is real, not mocked: `search.reindex_company` is a Phase 8 queue
-     * nobody has created yet, so pg-boss refuses the send.
+     * trigger is the PERMANENT sentinel `probe.queue_that_must_never_exist`: the first
+     * draft sent to `search.reindex_company`, which Phase 8 creates — and the day that
+     * queue existed this test would have silently proven nothing (`28` §11's
+     * landmine-with-a-date). The sentinel's name is its own documentation.
      */
     await ensureQueues()
 
     const before = recentEnqueueFailures().length
-    const jobId = await enqueue(JOB.searchReindexCompany, { companyId: 'probe' })
+    const jobId = await enqueue(JOB.neverCreatedProbe, {})
 
     expect(jobId).toBeNull()
     const failures = recentEnqueueFailures()
     expect(failures.length).toBe(before + 1)
-    expect(failures[failures.length - 1]?.queue).toBe(JOB.searchReindexCompany)
+    expect(failures[failures.length - 1]?.queue).toBe(JOB.neverCreatedProbe)
     expect(failures[failures.length - 1]?.message.length).toBeGreaterThan(0)
   }, 120_000)
 })

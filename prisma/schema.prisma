@@ -1421,6 +1421,28 @@ model Message {
   @@index([threadId, sentAt])
 }
 
+/**
+ * `18` §URLs, task 8.5: a public URL change is a cost, never a 404. When a translation's
+ * slug changes, the OLD slug lands here and the public page answers it with a permanent
+ * redirect to the entity's CURRENT slug (looked up at request time, so chains collapse:
+ * old → entityId → whatever is current). `(entityType, locale, oldSlug)` is UNIQUE — an
+ * old slug points at exactly one entity; a slug that comes back into live use has its
+ * redirect row deleted by the same service that assigned it.
+ */
+model SlugRedirect {
+  id         String   @id @default(cuid())
+  /// 'category' | 'product' — 'company' joins if company slugs ever become editable.
+  entityType String
+  /// 'tr' | 'en' — the slug sets are per locale (`ADR-017`).
+  locale     String
+  oldSlug    String
+  entityId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, locale, oldSlug])
+  @@index([entityId])
+}
+
 /// `16` §Moderation: every review is moderated before publication in V1.
 enum ReviewStatus {
   PENDING

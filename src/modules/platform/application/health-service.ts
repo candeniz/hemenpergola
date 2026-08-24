@@ -21,10 +21,17 @@ import { recentEnqueueFailures } from '@/shared/jobs'
 
 const TIMEOUT_MS = 3_000
 
+/**
+ * No free-text `detail` in the response, by design: `/api/health` is unauthenticated and
+ * the messages it would carry come from pg/pg-boss/fetch — connection strings, schema
+ * names, endpoints. `28` §6 justifies this endpoint's exemption with "returns no user
+ * data"; keeping that true means the *diagnosis* goes to the server log
+ * (`console.error('[health] …')`) and the response keeps only the signal: which check,
+ * ok or not, how long, and for the queue check a count and a queue name.
+ */
 export type CheckResult = {
   ok: boolean
   durationMs: number
-  detail?: string
 }
 
 export type HealthReport = {
@@ -38,9 +45,10 @@ export type HealthReport = {
     /**
      * Enqueue failures in the last window. Not a probe — a report: `enqueue()` never
      * throws by design, and the Phase 6 SLA drop proved a logged-and-ignored failure is
-     * a silent one. Any recent failure turns the report `degraded`.
+     * a silent one. Any recent failure turns the report `degraded`; the response carries
+     * count and queue name, never the underlying message.
      */
-    queue: CheckResult
+    queue: CheckResult & { failureCount?: number; latestQueue?: string }
   }
 }
 
@@ -68,11 +76,9 @@ async function timed<T>(label: string, fn: () => Promise<T>): Promise<CheckResul
     const value = await withTimeout(fn(), label)
     return { ok: true, durationMs: Date.now() - started, value }
   } catch (error) {
-    return {
-      ok: false,
-      durationMs: Date.now() - started,
-      detail: error instanceof Error ? error.message : String(error),
-    }
+    // The message stays on the server: see the CheckResult comment.
+    console.error(`[health] ${label} check failed:`, error)
+    return { ok: false, durationMs: Date.now() - started }
   }
 }
 
@@ -123,15 +129,18 @@ async function checkStorage(): Promise<CheckResult> {
   return result
 }
 
-function checkQueue(): CheckResult {
+function checkQueue(): CheckResult & { failureCount?: number; latestQueue?: string } {
   const failures = recentEnqueueFailures()
   if (failures.length === 0) return { ok: true, durationMs: 0 }
 
   const latest = failures[failures.length - 1]
+  // Count and queue name only — the underlying message is pg-boss/Postgres free text and
+  // stays in the server log (`[jobs] enqueue failed …`, logged where it happened).
   return {
     ok: false,
     durationMs: 0,
-    detail: `${failures.length} enqueue failure(s) in the last window; latest: ${latest?.queue ?? '?'} — ${latest?.message ?? '?'}`,
+    failureCount: failures.length,
+    latestQueue: latest?.queue,
   }
 }
 

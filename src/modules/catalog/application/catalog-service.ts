@@ -7,6 +7,7 @@ import { prisma } from '@/shared/db'
 import { conflict, err, notFound, ok, precondition, type DomainError } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 import { slugify, uniqueSlug } from '@/shared/text/slug'
+import { recordSlugChange } from '@/shared/slug-redirect'
 
 import { canDeleteCategory } from '../domain/authoring-rules'
 
@@ -250,6 +251,17 @@ export const updateCategory = serviceMethod<UpdateCategoryInput, { categoryId: s
           if (translation === undefined) continue
 
           const slug = await resolveSlug('category', locale, translation, input.categoryId)
+          // 8.5: the old slug keeps answering, permanently redirected (`18` §URLs).
+          const previous = before.translations.find((row) => row.locale === locale)
+          if (previous !== undefined && previous.slug !== slug) {
+            await recordSlugChange(tx, {
+              entityType: 'category',
+              locale,
+              oldSlug: previous.slug,
+              newSlug: slug,
+              entityId: input.categoryId,
+            })
+          }
           await tx.categoryTranslation.upsert({
             where: { categoryId_locale: { categoryId: input.categoryId, locale } },
             create: {
@@ -575,6 +587,17 @@ export const updateProduct = serviceMethod<UpdateProductInput, { productId: stri
           if (translation === undefined) continue
 
           const slug = await resolveSlug('product', locale, translation, input.productId)
+          // 8.5: same as the category path — a renamed product's old URL 301s, never 404s.
+          const previous = before.translations.find((row) => row.locale === locale)
+          if (previous !== undefined && previous.slug !== slug) {
+            await recordSlugChange(tx, {
+              entityType: 'product',
+              locale,
+              oldSlug: previous.slug,
+              newSlug: slug,
+              entityId: input.productId,
+            })
+          }
           await tx.productTranslation.upsert({
             where: { productId_locale: { productId: input.productId, locale } },
             create: {

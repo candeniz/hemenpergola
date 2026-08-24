@@ -45,6 +45,14 @@ export const JOB = {
   searchReindexCompany: 'search.reindex_company',
   /** Phase 9. */
   auditRetentionSweep: 'audit.retention_sweep',
+  /**
+   * NEVER created, on purpose — the permanent trigger for the loud-enqueue-failure test.
+   * The test originally sent to `search.reindex_company`, which Phase 8 creates: the day
+   * that queue exists, the test would silently prove nothing (`28` §11: "a stub for a
+   * table that is coming is a landmine with a date on it"). This name is its own
+   * documentation; adding it to `ensureQueues`/`WORKED_QUEUES` defeats a test.
+   */
+  neverCreatedProbe: 'probe.queue_that_must_never_exist',
 } as const
 
 export type JobName = (typeof JOB)[keyof typeof JOB]
@@ -60,6 +68,7 @@ export type JobPayloads = {
   [JOB.notificationDispatch]: { notificationId: string }
   [JOB.analyticsRefresh]: { companyId: string }
   [JOB.searchReindexCompany]: { companyId: string }
+  [JOB.neverCreatedProbe]: Record<string, never>
   [JOB.auditRetentionSweep]: Record<string, never>
 }
 

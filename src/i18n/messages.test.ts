@@ -60,8 +60,7 @@ describe('message catalogues', () => {
     /*
      * The failure this catches is not a missing translation — it is a translated message
      * that dropped `{count}`, which renders as a sentence with a hole in it and passes every
-     * other test. `{brand}` is deliberately escaped as `'{brand}'` in both catalogues (Q1),
-     * so it is not a placeholder and does not appear here.
+     * other test. Q1 closed: brand.name is the literal "Hemen Pergola" in both catalogues and carries no placeholder.
      */
     const mismatched = trPaths.filter((path) => {
       const a = placeholders(messageAt(tr as Tree, path))
@@ -92,22 +91,26 @@ describe('message catalogues', () => {
   /*
    * Named at describe level and PINNED below, the `OPERATIONAL_PROBES` /
    * `DEPLOY_WORD_EXEMPTIONS` discipline: each entry is a string with no words in it — a
-   * phone format, punctuation around localised numbers, unit abbreviations. A fifth entry
-   * is a decision to argue in the pull request, not a line to slip in.
+   * phone format, punctuation around localised numbers, unit abbreviations — plus the
+   * brand name, which is a proper noun and identical by definition (Q1 closed 2026-08-24:
+   * "Hemen Pergola"). A sixth entry is a decision to argue in the pull request, not a
+   * line to slip in.
    */
   const SAME_IN_BOTH = [
     'auth.phonePlaceholder',
     'estimate.range',
     'wizard.attachments.size',
     'leads.dimensions',
+    'brand.name',
   ]
 
-  it('keeps the identical-string exemption list to the four wordless formats', () => {
+  it('keeps the identical-string exemption list to the four wordless formats plus the brand', () => {
     expect(SAME_IN_BOTH).toEqual([
       'auth.phonePlaceholder',
       'estimate.range',
       'wizard.attachments.size',
       'leads.dimensions',
+      'brand.name',
     ])
   })
 

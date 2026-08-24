@@ -358,12 +358,39 @@ async function mayReadPrivate(
    * `14` §Access control puts project photos in the **semi-private** class: *"signed URL, 15
    * min, only for the customer and manufacturers whose request is `ACCEPTED`+"*.
    *
-   * The customer half is built now. The manufacturer half is Phase 6's, because `OfferRequest`
-   * does not exist yet — and the honest answer for a table that does not exist is no, not a
-   * placeholder that returns `true` and gets forgotten. That distinction is the same one
-   * Q19 keeps visible for the virus scanner.
+   * Both halves exist now. The customer half is ownership; the manufacturer half (task
+   * 8.1, carried from Phase 7) is an `ACCEPTED`-or-later request FROM THIS PROJECT to the
+   * actor's company — the same moment `11` §Contact disclosure opens everything else. The
+   * scoping is in the where clause: a company with only a PENDING or DECLINED request
+   * simply finds no row.
    */
-  if (ownerType === 'PROJECT') return ownsProject(actor, ownerId)
+  if (ownerType === 'PROJECT') {
+    if (await ownsProject(actor, ownerId)) return true
+
+    if (actor.companyId !== null) {
+      const accepted = await prisma.offerRequest.findFirst({
+        where: {
+          projectId: ownerId,
+          companyId: actor.companyId,
+          status: {
+            in: [
+              'ACCEPTED',
+              'SURVEY_SCHEDULED',
+              'SURVEY_COMPLETED',
+              'OFFER_SENT',
+              'OFFER_ACCEPTED',
+              'OFFER_REJECTED',
+              'WON',
+              'LOST',
+            ],
+          },
+        },
+        select: { id: true },
+      })
+      return accepted !== null
+    }
+    return false
+  }
 
   if (actor.userId === null) return false
 

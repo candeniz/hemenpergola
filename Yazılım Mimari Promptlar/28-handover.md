@@ -309,9 +309,12 @@ Four matter more than the rest:
 velocity, and it is the longest external lead time in the project. A Turkish alphanumeric SMS
 sender ID is allocated only to an İYS-registered business, which needs a registered company;
 the provider's own approval of the header is short (commonly 1–3 business days), so the lead
-time everyone worries about is the wrong one. Q1 (brand) sits upstream of it, because the
-sender ID *is* the brand. Q3 (SMS provider) sits downstream. This chain gates the real phone
-verification path, which gates contact disclosure in Phase 6. **Not started as of handover.**
+time everyone worries about is the wrong one. **Q1 closed 2026-08-24 — the brand is "Hemen
+Pergola"** — which unblocks this chain's upstream end; note the GSM alphanumeric field is 11
+characters, so the sender ID will be an *abbreviation* decided with the İYS application, not
+the full name (it lives in configuration, hardcoded nowhere). Q3 (SMS provider) sits
+downstream. This chain gates the real phone verification path, which gates contact
+disclosure in Phase 6. **Not started as of handover.**
 
 **Q18 — do snow and wind load affect size limits, or only price?** If only price, the model
 already handles it. If limits, `ProductAttribute.max` must vary by region and the schema

@@ -1,0 +1,411 @@
+import 'server-only'
+
+import { prisma } from '@/shared/db'
+import { err, notFound, ok } from '@/shared/result'
+import { serviceMethod } from '@/shared/service/registry'
+import { resolveSlugRedirect } from '@/shared/slug-redirect'
+
+/**
+ * The public directory — task 8.1, `07` §Route map's public half. Every method here is
+ * `anonymous` and PINNED in the authorisation-matrix suite (`DIRECTORY_PUBLIC_READ`, the
+ * `MATCHING_PUBLIC_READ` discipline): read-only, `get*`/`list*` shapes, and a new
+ * anonymous method is a reviewed diff, not a drift.
+ *
+ * Slug lookups are two-step (`18` §URLs, task 8.5): the current slug first, then the
+ * `SlugRedirect` table — a miss that finds a redirect returns `{ kind: 'moved' }` with
+ * the CURRENT slug and the page answers with a permanent redirect, never a 404.
+ *
+ * **The three-review rule lives here, not in the page** (`16` §Aggregates): `avgRating`
+ * is `null` until three PUBLISHED reviews exist, however full the denormalised columns
+ * are — the DTO boundary is the control, the same construction as the lead DTOs.
+ */
+
+const MIN_REVIEWS_FOR_AVERAGE = 3
+
+type Locale = 'tr' | 'en'
+
+const localeOf = (value: string): Locale => (value === 'en' ? 'en' : 'tr')
+
+// ── categories ────────────────────────────────────────────────────────────────
+
+export type PublicCategory = {
+  slug: string
+  name: string
+  description: string | null
+  productCount: number
+}
+
+export const listPublicCategories = serviceMethod<{ locale: string }, PublicCategory[]>(
+  'directory',
+  'listPublicCategories',
+  { kind: 'anonymous', why: 'the category grid is the public homepage (07 §Route map)' },
+  async (_actor, input) => {
+    const locale = localeOf(input.locale)
+    const rows = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      select: {
+        translations: { where: { locale }, select: { slug: true, name: true, description: true } },
+        _count: { select: { products: { where: { isActive: true } } } },
+      },
+    })
+
+    return ok(
+      rows
+        .map((row) => {
+          const translation = row.translations[0]
+          if (translation === undefined) return null
+          return {
+            slug: translation.slug,
+            name: translation.name,
+            description: translation.description,
+            productCount: row._count.products,
+          }
+        })
+        .filter((row): row is PublicCategory => row !== null),
+    )
+  },
+)
+
+export type PublicCategoryDetail =
+  | { kind: 'found'; category: PublicCategory; products: PublicProductCard[] }
+  | { kind: 'moved'; slug: string }
+
+export type PublicProductCard = {
+  slug: string
+  name: string
+  shortDescription: string | null
+}
+
+export const getPublicCategory = serviceMethod<
+  { locale: string; slug: string },
+  PublicCategoryDetail
+>(
+  'directory',
+  'getPublicCategory',
+  { kind: 'anonymous', why: 'a category page is a public canonical URL (07 §Route map)' },
+  async (_actor, input) => {
+    const locale = localeOf(input.locale)
+
+    const load = async (where: { slug: string } | { categoryId: string }) =>
+      prisma.categoryTranslation.findFirst({
+        where: { locale, ...where, category: { isActive: true } },
+        select: {
+          slug: true,
+          name: true,
+          description: true,
+          category: {
+            select: {
+              id: true,
+              products: {
+                where: { isActive: true },
+                orderBy: { sortOrder: 'asc' },
+                select: {
+                  translations: {
+                    where: { locale },
+                    select: { slug: true, name: true, shortDescription: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+
+    let row = await load({ slug: input.slug })
+
+    if (row === null) {
+      const entityId = await resolveSlugRedirect('category', locale, input.slug)
+      if (entityId === null) return err(notFound('Category'))
+      row = await load({ categoryId: entityId })
+      if (row === null) return err(notFound('Category'))
+      return ok({ kind: 'moved' as const, slug: row.slug })
+    }
+
+    return ok({
+      kind: 'found' as const,
+      category: {
+        slug: row.slug,
+        name: row.name,
+        description: row.description,
+        productCount: row.category.products.length,
+      },
+      products: row.category.products
+        .map((product) => product.translations[0])
+        .filter(
+          (translation): translation is NonNullable<typeof translation> =>
+            translation !== undefined,
+        )
+        .map((translation) => ({
+          slug: translation.slug,
+          name: translation.name,
+          shortDescription: translation.shortDescription,
+        })),
+    })
+  },
+)
+
+// ── products ──────────────────────────────────────────────────────────────────
+
+export type PublicProductDetail =
+  | {
+      kind: 'found'
+      product: {
+        slug: string
+        name: string
+        shortDescription: string | null
+        description: string | null
+        category: { slug: string; name: string } | null
+        attributes: { name: string; options: string[] }[]
+      }
+    }
+  | { kind: 'moved'; slug: string }
+
+export const getPublicProduct = serviceMethod<
+  { locale: string; slug: string },
+  PublicProductDetail
+>(
+  'directory',
+  'getPublicProduct',
+  { kind: 'anonymous', why: 'a product page is a public canonical URL (07 §Route map)' },
+  async (_actor, input) => {
+    const locale = localeOf(input.locale)
+
+    const load = async (where: { slug: string } | { productId: string }) =>
+      prisma.productTranslation.findFirst({
+        where: { locale, ...where, product: { isActive: true } },
+        select: {
+          slug: true,
+          name: true,
+          shortDescription: true,
+          description: true,
+          product: {
+            select: {
+              id: true,
+              category: {
+                select: { translations: { where: { locale }, select: { slug: true, name: true } } },
+              },
+              attributes: {
+                orderBy: { sortOrder: 'asc' },
+                select: {
+                  translations: { where: { locale }, select: { label: true } },
+                  options: {
+                    orderBy: { sortOrder: 'asc' },
+                    select: { translations: { where: { locale }, select: { label: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+
+    let row = await load({ slug: input.slug })
+
+    if (row === null) {
+      const entityId = await resolveSlugRedirect('product', locale, input.slug)
+      if (entityId === null) return err(notFound('Product'))
+      row = await load({ productId: entityId })
+      if (row === null) return err(notFound('Product'))
+      return ok({ kind: 'moved' as const, slug: row.slug })
+    }
+
+    const categoryTranslation = row.product.category?.translations[0] ?? null
+
+    return ok({
+      kind: 'found' as const,
+      product: {
+        slug: row.slug,
+        name: row.name,
+        shortDescription: row.shortDescription,
+        description: row.description,
+        category:
+          categoryTranslation === null
+            ? null
+            : { slug: categoryTranslation.slug, name: categoryTranslation.name },
+        attributes: row.product.attributes
+          .map((attribute) => ({
+            name: attribute.translations[0]?.label ?? '',
+            options: attribute.options
+              .map((option) => option.translations[0]?.label ?? '')
+              .filter((label) => label !== ''),
+          }))
+          .filter((attribute) => attribute.name !== ''),
+      },
+    })
+  },
+)
+
+// ── manufacturers ─────────────────────────────────────────────────────────────
+
+export type PublicManufacturerCard = {
+  slug: string
+  displayName: string
+  about: string | null
+  /** Null below three published reviews (`16` §Aggregates) — "new on the platform". */
+  avgRating: number | null
+  reviewCount: number
+  cityNames: string[]
+}
+
+function averageOrNull(ratingSum: number, reviewCount: number): number | null {
+  if (reviewCount < MIN_REVIEWS_FOR_AVERAGE) return null
+  return Math.round((ratingSum / reviewCount) * 10) / 10
+}
+
+const MANUFACTURER_CARD_SELECT = {
+  slug: true,
+  displayName: true,
+  about: true,
+  ratingSum: true,
+  reviewCount: true,
+  serviceAreas: {
+    where: { isActive: true },
+    select: { city: { select: { name: true } } },
+  },
+} as const
+
+function toCard(row: {
+  slug: string
+  displayName: string
+  about: string | null
+  ratingSum: number
+  reviewCount: number
+  serviceAreas: { city: { name: string } | null }[]
+}): PublicManufacturerCard {
+  return {
+    slug: row.slug,
+    displayName: row.displayName,
+    about: row.about,
+    avgRating: averageOrNull(row.ratingSum, row.reviewCount),
+    reviewCount: row.reviewCount,
+    cityNames: [
+      ...new Set(
+        row.serviceAreas
+          .map((area) => area.city?.name)
+          .filter((name): name is string => name !== undefined && name !== null),
+      ),
+    ],
+  }
+}
+
+export const listPublicManufacturers = serviceMethod<
+  Record<string, never>,
+  PublicManufacturerCard[]
+>(
+  'directory',
+  'listPublicManufacturers',
+  { kind: 'anonymous', why: 'the manufacturer directory is a public page (07 §Route map)' },
+  async () => {
+    const rows = await prisma.company.findMany({
+      where: { status: 'VERIFIED', deletedAt: null },
+      orderBy: [{ reviewCount: 'desc' }, { displayName: 'asc' }],
+      select: MANUFACTURER_CARD_SELECT,
+    })
+    return ok(rows.map(toCard))
+  },
+)
+
+// ── sitemap feed ──────────────────────────────────────────────────────────────
+
+export type PublicSlugs = {
+  categories: { locale: string; slug: string }[]
+  products: { locale: string; slug: string }[]
+  companies: { slug: string }[]
+}
+
+export const listPublicSlugs = serviceMethod<Record<string, never>, PublicSlugs>(
+  'directory',
+  'listPublicSlugs',
+  { kind: 'anonymous', why: 'the sitemap enumerates exactly the public canonical URLs (18)' },
+  async () => {
+    const [categories, products, companies] = await Promise.all([
+      prisma.categoryTranslation.findMany({
+        where: { category: { isActive: true } },
+        select: { locale: true, slug: true },
+      }),
+      prisma.productTranslation.findMany({
+        where: { product: { isActive: true } },
+        select: { locale: true, slug: true },
+      }),
+      prisma.company.findMany({
+        where: { status: 'VERIFIED', deletedAt: null },
+        select: { slug: true },
+      }),
+    ])
+    return ok({
+      categories: categories.map((row) => ({ locale: row.locale, slug: row.slug })),
+      products: products.map((row) => ({ locale: row.locale, slug: row.slug })),
+      companies: companies.map((row) => ({ slug: row.slug })),
+    })
+  },
+)
+
+export type PublicManufacturerProfile = {
+  card: PublicManufacturerCard
+  foundedYear: number | null
+  employeeRange: string | null
+  portfolio: { title: string; description: string | null; completedAt: Date | null }[]
+  reviews: {
+    ratingOverall: number
+    title: string | null
+    body: string
+    publishedAt: Date | null
+    response: { body: string; createdAt: Date } | null
+  }[]
+}
+
+export const getPublicManufacturer = serviceMethod<{ slug: string }, PublicManufacturerProfile>(
+  'directory',
+  'getPublicManufacturer',
+  { kind: 'anonymous', why: 'a manufacturer profile is a public canonical URL (07 §Route map)' },
+  async (_actor, input) => {
+    const row = await prisma.company.findFirst({
+      where: { slug: input.slug, status: 'VERIFIED', deletedAt: null },
+      select: {
+        ...MANUFACTURER_CARD_SELECT,
+        foundedYear: true,
+        employeeRange: true,
+        portfolio: {
+          orderBy: { sortOrder: 'asc' },
+          select: { title: true, description: true, completedAt: true },
+        },
+        companyReviews: {
+          where: { status: 'PUBLISHED', deletedAt: null },
+          orderBy: { publishedAt: 'desc' },
+          select: {
+            ratingOverall: true,
+            title: true,
+            body: true,
+            publishedAt: true,
+            response: { select: { body: true, createdAt: true } },
+          },
+        },
+      },
+    })
+    if (row === null) return err(notFound('Company'))
+
+    return ok({
+      card: toCard(row),
+      foundedYear: row.foundedYear,
+      employeeRange: row.employeeRange,
+      portfolio: row.portfolio.map((item) => ({
+        title: item.title,
+        description: item.description,
+        completedAt: item.completedAt,
+      })),
+      // Field-by-field pick: never the customer's identity — a public review is the text
+      // and the score, not who wrote it.
+      reviews: row.companyReviews.map((review) => ({
+        ratingOverall: review.ratingOverall,
+        title: review.title,
+        body: review.body,
+        publishedAt: review.publishedAt,
+        response:
+          review.response === null
+            ? null
+            : { body: review.response.body, createdAt: review.response.createdAt },
+      })),
+    })
+  },
+)
