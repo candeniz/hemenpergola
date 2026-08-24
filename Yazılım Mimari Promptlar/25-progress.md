@@ -6,17 +6,16 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phases 0–7 are complete with proven gates** (Phase 7 closed
-2026-08-24): the notification catalogue with `tr`/`en` templates and the idempotent
-dispatch (at-most-once by default, at-least-once for `ADR-027`'s mandatory events),
-post-acceptance messaging (`ADR-028` — the thread opens where the disclosure opens),
-moderated reviews feeding `Company`'s recompute-equality-tested aggregates, which the
-matching score now reads instead of hard-coded priors. The full F1 journey is proven end
-to end: a visitor configures to `READY`, `GET OFFERS` returns ranked, priced
-manufacturers, requests carry versioned consent, `PENDING → ACCEPTED` discloses contact
-exactly once with its `ContactDisclosure`, audit and notification, and the offer lands
-beside the original estimate. The repository is public at
-`github.com/candeniz/hemenpergola` and CI runs the whole pipeline on every push.
+**Current phase:** **Phases 0–8 are complete with proven gates** (Phase 8 closed
+2026-08-24, CI run #15): the public site is live in shape — homepage, categories,
+products, manufacturer profiles, supply-driven city pages and the block-CMS pages, with
+per-locale slugs that answer renames with permanent redirects, sitemap and JSON-LD from
+one origin value, and the five-template Lighthouse gate running STRICT in CI against
+`18`'s budgets and named conditions. Beneath it, the full F1 journey remains proven end to
+end (release gate 9/9), notifications dispatch idempotently, messaging opens with the
+disclosure (`ADR-028`), and moderated reviews feed the matching score through
+recompute-tested aggregates. Only Phase 9 (hardening + launch) remains. The repository is
+public at `github.com/candeniz/hemenpergola` and CI runs the whole pipeline on every push.
 
 **The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
 it, with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as
@@ -51,7 +50,7 @@ proven — not when the code is written.
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
-| 8 | Public site + SEO | **🟡 in progress · 4/5** | performance budgets met in CI — the gate stage is LIVE and strict (five named templates, no skip path); the first CI measurement runs on this commit. Landed 2026-08-24: slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
+| 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
 
 ## Log
@@ -2994,9 +2993,15 @@ decisions); the revalidate finding is written into `07` §Rendering strategy and
 check-dynamic-routes header — three layers, the cookies() masking, and the warning that
 the build check stands alone the day a page stops calling `cookies()`.
 
-Suite counts: **1073 unit / 336 integration / 57 e2e green (11 skipped)**. Also fixed in
+Suite counts: **1074 unit / 336 integration / 57 e2e green (11 skipped)**. Also fixed in
 passing: the Windows-Docker stale-socket flake in `match-performance` (pool refresh before
 the heavy run) and the shared test container gained explicit memory/connection limits.
+
+**Gate proven:** CI run #15's lighthouse job measured the five templates against the real
+stack for 4.6 minutes and passed every budget — the stage is strict, so green IS the
+proof. (Local numbers, on a slow host — benchmarkIndex ~650: LCP 1.1–1.9 s, CLS ≤ 0.015,
+TTFB-hit 50–230 ms; TBT scaled with host speed locally and cleared 200 ms on the runner.)
+Phase 8 → ✅ 5/5.
 
 ## Open questions — need a human answer before the phase that hits them
 
