@@ -224,8 +224,13 @@ jobs:
       # developer machine uses, then migrations and the demo seed the specs sign in with.
       # This was the first thing the first real runner ever proved missing — ci-local.mjs
       # ran on a machine where the stack was already up, so nothing noticed.
+      # `--wait` on the whole file fails when the one-shot `minio-init` exits — compose
+      # counts a stopped container as unhealthy. Wait on the long-running two, then run the
+      # bucket init synchronously (same pattern as the integration job).
       - name: Start the local stack (PostGIS + MinIO)
-        run: docker compose up -d --wait
+        run: |
+          docker compose up -d --wait postgres minio
+          docker compose run --rm minio-init
 
       - name: Migrate and seed
         run: pnpm prisma migrate deploy && pnpm seed demo
