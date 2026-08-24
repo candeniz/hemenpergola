@@ -3078,6 +3078,13 @@ and `README.md` now route to it.
 Suite counts: **1080 unit / 339 integration / 61 e2e green (11 skipped)** — the e2e
 suite, release gate included, now runs under the CSP.
 
+**CI run #17's gate numbers, from the annotations** (the reproducibility baseline the
+benchmarkIndex fix exists for): runner **benchmarkIndex 2849** — 4.4× this dev machine's
+~650, which is the whole story of the local TBT inflation. All five templates: LCP
+0.70–0.75 s, TBT 53–69 ms, CLS 0.000, TTFB-hit 12–29 ms — every budget cleared with 3–4×
+headroom. If a future runner reports a materially lower index alongside a TBT failure,
+suspect the host before the code.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
