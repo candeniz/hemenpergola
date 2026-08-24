@@ -37,9 +37,10 @@ const LEFTOVER_PLACEHOLDER = /\{[a-zA-Z]/
 
 describe('notification catalogue (phase gate)', () => {
   it('holds every event 13-notifications.md defines, and nothing renders for subscriptions', () => {
-    // 13's fifteen rows plus the split lifecycle events; auth.* is deliberately outside
-    // the catalogue (direct security mail, domain/templates.ts).
-    expect(EVENT_TYPES.length).toBe(19)
+    // 13's fifteen rows plus the split lifecycle events and 16's rejection notice;
+    // auth.* is deliberately outside the catalogue (direct security mail,
+    // domain/templates.ts, covered by templates.test.ts — the gate's other half).
+    expect(EVENT_TYPES.length).toBe(20)
     expect(SUBSCRIPTION_TYPES).toEqual(['supply_gap_watch'])
 
     for (const type of SUBSCRIPTION_TYPES) {

@@ -190,7 +190,19 @@ async function scoreAndPrice(
   const [companies, offeredCounts, portfolioCounts, books, companyProducts] = await Promise.all([
     prisma.company.findMany({
       where: { id: { in: companyIds } },
-      select: { id: true, displayName: true, updatedAt: true, priceOnRequest: true },
+      select: {
+        id: true,
+        displayName: true,
+        updatedAt: true,
+        priceOnRequest: true,
+        // Phase 7 · task 7.3 — the denormalised aggregates `company.analytics_refresh`
+        // maintains. Until that job has run for a company these sit at their defaults,
+        // which the scorer maps onto the Bayesian prior — the newcomer treatment.
+        ratingSum: true,
+        reviewCount: true,
+        medianResponseMinutes: true,
+        completedEngagements: true,
+      },
     }),
     selectedOptionIds.length === 0
       ? Promise.resolve([])
@@ -262,12 +274,13 @@ async function scoreAndPrice(
       radiusKm: candidate.radiusKm,
       selectedOptionCount: selectedOptionIds.length,
       offeredOptionCount: offeredByCompany.get(candidate.companyId) ?? 0,
-      // Reviews are Phase 7: everyone sits on the Bayesian prior, by design.
-      ratingSum: 0,
-      ratingCount: 0,
-      // OfferRequest is Phase 6: no response history exists to be medianed.
-      medianResponseMinutes: null,
-      completedEngagements: 0,
+      // Phase 7 · 7.3: read from Company's denormalised aggregates. A company the
+      // analytics job never touched carries the defaults (0 / 0 / null / 0), which is
+      // exactly the Bayesian-prior newcomer case Phase 5 designed for.
+      ratingSum: company.ratingSum,
+      ratingCount: company.reviewCount,
+      medianResponseMinutes: company.medianResponseMinutes,
+      completedEngagements: company.completedEngagements,
       portfolioCount: portfolioByCompany.get(candidate.companyId) ?? 0,
       priceBookPublishedAt: bookByCompany.get(candidate.companyId)?.publishedAt ?? null,
       profileUpdatedAt: company.updatedAt,

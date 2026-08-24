@@ -140,6 +140,14 @@ export const NOTIFICATION_EVENTS = {
     channels: ['in_app', 'email'],
     sample: { companyName: 'Ege Pergola' },
   },
+  // `16` §Moderation: "REJECTED (reason, notified)" — the customer learns why, with the
+  // narrow published grounds, rather than watching a review vanish.
+  review_rejected: {
+    kind: 'event',
+    audience: 'customer',
+    channels: ['in_app', 'email'],
+    sample: { reason: 'Üçüncü kişilere ait kişisel veri içeriyor' },
+  },
   // ── platform (`13` rows 14–15) ─────────────────────────────────────────────
   company_verified: {
     kind: 'event',

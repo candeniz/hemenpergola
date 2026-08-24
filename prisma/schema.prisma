@@ -137,6 +137,10 @@ model User {
   notifications Notification[]
   // Phase 7 · migration 9
   notificationPreferences NotificationPreference[]
+  // Phase 7 · migration 10
+  messages        Message[]
+  reviews         Review[]
+  reviewResponses ReviewResponse[]
 
   @@index([deletedAt])
   @@index([globalRole, status])
@@ -201,6 +205,19 @@ model Company {
   rejectionReason String?
   foundedYear     Int?
   employeeRange   String?
+
+  /// ── Phase 7 · migration 10 — denormalised analytics (`16` §Aggregates, `09`) ──
+  /// Sum and count rather than a stored average: the Bayesian component needs both, and
+  /// `analytics-job.ts` recomputes them from PUBLISHED, undeleted reviews — the recompute
+  /// equality test is the field's only real protection.
+  ratingSum             Int       @default(0)
+  reviewCount           Int       @default(0)
+  /// Median accept/decline minutes over the last 90 days; null until history exists.
+  medianResponseMinutes Int?
+  /// Engagements that reached SURVEY_COMPLETED or later (`09` §History).
+  completedEngagements  Int       @default(0)
+  analyticsRefreshedAt  DateTime?
+
   deletedAt       DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -224,6 +241,8 @@ model Company {
   // Phase 6 · migration 8
   offerRequests OfferRequest[]
   disclosures   ContactDisclosure[]
+  // Phase 7 · migration 10
+  companyReviews Review[]
 
   @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "Company_displayName_trgm")
   @@index([status])
@@ -1338,6 +1357,9 @@ model OfferRequest {
   disclosure       ContactDisclosure?
   appointments     Appointment[]
   offers           Offer[]
+  // Phase 7 · migration 10
+  thread           Thread?
+  review           Review?
 
   /// One request per project per company — re-sending is a `CONFLICT`, not a duplicate.
   @@unique([projectId, companyId])
@@ -1365,6 +1387,96 @@ model ContactDisclosure {
   consent      Consent      @relation(fields: [consentId], references: [id], onDelete: Restrict)
 
   @@index([companyId, disclosedAt])
+}
+
+/**
+ * `15-messaging.md` §Model, `ADR-028`: one thread per `OfferRequest`, and the thread
+ * exists only from `ACCEPTED` — messaging is not a side door around `11` §Contact
+ * disclosure. The UNIQUE makes "one thread" a table property; the service refuses to
+ * create one before acceptance.
+ */
+model Thread {
+  id             String   @id @default(cuid())
+  offerRequestId String   @unique
+  createdAt      DateTime @default(now())
+
+  offerRequest OfferRequest @relation(fields: [offerRequestId], references: [id], onDelete: Restrict)
+  messages     Message[]
+}
+
+model Message {
+  id           String    @id @default(cuid())
+  threadId     String
+  senderUserId String
+  /// Plain text, ≤ 4000 chars (`15` §Rules), stored raw and rendered escaped. No editing,
+  /// no deleting — a negotiation transcript that can be rewritten is worth nothing.
+  body         String
+  sentAt       DateTime  @default(now())
+  /// Read state is per-side: any company member reading marks the company side read.
+  readAt       DateTime?
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Restrict)
+  sender User   @relation(fields: [senderUserId], references: [id], onDelete: Restrict)
+
+  @@index([threadId, sentAt])
+}
+
+/// `16` §Moderation: every review is moderated before publication in V1.
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+/**
+ * `16-reviews-and-ratings.md`. One review per `OfferRequest` (UNIQUE), eligible from
+ * `SURVEY_COMPLETED`. Reviews are never hard-deleted — the history stays readable
+ * (`10` §Admin authoring's argument); `deletedAt` removes one from public display and
+ * aggregates while the row remains.
+ */
+model Review {
+  id             String @id @default(cuid())
+  offerRequestId String @unique
+  companyId      String
+  customerId     String
+
+  /// 1..5 each, CHECK-enforced in the migration tail. `ratingOverall` is entered, not
+  /// derived (`16` §Content).
+  ratingOverall       Int
+  ratingQuality       Int
+  ratingCommunication Int
+  ratingTimeliness    Int
+  title               String?
+  body                String
+
+  status          ReviewStatus @default(PENDING)
+  rejectionReason String?
+  publishedAt     DateTime?
+  editedAt        DateTime?
+  deletedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  offerRequest OfferRequest    @relation(fields: [offerRequestId], references: [id], onDelete: Restrict)
+  company      Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  customer     User            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  response     ReviewResponse?
+
+  @@index([companyId, status, publishedAt])
+  @@index([customerId, companyId, createdAt])
+}
+
+/// `16` §Manufacturer response: one per review, no threading, published immediately.
+model ReviewResponse {
+  id              String   @id @default(cuid())
+  reviewId        String   @unique
+  responderUserId String
+  body            String
+  createdAt       DateTime @default(now())
+
+  review    Review @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  responder User   @relation(fields: [responderUserId], references: [id], onDelete: Restrict)
 }
 
 enum AppointmentStatus {

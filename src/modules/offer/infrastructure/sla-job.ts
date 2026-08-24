@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { prisma } from '@/shared/db'
+import { enqueue, JOB } from '@/shared/jobs'
 import { notify } from '@/modules/notification/infrastructure/notify'
 
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
@@ -160,6 +161,13 @@ async function runExpiry(offerRequestId: string): Promise<SlaOutcome> {
       dedupeOn: [{ path: ['offerRequestId'], equals: offerRequestId }],
     })
   }
+
+  // 7.3: the auto-decline stamped `respondedAt`, so the response median moved.
+  await enqueue(
+    JOB.analyticsRefresh,
+    { companyId: outcome.companyId },
+    { singletonKey: `analytics:${outcome.companyId}` },
+  )
 
   return { status: 'expired' }
 }

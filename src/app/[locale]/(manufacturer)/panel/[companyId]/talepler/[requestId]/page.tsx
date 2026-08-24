@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { LeadActions } from '@/components/manufacturer/lead-actions'
+import { MessageThread } from '@/components/messaging/message-thread'
 import { DashboardShell } from '@/components/layouts/dashboard-shell'
 import { Card, CardTitle } from '@/components/ui/card'
 
@@ -103,6 +104,18 @@ export default async function LeadDetailPage({
           companyId={companyId}
           status={view.status}
         />
+
+        {/* Messaging opens with acceptance and never before (ADR-028) — on PENDING the
+            thread cannot exist, so the component simply is not rendered. */}
+        {view.status !== 'PENDING' && view.status !== 'DECLINED' && view.status !== 'EXPIRED' ? (
+          <Card density="dense">
+            <MessageThread
+              offerRequestId={view.offerRequestId}
+              side="company"
+              companyId={companyId}
+            />
+          </Card>
+        ) : null}
       </div>
     </DashboardShell>
   )

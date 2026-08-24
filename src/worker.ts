@@ -119,8 +119,21 @@ async function main(): Promise<void> {
     },
   )
 
+  await boss.work<JobPayloads[typeof JOB.analyticsRefresh]>(
+    JOB.analyticsRefresh,
+    { batchSize: 5 },
+    async (jobs) => {
+      const { runAnalyticsRefresh } = await import('@/modules/review/infrastructure/analytics-job')
+
+      for (const job of jobs) {
+        const outcome = await runAnalyticsRefresh(job.data.companyId)
+        console.info(`[worker] ${JOB.analyticsRefresh}`, job.data.companyId, outcome.status)
+      }
+    },
+  )
+
   console.info(
-    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch',
+    '[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire, notification.dispatch, company.analytics_refresh',
   )
 
   for (const signal of SHUTDOWN_SIGNALS) {

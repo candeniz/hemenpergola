@@ -80,6 +80,9 @@ export type AuditAction =
   | 'offer_sent'
   | 'offer_marked_won'
   | 'offer_marked_lost'
+  // Phase 7 · review moderation (`16` §Moderation: an admin decision over user content)
+  | 'review_published'
+  | 'review_rejected'
 
 export type AuditEntry = {
   action: AuditAction

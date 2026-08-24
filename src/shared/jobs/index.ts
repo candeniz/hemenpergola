@@ -36,6 +36,11 @@ export const JOB = {
   slaExpire: 'offer_request.sla_expire',
   /** Phase 7. */
   notificationDispatch: 'notification.dispatch',
+  /**
+   * Phase 7 · task 7.3 — recomputes `Company`'s denormalised aggregates from source
+   * (`16` §Aggregates). Added to `05` §Background work in the same change.
+   */
+  analyticsRefresh: 'company.analytics_refresh',
   /** Phase 8. */
   searchReindexCompany: 'search.reindex_company',
   /** Phase 9. */
@@ -53,6 +58,7 @@ export type JobPayloads = {
     kind: 'reminder_50' | 'reminder_90' | 'expire'
   }
   [JOB.notificationDispatch]: { notificationId: string }
+  [JOB.analyticsRefresh]: { companyId: string }
   [JOB.searchReindexCompany]: { companyId: string }
   [JOB.auditRetentionSweep]: Record<string, never>
 }
@@ -116,6 +122,7 @@ export const WORKED_QUEUES = [
   JOB.mediaProcess,
   JOB.slaExpire,
   JOB.notificationDispatch,
+  JOB.analyticsRefresh,
 ] as const
 
 export async function ensureQueues(): Promise<void> {
@@ -140,12 +147,39 @@ export type EnqueueOptions = {
 }
 
 /**
+ * A failed enqueue must never be *silent* — the lesson of the Phase 6 SLA drop, where
+ * every failure was logged to a stdout nobody read and nothing else recorded it. Failures
+ * land here (bounded ring buffer) and `/api/health` reports any failure in the last
+ * window as `degraded`, so the class of bug becomes a red deploy gate instead of a
+ * quiet log line.
+ */
+export type EnqueueFailure = { queue: string; at: Date; message: string }
+
+const ENQUEUE_FAILURE_BUFFER = 100
+export const ENQUEUE_FAILURE_WINDOW_MS = 15 * 60 * 1000
+
+const globalForFailures = globalThis as unknown as { enqueueFailures?: EnqueueFailure[] }
+
+function failureLog(): EnqueueFailure[] {
+  globalForFailures.enqueueFailures ??= []
+  return globalForFailures.enqueueFailures
+}
+
+export function recentEnqueueFailures(
+  windowMs: number = ENQUEUE_FAILURE_WINDOW_MS,
+): readonly EnqueueFailure[] {
+  const cutoff = Date.now() - windowMs
+  return failureLog().filter((failure) => failure.at.getTime() >= cutoff)
+}
+
+/**
  * Send a job.
  *
- * **Never throws.** A failed enqueue must not roll back the write that triggered it: a
- * service area that saved but did not geocode is a service area with no centre, which the
- * screen already renders as "hesaplanıyor" and a re-save fixes. A service area that failed
- * to save because the queue was down is a manufacturer who lost their work.
+ * **Never throws** — but never silently either; see `recentEnqueueFailures`. A failed
+ * enqueue must not roll back the write that triggered it: a service area that saved but
+ * did not geocode is a service area with no centre, which the screen already renders as
+ * "hesaplanıyor" and a re-save fixes. A service area that failed to save because the
+ * queue was down is a manufacturer who lost their work.
  */
 export async function enqueue<T extends JobName>(
   name: T,
@@ -164,6 +198,13 @@ export async function enqueue<T extends JobName>(
     })
   } catch (error) {
     console.error('[jobs] enqueue failed', name, error)
+    const log = failureLog()
+    log.push({
+      queue: name,
+      at: new Date(),
+      message: error instanceof Error ? error.message : String(error),
+    })
+    if (log.length > ENQUEUE_FAILURE_BUFFER) log.splice(0, log.length - ENQUEUE_FAILURE_BUFFER)
     return null
   }
 }

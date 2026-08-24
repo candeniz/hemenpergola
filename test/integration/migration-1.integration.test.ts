@@ -239,6 +239,8 @@ describe('migration scope', () => {
       // Phase 5 · migration 7 — matching
       'MatchResult',
       'MatchRun',
+      // Phase 7 · migration 10 — messaging (15, ADR-028)
+      'Message',
       // Phase 5 · migration 7 — 04 §Messaging's Notification, pulled forward by 5.7
       'Notification',
       // Phase 7 · migration 9 — preferences; absence of a row means enabled
@@ -274,21 +276,26 @@ describe('migration scope', () => {
       'ProjectAttributeValue',
       'RateLimitHit',
       'RefreshToken',
+      // Phase 7 · migration 10 — reviews (16)
+      'Review',
+      'ReviewResponse',
       // Phase 2 · migration 3
       'Seo',
       // Phase 3 · migration 4
       'ServiceArea',
       'Session',
       'Subscription',
+      // Phase 7 · migration 10
+      'Thread',
       'User',
       'VerificationToken',
       'spatial_ref_sys',
     ])
 
-    // The messaging, review and content tables arrive with their phases — their absence
-    // here is the assertion. (`OfferRequest` left this list when migration 8 landed.)
-    expect(tables).not.toContain('Thread')
-    expect(tables).not.toContain('Review')
+    // The content tables arrive with their phases — their absence here is the assertion.
+    // (`OfferRequest` left this list at migration 8; `Thread`/`Review` at migration 10.)
+    expect(tables).not.toContain('ComplaintCase')
+    expect(tables).not.toContain('ContentPage')
 
     /*
      * `CompanyProduct` and `CompanyProductOption` arrived in migration 4, which is the
@@ -323,10 +330,18 @@ describe('migration scope', () => {
     expect(tables).toContain('OfferRequest')
     expect(tables).toContain('ContactDisclosure')
 
-    // Phase 7's messaging and review tables are the next boundary; their absence is the
+    // Migration 10 is Phase 7's second half: messaging (`ADR-028`'s Thread cannot exist
+    // before acceptance — a service property; the table itself lands here) and reviews
+    // with their CHECK-enforced 1..5 ratings.
+    expect(tables).toContain('Thread')
+    expect(tables).toContain('Message')
+    expect(tables).toContain('Review')
+    expect(tables).toContain('ReviewResponse')
+
+    // Phase 8's content and complaint tables are the next boundary; their absence is the
     // assertion now.
-    expect(tables).not.toContain('Thread')
-    expect(tables).not.toContain('Review')
+    expect(tables).not.toContain('ComplaintCase')
+    expect(tables).not.toContain('ContentPage')
   })
 })
 

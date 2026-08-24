@@ -6,7 +6,14 @@ import { runMediaProcess } from '@/modules/media/infrastructure/media-job'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { ensureQueues, enqueue, JOB, startBoss, WORKED_QUEUES } from '@/shared/jobs'
+import {
+  ensureQueues,
+  enqueue,
+  JOB,
+  recentEnqueueFailures,
+  startBoss,
+  WORKED_QUEUES,
+} from '@/shared/jobs'
 import { getPoint, setPoint } from '@/shared/geo'
 import { setStorage, type StorageProvider } from '@/shared/storage'
 
@@ -385,6 +392,26 @@ describe('pg-boss is really there', () => {
       notificationId: notification.id,
     })
     expect(dispatchJobId).not.toBeNull()
+  }, 120_000)
+
+  it('records a failed enqueue loudly instead of only logging it', async () => {
+    /*
+     * The second half of the SLA lesson: `enqueue()` rightly never throws, but for a
+     * whole phase its only failure signal was a stdout line nobody read. Now every
+     * failure lands in a ring buffer that `/api/health` reports as `degraded`. The
+     * trigger here is real, not mocked: `search.reindex_company` is a Phase 8 queue
+     * nobody has created yet, so pg-boss refuses the send.
+     */
+    await ensureQueues()
+
+    const before = recentEnqueueFailures().length
+    const jobId = await enqueue(JOB.searchReindexCompany, { companyId: 'probe' })
+
+    expect(jobId).toBeNull()
+    const failures = recentEnqueueFailures()
+    expect(failures.length).toBe(before + 1)
+    expect(failures[failures.length - 1]?.queue).toBe(JOB.searchReindexCompany)
+    expect(failures[failures.length - 1]?.message.length).toBeGreaterThan(0)
   }, 120_000)
 })
 

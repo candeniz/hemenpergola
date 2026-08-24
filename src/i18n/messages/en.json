@@ -720,7 +720,13 @@
     "tax": "VAT / KDV ({rate}%)",
     "validUntil": "Valid until {when}",
     "superseded": "Previous version",
-    "decided": "Your decision was recorded."
+    "decided": "Your decision was recorded.",
+    "reviewStatus": {
+      "PENDING": "Your review is in moderation — it becomes visible once published.",
+      "PUBLISHED": "Your review is published.",
+      "REJECTED": "Your review could not be published."
+    },
+    "companyResponded": "Company response"
   },
   "leads": {
     "listTitle": "Incoming leads",
@@ -754,5 +760,46 @@
     "won": "Congratulations — recorded as won.",
     "dimensions": "{w} × {d} × {h} mm",
     "phoneLabel": "Phone"
+  },
+  "messaging": {
+    "title": "Messages",
+    "loading": "Loading messages…",
+    "empty": "No messages yet. You can write the first one.",
+    "inputLabel": "Your message",
+    "send": "Send",
+    "closed": "This request is closed; the transcript stays readable but no new messages can be sent."
+  },
+  "reviews": {
+    "formTitle": "Rate your experience",
+    "dimension": {
+      "ratingOverall": "Overall rating",
+      "ratingQuality": "Workmanship quality",
+      "ratingCommunication": "Communication",
+      "ratingTimeliness": "Timeliness"
+    },
+    "titleLabel": "Title (optional)",
+    "bodyLabel": "Your review",
+    "bodyHint": "Between 50 and 2000 characters.",
+    "submit": "Submit review",
+    "moderationNote": "Reviews are checked before publication.",
+    "submitted": "Your review was received and sent to moderation.",
+    "companyTitle": "Reviews",
+    "companyEmpty": "No published reviews yet.",
+    "untitled": "Untitled review",
+    "yourResponse": "Your response",
+    "responseLabel": "Your response (published once, not editable)",
+    "respond": "Respond",
+    "responded": "Your response is published.",
+    "forbidden": "You do not have permission to view this page.",
+    "moderationTitle": "Review moderation",
+    "moderationEmpty": "No pending reviews.",
+    "publish": "Publish",
+    "reject": "Reject",
+    "rejectReasonLabel": "Rejection reason (sent to the customer)",
+    "moderated": {
+      "PUBLISHED": "Review published.",
+      "REJECTED": "Review rejected and the customer notified."
+    },
+    "ratingOf": "{value}/5"
   }
 }

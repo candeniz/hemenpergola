@@ -204,6 +204,16 @@ export const TEMPLATES: Record<NotificationType, Record<Locale, Renderer> | null
       body: `${value(p, 'companyName')} responded to your review.`,
     }),
   },
+  review_rejected: {
+    tr: (p) => ({
+      title: 'Yorumunuz yayınlanamadı',
+      body: `Yorumunuz, yayın kurallarımıza uymadığı için yayınlanamadı. Gerekçe: ${value(p, 'reason')}. Yorumunuzu düzenleyip yeniden gönderebilirsiniz; olumsuz bir değerlendirme tek başına ret gerekçesi değildir.`,
+    }),
+    en: (p) => ({
+      title: 'Your review was not published',
+      body: `Your review could not be published under our publication rules. Reason: ${value(p, 'reason')}. You can edit and resubmit it; a negative review is never, by itself, grounds for rejection.`,
+    }),
+  },
   company_verified: {
     tr: (p) => ({
       title: 'Firmanız doğrulandı',

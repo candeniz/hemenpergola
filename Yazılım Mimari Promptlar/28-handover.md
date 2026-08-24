@@ -148,7 +148,8 @@ Ten phases, defined in `21-development-roadmap.md` (scope and gates) and
 | 4 Project configurator | ✅ gate met · 9/9 |
 | 5 Matching + pricing | ✅ gate met · 9/9 |
 | 6 Offer request lifecycle | ✅ gate met · 10/10 — `core-flow.spec.ts` walks all nine F1 steps |
-| 7–9 | not started |
+| 7 Communication + trust | ✅ gate met · 3/3 — every event renders (catalogue + `auth.*` family), messaging behind `ADR-028`, moderated reviews feeding the recompute-tested aggregates |
+| 8–9 | not started |
 
 **The gate was proven on 2026-08-23**, on the first working checkout after the blind
 session: the full pipeline ran green — typecheck clean on the first pass, one real lint
@@ -158,9 +159,9 @@ anonymous draft survives a context restart, the claim moves it, and the cookie a
 404 afterwards. `25-progress.md`'s second 2026-08-23 entry has the full list of what broke
 and what did not.
 
-Roughly two-thirds of the build, by phases closed. The weight that remains is 7
-(communication and trust), 8 (public site and SEO) and 9 (hardening and launch) — plus the
-human-decision chain Q2 → Q3 → Q6 that no phase can close from a keyboard. `21` called
+Eight of ten phases closed. The weight that remains is 8 (public site and SEO) and 9
+(hardening and launch) — plus the human-decision chain Q2 → Q3 → Q6 that no phase can
+close from a keyboard. `21` called
 Phase 5 "the first demo worth showing anyone"; that demo exists, and Phase 6's
 `e2e/core-flow.spec.ts` is the release gate.
 
@@ -384,22 +385,24 @@ Recorded so they do not bite twice. Each cost real time.
 
 ## 12. What is next
 
-**Phase 7 — communication and trust.** Phases 4, 5 and 6 all closed on 2026-08-24 with their
-gates proven; the release gate (`e2e/core-flow.spec.ts`) walks all nine F1 steps. What
-Phase 7 owns:
+**Phase 8 — public site and SEO.** Phases 4–7 all closed on 2026-08-24 with their gates
+proven; the release gate (`e2e/core-flow.spec.ts`) walks all nine F1 steps. What Phase 8
+owns:
 
-- **Notification dispatch.** Every service writes `Notification` rows and nothing sends
-  them — `notification.dispatch` has a queue name and no handler. `13-notifications.md` is
-  the spec; the mail adapter is `log` until Q3 closes.
-- **Messaging.** `Thread`/`Message` (`04` §Messaging) — migration 9 territory, one thread
-  per offer request.
-- **Reviews.** `16-reviews-and-ratings.md`, reading the `SURVEY_COMPLETED`-or-later states
-  Phase 6 now produces. Ratings then feed matching's Bayesian component, which has been
-  running on the prior alone since Phase 5.
+- **The public directory and company profiles** (`07` §Routes, the `_final` screens):
+  published reviews, the aggregate display rules (`16` §Aggregates: show the average only
+  from 3 published reviews, "New on the platform" below), portfolio, service areas.
+- **Search** — `search.reindex_company` gets its handler; the queue exists and a failed
+  enqueue to it is the loud-failure integration test's trigger, so wiring it flips that
+  test's fixture.
+- **SEO**: `Seo`/content surfaces, sitemaps, performance budgets in CI (the phase gate).
 - **`mayReadPrivate`'s manufacturer half** — a manufacturer with an `ACCEPTED`+ request
-  reading the project's photos (`14` §Access control).
+  reading the project's photos (`14` §Access control), carried from Phase 7.
 - Small carried debts: `mark_lost` and admin `close` have machine edges and services but no
-  surface; SLA business-hours awareness is parked under Q7.
+  surface; SLA business-hours awareness is parked under Q7; the message digest and
+  15-minute unread email follow-up (`15` §Notifications) wait for a real mail provider;
+  `appointment_reminder` / `offer_expiring` have templates but no scheduler; the F5/F6
+  e2e specs in `secondary-flows.spec.ts` are still `fixme`.
 
 **The human-decision chain is the other half of "next":** Q2 (legal entity → İYS) → Q3 (SMS
 sender) gate the production disclosure path, and Q6's 20% KDV default still wants an

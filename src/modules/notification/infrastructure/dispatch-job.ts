@@ -16,14 +16,26 @@ import { getSmsSender } from './sms-sender'
 /**
  * `notification.dispatch` — task 7.1, `13` §Delivery. The worker's third handler.
  *
- * **Idempotent by claim-then-send, and the direction of the trade is deliberate.** A
- * drained worker retries in-flight jobs (`23` §Runtime); a dispatch that ran twice is two
- * emails, and a sent email cannot be unsent. So the row is claimed — `dispatchedAt`
- * written and committed — BEFORE any channel sends. The retry of a crash-after-claim run
- * finds the stamp and sends nothing: at-most-once, where the failure mode is a rare lost
- * email (logged, visible in the row's stamp-without-mail-log gap) rather than a
- * duplicated one. The same trade the SLA handler made, sharpened because this side is
- * irreversible.
+ * **Idempotent, with two delivery modes — and which event gets which is a decision, not
+ * an accident.** A drained worker retries in-flight jobs (`23` §Runtime), so this handler
+ * will run twice on the same row sooner or later. Something has to give: either the retry
+ * can re-send (duplicate email) or a crash between claim and send loses the delivery. The
+ * two failure modes are not equally bad for every event:
+ *
+ *   **Default — at-most-once (claim, then send).** `dispatchedAt` is written and committed
+ *   BEFORE any channel sends; the retry of a crash-after-claim run finds the stamp and
+ *   sends nothing. For convenience notifications the rare lost email is the cheap failure
+ *   — a duplicated "you received an offer" reads as a system that cannot count.
+ *
+ *   **`MANDATORY_EVENTS` — at-least-once (send, then stamp).** The disclosure notice is a
+ *   leg of the legal record (`CLAUDE.md` non-negotiable 8, `19` §Disclosure): *losing* it
+ *   is the KVKK failure, while "your data was shared" arriving twice is harmless. So for
+ *   mandatory events the claim transaction leaves `dispatchedAt` null, the channels send,
+ *   and the stamp lands after — a crash mid-send retries into a re-send, never into
+ *   silence.
+ *
+ * Both modes still meet an existing stamp with `already-dispatched`; the modes differ only
+ * in which side of the send the stamp is written.
  *
  * Preferences (`13` §Preferences, `ADR-027`): in-app is the row itself and is never
  * suppressed. Email/SMS consult `NotificationPreference` — absence of a row means
@@ -84,7 +96,11 @@ export async function runNotificationDispatch(notificationId: string): Promise<D
       return { kind: 'subscription' as const }
     }
 
-    await tx.notification.update({ where: { id: row.id }, data: { dispatchedAt: new Date() } })
+    if (!isMandatory(type)) {
+      // At-most-once: the claim IS the stamp. Mandatory events stamp after the send
+      // instead — see the file comment for why the trade flips.
+      await tx.notification.update({ where: { id: row.id }, data: { dispatchedAt: new Date() } })
+    }
 
     const user = await tx.user.findUniqueOrThrow({
       where: { id: row.userId },
@@ -139,6 +155,16 @@ export async function runNotificationDispatch(notificationId: string): Promise<D
       await getSmsSender().send({ to: claim.user.phone, text: rendered.sms })
       sent.push('sms')
     }
+  }
+
+  if (isMandatory(claim.type)) {
+    // At-least-once: the stamp lands only after every channel sent. A crash above leaves
+    // `dispatchedAt` null and the retry re-sends — a duplicate disclosure notice is
+    // harmless, a lost one is a KVKK failure.
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { dispatchedAt: new Date() },
+    })
   }
 
   return { status: 'dispatched', channels: sent }

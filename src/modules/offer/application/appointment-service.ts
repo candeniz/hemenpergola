@@ -6,6 +6,7 @@ import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
 import { notify } from '@/modules/notification/infrastructure/notify'
+import { enqueue, JOB } from '@/shared/jobs'
 import { err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
@@ -154,6 +155,14 @@ export const completeAppointment = serviceMethod<
     })
 
     if (outcome.kind === 'error') return err(outcome.error)
+
+    // 7.3: SURVEY_COMPLETED is what `completedEngagements` counts (`09` §History).
+    await enqueue(
+      JOB.analyticsRefresh,
+      { companyId: actor.companyId },
+      { singletonKey: `analytics:${actor.companyId}` },
+    )
+
     return ok({ status: outcome.status })
   },
 )

@@ -536,6 +536,13 @@ export const acceptOfferRequest = serviceMethod<RespondInput, AcceptedLeadView>(
       },
     })
 
+    // 7.3: the accept changed this company's response latency and engagement history.
+    await enqueue(
+      JOB.analyticsRefresh,
+      { companyId: outcome.companyId },
+      { singletonKey: `analytics:${outcome.companyId}` },
+    )
+
     return ok(
       toAcceptedLead({
         offerRequestId: outcome.row.id,
@@ -626,6 +633,13 @@ export const declineOfferRequest = serviceMethod<
         ).displayName,
       },
     })
+
+    // 7.3: a decline is a response too — the median must see it.
+    await enqueue(
+      JOB.analyticsRefresh,
+      { companyId: actor.companyId! },
+      { singletonKey: `analytics:${actor.companyId!}` },
+    )
 
     return ok({ offerRequestId: outcome.id, status: outcome.status })
   },

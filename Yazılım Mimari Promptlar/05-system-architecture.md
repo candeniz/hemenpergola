@@ -142,6 +142,7 @@ pg-boss on the same Postgres. No Redis, no separate broker in V1.
 | `media.process` | on upload | variants, dimensions, virus scan status |
 | `search.reindex_company` | on profile/portfolio change | refreshes tsvector column |
 | `geo.geocode_service_area` | on radius service area save | fills `centerPoint` |
+| `company.analytics_refresh` | on review publish/reject/response, offer decisions | recomputes `Company`'s denormalised aggregates from source (`16` §Aggregates) |
 | `audit.retention_sweep` | nightly | applies the retention policy in `19-security-and-kvkk.md` |
 
 Matching and pricing are **not** jobs. They run in the request (`03-user-flows.md` §F1/3).

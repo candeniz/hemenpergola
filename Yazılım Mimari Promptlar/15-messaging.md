@@ -32,10 +32,11 @@ Thread(id, offerRequestId unique)
 Message(id, threadId, senderUserId, body, sentAt, readAt?)
 ```
 
-`readAt` is per message, set by `POST .../messages/read { upTo }`. Read state is
-per-participant-side: the customer marks manufacturer messages read and vice versa; any
-company member reading marks it read for the company, because the customer cares that "the
-company" saw it.
+`readAt` is per message, set by the **list call itself** (the poll marks the other side's
+messages read — one request per poll instead of a separate `POST .../read`; changed with
+`ADR-028`). Read state is per-participant-side: the customer marks manufacturer messages
+read and vice versa; any company member reading marks it read for the company, because the
+customer cares that "the company" saw it.
 
 ## Rules
 

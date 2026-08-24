@@ -170,6 +170,44 @@ describe('preferences at dispatch (ADR-027)', () => {
     expect(sentMail.length).toBe(before + 1)
     expect(sentMail.at(-1)?.text).toContain('paylaşımın kaydıdır')
   }, 60_000)
+
+  it('delivers a mandatory event at-least-once: a crash mid-send re-sends on retry', async () => {
+    // The mirror of the at-most-once test above. For `contact_disclosed` the stamp lands
+    // AFTER the send, so the crashed run leaves `dispatchedAt` null and the retry sends —
+    // losing the disclosure notice is the KVKK failure, a duplicate is harmless.
+    const id = await notified('contact_disclosed', { companyName: 'Marmara Cam' })
+
+    setMailer({
+      name: 'exploding',
+      async send() {
+        throw new Error('smtp fell over mid-send')
+      },
+    })
+    await expect(runNotificationDispatch(id)).rejects.toThrow('smtp fell over')
+
+    // The crash left the row UNSTAMPED — that is the whole design.
+    const crashed = await getPrisma().notification.findUniqueOrThrow({ where: { id } })
+    expect(crashed.dispatchedAt).toBeNull()
+
+    setMailer({
+      name: 'recording',
+      async send(email) {
+        sentMail.push(email)
+      },
+    })
+    const before = sentMail.length
+    const retry = await runNotificationDispatch(id)
+    expect(retry.status).toBe('dispatched')
+    expect(sentMail.length).toBe(before + 1)
+
+    const done = await getPrisma().notification.findUniqueOrThrow({ where: { id } })
+    expect(done.dispatchedAt).not.toBeNull()
+
+    // And once stamped, a further replay sends nothing — both modes converge after success.
+    const third = await runNotificationDispatch(id)
+    expect(third.status).toBe('already-dispatched')
+    expect(sentMail.length).toBe(before + 1)
+  }, 60_000)
 })
 
 describe('sms channel · log adapter smoke', () => {

@@ -67,6 +67,12 @@ Messaging with polling, the full notification catalogue across in-app/email/SMS,
 moderation and responses, manufacturer analytics.
 
 **Done when:** every event in `13-notifications.md` fires with a rendered `tr` template.
+The gate's scope is both template families: the `Notification` catalogue
+(`notification-catalog.test.ts` renders all events from the code's own closed list) **and**
+the `auth.*`/verification family, which lives outside the catalogue as direct security mail
+(`templates.test.ts` renders every export of `templates.ts` automatically) — the
+verification email is the product's highest-volume message and a gate that skipped it would
+prove less than its name.
 
 ## Phase 8 — Public site and SEO
 

@@ -720,7 +720,13 @@
     "tax": "KDV ({rate}%)",
     "validUntil": "Geçerlilik: {when}",
     "superseded": "Önceki sürüm",
-    "decided": "Kararınız kaydedildi."
+    "decided": "Kararınız kaydedildi.",
+    "reviewStatus": {
+      "PENDING": "Yorumunuz moderasyonda — yayınlandığında görünür olacak.",
+      "PUBLISHED": "Yorumunuz yayınlandı.",
+      "REJECTED": "Yorumunuz yayınlanamadı."
+    },
+    "companyResponded": "Firma yanıtı"
   },
   "leads": {
     "listTitle": "Gelen talepler",
@@ -754,5 +760,46 @@
     "won": "Tebrikler — anlaşma kazanıldı olarak kaydedildi.",
     "dimensions": "{w} × {d} × {h} mm",
     "phoneLabel": "Telefon"
+  },
+  "messaging": {
+    "title": "Mesajlar",
+    "loading": "Mesajlar yükleniyor…",
+    "empty": "Henüz mesaj yok. İlk mesajı siz yazabilirsiniz.",
+    "inputLabel": "Mesajınız",
+    "send": "Gönder",
+    "closed": "Bu talep kapandı; yazışma geçmişi okunabilir kalır ama yeni mesaj gönderilemez."
+  },
+  "reviews": {
+    "formTitle": "Deneyiminizi değerlendirin",
+    "dimension": {
+      "ratingOverall": "Genel değerlendirme",
+      "ratingQuality": "İşçilik kalitesi",
+      "ratingCommunication": "İletişim",
+      "ratingTimeliness": "Zamanlama"
+    },
+    "titleLabel": "Başlık (isteğe bağlı)",
+    "bodyLabel": "Yorumunuz",
+    "bodyHint": "En az 50, en çok 2000 karakter.",
+    "submit": "Yorumu gönder",
+    "moderationNote": "Yorumlar yayınlanmadan önce incelenir.",
+    "submitted": "Yorumunuz alındı ve moderasyona gönderildi.",
+    "companyTitle": "Yorumlar",
+    "companyEmpty": "Henüz yayınlanmış yorum yok.",
+    "untitled": "Başlıksız yorum",
+    "yourResponse": "Yanıtınız",
+    "responseLabel": "Yanıtınız (bir kez yayınlanır, düzenlenemez)",
+    "respond": "Yanıtla",
+    "responded": "Yanıtınız yayınlandı.",
+    "forbidden": "Bu sayfayı görüntüleme yetkiniz yok.",
+    "moderationTitle": "Yorum moderasyonu",
+    "moderationEmpty": "Bekleyen yorum yok.",
+    "publish": "Yayınla",
+    "reject": "Reddet",
+    "rejectReasonLabel": "Ret gerekçesi (müşteriye iletilir)",
+    "moderated": {
+      "PUBLISHED": "Yorum yayınlandı.",
+      "REJECTED": "Yorum reddedildi ve müşteri bilgilendirildi."
+    },
+    "ratingOf": "{value}/5"
   }
 }

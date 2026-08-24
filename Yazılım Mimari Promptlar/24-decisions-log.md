@@ -887,3 +887,41 @@ preferences by construction rather than by membership in this list.
 **Reverses if.** KVKK/İYS counsel identifies further notices that are part of a legal
 record (candidates: a future data-export confirmation, account deletion notice). They join
 the list by editing the pin — that friction is the mechanism working, not a cost.
+
+---
+
+## ADR-028 — No messaging before acceptance
+
+**Context.** Task 7.1's second half builds messaging. `15-messaging.md` already says a
+thread exists only from `ACCEPTED`; this ADR records that the rule survived a re-derivation
+under Phase 6's disclosure architecture and how it is enforced, because it is the single
+place where the KVKK boundary could be reopened by accident. Phase 6 spent five tasks
+ensuring a manufacturer sees no contact data before accepting — the DTO cannot carry the
+fields at the type level, and even the free-text note travels with the disclosure
+(`ADR-026`) precisely because free text is an uncontrollable contact channel. A message box
+on a `PENDING` request is that channel again, now bidirectional and live: "what is your
+phone number?" defeats every boundary the lifecycle built.
+
+**Decision.** The thread opens at `ACCEPTED` — the same moment `11` §Contact disclosure
+opens contact — and not before. Enforced in three layers: only `message-service.ts` creates
+`Thread` rows and it refuses pre-acceptance (`PRECONDITION`, "Mesajlaşma, talep kabul
+edildikten sonra açılır"); the `Thread.offerRequestId` UNIQUE plus lazy creation means no
+other path can materialise a thread; and an integration test locks the refusal (send on
+`PENDING` → `PRECONDITION`, accept, same send succeeds). Sending closes again in terminal
+states while the transcript stays readable — it is part of the engagement record.
+
+**Why not a restricted pre-acceptance form.** The alternative — structured Q&A before
+acceptance ("is the site accessible by crane?") — was considered and is NOT rejected
+forever; it is rejected as *messaging*. If pilots show manufacturers need pre-acceptance
+information, the answer is structured fields on the lead (the `ADR-026` §Consequences
+route), never free text. `19` §Data minimisation points the same way: the accept/decline
+decision is made on dimensions, options, district and timing.
+
+**Consequences.** No content filtering exists after acceptance (`15` §Contact-detail
+leakage): contact is already lawfully disclosed, and a digit scrubber is a false-positive
+machine protecting nothing. Read state is set by the list call rather than `15`'s separate
+`POST .../read` — one request per poll instead of two; the behaviour (`any company member
+reading marks the company side read`) is unchanged, and `15` is updated in the same commit.
+
+**Reverses if.** Pilot evidence shows pre-acceptance information exchange is decisive for
+accept rates — in which case the structured-field design above gets an ADR of its own.

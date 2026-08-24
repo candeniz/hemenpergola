@@ -2,6 +2,7 @@ import 'server-only'
 
 import { env } from '@/shared/config/env'
 import { prisma } from '@/shared/db'
+import { recentEnqueueFailures } from '@/shared/jobs'
 
 /**
  * The health check behind `/api/health` (`23-deployment-and-environments.md` §Pipeline).
@@ -34,6 +35,12 @@ export type HealthReport = {
     database: CheckResult
     migrations: CheckResult & { version?: string }
     storage: CheckResult
+    /**
+     * Enqueue failures in the last window. Not a probe — a report: `enqueue()` never
+     * throws by design, and the Phase 6 SLA drop proved a logged-and-ignored failure is
+     * a silent one. Any recent failure turns the report `degraded`.
+     */
+    queue: CheckResult
   }
 }
 
@@ -116,17 +123,30 @@ async function checkStorage(): Promise<CheckResult> {
   return result
 }
 
+function checkQueue(): CheckResult {
+  const failures = recentEnqueueFailures()
+  if (failures.length === 0) return { ok: true, durationMs: 0 }
+
+  const latest = failures[failures.length - 1]
+  return {
+    ok: false,
+    durationMs: 0,
+    detail: `${failures.length} enqueue failure(s) in the last window; latest: ${latest?.queue ?? '?'} — ${latest?.message ?? '?'}`,
+  }
+}
+
 export async function checkHealth(): Promise<HealthReport> {
   const [database, migrations, storage] = await Promise.all([
     checkDatabase(),
     checkMigrations(),
     checkStorage(),
   ])
+  const queue = checkQueue()
 
   return {
-    status: database.ok && migrations.ok && storage.ok ? 'ok' : 'degraded',
+    status: database.ok && migrations.ok && storage.ok && queue.ok ? 'ok' : 'degraded',
     checkedAt: new Date().toISOString(),
     environment: env.APP_ENV,
-    checks: { database, migrations, storage },
+    checks: { database, migrations, storage, queue },
   }
 }

@@ -6,14 +6,16 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phases 0–6 are complete with proven gates**; **Phase 7's first slice
-(7.1, notifications) landed 2026-08-24** — the closed event catalogue with `tr`/`en`
-templates, the single-writer `notify()`, the idempotent `notification.dispatch` worker job,
-and per-(channel, event) preferences with `ADR-027`'s closed mandatory list. The full F1
-journey is proven end to end: a visitor configures to `READY`, `GET OFFERS` returns ranked,
-priced manufacturers, requests carry versioned consent, `PENDING → ACCEPTED` discloses
-contact exactly once with its `ContactDisclosure`, audit and notification, and the offer
-lands beside the original estimate. The repository is public at
+**Current phase:** **Phases 0–7 are complete with proven gates** (Phase 7 closed
+2026-08-24): the notification catalogue with `tr`/`en` templates and the idempotent
+dispatch (at-most-once by default, at-least-once for `ADR-027`'s mandatory events),
+post-acceptance messaging (`ADR-028` — the thread opens where the disclosure opens),
+moderated reviews feeding `Company`'s recompute-equality-tested aggregates, which the
+matching score now reads instead of hard-coded priors. The full F1 journey is proven end
+to end: a visitor configures to `READY`, `GET OFFERS` returns ranked, priced
+manufacturers, requests carry versioned consent, `PENDING → ACCEPTED` discloses contact
+exactly once with its `ContactDisclosure`, audit and notification, and the offer lands
+beside the original estimate. The repository is public at
 `github.com/candeniz/hemenpergola` and CI runs the whole pipeline on every push.
 
 **The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
@@ -24,7 +26,7 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **1047 unit tests, 305 integration tests** against real PostGIS and MinIO
+price their work. **1060 unit tests, 323 integration tests** against real PostGIS and MinIO
 containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
 (50 Playwright tests green, 11 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
@@ -48,7 +50,7 @@ proven — not when the code is written.
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
-| 7 | Communication + trust | **🟡 in progress · 1/3** | every notification event fires with a `tr` template — **proven 2026-08-24**: `notification-catalog.test.ts` renders all 19 events in both locales from the code's own catalogue; messaging and reviews (7.2–7.3) remain |
+| 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
 
@@ -2818,6 +2820,66 @@ semantics, now locked by an integration test.
 
 Suite counts: **1047 unit / 305 integration / 50 e2e green (11 skipped for later
 phases)**; CI run on this commit is the proof-of-record.
+
+### 2026-08-24 — Phase 7 closed: messaging, reviews, analytics, and three carried gaps (commit `P7.2-7.3 · mesajlaşma, yorumlar, analitik`)
+
+**The three gaps first.**
+
+- **`contact_disclosed` is at-least-once now.** The 7.1 dispatch stamped before sending for
+  every event, which made a claim-then-crash a permanently lost disclosure notice — and the
+  notice is one of the four legs of `19`'s lawful disclosure; a duplicate "your data was
+  shared" is harmless. `MANDATORY_EVENTS` now stamp *after* the send (crash → unstamped →
+  retry re-sends); everything else keeps at-most-once. Both crash paths are integration
+  tests: the non-mandatory retry sends nothing, the mandatory retry sends.
+- **A failed `enqueue()` is loud.** The SLA drop's root cause was not only the queue list —
+  it was that `enqueue()`'s only failure signal was a stdout line nobody read. Failures now
+  land in a ring buffer (`recentEnqueueFailures()`), `/api/health` reports any recent one as
+  `degraded` (a red deploy gate, not a log line), and an integration test triggers a real
+  failure (a send to the uncreated Phase 8 queue) and reads it back.
+- **The gate's scope is honest.** `notification-catalog.test.ts` covers the catalogue;
+  `templates.test.ts` now covers the `auth.*`/verification family — every export of
+  `templates.ts`, discovered automatically, rendered with sample args — and `21`'s Phase 7
+  gate names both halves. The verification email is the product's highest-volume message; a
+  gate that skipped it proved less than its name.
+
+**Messaging (7.1's second half, migration 10, `ADR-028`).** The thread opens at `ACCEPTED`
+and not before — the same moment `11` opens contact — because a pre-acceptance message box
+is the `note` hole (`ADR-026`) reopened in both directions. Locked by an integration test:
+send into `PENDING` → `PRECONDITION`, accept, the identical send succeeds; and no `Thread`
+row materialises pre-acceptance at all. Sending closes in terminal states, the transcript
+stays readable forever; 60 msg/h/thread rate limit; first-unread-only notification (a
+burst of ten is one `message_received` row, proven by test). Polling per `ADR-009`: 5 s
+focused, 30 s blurred, stopped hidden — cursor-based, so the steady poll is one small
+empty response, and the list call doubles as the read-marker (one request per poll; `15`
+updated). Content filtering deliberately absent (`15` §Contact-detail leakage).
+
+**Reviews (7.2, `16`).** One review per request (UNIQUE, `CONFLICT` on the second),
+eligible from `SURVEY_COMPLETED`, 1..5 ratings CHECK-enforced in the migration tail,
+90-day window from the terminal state, two-per-company-per-12-months anti-gaming cap. All
+reviews land `PENDING`; **an unmoderated review appears in no listing** (the company's own
+list included — `16`: a manufacturer cannot see who is about to review them) **and does
+not enter the average** — two separate integration tests, as the task demanded. Moderation
+is an audited admin decision; publish notifies the manufacturer, reject notifies the
+author with the reason (new catalogue event `review_rejected` — the gate grew to 20 by
+existing, no list edited). One response per review, published immediately. Reviews are
+never hard-deleted; `deletedAt` exists for the KVKK path and excludes from display and
+aggregates while history stays readable.
+
+**Analytics (7.3, `company.analytics_refresh` — added to `05` §Background work).**
+`Company.ratingSum/reviewCount/medianResponseMinutes/completedEngagements`, recomputed
+from source in one transaction — never incremented, so the job is idempotent by
+construction and self-heals drift. **The recompute-equality test** derives the same
+numbers independently in the test and asserts the columns match — the only real protection
+a denormalised field has, and it matters because `09`'s Bayesian and responsiveness
+components now read these columns instead of the hard-coded zeros they were fed since
+Phase 5. A reviewless company keeps 0/0/null, which is exactly the Bayesian-prior newcomer
+case. Triggered on review publish/reject/response, accept/decline, SLA expiry and survey
+completion, singleton-keyed per company.
+
+Suite counts: **1060 unit / 323 integration / 50 e2e green (11 skipped)**. One e2e red on
+the way was not code: a stale `next start` survived on port 3100 (the Phase 4 lesson,
+again), served the old build's chunk names against the new build's disk and every page
+died at hydration; killing the process made the suite green unchanged.
 
 ## Open questions — need a human answer before the phase that hits them
 

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { RequestDecision } from '@/components/customer/request-decision'
+import { ReviewForm } from '@/components/customer/review-form'
+import { MessageThread } from '@/components/messaging/message-thread'
 import { DashboardShell } from '@/components/layouts/dashboard-shell'
 import { Card, CardTitle } from '@/components/ui/card'
 import { EstimateBand } from '@/components/ui/estimate-band'
@@ -49,15 +51,36 @@ export default async function CustomerRequestsPage({
     { locale },
   )
 
+  const reviewService = await import('@/modules/review/application/review-service')
+
   const listed = await requestsService.listRequestsForProject(actor, { projectId: id })
   const requests = listed.ok ? listed.value.requests : []
 
+  const MESSAGING_STATES = [
+    'ACCEPTED',
+    'SURVEY_SCHEDULED',
+    'SURVEY_COMPLETED',
+    'OFFER_SENT',
+    'OFFER_ACCEPTED',
+    'OFFER_REJECTED',
+    'WON',
+    'LOST',
+    // A cancel after acceptance leaves a transcript that stays readable (15 §Rules);
+    // a cancel from PENDING just renders the empty state.
+    'CANCELLED',
+  ]
+
   const withOffers = await Promise.all(
     requests.map(async (request) => {
-      const offers = await offersService.getOffersForRequest(actor, {
-        offerRequestId: request.offerRequestId,
-      })
-      return { request, view: offers.ok ? offers.value : null }
+      const [offers, eligibility] = await Promise.all([
+        offersService.getOffersForRequest(actor, { offerRequestId: request.offerRequestId }),
+        reviewService.getReviewEligibility(actor, { offerRequestId: request.offerRequestId }),
+      ])
+      return {
+        request,
+        view: offers.ok ? offers.value : null,
+        review: eligibility.ok ? eligibility.value : null,
+      }
     }),
   )
 
@@ -72,7 +95,7 @@ export default async function CustomerRequestsPage({
           <p className="text-body-md text-muted">{t('empty')}</p>
         ) : (
           <ul className="flex flex-col gap-base">
-            {withOffers.map(({ request, view }) => (
+            {withOffers.map(({ request, view, review }) => (
               <li key={request.offerRequestId}>
                 <Card density="dense" className="flex flex-col gap-base">
                   <div className="flex flex-wrap items-center justify-between gap-base">
@@ -152,6 +175,37 @@ export default async function CustomerRequestsPage({
                         <RequestDecision offerRequestId={request.offerRequestId} />
                       ) : null}
                     </div>
+                  ) : null}
+
+                  {/* Messaging opens with acceptance and never before (ADR-028). */}
+                  {MESSAGING_STATES.includes(request.status) ? (
+                    <div className="border-t border-control-border pt-base">
+                      <MessageThread offerRequestId={request.offerRequestId} side="customer" />
+                    </div>
+                  ) : null}
+
+                  {/* Reviews open at SURVEY_COMPLETED (16 §Eligibility). */}
+                  {review !== null ? (
+                    review.eligible ? (
+                      <div className="border-t border-control-border pt-base">
+                        <ReviewForm offerRequestId={request.offerRequestId} />
+                      </div>
+                    ) : review.review !== null ? (
+                      <div className="flex flex-col gap-xs border-t border-control-border pt-base">
+                        <p className="text-body-sm text-muted">
+                          {t(`reviewStatus.${review.review.status}`)}
+                        </p>
+                        {review.review.status === 'REJECTED' &&
+                        review.review.rejectionReason !== null ? (
+                          <p className="text-body-sm text-muted">{review.review.rejectionReason}</p>
+                        ) : null}
+                        {review.review.response !== null ? (
+                          <p className="text-body-sm">
+                            {t('companyResponded')}: {review.review.response.body}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null
                   ) : null}
                 </Card>
               </li>
