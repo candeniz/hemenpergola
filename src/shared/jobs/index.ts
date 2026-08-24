@@ -47,7 +47,11 @@ export type JobName = (typeof JOB)[keyof typeof JOB]
 export type JobPayloads = {
   [JOB.geocodeServiceArea]: { serviceAreaId: string }
   [JOB.mediaProcess]: { fileId: string }
-  [JOB.slaExpire]: { offerRequestId: string }
+  [JOB.slaExpire]: {
+    offerRequestId: string
+    /** One queue, three moments — `11` §SLA: reminders at 50% and 90%, then expiry. */
+    kind: 'reminder_50' | 'reminder_90' | 'expire'
+  }
   [JOB.notificationDispatch]: { notificationId: string }
   [JOB.searchReindexCompany]: { companyId: string }
   [JOB.auditRetentionSweep]: Record<string, never>

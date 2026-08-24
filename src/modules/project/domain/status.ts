@@ -63,3 +63,16 @@ export function statusAfterValidation(current: ProjectStatus, ready: boolean): P
   if (isTerminal(current)) return current
   return ready ? 'READY' : 'DRAFT'
 }
+
+/**
+ * The status after offer requests go out — Phase 6, `04` §Project's "sent" state.
+ *
+ * Only `READY` submits: a `DRAFT` never got this far (the offer service refuses it first),
+ * and a `SUBMITTED` project submitting again — the customer adding manufacturers after an
+ * expiry (`11` §SLA) — stays `SUBMITTED`, idempotently, rather than erroring or bouncing.
+ * `CLOSED` is returned unchanged like everywhere else in this file.
+ */
+export function statusAfterSubmission(current: ProjectStatus): ProjectStatus {
+  if (current === 'READY') return 'SUBMITTED'
+  return current
+}

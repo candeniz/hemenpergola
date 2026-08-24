@@ -83,7 +83,25 @@ async function main(): Promise<void> {
     },
   )
 
-  console.info('[worker] ready · geo.geocode_service_area, media.process')
+  await boss.work<JobPayloads[typeof JOB.slaExpire]>(
+    JOB.slaExpire,
+    { batchSize: 10 },
+    async (jobs) => {
+      const { runSlaJob } = await import('@/modules/offer/infrastructure/sla-job')
+
+      for (const job of jobs) {
+        const outcome = await runSlaJob(job.data.offerRequestId, job.data.kind)
+        console.info(
+          `[worker] ${JOB.slaExpire}`,
+          job.data.kind,
+          job.data.offerRequestId,
+          outcome.status,
+        )
+      }
+    },
+  )
+
+  console.info('[worker] ready · geo.geocode_service_area, media.process, offer_request.sla_expire')
 
   for (const signal of SHUTDOWN_SIGNALS) {
     process.on(signal, () => {

@@ -6,11 +6,18 @@ import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
 import { prisma } from '@/shared/db'
+import { enqueue, JOB } from '@/shared/jobs'
 import { CONTACT_SHARING_TEXT_VERSION } from '@/shared/legal/consent-version'
 import { conflict, err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
+import { statusAfterSubmission } from '@/modules/project/domain/status'
+
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
+
+// Re-exported for app/: pages and actions may not reach into domain, even for a type the
+// lint rule cannot tell apart from a value import.
+export type { OfferRequestStatus } from '../domain/state-machine'
 
 import {
   toAcceptedLead,
@@ -120,7 +127,6 @@ type LeadRow = {
     areaM2: number | null
     quantity: number
     timing: string | null
-    note: string | null
     city: { name: string } | null
     district: { name: string } | null
     values: { optionId: string | null }[]
@@ -139,7 +145,6 @@ function leadProject(row: LeadRow['project']): LeadProject {
     cityName: row.city?.name ?? null,
     districtName: row.district?.name ?? null,
     timing: row.timing,
-    note: row.note,
     selectedOptionIds: row.values
       .map((value) => value.optionId)
       .filter((optionId): optionId is string => optionId !== null),
@@ -155,7 +160,6 @@ const LEAD_PROJECT_SELECT = {
   areaM2: true,
   quantity: true,
   timing: true,
-  note: true,
   city: { select: { name: true } },
   district: { select: { name: true } },
   values: { select: { optionId: true } },
@@ -283,6 +287,16 @@ export const createOfferRequests = serviceMethod<
           select: { id: true, companyId: true },
         })
 
+        /*
+         * The project moves READY → SUBMITTED with its requests, through its own status
+         * module — never a bare write (`CLAUDE.md` non-negotiable 4). Idempotent for the
+         * add-more-after-expiry case: SUBMITTED stays SUBMITTED.
+         */
+        await tx.project.update({
+          where: { id: input.projectId },
+          data: { status: statusAfterSubmission(project.status) },
+        })
+
         return rows.map((row) => ({ offerRequestId: row.id, companyId: row.companyId }))
       })
     } catch (error) {
@@ -320,6 +334,37 @@ export const createOfferRequests = serviceMethod<
           },
         })),
       })
+    }
+
+    /*
+     * The SLA clock, scheduled at creation (`11` §SLA): reminders at 50% and 90% of the
+     * window, then the expiry itself. After commit like the notifications — a rolled-back
+     * batch must not leave a live timer — and singleton-keyed so a double submit cannot
+     * double the schedule. The handler is idempotent regardless.
+     */
+    const windowSeconds = hours * 3600
+    for (const row of created) {
+      await enqueue(
+        JOB.slaExpire,
+        { offerRequestId: row.offerRequestId, kind: 'reminder_50' },
+        {
+          startAfterSeconds: Math.floor(windowSeconds * 0.5),
+          singletonKey: `sla50:${row.offerRequestId}`,
+        },
+      )
+      await enqueue(
+        JOB.slaExpire,
+        { offerRequestId: row.offerRequestId, kind: 'reminder_90' },
+        {
+          startAfterSeconds: Math.floor(windowSeconds * 0.9),
+          singletonKey: `sla90:${row.offerRequestId}`,
+        },
+      )
+      await enqueue(
+        JOB.slaExpire,
+        { offerRequestId: row.offerRequestId, kind: 'expire' },
+        { startAfterSeconds: windowSeconds, singletonKey: `slaX:${row.offerRequestId}` },
+      )
     }
 
     return ok({ created, slaExpiresAt })
@@ -372,10 +417,15 @@ export const acceptOfferRequest = serviceMethod<RespondInput, AcceptedLeadView>(
       if (!next.ok) return { kind: 'error' as const, error: next.error }
 
       // 3 · side effects, in-tx.
-      const customer = await tx.user.findUniqueOrThrow({
-        where: { id: row.customerId },
-        select: { fullName: true, email: true, phone: true },
-      })
+      const [customer, projectRow] = await Promise.all([
+        tx.user.findUniqueOrThrow({
+          where: { id: row.customerId },
+          select: { fullName: true, email: true, phone: true },
+        }),
+        // The free-text note crosses the boundary WITH the disclosure (`ADR-026`), so it is
+        // fetched here — on the accepting path — and never by the pending read.
+        tx.project.findUniqueOrThrow({ where: { id: row.projectId }, select: { note: true } }),
+      ])
 
       const disclosedFields = [
         ...(customer.fullName !== null ? ['fullName'] : []),
@@ -443,6 +493,7 @@ export const acceptOfferRequest = serviceMethod<RespondInput, AcceptedLeadView>(
         kind: 'accepted' as const,
         row: updated,
         customer,
+        customerNote: projectRow.note,
         customerId: row.customerId,
         companyId: actor.companyId!,
         disclosedFields,
@@ -483,6 +534,7 @@ export const acceptOfferRequest = serviceMethod<RespondInput, AcceptedLeadView>(
           email: outcome.customer.email,
           phone: outcome.customer.phone,
         },
+        customerNote: outcome.customerNote,
       }),
     )
   },
@@ -599,10 +651,16 @@ export const getLeadForCompany = serviceMethod<GetLeadInput, LeadView>(
       return ok(toPendingLead(base))
     }
 
-    const customer = await prisma.user.findUniqueOrThrow({
-      where: { id: row.customerId },
-      select: { fullName: true, email: true, phone: true },
-    })
+    const [customer, projectNote] = await Promise.all([
+      prisma.user.findUniqueOrThrow({
+        where: { id: row.customerId },
+        select: { fullName: true, email: true, phone: true },
+      }),
+      prisma.project.findUniqueOrThrow({
+        where: { id: row.project.id },
+        select: { note: true },
+      }),
+    ])
 
     return ok(
       toAcceptedLead({
@@ -613,8 +671,124 @@ export const getLeadForCompany = serviceMethod<GetLeadInput, LeadView>(
           email: customer.email,
           phone: customer.phone,
         },
+        customerNote: projectNote.note,
       }),
     )
+  },
+)
+
+// ── list (manufacturer) — the inbox, contact-free by construction ────────────
+
+export const listLeadsSchema = z.object({}).optional()
+export type ListLeadsInput = z.infer<typeof listLeadsSchema>
+
+export type LeadListItem = {
+  offerRequestId: string
+  status: OfferRequestStatus
+  slaExpiresAt: Date
+  createdAt: Date
+  productId: string
+  areaM2: number | null
+  cityName: string | null
+  districtName: string | null
+}
+
+export const listLeadsForCompany = serviceMethod<ListLeadsInput, { leads: LeadListItem[] }>(
+  'offer',
+  'listLeadsForCompany',
+  { kind: 'permission', permission: PERMISSIONS.OFFER_REQUEST_READ },
+  async (actor, input) => {
+    void input
+    const allowed = authorize(actor, PERMISSIONS.OFFER_REQUEST_READ)
+    if (!allowed.ok) return err(allowed.error)
+    if (actor.companyId === null) return ok({ leads: [] })
+
+    const rows = await prisma.offerRequest.findMany({
+      where: { companyId: actor.companyId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        status: true,
+        slaExpiresAt: true,
+        createdAt: true,
+        project: {
+          select: {
+            productId: true,
+            areaM2: true,
+            city: { select: { name: true } },
+            district: { select: { name: true } },
+          },
+        },
+      },
+    })
+
+    return ok({
+      leads: rows.map((row) => ({
+        offerRequestId: row.id,
+        status: row.status,
+        slaExpiresAt: row.slaExpiresAt,
+        createdAt: row.createdAt,
+        productId: row.project.productId,
+        areaM2: row.project.areaM2,
+        cityName: row.project.city?.name ?? null,
+        districtName: row.project.district?.name ?? null,
+      })),
+    })
+  },
+)
+
+// ── list (customer) — the request tracker on the project page ────────────────
+
+export const listRequestsForProjectSchema = z.object({ projectId: z.string().min(1) })
+export type ListRequestsForProjectInput = z.infer<typeof listRequestsForProjectSchema>
+
+export type CustomerRequestListItem = {
+  offerRequestId: string
+  companyId: string
+  companyName: string
+  status: OfferRequestStatus
+  slaExpiresAt: Date
+  createdAt: Date
+}
+
+export const listRequestsForProject = serviceMethod<
+  ListRequestsForProjectInput,
+  { requests: CustomerRequestListItem[] }
+>(
+  'offer',
+  'listRequestsForProject',
+  {
+    kind: 'customer-owned',
+    describe: 'a customer lists only the requests of a project they own',
+    scopedBy: ['userId'],
+  },
+  async (actor, input) => {
+    if (actor.userId === null) return ok({ requests: [] })
+
+    const rows = await prisma.offerRequest.findMany({
+      where: { projectId: input.projectId, customerId: actor.userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        companyId: true,
+        status: true,
+        slaExpiresAt: true,
+        createdAt: true,
+        company: { select: { displayName: true } },
+      },
+    })
+
+    return ok({
+      requests: rows.map((row) => ({
+        offerRequestId: row.id,
+        companyId: row.companyId,
+        companyName: row.company.displayName,
+        status: row.status,
+        slaExpiresAt: row.slaExpiresAt,
+        createdAt: row.createdAt,
+      })),
+    })
   },
 )
 
@@ -623,4 +797,6 @@ export const offerRequestService = {
   acceptOfferRequest,
   declineOfferRequest,
   getLeadForCompany,
+  listLeadsForCompany,
+  listRequestsForProject,
 } satisfies Record<string, { meta: unknown }>

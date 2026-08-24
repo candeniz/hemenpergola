@@ -12,13 +12,22 @@
  * contact field — any property named like one is `never`, which no value satisfies.
  * `manufacturer_request_detail_new_lead` and `manufacturer_request_detail` are the two
  * screens these feed (`07` §Route map).
+ *
+ * **The free-text `note` sits on the accepted side** (`ADR-026`). It is the wizard's
+ * 2000-character field, and customers write "call me on 0532…" and street addresses into
+ * exactly such fields — so pre-acceptance it is contact data wearing a project hat.
+ * Pattern-scrubbing it was rejected as unwinnable; it simply crosses with the disclosure.
+ *
+ * **Belt and braces**: `NoContactFields` is compile-time, and the builders below `pick`
+ * every field by name at runtime — a new column on the query cannot ride into a DTO
+ * through a spread; someone has to write the line that carries it.
  */
 
 /**
  * Property names that must never appear in a pre-disclosure payload. By name, because that
  * is what survives refactoring — a reviewer renaming `contact` to `customerDetails` is
  * exactly the case a structural check would miss. `addressNote` is here too: `11` releases
- * the district before acceptance, never the exact address.
+ * the district before acceptance, never the exact address. `note` joined by `ADR-026`.
  */
 type ForbiddenContactKey =
   | 'contact'
@@ -32,6 +41,7 @@ type ForbiddenContactKey =
   | 'address'
   | 'addressNote'
   | 'addressLine'
+  | 'note'
 
 /** `T` with a compile error on any contact-shaped key. */
 export type NoContactFields<T> = {
@@ -54,8 +64,24 @@ export type LeadProject = {
   cityName: string | null
   districtName: string | null
   timing: string | null
-  note: string | null
   selectedOptionIds: string[]
+}
+
+/** The runtime pick behind both builders — one list, every field deliberate. */
+function pickLeadProject(project: LeadProject): LeadProject {
+  return {
+    projectId: project.projectId,
+    productId: project.productId,
+    widthMm: project.widthMm,
+    depthMm: project.depthMm,
+    heightMm: project.heightMm,
+    areaM2: project.areaM2,
+    quantity: project.quantity,
+    cityName: project.cityName,
+    districtName: project.districtName,
+    timing: project.timing,
+    selectedOptionIds: [...project.selectedOptionIds],
+  }
 }
 
 /** The request row's non-personal facts. */
@@ -83,14 +109,16 @@ export type AcceptedLeadView = LeadRequestBase & {
     email: string
     phone: string | null
   }
+  /** The customer's free text — accepted side only (`ADR-026`). */
+  customerNote: string | null
 }
 
 export type LeadView = PendingLeadView | AcceptedLeadView
 
 /**
- * The only supported way to build the pending view. A function rather than a spread at the
- * call site, so adding a field to the row cannot leak it by default — the compiler stops a
- * forbidden name here, before any request is served.
+ * The only supported way to build the pending view. Field-by-field on purpose: the type
+ * stops a forbidden *name* at compile time, and the pick stops an unforeseen *value* at
+ * runtime — `project: input.project` would serialise whatever the query happened to fetch.
  */
 export function toPendingLead(input: {
   offerRequestId: string
@@ -105,7 +133,7 @@ export function toPendingLead(input: {
     status: input.status,
     slaExpiresAt: input.slaExpiresAt,
     createdAt: input.createdAt,
-    project: input.project,
+    project: pickLeadProject(input.project),
   }
 }
 
@@ -117,6 +145,7 @@ export function toAcceptedLead(input: {
   contactDisclosedAt: Date
   project: LeadProject
   contact: { fullName: string | null; email: string; phone: string | null }
+  customerNote: string | null
 }): AcceptedLeadView {
   return {
     kind: 'accepted',
@@ -125,7 +154,12 @@ export function toAcceptedLead(input: {
     slaExpiresAt: input.slaExpiresAt,
     createdAt: input.createdAt,
     contactDisclosedAt: input.contactDisclosedAt,
-    project: input.project,
-    contact: input.contact,
+    project: pickLeadProject(input.project),
+    contact: {
+      fullName: input.contact.fullName,
+      email: input.contact.email,
+      phone: input.contact.phone,
+    },
+    customerNote: input.customerNote,
   }
 }

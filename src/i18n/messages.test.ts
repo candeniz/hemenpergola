@@ -106,7 +106,16 @@ describe('message catalogues', () => {
      * And the attachment size, for the same reason as the range: `{kilobytes} KB` is a unit
      * after a number the formatter has already localised, and "KB" is "KB" in Turkish.
      */
-    const SAME_IN_BOTH = ['auth.phonePlaceholder', 'estimate.range', 'wizard.attachments.size']
+    /*
+     * And the dimension triple — three localised numbers, two × signs and a unit that is
+     * 'mm' in both languages: nothing in it is words.
+     */
+    const SAME_IN_BOTH = [
+      'auth.phonePlaceholder',
+      'estimate.range',
+      'wizard.attachments.size',
+      'leads.dimensions',
+    ]
 
     const identical = trPaths.filter((path) => {
       if (SAME_IN_BOTH.includes(path)) return false

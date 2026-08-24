@@ -810,3 +810,44 @@ database that runs the query.
 
 **Reverses if.** Service areas ever legitimately exceed 500 km — at which point the CHECK,
 the constants and the Zod bound move together, in one commit, with this ADR amended.
+
+---
+
+## ADR-026 — The project's free-text note is contact data until the disclosure
+
+**Context.** Task 6.5 built the DTO boundary: before `PENDING → ACCEPTED`, a manufacturer
+sees project data only. The first review of that boundary found `project.note` riding in the
+pending DTO — the wizard's 2000-character free-text field, whose whole purpose is "anything
+else you want to tell us". Customers put phone numbers, street directions and door codes in
+exactly such fields; a field-level allowlist that admits it re-opens, in prose, the channel
+the boundary closed for structured data. The value-based tests never caught it because the
+*field* is legitimate; only its *content* is contact data, sometimes.
+
+**Decision.** The note crosses the boundary **with the disclosure**. `note` joins
+`ForbiddenContactKey`, `PendingLeadView` cannot carry it, the pending read does not fetch
+it, and `AcceptedLeadView` gains `customerNote` — populated on the accepting path, alongside
+the contact block it legally travels with.
+
+**Why not scrub it instead.** The alternative — keep the note pre-acceptance, warn the
+customer, reject phone/email patterns server-side — was considered and rejected. Free-text
+scrubbing is an arms race with no winning side: "beş üç iki…" defeats a digit pattern, an
+address defeats everything, and each miss is a silent KVKK leak with the platform's name on
+it. `19` §Data minimisation points the same way: the manufacturer's accept/decline decision
+is made on dimensions, options, district and timing — the same signals `09` §Eligibility
+matches on — so the note adds nothing the decision needs and risks plenty the customer
+never meant to publish early.
+
+**Consequences.**
+
+- The integration suite plants a note that *is* a disguised contact attempt
+  (`ZİLİ ÇALIŞMIYOR beni 0532 555 0000 numaradan arayın`) and asserts the pending JSON
+  carries none of it — a value-level trap on top of the type-level rule.
+- A manufacturer deciding whether to take a lead does not see the customer's "anything
+  else". If pilots show that hurts accept rates, the answer is a *structured* pre-acceptance
+  field (access constraints, floor, crane needed) — never the free text.
+- The wizard's note field copy should say the note reaches the manufacturer after they
+  accept; that is a Phase 8 copy pass, noted rather than blocking.
+
+**Reverses if.** A legal review concludes free-text project notes are not personal data even
+when they contain contact details — which would be surprising — or the structured-field
+alternative proves insufficient in pilots.

@@ -208,7 +208,9 @@ test.describe('F1 · core flow (release gate)', () => {
       timeout: 60_000,
     })
 
-    const checkboxes = page.getByRole('checkbox')
+    // Scoped to the result cards: the consent checkbox joined the page in Phase 6, and an
+    // unscoped nth() would tick it as if it were a company.
+    const checkboxes = page.locator('li').getByRole('checkbox')
     const available = await checkboxes.count()
     expect(
       available,
@@ -245,30 +247,232 @@ test.describe('F1 · core flow (release gate)', () => {
     await expect(page.getByText(/En fazla 3 firma yan yana/)).toBeVisible()
   })
 
-  test.skip('5 · select: consent is captured and the request is sent to 1..5 manufacturers', async () => {
-    // Phase 6. The KVKK boundary: contact data is NOT sent with the request, and the
-    // consent row records the exact text version (19 §Consent).
-    // Screens: manufacturer_selection_confirmation → request_success_confirmation
-  })
+  /*
+   * Steps 5–9 are one engagement walked across two browsers, so they run SERIALLY and
+   * share state — a customer context and a manufacturer context created in step 5 and
+   * carried to step 9. Ege Pergola is the manufacturer: seeded with an İstanbul service
+   * area and a PUBLISHED price book, so the offer lands on a request that showed a band.
+   * Database facts (disclosure rows, audit entries, notifications) are asserted through
+   * `pg`, the same channel `session-fixture.ts` already uses — the DTO-shape proofs live
+   * in the integration suite; what this spec proves is the same rules holding through the
+   * real pages.
+   */
+  test.describe.serial('5–9 · one engagement, customer and manufacturer', () => {
+    let customerPage: Page
+    let manufacturerPage: Page
+    let requestId = ''
+    let projectUrl = ''
 
-  test.skip('6 · manufacturer accepts: contact is disclosed exactly once, with a record', async () => {
-    // Phase 6. The single most important transition in the product. Asserts the DTO
-    // difference — contact fields absent before ACCEPTED, present after — plus the
-    // ContactDisclosure row, the audit entry and the notification to the customer.
-    // Screens: manufacturer_request_detail_new_lead → manufacturer_request_detail
-  })
+    async function pgQuery<T>(sql: string, params: unknown[]): Promise<T[]> {
+      const { Client } = await import('pg')
+      const client = new Client({
+        connectionString:
+          process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
+      })
+      await client.connect()
+      try {
+        const result = await client.query(sql, params)
+        return result.rows as T[]
+      } finally {
+        await client.end()
+      }
+    }
 
-  test.skip('7 · survey: an appointment is scheduled and then completed', async () => {
-    // Phase 6. Completion is what makes the engagement review-eligible (16).
-    // Screens: manufacturer_project_calendar, manufacturer_appointment_detail
-  })
+    test.beforeAll(async ({ browser }) => {
+      const customerContext = await browser.newContext({
+        extraHTTPHeaders: { 'x-forwarded-for': `10.${RUN}.201.1` },
+      })
+      customerPage = await customerContext.newPage()
 
-  test.skip('8 · final offer: line items, KDV and validity, then the customer decides', async () => {
-    // Phase 6. Tax is computed once on the net total, never per line (11 §Offers and KDV),
-    // and the original estimate is shown beside the offer so the gap is explained in place.
-  })
+      const manufacturerContext = await browser.newContext({
+        extraHTTPHeaders: { 'x-forwarded-for': `10.${RUN}.201.2` },
+      })
+      manufacturerPage = await manufacturerContext.newPage()
+    })
 
-  test.skip('9 · outcome: won or lost is recorded and a review becomes possible', async () => {
-    // Phase 6 for the outcome, Phase 7 for the review that follows it.
+    test('5 · select: consent is captured and the request is sent to 1..5 manufacturers', async () => {
+      const page = customerPage
+      await signIn(page)
+      await configureToReady(page, 'İstanbul')
+      projectUrl = page.url()
+
+      await page.getByRole('link', { name: 'Teklif al' }).click()
+      await page.waitForURL(/\/hesap\/projeler\/[^/]+\/eslesmeler/, { timeout: 60_000 })
+      await expect(page.getByText(/₺[\d.,]+\s*–\s*₺[\d.,]+/).first()).toBeVisible({
+        timeout: 60_000,
+      })
+
+      // Select Ege Pergola — the priced, seeded supplier the rest of the chain signs in as.
+      await page
+        .locator('li', { has: page.getByText('Ege Pergola', { exact: true }) })
+        .getByRole('checkbox')
+        .check()
+
+      // `19` §Consent: never pre-checked — the send button stays dead until the tick.
+      const send = page.getByRole('button', { name: 'İsteği gönder' })
+      await expect(send).toBeDisabled()
+      await page.getByText(/paylaşılmasına onay veriyorum/).click()
+      await expect(send).toBeEnabled()
+      await send.click()
+
+      await page.waitForURL(/\/hesap\/projeler\/[^/]+\/talepler/, { timeout: 60_000 })
+      await expect(page.getByText('Yanıt bekleniyor').first()).toBeVisible({ timeout: 30_000 })
+
+      const projectId = /\/hesap\/projeler\/([^/]+)\/talepler/.exec(page.url())?.[1] ?? ''
+      const rows = await pgQuery<{ id: string; consentId: string; textVersion: string }>(
+        `SELECT r."id", r."consentId", c."textVersion"
+         FROM "OfferRequest" r JOIN "Consent" c ON c."id" = r."consentId"
+         WHERE r."projectId" = $1`,
+        [projectId],
+      )
+      expect(rows).toHaveLength(1)
+      // The consent row records the exact text version shown (`19` §Consent).
+      expect(rows[0]!.textVersion).toMatch(/^\d{4}-\d{2}-\d{2}\.v\d+$/)
+      requestId = rows[0]!.id
+    })
+
+    test('6 · manufacturer accepts: contact is disclosed exactly once, with a record', async () => {
+      const page = manufacturerPage
+
+      await page.goto('/giris')
+      await page.getByLabel('E-posta').fill('owner@egepergola.local')
+      await page.getByLabel('Şifre').fill('phase3-pilot-manufacturer-password')
+      await page.getByRole('button', { name: 'Giriş yap' }).click()
+      await page.waitForURL(/\/hesap/, { timeout: 30_000 })
+
+      const companyId = (
+        await pgQuery<{ companyId: string }>(
+          `SELECT "companyId" FROM "OfferRequest" WHERE "id" = $1`,
+          [requestId],
+        )
+      )[0]!.companyId
+
+      // ── before: the pending page renders NO contact, and no disclosure row exists ──
+      await page.goto(`/panel/${companyId}/talepler/${requestId}`)
+      await expect(page.getByText(/kabul ettiğinizde paylaşılır/)).toBeVisible({
+        timeout: 30_000,
+      })
+      await expect(page.getByText('musteri@pergola.local')).toBeHidden()
+
+      expect(
+        Number(
+          (
+            await pgQuery<{ count: string }>(
+              `SELECT count(*) AS count FROM "ContactDisclosure" WHERE "offerRequestId" = $1`,
+              [requestId],
+            )
+          )[0]!.count,
+        ),
+      ).toBe(0)
+
+      // ── accept ────────────────────────────────────────────────────────────
+      await page.getByRole('button', { name: 'Talebi kabul et' }).click()
+      await expect(page.getByText('musteri@pergola.local')).toBeVisible({ timeout: 30_000 })
+
+      // Exactly once, with its record set: the row, the audit entries, the notification.
+      const counts = await pgQuery<{ disclosures: string; audits: string; notes: string }>(
+        `SELECT
+           (SELECT count(*) FROM "ContactDisclosure" WHERE "offerRequestId" = $1) AS disclosures,
+           (SELECT count(*) FROM "AuditLog"
+             WHERE "entityType" = 'OfferRequest' AND "entityId" = $1
+               AND "action" = 'contact_disclosed') AS audits,
+           (SELECT count(*) FROM "Notification"
+             WHERE "type" = 'contact_disclosed'
+               AND payload->>'offerRequestId' = $1) AS notes`,
+        [requestId],
+      )
+      expect(counts[0]).toEqual({ disclosures: '1', audits: '1', notes: '1' })
+    })
+
+    test('7 · survey: an appointment is scheduled and then completed', async () => {
+      const page = manufacturerPage
+
+      const tomorrow = new Date(Date.now() + 24 * 3600 * 1000)
+      const local = new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60_000)
+        .toISOString()
+        .slice(0, 16)
+
+      await page.getByLabel('Keşif randevusu').fill(local)
+      await page.getByRole('button', { name: 'Randevu planla' }).click()
+      await expect(page.getByRole('button', { name: /tamamlandı olarak işaretle/ })).toBeVisible({
+        timeout: 30_000,
+      })
+
+      // The machine refuses completing a visit that has not happened; move the clock the
+      // way the integration suite does, then complete for real through the page.
+      await pgQuery(
+        `UPDATE "Appointment" SET "scheduledAt" = now() - interval '1 hour'
+         WHERE "offerRequestId" = $1 AND "status" = 'SCHEDULED'`,
+        [requestId],
+      )
+
+      await page.getByRole('button', { name: /tamamlandı olarak işaretle/ }).click()
+      await expect(page.getByText('Keşif tamamlandı.')).toBeVisible({ timeout: 30_000 })
+
+      const status = await pgQuery<{ status: string }>(
+        `SELECT "status" FROM "OfferRequest" WHERE "id" = $1`,
+        [requestId],
+      )
+      expect(status[0]!.status).toBe('SURVEY_COMPLETED')
+    })
+
+    test('8 · final offer: line items, KDV and validity, then the customer decides', async () => {
+      const manufacturer = manufacturerPage
+
+      await manufacturer.getByLabel('Açıklama').fill('Bioklimatik pergola, montaj dahil')
+      await manufacturer.getByLabel('Birim fiyat (TL)').fill('100000')
+      await manufacturer.getByRole('button', { name: 'Teklifi gönder' }).click()
+      await expect(manufacturer.getByText(/Teklif gönderildi:/)).toBeVisible({ timeout: 30_000 })
+
+      // KDV once, on the net total, stored gross — read back from the row (`11`).
+      const offer = await pgQuery<{ netKurus: number; taxKurus: number; grossKurus: number }>(
+        `SELECT "netKurus", "taxKurus", "grossKurus" FROM "Offer"
+         WHERE "offerRequestId" = $1 AND "status" = 'SENT'`,
+        [requestId],
+      )
+      expect(offer).toHaveLength(1)
+      expect(offer[0]!.grossKurus).toBe(offer[0]!.netKurus + offer[0]!.taxKurus)
+      expect(offer[0]!.netKurus).toBe(100_000_00)
+
+      // The customer sees the offer BESIDE the original estimate, with the net-of-KDV note
+      // bridging the gap (`ADR-007`, task 6.9).
+      const customer = customerPage
+      await customer.reload()
+      await expect(customer.getByText('İlk tahmininiz')).toBeVisible({ timeout: 30_000 })
+      await expect(customer.getByText(/KDV hariçti/)).toBeVisible()
+      await expect(customer.getByText('Genel toplam (KDV dahil)')).toBeVisible()
+
+      await customer.getByRole('button', { name: 'Teklifi kabul et' }).click()
+      // The durable signal, not the transient confirmation: router.refresh() replaces the
+      // decision component with the new status badge, and under full-suite load the refresh
+      // can land before the confirmation text ever paints.
+      await expect(customer.getByText('Teklif kabul edildi')).toBeVisible({ timeout: 30_000 })
+
+      const status = await pgQuery<{ status: string }>(
+        `SELECT "status" FROM "OfferRequest" WHERE "id" = $1`,
+        [requestId],
+      )
+      expect(status[0]!.status).toBe('OFFER_ACCEPTED')
+    })
+
+    test('9 · outcome: won or lost is recorded and a review becomes possible', async () => {
+      const page = manufacturerPage
+
+      await page.reload()
+      await page.getByRole('button', { name: 'Kazanıldı olarak işaretle' }).click()
+      await expect(page.getByText(/kazanıldı olarak kaydedildi/)).toBeVisible({ timeout: 30_000 })
+
+      const row = await pgQuery<{ status: string; completed: string }>(
+        `SELECT r."status",
+                (SELECT count(*) FROM "Appointment" a
+                  WHERE a."offerRequestId" = r."id" AND a."status" = 'COMPLETED') AS completed
+         FROM "OfferRequest" r WHERE r."id" = $1`,
+        [requestId],
+      )
+      // WON recorded — and the completed survey is what Phase 7's review-eligibility reads.
+      expect(row[0]!.status).toBe('WON')
+      expect(Number(row[0]!.completed)).toBeGreaterThanOrEqual(1)
+      void projectUrl
+    })
   })
 })

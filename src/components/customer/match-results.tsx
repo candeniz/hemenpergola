@@ -7,11 +7,14 @@ import { useRouter } from 'next/navigation'
 import type { MatchResultView, MatchRunView } from '@/modules/matching/application/match-service'
 import type { CustomerEstimate } from '@/modules/pricing/application/estimate-dto'
 import { runMatchAction } from '@/app/actions/match'
+import { createOfferRequestsAction } from '@/app/actions/offer'
+import { ConsentCheckbox } from '@/components/legal/consent-checkbox'
 import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
 import { EstimateBand } from '@/components/ui/estimate-band'
 import { Icon } from '@/components/ui/icon'
 import { Link } from '@/i18n/navigation'
+import { useRouter as useLocalisedRouter } from '@/i18n/navigation'
 
 /**
  * The matched-manufacturers list — task 5.6, `matched_manufacturers_results` and
@@ -50,11 +53,18 @@ const COMPARE_LIMIT = 3
 
 export function MatchResults({ run, widened = false }: { run: MatchRunView; widened?: boolean }) {
   const t = useTranslations('results')
+  const tr = useTranslations('requests')
   const locale = useLocale() === 'en' ? 'en' : 'tr'
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [selected, setSelected] = useState<string[]>([])
   const [limitNote, setLimitNote] = useState(false)
+  const [consent, setConsent] = useState<{ checked: boolean; textVersion: string | null }>({
+    checked: false,
+    textVersion: null,
+  })
+  const [requestError, setRequestError] = useState<string | null>(null)
+  const localisedRouter = useLocalisedRouter()
 
   function toggle(companyId: string) {
     setSelected((current) => {
@@ -68,6 +78,23 @@ export function MatchResults({ run, widened = false }: { run: MatchRunView; wide
       }
       setLimitNote(false)
       return [...current, companyId]
+    })
+  }
+
+  function sendRequests() {
+    startTransition(async () => {
+      setRequestError(null)
+      const result = (await createOfferRequestsAction({
+        projectId: run.projectId,
+        companyIds: selected,
+        consent: { accepted: true, textVersion: consent.textVersion },
+      })) as { data: unknown } | { error: { message: string } }
+
+      if ('error' in result) {
+        setRequestError(result.error.message)
+        return
+      }
+      localisedRouter.push(`/hesap/projeler/${run.projectId}/talepler`)
     })
   }
 
@@ -90,19 +117,41 @@ export function MatchResults({ run, widened = false }: { run: MatchRunView; wide
       </div>
 
       {selected.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-base">
-          <Button asChild>
-            <Link
-              href={`/hesap/projeler/${run.projectId}/karsilastir?firmalar=${selected.join(',')}`}
-            >
-              {t('compareCta', { count: selected.length })}
-            </Link>
-          </Button>
-          {limitNote ? (
-            <p role="status" className="text-body-sm text-muted">
-              {t('compareLimit')}
-            </p>
-          ) : null}
+        <div className="flex flex-col gap-base">
+          <div className="flex flex-wrap items-center gap-base">
+            <Button asChild variant="outline">
+              <Link
+                href={`/hesap/projeler/${run.projectId}/karsilastir?firmalar=${selected.join(',')}`}
+              >
+                {t('compareCta', { count: selected.length })}
+              </Link>
+            </Button>
+            {limitNote ? (
+              <p role="status" className="text-body-sm text-muted">
+                {t('compareLimit')}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Step 5 of F1: selection → consent → send (`ADR-021`'s wall already ensured a
+              session; `19` §Consent: never pre-checked, version rides with the tick). */}
+          <div className="flex flex-col gap-base rounded border border-control-border bg-panel p-base">
+            <p className="text-body-md">{tr('sendHint', { count: selected.length })}</p>
+            <ConsentCheckbox
+              checked={consent.checked}
+              onChange={(checked, textVersion) => setConsent({ checked, textVersion })}
+            />
+            <div className="flex items-center gap-base">
+              <Button onClick={sendRequests} disabled={pending || !consent.checked}>
+                {tr('sendCta')}
+              </Button>
+              {requestError !== null ? (
+                <p role="alert" className="text-body-sm text-destructive">
+                  {requestError}
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : (
         <p className="text-body-sm text-muted">{t('compareHint')}</p>

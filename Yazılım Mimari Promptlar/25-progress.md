@@ -6,13 +6,14 @@ someone already knew.
 
 ## Status
 
-**Current phase:** **Phase 4 is complete and its gate is proven** (2026-08-23); **Phase 5's
-engine half (5.1–5.5) is built and integration-proven** the same day, its surface (5.6–5.9)
-not started. A visitor — signed in or anonymous — walks the wizard to `READY`, the draft
-survives a browser restart, registration claims it, and the old cookie gets a 404. Behind
-that, the match pipeline runs: one-query eligibility over PostGIS, seven-component scoring
-with a stored breakdown, a pricing pass that never drops an unpriceable manufacturer, a
-deterministic ranking and a persisted `MatchRun`.
+**Current phase:** **Phases 0–5 are complete with proven gates**; **Phase 6's first half
+(6.1–6.5 + 6.10) landed 2026-08-24** — the state machine, the disclosure, the DTO boundary
+and the concurrency proof — with the surface, the SLA job and offers (6.6–6.9) in flight.
+A visitor configures to `READY` (anonymous or signed in), `GET OFFERS` returns ranked,
+priced manufacturers from the seeded supply, requests carry versioned consent, and
+`PENDING → ACCEPTED` discloses contact exactly once with its `ContactDisclosure`, audit and
+notification. The repository is public at `github.com/candeniz/hemenpergola` and CI runs
+the whole pipeline on every push.
 
 **The D3 pilot session is still runnable.** `27-d3-pilot-guide.md` is a one-page script for
 it, with a seeded manufacturer login, a table of what to observe, and Q11–Q18 phrased as
@@ -22,8 +23,9 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **991 unit tests, 276 integration tests** against real PostGIS and MinIO
-containers, and **43 Playwright specs green** (18 still skipped for later phases). Mail and
+price their work. **1021 unit tests, 296 integration tests** against real PostGIS and MinIO
+containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
+(61 Playwright tests, 16 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
 
 ## Phase tracker
@@ -44,7 +46,7 @@ proven — not when the code is written.
 | 3 | Manufacturer supply side | **✅ gate met · 8/8** | a company is matchable — proven, see 2026-08-16 |
 | 4 | Project configurator | **✅ gate met · 9/9** | a customer walks the wizard to READY and it survives a restart — first half proven 2026-08-17, anonymous half proven 2026-08-23: `phase4-gate.spec.ts` green, full pipeline green |
 | 5 | Matching + pricing | **✅ gate met · 9/9** | `GET OFFERS` returns ranked priced results — proven 2026-08-24: `core-flow.spec.ts` steps 3–4 green against the seeded supply, zero-match ladder included; p95 805 ms for 200 candidates, asserted in CI |
-| 6 | Offer request lifecycle | **🟡 in progress · 6/10** | `e2e/core-flow.spec.ts` green — machine, service, consent, disclosure, DTO boundary and the concurrency proof landed 2026-08-24; surface + SLA job + offers (6.6–6.9) remain |
+| 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | ⬜ | every notification event fires with a `tr` template |
 | 8 | Public site + SEO | ⬜ | performance budgets met in CI |
 | 9 | Hardening + launch | ⬜ | pre-launch checklist ticked by evidence |
@@ -2684,6 +2686,81 @@ is zero and no notification exists — the row lock and the machine doing exactl
 - Appointment/Offer/OfferLine tables shipped in migration 8; their services and the
   remaining machine edges' callers are 6.6–6.9. `Project.status → SUBMITTED` on request
   creation is deliberately untouched until the surface lands.
+
+### 2026-08-24 — Phase 6 closed: tasks 6.6–6.9, three gaps, and the release gate (commit `P6.6-6.9 · Faz 6 kapanışı`)
+
+**The release gate is green.** `e2e/core-flow.spec.ts` — empty since Phase 0 on purpose —
+now walks all nine F1 steps: an İstanbul project configured to READY, ranked priced results,
+selection with versioned consent, Ege Pergola accepting with the disclosure set written,
+a survey scheduled and completed, an offer with KDV computed once, the customer accepting
+beside their original band, and WON recorded. Steps 5–9 run serially across two browser
+contexts; database facts (disclosure/audit/notification counts, statuses, offer totals) are
+asserted through `pg` while the pages carry the flow.
+
+**The three gaps:**
+
+- **`note` crossed to the accepted side** (`ADR-026`): the free-text field is contact data
+  until the disclosure — customers write phone numbers into it, and scrubbing free text is
+  an arms race with no winning side. `note` joined `ForbiddenContactKey`, the pending read
+  no longer fetches it, `AcceptedLeadView.customerNote` carries it across, and the
+  integration suite plants `ZİLİ ÇALIŞMIYOR beni 0532 555 0000 numaradan arayın` and
+  asserts the pending JSON contains none of it.
+- **The lead mappers pick field-by-field**: `NoContactFields` stops a forbidden *name* at
+  compile time and `pickLeadProject` stops an unforeseen *value* at runtime — a new column
+  cannot ride into a DTO through a spread.
+- **Two stale document lines** — `25` §Status (still describing Phase 5's surface as
+  unstarted) and `28`'s "a quarter of the build" — rewritten to the truth.
+
+#### 6.6 · SLA
+
+One queue, three moments (`reminder_50`, `reminder_90`, `expire`), scheduled at creation
+with `startAfterSeconds` and singleton keys. Expiry is a transition like any other — FOR
+UPDATE, then the machine; a retried job meets EXPIRED, gets the machine's CONFLICT, and the
+handler calls that success. Reminders dedupe on a notification row keyed by (user, request,
+kind). Both parties notified on expiry, after commit. **Business-hours awareness is
+deliberately not in**: a Turkish public-holiday calendar this repo does not maintain would
+lie worse than plain hours, Q7 already plans to tune the window from data, and the 50%/90%
+reminders warn a weekend-started clock twice before it runs out — recorded under Q7 rather
+than silently dropped.
+
+#### 6.7 · appointments
+
+`schedule`/`reschedule`/`complete` through the machine; completion produces
+`SURVEY_COMPLETED`, the state `16`'s review-eligibility will read.
+
+#### 6.8 · offers
+
+KDV **once, on the net total** — `offer-math.test.ts` demonstrates the per-line divergence
+(three 100.01 TL lines at 18%: 5400 per-line vs 5401 on the net) instead of asserting it
+away; `grossKurus` stored. Numbers are `PRE-YYYY-NNNN`, allocated by read-last + UNIQUE +
+retry — the integration suite fires two concurrent sends into a shared prefix namespace and
+gets two different numbers. Revision supersedes: old offer → SUPERSEDED, new row, new
+number, both readable.
+
+#### 6.9 · the offer beside the estimate
+
+The customer's request page renders the original band through `EstimateBand`, the
+"estimate was net of KDV" note, then net/KDV/gross and the decision buttons — the gap
+explained where it appears (`ADR-007`).
+
+#### Also
+
+- `Project READY → SUBMITTED` on request creation, through `statusAfterSubmission` in the
+  project's own status module — idempotent for the add-more-after-expiry case.
+- Surfaces: request sending with `ConsentCheckbox` on the results page; the customer
+  request tracker with the two-sided countdown; the manufacturer lead inbox and detail
+  (one route, two DTOs, rendered as returned); the offer form. Manufacturer server actions
+  learned to carry the panel's company segment into `resolveActor` — the page pattern,
+  now in `app/actions/offer.ts` too.
+- The demo suppliers' owners got the shared manufacturer password, so the gate (and a
+  demo) can sign in as a priced company.
+
+#### Carried forward to Phase 7+
+
+- `Notification` rows are written everywhere and nothing dispatches them (Phase 7).
+- `mark_lost` and admin `close` have machine edges and service methods but no surface.
+- Thread/Message, reviews (reading `SURVEY_COMPLETED`), and `mayReadPrivate`'s
+  manufacturer half — Phase 7 as planned.
 
 ## Open questions — need a human answer before the phase that hits them
 

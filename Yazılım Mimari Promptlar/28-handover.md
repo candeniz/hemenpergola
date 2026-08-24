@@ -147,7 +147,7 @@ Ten phases, defined in `21-development-roadmap.md` (scope and gates) and
 | 3 Manufacturer supply side | ✅ gate met · 8/8 |
 | 4 Project configurator | ✅ gate met · 9/9 |
 | 5 Matching + pricing | ✅ gate met · 9/9 |
-| 6 Offer request lifecycle | 🟡 in progress · 6/10 — machine, disclosure, DTO boundary proven; surface + SLA + offers remain |
+| 6 Offer request lifecycle | ✅ gate met · 10/10 — `core-flow.spec.ts` walks all nine F1 steps |
 | 7–9 | not started |
 
 **The gate was proven on 2026-08-23**, on the first working checkout after the blind
@@ -158,10 +158,11 @@ anonymous draft survives a context restart, the claim moves it, and the cookie a
 404 afterwards. `25-progress.md`'s second 2026-08-23 entry has the full list of what broke
 and what did not.
 
-Roughly a quarter of the build. The phases carrying the most remaining weight are 5 (matching
-and pricing), 6 (offer request lifecycle) and 3's already-completed supply side. `21` calls
-Phase 5 "the first demo worth showing anyone" and Phase 6's `e2e/core-flow.spec.ts` is the
-release gate.
+Roughly two-thirds of the build, by phases closed. The weight that remains is 7
+(communication and trust), 8 (public site and SEO) and 9 (hardening and launch) — plus the
+human-decision chain Q2 → Q3 → Q6 that no phase can close from a keyboard. `21` called
+Phase 5 "the first demo worth showing anyone"; that demo exists, and Phase 6's
+`e2e/core-flow.spec.ts` is the release gate.
 
 **Sequencing note:** `26` §Sequencing puts Phase 3 before Phase 4 for a single developer,
 against `21`'s claim that they are parallel. That is done; Phase 3 is closed.
@@ -383,31 +384,26 @@ Recorded so they do not bite twice. Each cost real time.
 
 ## 12. What is next
 
-**Verify Phase 4's second half.** It is written and unproven — see §5. `e2e/phase4-gate.spec.ts`
-is the gate: an anonymous visitor configures, the browser restarts, the draft survives, they
-register and sign in, the draft becomes theirs, and the cookie alone can no longer reach it.
-Only when that is green does `25-progress.md`'s Phase 4 row move to ✅.
+**Phase 7 — communication and trust.** Phases 4, 5 and 6 all closed on 2026-08-24 with their
+gates proven; the release gate (`e2e/core-flow.spec.ts`) walks all nine F1 steps. What
+Phase 7 owns:
 
-What follows is the original description of the work, kept because it says why each piece is
-shaped the way it is:
+- **Notification dispatch.** Every service writes `Notification` rows and nothing sends
+  them — `notification.dispatch` has a queue name and no handler. `13-notifications.md` is
+  the spec; the mail adapter is `log` until Q3 closes.
+- **Messaging.** `Thread`/`Message` (`04` §Messaging) — migration 9 territory, one thread
+  per offer request.
+- **Reviews.** `16-reviews-and-ratings.md`, reading the `SURVEY_COMPLETED`-or-later states
+  Phase 6 now produces. Ratings then feed matching's Bayesian component, which has been
+  running on the prior alone since Phase 5.
+- **`mayReadPrivate`'s manufacturer half** — a manufacturer with an `ACCEPTED`+ request
+  reading the project's photos (`14` §Access control).
+- Small carried debts: `mark_lost` and admin `close` have machine edges and services but no
+  surface; SLA business-hours awareness is parked under Q7.
 
-- **4.5 anonymous drafts and claiming.** `anonymousKey` httpOnly cookie, 30-day TTL, at most
-  three drafts per key, `POST /projects/{id}/claim` on register or login. `26` names this as
-  the riskiest task in the phase: it is where sessions, cookies, retention and ownership
-  checks intersect, and it is the one flow a customer meets before they trust the product.
-  The groundwork is done — the `customer-owned` authorisation shape already carries both
-  `userId` and `anonymousKey`, and `ADR-021` already put the configurator on a public route,
-  so this adds a cookie and a claim flow rather than a reshaping.
-- **4.6 attachments** — `PHOTO` and `DOCUMENT` both, limits in `14-file-storage-and-media.md`
-- **4.8 customer dashboard and project list** — `customer_dashboard_final`, `_empty_state`
-- **4.9 duplicate project**
-- **Gate:** a project reaches `READY` and survives a browser restart mid-wizard. The first half
-  already proves this for a signed-in customer; the second half must prove it for an anonymous
-  one too.
-
-Then Phase 5 — matching and pricing — which `21` calls the first demo worth showing anyone.
-Its engine and golden files already exist, moved forward into Phase 3 deliberately so Phase 5
-wires a tested function rather than debugging arithmetic and SQL in the same week.
+**The human-decision chain is the other half of "next":** Q2 (legal entity → İYS) → Q3 (SMS
+sender) gate the production disclosure path, and Q6's 20% KDV default still wants an
+accountant's confirmation. No phase closes these from a keyboard.
 
 ---
 

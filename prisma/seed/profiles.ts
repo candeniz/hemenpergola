@@ -352,6 +352,27 @@ async function seedMatchableSupply(prisma: PrismaClient): Promise<void> {
   const istanbul = await prisma.city.findFirst({ where: { plateCode: 34 } })
   if (istanbul === null) return
 
+  // The suppliers' owners can sign in with the shared manufacturer password, so the
+  // release gate (and a demo) can walk accept → survey → offer → won as a priced company.
+  {
+    const [{ hash }, { ARGON2_OPTIONS }] = await Promise.all([
+      import('@node-rs/argon2'),
+      import('@/modules/iam/domain/password'),
+    ])
+    const passwordHash = await hash(SEED_MANUFACTURER_PASSWORD, ARGON2_OPTIONS)
+    await prisma.user.updateMany({
+      where: { email: { in: ['owner@egepergola.local', 'owner@anadolugunes.local'] } },
+      data: { passwordHash },
+    })
+    await prisma.user.updateMany({
+      where: {
+        email: { in: ['owner@egepergola.local', 'owner@anadolugunes.local'] },
+        emailVerifiedAt: null,
+      },
+      data: { emailVerifiedAt: new Date() },
+    })
+  }
+
   const suppliers = [
     { slug: 'ege-pergola', basePriceKurus: 4_500_00, minProjectPriceKurus: 60_000_00 },
     { slug: 'anadolu-gunes-kontrol', basePriceKurus: 5_200_00, minProjectPriceKurus: 75_000_00 },

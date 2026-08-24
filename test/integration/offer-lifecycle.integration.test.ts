@@ -21,6 +21,12 @@ import { getPrisma } from './setup'
 
 const CUSTOMER_EMAIL = 'offer-customer@example.com'
 const CUSTOMER_PHONE = '+905551112233'
+/*
+ * The trap for `ADR-026`: contact data written INTO the free-text note, which a
+ * value-based scan for the account's email/phone would never catch. The pending JSON must
+ * not contain it; the accepted DTO carries it as `customerNote`.
+ */
+const NOTE_TRAP = 'ZİLİ ÇALIŞMIYOR beni 0532 555 0000 numaradan arayın'
 
 let customerId = ''
 let projectId = ''
@@ -81,6 +87,7 @@ async function freshReadyProject(): Promise<string> {
       areaM2: 20,
       quantity: 1,
       cityId,
+      note: NOTE_TRAP,
     },
   })
   return project.id
@@ -190,6 +197,10 @@ describe('6.5 · one route, two DTOs — the boundary is the shape', () => {
     expect(serialised).not.toContain(CUSTOMER_EMAIL)
     expect(serialised).not.toContain(CUSTOMER_PHONE)
     expect(serialised).not.toContain('Ayşe')
+    // ADR-026: the free-text note is contact data before acceptance — the planted phone
+    // number and the note text itself must both be absent.
+    expect(serialised).not.toContain('0532 555 0000')
+    expect(serialised).not.toContain('ZİLİ ÇALIŞMIYOR')
   })
 })
 
@@ -209,6 +220,8 @@ describe('6.4 · the disclosure — exactly once, idempotent under a double acce
     expect(accepted.value.kind).toBe('accepted')
     expect(accepted.value.contact.email).toBe(CUSTOMER_EMAIL)
     expect(accepted.value.contact.phone).toBe(CUSTOMER_PHONE)
+    // …and the note crossed WITH the disclosure (`ADR-026`).
+    expect(accepted.value.customerNote).toBe(NOTE_TRAP)
 
     // Exactly one of each of the four things `CLAUDE.md` non-negotiable 8 names.
     const disclosures = await getPrisma().contactDisclosure.findMany({
@@ -377,5 +390,253 @@ describe('guards from 11 the service owns', () => {
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.error.kind).toBe('PRECONDITION')
+  })
+})
+
+describe('6.6 · the SLA job — idempotent, through the machine', () => {
+  it('expires an overdue PENDING request via the machine, once; a re-run is a no-op', async () => {
+    const { runSlaJob } = await import('@/modules/offer/infrastructure/sla-job')
+
+    const late = await createOfferRequests(customerActor(), {
+      projectId: await freshReadyProject(),
+      companyIds: [companyB],
+      consent: CONSENT,
+    })
+    expect(late.ok).toBe(true)
+    if (!late.ok) return
+    const id = late.value.created[0]!.offerRequestId
+
+    await getPrisma().offerRequest.update({
+      where: { id },
+      data: { slaExpiresAt: new Date(Date.now() - 60_000) },
+    })
+
+    const first = await runSlaJob(id, 'expire')
+    expect(first.status).toBe('expired')
+
+    const row = await getPrisma().offerRequest.findUniqueOrThrow({ where: { id } })
+    expect(row.status).toBe('EXPIRED')
+
+    const notesAfterFirst = await getPrisma().notification.count({
+      where: { type: 'offer_request_expired', payload: { path: ['offerRequestId'], equals: id } },
+    })
+    expect(notesAfterFirst).toBeGreaterThanOrEqual(2) // customer + at least one owner
+
+    // The drained-worker retry: same job again. The machine answers CONFLICT internally,
+    // the handler reports "already settled", and nothing doubles.
+    const second = await runSlaJob(id, 'expire')
+    expect(second.status).toBe('already-settled')
+    expect(
+      await getPrisma().notification.count({
+        where: {
+          type: 'offer_request_expired',
+          payload: { path: ['offerRequestId'], equals: id },
+        },
+      }),
+    ).toBe(notesAfterFirst)
+  })
+
+  it('does not expire a request that was answered in time', async () => {
+    const { runSlaJob } = await import('@/modules/offer/infrastructure/sla-job')
+
+    const answered = await getPrisma().offerRequest.findFirstOrThrow({
+      where: { projectId, companyId: companyA, status: 'ACCEPTED' },
+    })
+
+    const outcome = await runSlaJob(answered.id, 'expire')
+    expect(outcome.status).toBe('already-settled')
+    expect(
+      (await getPrisma().offerRequest.findUniqueOrThrow({ where: { id: answered.id } })).status,
+    ).toBe('ACCEPTED')
+  })
+
+  it('writes each reminder exactly once, however many times the job fires', async () => {
+    const { runSlaJob } = await import('@/modules/offer/infrastructure/sla-job')
+
+    const fresh = await createOfferRequests(customerActor(), {
+      projectId: await freshReadyProject(),
+      companyIds: [companyC],
+      consent: CONSENT,
+    })
+    expect(fresh.ok).toBe(true)
+    if (!fresh.ok) return
+    const id = fresh.value.created[0]!.offerRequestId
+
+    const first = await runSlaJob(id, 'reminder_50')
+    const again = await runSlaJob(id, 'reminder_50')
+    expect(first.status).toBe('reminded')
+    expect(again.status).toBe('already-reminded')
+
+    expect(
+      await getPrisma().notification.count({
+        where: {
+          type: 'offer_request_sla_reminder',
+          payload: { path: ['offerRequestId'], equals: id },
+        },
+      }),
+    ).toBe(1)
+  })
+})
+
+describe('6.8 · offers — KDV once, numbers race-safe, revision supersedes', () => {
+  async function ownerOf(companyId: string): Promise<string> {
+    const membership = await getPrisma().companyMembership.findFirstOrThrow({
+      where: { companyId, role: 'OWNER' },
+    })
+    return membership.userId
+  }
+
+  async function acceptedRequestFor(companyId: string, ownerId: string): Promise<string> {
+    const created = await createOfferRequests(customerActor(), {
+      projectId: await freshReadyProject(),
+      companyIds: [companyId],
+      consent: CONSENT,
+    })
+    if (!created.ok) throw new Error('create failed')
+    const id = created.value.created[0]!.offerRequestId
+    const accepted = await acceptOfferRequest(manufacturerActor(companyId, ownerId), {
+      offerRequestId: id,
+    })
+    if (!accepted.ok) throw new Error('accept failed')
+    return id
+  }
+
+  const LINES = [
+    { description: 'Bioklimatik pergola', quantity: 1, unit: 'adet', unitPriceKurus: 95_000_00 },
+    { description: 'Montaj', quantity: 1, unit: 'adet', unitPriceKurus: 5_000_00 },
+  ]
+  const FUTURE = () => new Date(Date.now() + 14 * 24 * 3600 * 1000)
+
+  it('stores gross = net + tax computed once on the net total', async () => {
+    const { sendOffer } = await import('@/modules/offer/application/offer-service')
+    const requestId = await acceptedRequestFor(companyB, ownerB)
+
+    const sent = await sendOffer(manufacturerActor(companyB, ownerB), {
+      offerRequestId: requestId,
+      lines: LINES,
+      taxRate: 20,
+      validUntil: FUTURE(),
+    })
+    expect(sent.ok).toBe(true)
+    if (!sent.ok) return
+
+    expect(sent.value.netKurus).toBe(100_000_00)
+    expect(sent.value.taxKurus).toBe(20_000_00)
+    expect(sent.value.grossKurus).toBe(120_000_00)
+
+    const row = await getPrisma().offerRequest.findUniqueOrThrow({ where: { id: requestId } })
+    expect(row.status).toBe('OFFER_SENT')
+  })
+
+  it('gives two concurrent sends two DIFFERENT numbers — count(*)+1 would not', async () => {
+    const { sendOffer } = await import('@/modules/offer/application/offer-service')
+    const ownerCId = await ownerOf(companyC)
+
+    const [reqA, reqB] = await Promise.all([
+      acceptedRequestFor(companyA, ownerA),
+      acceptedRequestFor(companyC, ownerCId),
+    ])
+
+    // Two companies whose slugs share the OFF prefix share the number namespace — exactly
+    // where count(*)+1 collides under concurrency.
+    const [first, second] = await Promise.all([
+      sendOffer(manufacturerActor(companyA, ownerA), {
+        offerRequestId: reqA,
+        lines: LINES,
+        taxRate: 20,
+        validUntil: FUTURE(),
+      }),
+      sendOffer(manufacturerActor(companyC, ownerCId), {
+        offerRequestId: reqB,
+        lines: LINES,
+        taxRate: 20,
+        validUntil: FUTURE(),
+      }),
+    ])
+
+    expect(first.ok && second.ok).toBe(true)
+    if (!first.ok || !second.ok) return
+
+    expect(first.value.number).not.toBe(second.value.number)
+    expect(first.value.number).toMatch(/^OFF-\d{4}-\d{4}$/)
+    expect(second.value.number).toMatch(/^OFF-\d{4}-\d{4}$/)
+  })
+
+  it('revision supersedes and keeps the old figures readable', async () => {
+    const { sendOffer, getOffersForRequest } =
+      await import('@/modules/offer/application/offer-service')
+    const requestId = await acceptedRequestFor(companyB, ownerB)
+
+    const v1 = await sendOffer(manufacturerActor(companyB, ownerB), {
+      offerRequestId: requestId,
+      lines: LINES,
+      taxRate: 20,
+      validUntil: FUTURE(),
+    })
+    expect(v1.ok).toBe(true)
+    if (!v1.ok) return
+
+    const v2 = await sendOffer(manufacturerActor(companyB, ownerB), {
+      offerRequestId: requestId,
+      lines: [
+        { description: 'Revize paket', quantity: 1, unit: 'adet', unitPriceKurus: 90_000_00 },
+      ],
+      taxRate: 20,
+      validUntil: FUTURE(),
+    })
+    expect(v2.ok).toBe(true)
+    if (!v2.ok) return
+
+    const view = await getOffersForRequest(customerActor(), { offerRequestId: requestId })
+    expect(view.ok).toBe(true)
+    if (!view.ok) return
+
+    // Both versions, both readable; the superseded one keeps its figures.
+    expect(view.value.offers).toHaveLength(2)
+    const statuses = view.value.offers.map((offer) => offer.status).sort()
+    expect(statuses).toEqual(['SENT', 'SUPERSEDED'])
+    const superseded = view.value.offers.find((offer) => offer.status === 'SUPERSEDED')
+    const current = view.value.offers.find((offer) => offer.status === 'SENT')
+    expect(superseded?.netKurus).toBe(100_000_00)
+    expect(superseded?.number).not.toBe(current?.number)
+  })
+
+  it('walks decision to WON: accept_offer by the customer, mark_won by the manufacturer', async () => {
+    const { sendOffer, acceptOffer, markWon } =
+      await import('@/modules/offer/application/offer-service')
+    const { scheduleAppointment, completeAppointment } =
+      await import('@/modules/offer/application/appointment-service')
+    const requestId = await acceptedRequestFor(companyA, ownerA)
+
+    // Survey first — completion is what Phase 7's review-eligibility will read.
+    const scheduled = await scheduleAppointment(manufacturerActor(companyA, ownerA), {
+      offerRequestId: requestId,
+      scheduledAt: new Date(Date.now() + 3600_000),
+      durationMin: 60,
+    })
+    expect(scheduled.ok).toBe(true)
+
+    await getPrisma().appointment.updateMany({
+      where: { offerRequestId: requestId, status: 'SCHEDULED' },
+      data: { scheduledAt: new Date(Date.now() - 3600_000) },
+    })
+    const completed = await completeAppointment(manufacturerActor(companyA, ownerA), {
+      offerRequestId: requestId,
+    })
+    expect(completed.ok && completed.value.status).toBe('SURVEY_COMPLETED')
+
+    const sent = await sendOffer(manufacturerActor(companyA, ownerA), {
+      offerRequestId: requestId,
+      lines: LINES,
+      taxRate: 20,
+      validUntil: FUTURE(),
+    })
+    expect(sent.ok).toBe(true)
+
+    const decided = await acceptOffer(customerActor(), { offerRequestId: requestId })
+    expect(decided.ok && decided.value.status).toBe('OFFER_ACCEPTED')
+
+    const won = await markWon(manufacturerActor(companyA, ownerA), { offerRequestId: requestId })
+    expect(won.ok && won.value.status).toBe('WON')
   })
 })

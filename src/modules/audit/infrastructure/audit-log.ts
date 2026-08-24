@@ -77,6 +77,9 @@ export type AuditAction =
   | 'offer_request_accepted'
   | 'offer_request_declined'
   | 'contact_disclosed'
+  | 'offer_sent'
+  | 'offer_marked_won'
+  | 'offer_marked_lost'
 
 export type AuditEntry = {
   action: AuditAction

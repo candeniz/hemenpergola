@@ -31,7 +31,6 @@ const PROJECT: LeadProject = {
   cityName: 'İstanbul',
   districtName: 'Kadıköy',
   timing: 'ASAP',
-  note: null,
   selectedOptionIds: ['opt_1'],
 }
 
@@ -60,6 +59,13 @@ describe('the pending type cannot carry contact data', () => {
   it('keeps the project block itself contact-free — the exact address never rides along', () => {
     expectTypeOf<PendingLeadView['project']>().not.toHaveProperty('addressNote')
     expectTypeOf<PendingLeadView['project']>().not.toHaveProperty('addressLine')
+  })
+
+  it('treats the free-text note as contact data before acceptance — ADR-026', () => {
+    // Customers write phone numbers and street directions into free text; scrubbing was
+    // rejected as unwinnable, so the field itself crosses with the disclosure.
+    expectTypeOf<NoContactFields<{ note: string }>['note']>().toEqualTypeOf<never>()
+    expectTypeOf<PendingLeadView['project']>().not.toHaveProperty('note')
   })
 })
 
@@ -93,6 +99,7 @@ describe('the builders', () => {
       contactDisclosedAt: new Date('2026-08-24T13:00:00Z'),
       project: PROJECT,
       contact: { fullName: 'Ayşe Demir', email: 'ayse@example.com', phone: '+905551112233' },
+      customerNote: 'Bahçe kapısından girin.',
     })
 
     expect(Object.keys(accepted.contact).sort()).toEqual(['email', 'fullName', 'phone'])
