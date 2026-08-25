@@ -12,8 +12,8 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| A1 | Data export works end to end, subject-only content, signed 30-day link | ✅ | `privacy.integration.test.ts` — export → mail → token download; no line items, no received messages |
-| A2 | Erasure works and is anonymisation, never hard delete | ✅ | `privacy.integration.test.ts` — personal fields cleared, commercial ids survive, replay refused |
+| A1 | Data export works end to end, subject-only content, signed 30-day link | ✅ | **end to end now means end to end.** `privacy.integration.test.ts` proves export → mail → token download with no line items and no received messages; `e2e/account-data.spec.ts` proves a signed-in customer can reach `/hesap/verilerim` and ask for it. The ✅ before 10.2 was wrong: the service was proven and its entry point did not exist |
+| A2 | Erasure works and is anonymisation, never hard delete | 🟡 | `privacy.integration.test.ts` — personal fields cleared, commercial ids survive, replay refused; `e2e/account-data.spec.ts` — the form is behind a disclosure, a typed email and an irreversibility checkbox. **Still missing: `19`'s separate emailed _verification_ step** ("request → verification → anonymisation job"). Needs a service method and an `AuthToken` purpose that do not exist — Q30 |
 | A3 | Retention sweep runs, dry-run first, legal-hold untouchable | ✅ | `retention-policy.test.ts` (empty intersection, structurally) + `privacy.integration.test.ts` (dry-run = applied, evidence survives, idempotent) |
 | A4 | Export PDF rendering | ✅ | `export-pdf.ts` + `privacy.integration.test.ts` — a real PDF with an EMBEDDED OFL subset (`fonts/LICENSE-noto-sans.md`) that carries `ı İ ş Ş ğ Ğ ₺`; the standard-14 faces cannot, and the first font found in the tree was rejected after reading its cmap |
 | A5 | Privacy notice, cookie notice, terms, consent text — lawyer-reviewed, versioned | ⏳ | bekliyor: **9.2 / Q2** — Turkish counsel; `shared/legal/` carries the versioned texts to review |
@@ -75,7 +75,20 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 (Two rows count in both columns — B3 has one of five surfaces waiting on an edge layer,
 C10 is measured here and unsized on real hardware.)
 
-**There is no remaining code work.** Every waiting row names a person or a purchase, not a
+**There is remaining code work, and pretending otherwise is how A1 kept a ✅ it had not
+earned.** The sentence that stood here until 2026-08-25 said the opposite. What it meant was
+"no remaining code work *that this checklist was tracking*", and the gap it could not see was
+that a checklist row proving a **service** says nothing about whether a **person can reach
+it**: `requestDataExport` and `anonymiseAccount` had authorisation entries, passing
+integration tests and no page, no action and no route. `test/api-surface.test.ts` found it by
+counting capabilities rather than adapters.
+
+Phase 10.2 built those surfaces. Phase 10 as a whole — the rest of `/api/v1` — and Phase 11,
+the mobile application (`ADR-030`), are open. Neither blocks this list: the web launches
+first and the app enters the stores afterwards, which is a constraint written into `ADR-030`
+because store review needs A5 and C6.
+
+Every waiting row below names a person or a purchase, not a
 programmer. The waiting set decomposes into five chains, and this is who owns each:
 
 | Chain | Owner | Rows | Note |

@@ -24,6 +24,7 @@ export const CLIENT_MESSAGE_NAMESPACES = [
   'messaging',
   'nav',
   'pricing',
+  'privacy',
   'projects',
   'requests',
   'results',

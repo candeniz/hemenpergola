@@ -335,7 +335,8 @@
       "requests": "My requests",
       "messages": "Messages",
       "savedCompanies": "Saved companies",
-      "settings": "Settings"
+      "settings": "Settings",
+      "myData": "My data"
     },
     "manufacturer": {
       "section": "Manufacturer portal",
@@ -861,6 +862,61 @@
       "list": "List",
       "image": "Image",
       "cta": "Button (CTA)"
+    }
+  },
+  "privacy": {
+    "title": "My data",
+    "preferences": {
+      "title": "Notification preferences",
+      "intro": "Choose which events you want to hear about by email or SMS. In-app notifications are part of your history and cannot be switched off.",
+      "caption": "Notification preferences by event type and channel",
+      "event": "Event",
+      "email": "Email",
+      "sms": "SMS",
+      "emailLabel": "Email notification for {event}",
+      "smsLabel": "SMS notification for {event}",
+      "mandatory": "Part of the legal record; cannot be switched off."
+    },
+    "export": {
+      "title": "Download my data",
+      "intro": "We prepare a complete copy of the personal data in your account. When it is ready we email you a link valid for 30 days (JSON and PDF).",
+      "cta": "Request export",
+      "sent": "Your request was received. The link will be emailed to you.",
+      "failed": "The request could not be submitted. Please try again."
+    },
+    "erase": {
+      "title": "Delete my account",
+      "intro": "Deletion cannot be undone. Your name, email and phone number are permanently anonymised and you will not be able to sign in again.",
+      "survives": "What is retained: the consents you gave, contact-disclosure records, commercial records of completed work, message transcripts and audit entries. These are kept under a legal obligation, stripped of the fields that identify you.",
+      "reveal": "I want to delete my account",
+      "confirmLabel": "Type your account email address to confirm",
+      "acknowledge": "I understand that this cannot be undone.",
+      "submit": "Permanently delete my account",
+      "cancel": "Cancel",
+      "failed": "The deletion could not be completed. Check that the email address is correct."
+    },
+    "events": {
+      "offer_request_created": "Your offer request was created",
+      "offer_request_received": "You received a new offer request",
+      "offer_request_sla_reminder": "Response deadline reminder",
+      "contact_disclosed": "Contact details were shared",
+      "offer_request_declined": "A request was declined",
+      "offer_request_expired": "A request expired",
+      "survey_scheduled": "Site survey scheduled",
+      "appointment_reminder": "Appointment reminder",
+      "offer_received": "An offer arrived",
+      "offer_revised": "An offer was revised",
+      "offer_expiring": "An offer is about to expire",
+      "offer_accepted": "An offer was accepted",
+      "offer_rejected": "An offer was rejected",
+      "message_received": "New message",
+      "review_published": "Your review was published",
+      "review_responded": "Your review received a response",
+      "review_rejected": "Your review was not published",
+      "company_verified": "Your company was verified",
+      "company_rejected": "Company verification was rejected",
+      "price_book_published": "A price book was published",
+      "supply_gap_watch": "A manufacturer now covers your area"
     }
   }
 }

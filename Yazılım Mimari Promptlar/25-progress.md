@@ -62,7 +62,7 @@ proven — not when the code is written.
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
-| 10 | The API the mobile app consumes | **⬜ not started · measured** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. **Measured 2026-08-25: 46 of them are.** The test was written and run this turn and is deliberately not committed; it lands with the endpoints |
+| 10 | The API the mobile app consumes | **🟡 · 2/4** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. Measured at the capability level: **76 of 132 missing on 2026-08-25, 41 after 10.2.** 10.1 decided and measured, 10.2 closed the KVKK surfaces and opened match / offer / messaging / files. 10.3 (supply, review, company-profile) and 10.4 (catalogue, pricing, audit, the public reads) remain, so the test is still red and still uncommitted; it lands the turn it goes green |
 | 11 | Mobile application (Expo / React Native) | **⬜ not started** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
@@ -3218,6 +3218,101 @@ imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`.
 `test/reference-dirs.test.ts` asserts they agree with it — and that test caught the live
 `Prompt` entry on its first run, which is the seam proving itself.
 
+### 2026-08-25 — Phase 10.2 · the surfaces a user could not reach, and the core flow over HTTP (commit `P10.2 · KVKK yüzeyleri, 06 tamamlama, çekirdek akış uçları`)
+
+**The measurement was at the wrong layer, and fixing that found a KVKK hole.**
+
+10.1's test enumerated `src/app/actions/*.ts` and asked whether each action had an endpoint.
+That counts adapters, not capabilities: a service method reached only from a Server
+Component has no action to be missing an endpoint for. Re-based on
+`registeredServiceMethods()`, the number went from 46 to **76 of 132** — and the extra 30
+split into two groups that behave differently. 22 are read by a page (`getMatchRun`,
+`getOffersForRequest`, `listLeadsForCompany`, the whole public directory). **7 were
+reachable from nothing at all.**
+
+Five of those seven were the account's own controls over its own data:
+`requestDataExport`, `anonymiseAccount`, `listNotificationPreferences`,
+`setNotificationPreference`, and the token `logout`. Each had an authorisation-matrix
+entry and passing integration tests. **A user could not export their data and could not
+delete their account, from any surface.** `/api/v1/privacy/export` served
+`downloadDataExport` only — the download of a package there was no way to ask for.
+
+**How it got past a phase gate is the part worth keeping.** `29` A1 read *"Data export works
+end to end"* with `privacy.integration.test.ts` as evidence. That test proves the service.
+Nothing asked whether the service had an entry point, because the checklist was written in
+the vocabulary of services and the gap is in the vocabulary of surfaces. The lesson
+generalises past this bug: **a phase gate that names a service test as evidence for a
+user-facing right is evidence of the wrong thing**, and the next phase can make the same
+mistake in a different module. What caught it was counting capabilities and asking, of each
+one, "who can reach this?"
+
+Built: `/hesap/verilerim` (`19` names that exact path and had since Phase 0), with
+notification preferences over the whole catalogue — absence of a row means enabled, so the
+catalogue is the spine and stored rows are the exceptions — plus the export request and the
+erasure form. `POST /privacy/export`, `POST /privacy/erase`, `PATCH /me`,
+`GET /me/notification-preferences`, `POST /auth/logout`. `e2e/account-data.spec.ts` proves
+reachability and gating rather than re-proving the services, and `29` A1's evidence now
+names it.
+
+**A2 went from ✅ to 🟡, deliberately.** `19` describes erasure as "request → verification →
+anonymisation". What exists is confirmation — behind a disclosure, the account's own email
+typed, an irreversibility checkbox, and the typed address enforced in the service so every
+entry point meets it. There is no emailed verification step; that needs a service method and
+an `AuthToken` purpose. Q30.
+
+**`06` was completed before any of it was implemented.** §Files did not exist at all: the
+document took `{ fileId }` in three request bodies and never said where one came from, while
+`presign → complete → url` had been in the code since Phase 3. For a client that is mostly a
+camera that is not an edge case. Also added: `POST /projects/{id}/duplicate`,
+`PUT /companies/{id}/slug`, the supply-gap and fallback paths, the seven admin paths §Admin
+had left inside the phrase "mirrors `17`", and §Privacy.
+
+Three places where `06` was **corrected rather than implemented**, because the specification
+predates the state machine: `PATCH /companies/{id}/appointments/{appointmentId}` cannot be
+built — completion is keyed by `offerRequestId`, since the transition belongs to the
+request's machine and not to an appointment row read alone; `06` split offer *create* from
+*send* and the code does not, because a created-but-unsent offer is a state `11` has no name
+for and a draft editable after the customer was notified is how two parties end up reading
+different numbers; and districts are served whole rather than per province, because the
+location step lets a visitor change province and per-province fetching turns one query into a
+round trip per keystroke.
+
+**The core flow over HTTP**, ~28 endpoints: match (run **and read** — `09` §Pipeline stores a
+`MatchRun` so a revisit does not recompute, and until now only a Server Component could read
+it), the eleven `offer` transitions plus the five reads, both halves of messaging, and the
+file triple.
+
+**The leak trap was real and is now nailed down.** `PriceCalculation` carries `netKurus` and
+a per-line `breakdown` in the same row as the band. `getMatchRun` already built its DTO
+field by field and selected `breakdown` only to derive one boolean — but nothing asserted it,
+and `toPendingLead` leaked `project.note` in Phase 6 by exactly this mechanism.
+`api-leak.integration.test.ts` runs the real pipeline, puts the result through `respond()`
+— the whole of what a route handler adds — and scans the serialised body recursively for
+`netKurus`, `breakdown`, `priceBookId`, `unitPriceKurus` and `score`. Its last assertion
+proves those fields **are** on the stored row, so the absence assertions cannot start passing
+for the wrong reason.
+
+**Exception lists: three, disjoint, each argued.** `WEB_ONLY` shrank from three entries to
+one. The first version exempted the admin CMS editor as "wide-screen work", which does not
+survive contact with the codebase — admin catalogue, settings and verification are equally
+wide-screen and all three have complete `/api/v1/admin` trees. The list answers "can this be
+an HTTP endpoint at all?", not "will the app show this screen?"; `ADR-030`'s scope table
+governs the second question only. What survives is transport: `endWebSession` deletes a
+`Session` row addressed by an `httpOnly` cookie. `INTERNAL` is new and holds
+`listCompaniesCoveringPoint` — a test seam `20` §Integration asks for by name, exposed so a
+boundary test does not reimplement the SQL. `NO_SURFACE` is a defect inventory that must
+reach zero and now holds one entry, `estimateForProject`, which is 10.4's.
+
+Count after this turn: **41 of 132**, all of them 10.3 and 10.4. The test stays out of the
+commit until it is green.
+
+**One thing found and deliberately not fixed:** `listCitiesSchema` and
+`listDistrictsSchema` still require a `companyId` the services ignore (`void input`),
+left from a Phase 3 gating that `ADR-021` invalidated. The wizard already passes the literal
+`'public'`, and the new routes follow that existing convention rather than inventing a
+second one. Removing the field is a service-signature change, which touches the web and is a
+10.4 decision, not a quiet edit made while adding an endpoint.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3247,6 +3342,7 @@ imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`.
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
 | ~~Q28~~ | ~~The notification delivery log has a retention rule and no sweeper.~~ **CLOSED 2026-08-24 (task 9.1):** the same sweep executes `retentionWhere()` — 90 days, mandatory events excluded — under the same dry-run/apply/idempotence proof. | ~~Faz 9~~ closed | Q25 and Q28 closed together, by ONE sweeper over ONE policy file, which was the reason both waited. |
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
+| Q30 | **Erasure has no separate verification step.** `19` §Data subject rights describes it as "account deletion request → verification → anonymisation job". What exists is confirmation, not verification: the form is behind a disclosure, requires the account's own email typed, and requires an irreversibility checkbox — and `anonymiseAccountSchema.confirmEmail` enforces the typed address in the service, so every entry point meets it. What is absent is an emailed confirm-link before the job runs, which needs a new service method and an `AuthToken` purpose. Decide whether `19` means an emailed step or whether typed confirmation satisfies it, and change one of the two. | Before launch — it is a KVKK-facing claim (`29` A2, now 🟡 rather than ✅) | Confirmation only: disclosure + typed email + acknowledgement, enforced in the service |
 | ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

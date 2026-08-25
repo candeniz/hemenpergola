@@ -176,10 +176,21 @@ test.describe('F6 · reviews', () => {
       )
     await page.getByRole('button', { name: 'Yorumu gönder' }).click()
 
-    // Moderated before publication: the customer is told, not left wondering.
-    await expect(page.getByText('Yorumunuz alındı ve moderasyona gönderildi.')).toBeVisible({
-      timeout: 30_000,
-    })
+    /*
+     * Moderated before publication: the customer is told, not left wondering.
+     *
+     * **Either sentence satisfies that, and asserting only the first was a race.** The form
+     * shows "Yorumunuz alındı ve moderasyona gönderildi." on the action's result; the server
+     * then revalidates and the section re-renders from state, where a submitted review reads
+     * "Yorumunuz moderasyonda — yayınlandığında görünür olacak." and the form is gone. Which
+     * one is on screen depends on whether the revalidation lands first.
+     *
+     * It passed by timing until Phase 10.2 added four specs and a customer nav item, at which
+     * point the revalidation started winning and this went red — while the review was created
+     * correctly every single time, PENDING, as the assertion below kept proving. The product
+     * was right and the assertion was watching the wrong thing.
+     */
+    await expect(page.getByText(/moderasyon/i).first()).toBeVisible({ timeout: 30_000 })
 
     // And it is PENDING in the database — invisible until an admin publishes it.
     const rows = await pgQuery<{ status: string }>(

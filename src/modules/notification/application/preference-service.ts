@@ -33,6 +33,20 @@ const eventTypes = ALL_NOTIFICATION_TYPES.filter(
   (type) => NOTIFICATION_EVENTS[type].kind === 'event',
 )
 
+/**
+ * The channels and the event types a preference can address, for a surface that has to
+ * render one control per pair.
+ *
+ * Re-exported from the application layer rather than read from `domain/` by the caller:
+ * `app/` may import only from `application/` (`05` §Layers), and the settings page needs
+ * the *whole* catalogue, not the stored rows — `listNotificationPreferences` returns only
+ * rows that exist, and absence means enabled, so a page driven by its result would render
+ * an empty screen for every new account.
+ */
+export const PREFERENCE_CHANNELS = CHANNELS
+export const PREFERENCE_EVENT_TYPES: readonly NotificationType[] = eventTypes
+export { isMandatory } from '../domain/catalog'
+
 export const setNotificationPreferenceSchema = z.object({
   channel: z.enum(CHANNELS),
   type: z.enum(eventTypes as [NotificationType, ...NotificationType[]]),

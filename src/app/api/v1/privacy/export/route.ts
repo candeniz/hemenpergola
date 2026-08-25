@@ -1,12 +1,34 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { respond } from '@/shared/http/respond'
+
 /**
- * The export download — task 9.1, `19` §Access. A thin adapter (`05` §Shape): the token
- * verification, expiry and storage read all live in `privacy-service.downloadDataExport`;
- * this file maps its Result to HTTP and nothing more. Dynamic imports only
- * (non-negotiable 9).
+ * `19` §Access / portability, both halves.
+ *
+ * `POST` **asks** for the export; `GET ?token=` downloads the package it produced. Only the
+ * second existed until Phase 10.2, which is a stranger bug than it sounds: the download was
+ * built, tested and shipped, and there was no way to reach the thing being downloaded. A
+ * user could not exercise their access right at all, from any surface — the service was
+ * proven by `privacy.integration.test.ts` and reachable by nobody.
+ *
+ * A thin adapter (`05` §Shape): token verification, expiry, package building and storage
+ * all live in `privacy-service`. Dynamic imports only (non-negotiable 9).
  */
 export const dynamic = 'force-dynamic'
+
+/**
+ * Ask for an export. The body is empty — the subject is the caller, always
+ * (`requestDataExport` is `customer-owned` and scoped by `userId`), so there is no
+ * parameter with which to ask for somebody else's data.
+ */
+export async function POST(request: Request): Promise<Response> {
+  const [{ requestDataExport }, { resolveActor }] = await Promise.all([
+    import('@/modules/privacy/application/privacy-service'),
+    import('@/shared/context/actor'),
+  ])
+
+  return respond(await requestDataExport(await resolveActor(request), {}))
+}
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')

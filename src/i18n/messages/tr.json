@@ -335,7 +335,8 @@
       "requests": "Taleplerim",
       "messages": "Mesajlar",
       "savedCompanies": "Kayıtlı firmalar",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "myData": "Verilerim"
     },
     "manufacturer": {
       "section": "Üretici portalı",
@@ -861,6 +862,61 @@
       "list": "Liste",
       "image": "Görsel",
       "cta": "Buton (CTA)"
+    }
+  },
+  "privacy": {
+    "title": "Verilerim",
+    "preferences": {
+      "title": "Bildirim tercihleri",
+      "intro": "Hangi olaylarda e-posta veya SMS almak istediğinizi seçin. Uygulama içi bildirimler geçmişinizin parçasıdır ve kapatılamaz.",
+      "caption": "Olay türüne ve kanala göre bildirim tercihleri",
+      "event": "Olay",
+      "email": "E-posta",
+      "sms": "SMS",
+      "emailLabel": "{event} için e-posta bildirimi",
+      "smsLabel": "{event} için SMS bildirimi",
+      "mandatory": "Yasal kaydın parçası; kapatılamaz."
+    },
+    "export": {
+      "title": "Verilerimi indir",
+      "intro": "Hesabınızdaki kişisel verilerin tam bir kopyasını hazırlarız. Hazır olduğunda e-posta adresinize 30 gün geçerli bir bağlantı gönderilir (JSON ve PDF).",
+      "cta": "Dışa aktarım iste",
+      "sent": "Talebiniz alındı. Bağlantı e-posta adresinize gönderilecek.",
+      "failed": "Talep alınamadı. Lütfen tekrar deneyin."
+    },
+    "erase": {
+      "title": "Hesabımı sil",
+      "intro": "Silme işlemi geri alınamaz. Adınız, e-postanız ve telefonunuz kalıcı olarak anonimleştirilir; hesabınıza bir daha giriş yapamazsınız.",
+      "survives": "Saklanmaya devam edenler: verdiğiniz onaylar, iletişim paylaşımı kayıtları, sonuçlanmış işlerin ticari kayıtları, mesaj dökümleri ve denetim kayıtları. Bunlar yasal yükümlülük gereği tutulur ve sizi tanımlayan alanlardan arındırılır.",
+      "reveal": "Hesabımı silmek istiyorum",
+      "confirmLabel": "Onaylamak için hesabınızın e-posta adresini yazın",
+      "acknowledge": "Bu işlemin geri alınamayacağını anlıyorum.",
+      "submit": "Hesabımı kalıcı olarak sil",
+      "cancel": "Vazgeç",
+      "failed": "Silme işlemi tamamlanamadı. E-posta adresini doğru yazdığınızdan emin olun."
+    },
+    "events": {
+      "offer_request_created": "Teklif talebiniz oluşturuldu",
+      "offer_request_received": "Yeni teklif talebi aldınız",
+      "offer_request_sla_reminder": "Yanıt süresi hatırlatması",
+      "contact_disclosed": "İletişim bilgileri paylaşıldı",
+      "offer_request_declined": "Talep reddedildi",
+      "offer_request_expired": "Talebin süresi doldu",
+      "survey_scheduled": "Keşif randevusu planlandı",
+      "appointment_reminder": "Randevu hatırlatması",
+      "offer_received": "Teklif geldi",
+      "offer_revised": "Teklif güncellendi",
+      "offer_expiring": "Teklifin süresi doluyor",
+      "offer_accepted": "Teklif kabul edildi",
+      "offer_rejected": "Teklif reddedildi",
+      "message_received": "Yeni mesaj",
+      "review_published": "Yorumunuz yayımlandı",
+      "review_responded": "Yorumunuza yanıt verildi",
+      "review_rejected": "Yorumunuz yayımlanmadı",
+      "company_verified": "Firmanız doğrulandı",
+      "company_rejected": "Firma doğrulaması reddedildi",
+      "price_book_published": "Fiyat kitabı yayımlandı",
+      "supply_gap_watch": "Bölgenize üretici eklendi"
     }
   }
 }
