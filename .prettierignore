@@ -12,3 +12,7 @@ Prompt
 # on files nobody asked it to touch.
 /README.md
 /CLAUDE.md
+
+# Elle biçimlendirilmiş statik tanıtım sayfası. Prettier printWidth:100 ile
+# tüm işaretlemeyi yeniden sarar; bu dosya kaynak değil, çıktı.
+/docs

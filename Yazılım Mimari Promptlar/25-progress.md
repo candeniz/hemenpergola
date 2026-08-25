@@ -3168,6 +3168,26 @@ should I build next" is currently "nothing".
 
 Suite counts: **1081 unit / 340 integration / 64 e2e green (10 skipped)**.
 
+### 2026-08-25 — A GitHub Pages landing page (commit `docs: GitHub Pages tanıtım sayfası`)
+
+A hand-written static page at `docs/index.html` (plus `.nojekyll`), to be served by GitHub
+Pages. Not application code: it imports nothing, is in no module graph, and every claim on
+it comes from the documents in this repository.
+
+`/docs` is in `.prettierignore` for the reason the other entries there are: Prettier would
+re-wrap the whole markup at `printWidth: 100`, and this file is output rather than source.
+Verified rather than assumed — removing the entry makes `pnpm format:check` fail on
+`docs/index.html`, restoring it makes the check pass.
+
+No `tsconfig.json` or `next.config.ts` exclusion was added, because none is needed: the
+directory holds only `.html`, so tsconfig's `**/*.ts(x)` never matches it, ESLint does not
+process the extension, and nothing imports it into the build's trace. `pnpm build` **with
+no `.env` present** produces a byte-identical route table to the build before it.
+
+Pages source is **`master` + `/docs`** — note `master`, not `main`: this repository has
+only ever had `master`, and it is the remote's default branch. Enabling Pages needs the
+repository settings (or an authenticated `gh`, which this machine does not have).
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
