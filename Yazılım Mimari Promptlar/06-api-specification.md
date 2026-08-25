@@ -82,20 +82,35 @@ line and not yet built — Phase 10.4.
 
 ### Catalogue (public)
 
+Anonymous reads are cached with `public, max-age=3600, stale-while-revalidate=86400` — the
+API analog of the public pages' ISR (`05` §Caching), one shared constant
+(`REFERENCE_CACHE`) so the endpoints cannot drift header by header. Measured before the
+decision, not after: 81 provinces are 1.7 KB gzipped, all 974 districts 22 KB — one
+cacheable fetch, not a round trip per selection.
+
+`/products/{key}` reads the path segment two ways by sub-resource: a **slug** for the page,
+an **id** for `/configuration` — and the products list carries both keys, which is where a
+client gets them. The configuration endpoint takes `?include=` option ids that must render
+even if deactivated; ids rather than a project id, because the endpoint is anonymous and a
+project id would leak which options somebody else's project selected.
+
 ```
 GET    /categories                    ?parent=&locale=
 GET    /categories/{slug}
-GET    /products                      ?category=&q=&cursor=
-GET    /products/{slug}               -> product + attributes + options  (drives the configurator)
-GET    /cities                        81 provinces
-GET    /cities/districts              all 974 districts, each with its cityId
+GET    /products                      ?locale=  the configurable products, with ids AND slugs
+GET    /products/{slug}               the public product page (directory; handles moved slugs)
+GET    /products/{id}/configuration   ?include=  attributes + options — drives the configurator
+GET    /cities                        81 provinces (reference; cached, see below)
+GET    /cities/districts              all 974 districts, each with its cityId (cached)
+GET    /cities/pages                  the cities WITH landing pages — real supply only (18, Q5)
+GET    /cities/{slug}                 one city landing page: city + manufacturer cards
 ```
 
 ### Projects (customer)
 
 ```
 POST   /projects                      create draft
-GET    /projects                      ?status=&cursor=
+GET    /projects                      the caller's own projects; ownership is the whole filter
 GET    /projects/{id}
 PATCH  /projects/{id}                 partial, per wizard step
 PUT    /projects/{id}/attributes      full replace of attribute values
@@ -103,7 +118,7 @@ POST   /projects/{id}/photos          { fileId }        DELETE /projects/{id}/ph
 POST   /projects/{id}/claim           { anonymousKey }  attach an anonymous draft after signup
 DELETE /projects/{id}                 draft only
 POST   /projects/{id}/validate        -> { ready: bool, issues: [] }
-POST   /projects/{id}/duplicate       -> a new draft with the same answers
+POST   /projects/{id}/duplicate       -> a new DRAFT with the same answers, never the submissions
 ```
 
 `POST /projects/{id}/photos` and every other body below that takes a `{ fileId }` gets one
@@ -193,7 +208,8 @@ PUT    /companies/{companyId}/products/{productId} { isActive, offeredOptionIds[
 
 GET    /companies/{companyId}/price-books
 POST   /companies/{companyId}/price-books          create draft (optionally clone version N)
-GET    /companies/{companyId}/price-books/{id}
+GET    /companies/{companyId}/price-books/{id}     full book, owner only — ADR-006 bans the CUSTOMER boundary, not this
+POST   /companies/{companyId}/estimate             price a shape against the PUBLISHED book; persists a PriceCalculation with actor + IP (ADR-006 §Anti-scraping)
 PATCH  /companies/{companyId}/price-books/{id}     draft only
 PUT    /companies/{companyId}/price-books/{id}/items
 POST   /companies/{companyId}/price-books/{id}/publish
@@ -243,12 +259,21 @@ POST   /offer-requests/{id}/review     { ratings…, title, body }
 ### Public read
 
 ```
-GET    /manufacturers                  ?city=&district=&product=&q=&sort=&cursor=
-GET    /manufacturers/{slug}
-GET    /manufacturers/{slug}/portfolio GET /manufacturers/{slug}/reviews
-GET    /pages/{slug}                   CMS
-GET    /categories/{slug}/cities       GET /cities/{slug}  the city landing pages 18 §Cities
+GET    /manufacturers                  the VERIFIED directory, ranked; no server filters yet
+GET    /manufacturers/{slug}           the whole public profile: about, areas, portfolio, reviews
+GET    /pages/{slug}                   ?locale=  CMS blocks as structured data, never HTML
 ```
+
+Two corrections against the original sketch, both toward what the code actually serves:
+the directory takes **no query filters** — at its current size the whole card list is one
+cached response and filtering is the client's; server-side filters return when the
+directory outgrows that, as a change here first. And the profile is **one response** rather
+than `/portfolio` and `/reviews` sub-paths — the service builds it whole and a profile
+screen wants it whole.
+
+`listPublicSlugs` has no endpoint on purpose: it feeds `sitemap.xml`, and the sitemap IS
+that capability's HTTP surface — a crawler artifact, not a client resource
+(`api-surface`'s `WEB_ONLY` list carries the reasoning).
 
 Every one of these exists today **only as a Server Component**. They are public and
 cacheable, which is what made them the easiest to leave as pages and the least urgent to
@@ -266,13 +291,15 @@ envelope and pagination rules as everything above.
 a capability nobody builds. The ones this document had left implicit:
 
 ```
-GET    /admin/audit                   already built; ?entityType=&entityId=&cursor=
+GET    /admin/audit                   ?entityType=&entityId=&cursor=
 GET    /admin/audit/facets            the filter values that exist, for the viewer's selects
+GET    /admin/dashboard               the operator's counts — live, never cached
 GET    /admin/offer-requests          the requests an admin may close, and only those
 POST   /admin/offer-requests/{id}/close   { reason } — 11's one operator power
-GET    /admin/reviews                 ?status=PENDING
-POST   /admin/reviews/{id}/moderate   { status, reason? }
-PUT    /admin/content/{slug}          the block CMS page body
+GET    /admin/reviews                 the moderation queue (PENDING)
+POST   /admin/reviews/{id}/moderate   { decision: PUBLISHED|REJECTED, reason? — required to reject }
+GET    /admin/catalog/products/{id}   one product as the editor loads it, inactive options included
+PUT    /admin/content/{slug}          the block CMS page body; {slug} is a closed enum
 ```
 
 `11` §Transition table is explicit that closing is the **whole** of what an admin may do to

@@ -62,7 +62,7 @@ proven — not when the code is written.
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
-| 10 | The API the mobile app consumes | **🟡 · 3/4** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. Measured at the capability level: **76 of 132 missing on 2026-08-25, 41 after 10.2.** 10.1 decided and measured, 10.2 closed the KVKK surfaces and opened match / offer / messaging / files. 10.3 (supply, review, company-profile) and 10.4 (catalogue, pricing, audit, the public reads) remain, so the test is still red and still uncommitted; it lands the turn it goes green |
+| 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **⬜ not started** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
@@ -3373,6 +3373,61 @@ redirect discipline, `POST .../documents`).
 Count: **41 → 21 of 133** (the population grew by one: two erasure methods in, one
 retired). Remaining is 10.4 — catalogue/pricing/audit, the public reads, and
 `estimateForProject`. The measurement test stays out of the commit until it is green.
+
+### 2026-08-25 — Phase 10.4 · the public reads, the last no-surface capability, and a green api-surface (commit `P10.4 · public okumalar, son yüzeysiz yetenek ve yeşil api-surface`)
+
+**Phase 10's gate is met: `test/api-surface.test.ts` is green and finally committed.**
+133 registered service methods; every one reachable through `/api/v1` or on an exception
+list that argues for itself. The counts, for the record of the whole arc: 46 claimed by the
+first (wrong-layer) measurement → 76 at the first honest one → 41 after 10.2 → 21 after
+10.3 → **0**.
+
+**~18 endpoints this turn.** The public reads that were "easy to leave for last and wrong
+to leave out" — categories, products, manufacturers, city pages, CMS pages — all carrying
+`REFERENCE_CACHE`, the profile answered whole rather than in sub-path fragments. Admin
+gained dashboard counts, audit facets, the editor's product read and the CMS write (the
+capability the first `WEB_ONLY` list wrongly exempted). Projects gained their list read,
+duplicate, and both photo legs. Pricing gained the owner's full book read — the one place
+line items are returned on purpose, because `ADR-006` bans the *customer* boundary, not a
+manufacturer reading their own book.
+
+**The last no-surface capability is the story of the turn.** `estimateForProject`: built
+in Phase 3 for the compare screen, permission-checked, integration-tested, and reachable
+from nothing for seven phases — now `POST /companies/{id}/estimate`, which prices a shape
+against the PUBLISHED book and persists the `PriceCalculation` with actor and IP
+(`ADR-006` §Anti-scraping). Its type signature required a `priceBookId` the handler
+ignored — the same dead-parameter disease as `listCities`' `companyId`, cured the same
+way: narrowed to `estimateForProjectSchema` (which omits it), the misleading fixture
+arguments deleted from the pricing integration test. Zero production callers existed, so
+nothing could break; `requestIp` is deliberately not in the schema — the anti-scraping
+row's IP comes from the resolved actor, never from a value the client could type.
+
+**One naming wart, documented rather than hidden:** `/products/{key}` reads its segment as
+a slug for the page and as an id for `/configuration`. The products list returns both keys;
+`06` §Catalogue says so out loud. The alternative — a second top-level resource for the
+same product — seemed worse than one documented asymmetry.
+
+**`listPublicSlugs` is the second `WEB_ONLY` entry**, and the reason is categorical, not
+convenient: it feeds `sitemap.xml`, and the sitemap IS that capability's HTTP surface. An
+`/api/v1/slugs` twin would duplicate a crawler artifact for a client that navigates rather
+than crawls.
+
+**`api-leak` widened with the surface** (18 tests): `zeroResultFallback` and the public
+manufacturer profile — the widest-open response there is — now scanned for `netKurus`,
+`breakdown`, `priceBookId`, `unitPriceKurus`, `score`; `estimateForProject` deliberately
+NOT scanned, because the owner's breakdown is its purpose.
+
+**`05` §Two entry points tells the truth unconditionally again.** The warning block that
+said "do not read the paragraph above as a description of what exists" now records the
+closed gap and names the test that keeps it closed. `06` gained the corrected paths and
+two honest corrections: the directory takes no server filters yet (the whole card list is
+one cached response; filters return as a `06` change first), and `GET /cities/pages` vs
+`GET /cities` — supplied-city landing pages and the 81-province reference are different
+resources, and conflating them is how an empty city page gets built.
+
+What Phase 10 leaves for Phase 11: an API where every capability answers over HTTP, a
+drift test that fails on the next capability built without a surface, and `ADR-030`'s
+scope table for what the phone renders first.
 
 ## Open questions — need a human answer before the phase that hits them
 

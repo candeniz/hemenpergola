@@ -345,7 +345,6 @@ describe('immutability of stored calculations', () => {
 
     const estimate = await estimateForProject(actor, {
       companyId: id,
-      priceBookId: v1.value.priceBookId,
       productId,
       basisType: 'AREA_M2',
       areaM2: 20,
@@ -400,7 +399,6 @@ describe('immutability of stored calculations', () => {
     // And a fresh calculation does pick up v2, or the test would pass on a broken publish.
     const after = await estimateForProject(actor, {
       companyId: id,
-      priceBookId: v2.value.priceBookId,
       productId,
       basisType: 'AREA_M2',
       areaM2: 20,
@@ -440,7 +438,6 @@ describe('immutability of stored calculations', () => {
 
     await estimateForProject(actor, {
       companyId: id,
-      priceBookId: draft.value.priceBookId,
       productId,
       basisType: 'AREA_M2',
       areaM2: 10,

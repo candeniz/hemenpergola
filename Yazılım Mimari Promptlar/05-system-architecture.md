@@ -66,14 +66,14 @@ through a server action but has no route-handler path, because the mobile app co
 Web forms use server actions (progressive enhancement, no client fetch layer). The `/api/v1`
 surface is specified in `06-api-specification.md`.
 
-> **This rule was prose for nine phases and nothing enforced it, so it drifted.** Measured
-> against the running code: of 132 registered service methods, 55 are reachable through a
-> route handler and **46 server-action capabilities have no `/api/v1` path at all** —
-> including every transition in `11`'s table, all of `09`'s matching output, all of `15` and
-> all of `16`. `test/api-surface.test.ts` now measures this by matching on the service
-> method both adapters call, with a named web-only exception list. Closing it is Phase 10
-> (`21-development-roadmap.md`); until that gate is green, do not read the paragraph above
-> as a description of what exists.
+> **This rule was prose for nine phases, nothing enforced it, and it had drifted to 76 of
+> 132 capabilities missing** — every transition in `11`'s table, all of `09`'s output, all
+> of `15` and `16`, and seven capabilities (five of them KVKK rights) reachable from no
+> surface at all. Phase 10 closed it: as of 2026-08-25 `test/api-surface.test.ts` holds the
+> rule as a green test — every method registered with `serviceMethod()` is reachable
+> through a route handler, on a reasoned `WEB_ONLY`/`INTERNAL` exception list, or the
+> build fails. The paragraph above is a description of what exists again, and the test is
+> what keeps it one.
 
 ## ActorContext
 

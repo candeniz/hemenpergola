@@ -173,6 +173,37 @@ describe('ADR-006 · the customer match response carries the band and nothing un
     }
   })
 
+  /*
+   * Phase 10.4 widened the public surface, so the scan widens with it. `zeroResultFallback`
+   * computes bands the same way the run does, and the public manufacturer profile
+   * aggregates reviews over engagements that all had calculations behind them — both are
+   * one careless `include` from the same leak. `estimateForProject` is deliberately NOT
+   * here: it returns the OWNER's view, and the breakdown is its purpose (`ADR-006`
+   * restricts the customer boundary, not the manufacturer reading their own book).
+   */
+  it('holds on the zero-result fallback too — widened results are still customer results', async () => {
+    const { zeroResultFallback } = await import('@/modules/matching/application/match-service')
+    const text = await respond(await zeroResultFallback(owner(), { projectId })).text()
+
+    for (const forbidden of FORBIDDEN) {
+      expect(text.includes(forbidden), `\`${forbidden}\` appears in the fallback body`).toBe(false)
+    }
+  })
+
+  it('holds on the public manufacturer profile — the widest-open surface there is', async () => {
+    const { getPublicManufacturer } =
+      await import('@/modules/directory/application/directory-service')
+    const { anonymousActor: anon } = await import('@/shared/context/actor')
+
+    const result = await getPublicManufacturer(anon(), { slug: 'leak-priced' })
+    expect(result.ok).toBe(true)
+
+    const text = await respond(result).text()
+    for (const forbidden of FORBIDDEN) {
+      expect(text.includes(forbidden), `\`${forbidden}\` appears in the public profile`).toBe(false)
+    }
+  })
+
   it('proves the forbidden fields are really on the stored row', async () => {
     const calculation = await getPrisma().priceCalculation.findFirst({
       where: { companyId },

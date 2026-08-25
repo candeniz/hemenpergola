@@ -27,3 +27,17 @@ export async function POST(request: Request): Promise<Response> {
   const actor = await resolveActor(request)
   return respond(await createProject(actor, parsed.data))
 }
+
+/**
+ * `GET /api/v1/projects` — the caller's own projects (`06`). Ownership is the whole
+ * filter: the service's `where` is keyed by the resolved actor, so there is nothing to
+ * parse and nothing to get wrong.
+ */
+export async function GET(request: Request): Promise<Response> {
+  const [{ listProjects }, { resolveActor }] = await Promise.all([
+    import('@/modules/project/application/project-service'),
+    import('@/shared/context/actor'),
+  ])
+
+  return respond(await listProjects(await resolveActor(request), {}))
+}

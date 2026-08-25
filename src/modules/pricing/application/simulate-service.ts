@@ -135,8 +135,19 @@ export const simulatePriceBook = serviceMethod<SimulateInput, SimulateResult>(
  * Merging the two behind a flag would mean one careless caller writing a row for every
  * keystroke in the editor.
  */
+/**
+ * The request shape for the published-book estimate. `priceBookId` is omitted — the
+ * method resolves the PUBLISHED book itself, which is its whole difference from the
+ * simulator — and `requestIp` is not here at all: the persisted anti-scraping row's IP
+ * comes from the actor the adapter resolved, never from a value the client could type.
+ */
+export const estimateForProjectSchema = simulateSchema
+  .omit({ priceBookId: true })
+  .extend({ projectId: z.string().min(1).optional() })
+export type EstimateForProjectInput = z.infer<typeof estimateForProjectSchema>
+
 export const estimateForProject = serviceMethod<
-  SimulateInput & { projectId?: string | null; requestIp?: string | null },
+  EstimateForProjectInput & { requestIp?: string | null },
   SimulateResult
 >(
   'pricing',
