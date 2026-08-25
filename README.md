@@ -12,10 +12,11 @@ Reading the whole set for one feature wastes context and produces worse code, no
 
 | Path | What |
 |---|---|
-| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`28`. Every bare `NN` reference below resolves here |
+| `Yazılım Mimari Promptlar/` | the numbered documents `00`–`29`. Every bare `NN` reference below resolves here |
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | the 77-screen design reference |
 | `README.md`, `CLAUDE.md` | repository root |
 | `src/`, `prisma/`, `e2e/`, `test/` | application code, from Phase 0 onward |
+| `docs/` | the GitHub Pages landing page. **Not documentation** — the numbered documents are in `Yazılım Mimari Promptlar/` |
 
 Application code lives at the repository root, not inside either of the two folders above.
 Both are committed and both are excluded from the Next.js build and from `tsconfig` —
