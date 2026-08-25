@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { authorize, requireAdmin } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
@@ -48,51 +48,16 @@ const TERMINAL_STATES: readonly OfferRequestStatus[] = ['WON', 'LOST']
 const REVIEW_WINDOW_DAYS = 90
 const MAX_REVIEWS_PER_COMPANY_PER_YEAR = 2
 
-const rating = z.number().int().min(1).max(5)
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2); re-exported
+// so every existing import site keeps working.
+export * from './dto'
 
-export const submitReviewSchema = z.object({
-  offerRequestId: z.string().min(1),
-  ratingOverall: rating,
-  ratingQuality: rating,
-  ratingCommunication: rating,
-  ratingTimeliness: rating,
-  title: z.string().trim().max(100).optional(),
-  body: z.string().trim().min(50).max(2000),
-})
-export type SubmitReviewInput = z.infer<typeof submitReviewSchema>
-
-export const moderateReviewSchema = z
-  .object({
-    reviewId: z.string().min(1),
-    decision: z.enum(['PUBLISHED', 'REJECTED']),
-    reason: z.string().trim().max(500).optional(),
-  })
-  .refine((input) => input.decision !== 'REJECTED' || (input.reason ?? '').length > 0, {
-    message: 'Rejection requires a reason — 16 §Moderation notifies the author with it.',
-    path: ['reason'],
-  })
-export type ModerateReviewInput = z.infer<typeof moderateReviewSchema>
-
-export const respondToReviewSchema = z.object({
-  reviewId: z.string().min(1),
-  body: z.string().trim().min(1).max(2000),
-})
-export type RespondToReviewInput = z.infer<typeof respondToReviewSchema>
-
-export type ReviewView = {
-  id: string
-  ratingOverall: number
-  ratingQuality: number
-  ratingCommunication: number
-  ratingTimeliness: number
-  title: string | null
-  body: string
-  status: 'PENDING' | 'PUBLISHED' | 'REJECTED'
-  rejectionReason: string | null
-  publishedAt: Date | null
-  createdAt: Date
-  response: { body: string; createdAt: Date } | null
-}
+import {
+  type ModerateReviewInput,
+  type RespondToReviewInput,
+  type ReviewView,
+  type SubmitReviewInput,
+} from './dto'
 
 function toView(row: {
   id: string

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
@@ -20,16 +20,10 @@ import { transition, type OfferRequestStatus } from '../domain/state-machine'
  * `SURVEY_COMPLETED`, which only these transitions can produce.
  */
 
-export const scheduleAppointmentSchema = z.object({
-  offerRequestId: z.string().min(1),
-  scheduledAt: z.coerce.date(),
-  durationMin: z.number().int().min(15).max(480).default(60),
-  note: z.string().trim().max(500).optional(),
-})
-export type ScheduleAppointmentInput = z.infer<typeof scheduleAppointmentSchema>
+// The contract lives in ./dto (extracted in 11.2).
+export * from './dto'
 
-export const completeAppointmentSchema = z.object({ offerRequestId: z.string().min(1) })
-export type CompleteAppointmentInput = z.infer<typeof completeAppointmentSchema>
+import { type CompleteAppointmentInput, type ScheduleAppointmentInput } from './dto'
 
 export const scheduleAppointment = serviceMethod<
   ScheduleAppointmentInput,

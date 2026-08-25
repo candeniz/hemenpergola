@@ -1,17 +1,12 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
-import {
-  ALL_NOTIFICATION_TYPES,
-  isMandatory,
-  NOTIFICATION_EVENTS,
-  type NotificationType,
-} from '../domain/catalog'
+import { ALL_NOTIFICATION_TYPES, isMandatory, type NotificationType } from '../domain/catalog'
 
 /**
  * Notification preferences — `13` §Preferences, task 7.1. The model is deliberately
@@ -27,38 +22,15 @@ import {
  * preference row the system ignores.
  */
 
-const CHANNELS = ['email', 'sms'] as const
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2); re-exported
+// so every existing import site keeps working.
+export * from './dto'
 
-const eventTypes = ALL_NOTIFICATION_TYPES.filter(
-  (type) => NOTIFICATION_EVENTS[type].kind === 'event',
-)
-
-/**
- * The channels and the event types a preference can address, for a surface that has to
- * render one control per pair.
- *
- * Re-exported from the application layer rather than read from `domain/` by the caller:
- * `app/` may import only from `application/` (`05` §Layers), and the settings page needs
- * the *whole* catalogue, not the stored rows — `listNotificationPreferences` returns only
- * rows that exist, and absence means enabled, so a page driven by its result would render
- * an empty screen for every new account.
- */
-export const PREFERENCE_CHANNELS = CHANNELS
-export const PREFERENCE_EVENT_TYPES: readonly NotificationType[] = eventTypes
-export { isMandatory } from '../domain/catalog'
-
-export const setNotificationPreferenceSchema = z.object({
-  channel: z.enum(CHANNELS),
-  type: z.enum(eventTypes as [NotificationType, ...NotificationType[]]),
-  enabled: z.boolean(),
-})
-export type SetNotificationPreferenceInput = z.infer<typeof setNotificationPreferenceSchema>
-
-export type NotificationPreferenceView = {
-  channel: (typeof CHANNELS)[number]
-  type: NotificationType
-  enabled: boolean
-}
+import {
+  PREFERENCE_CHANNELS,
+  type NotificationPreferenceView,
+  type SetNotificationPreferenceInput,
+} from './dto'
 
 export const listNotificationPreferences = serviceMethod<
   Record<string, never>,
@@ -76,7 +48,7 @@ export const listNotificationPreferences = serviceMethod<
     rows
       .filter(
         (row): row is typeof row & { channel: 'email' | 'sms'; type: NotificationType } =>
-          (CHANNELS as readonly string[]).includes(row.channel) &&
+          (PREFERENCE_CHANNELS as readonly string[]).includes(row.channel) &&
           (ALL_NOTIFICATION_TYPES as string[]).includes(row.type),
       )
       .map((row) => ({ channel: row.channel, type: row.type, enabled: row.enabled })),

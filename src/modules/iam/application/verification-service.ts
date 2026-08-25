@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { brandName } from '@/modules/notification/domain/brand'
@@ -15,6 +15,37 @@ import { notify as notifyUser } from '@/modules/notification/infrastructure/noti
 import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+
+// The contract lives in ./dto (extracted in 11.2).
+export {
+  getCompanyForVerificationSchema,
+  listVerificationQueueSchema,
+  rejectCompanySchema,
+  requestDocumentsSchema,
+  reviewDocumentSchema,
+  suspendCompanySchema,
+  verifyCompanySchema,
+  type CompanyDetail,
+  type GetCompanyForVerificationInput,
+  type ListVerificationQueueInput,
+  type QueueEntry,
+  type RejectCompanyInput,
+  type RequestDocumentsInput,
+  type ReviewDocumentInput,
+  type SuspendCompanyInput,
+  type VerifyCompanyInput,
+} from './dto'
+import type {
+  CompanyDetail,
+  GetCompanyForVerificationInput,
+  ListVerificationQueueInput,
+  QueueEntry,
+  RejectCompanyInput,
+  RequestDocumentsInput,
+  ReviewDocumentInput,
+  SuspendCompanyInput,
+  VerifyCompanyInput,
+} from './dto'
 
 import { requireAdmin } from './authorization'
 
@@ -34,61 +65,6 @@ import { requireAdmin } from './authorization'
  *   but silence is not an acceptable placeholder for it: nobody should discover that their
  *   company was rejected by logging in and noticing.
  */
-
-export const listVerificationQueueSchema = z.object({
-  status: z.enum(['PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED']).optional(),
-})
-export type ListVerificationQueueInput = z.infer<typeof listVerificationQueueSchema>
-
-export const getCompanyForVerificationSchema = z.object({ companyId: z.string().min(1) })
-export type GetCompanyForVerificationInput = z.infer<typeof getCompanyForVerificationSchema>
-
-/** A reason is mandatory on everything except approval. */
-const reasonSchema = z.string().trim().min(10).max(1000)
-
-export const verifyCompanySchema = z.object({
-  companyId: z.string().min(1),
-  note: z.string().trim().max(1000).optional(),
-})
-export type VerifyCompanyInput = z.infer<typeof verifyCompanySchema>
-
-export const rejectCompanySchema = z.object({
-  companyId: z.string().min(1),
-  reason: reasonSchema,
-})
-export type RejectCompanyInput = z.infer<typeof rejectCompanySchema>
-
-export const requestDocumentsSchema = z.object({
-  companyId: z.string().min(1),
-  reason: reasonSchema,
-})
-export type RequestDocumentsInput = z.infer<typeof requestDocumentsSchema>
-
-export const suspendCompanySchema = z.object({
-  companyId: z.string().min(1),
-  reason: reasonSchema,
-})
-export type SuspendCompanyInput = z.infer<typeof suspendCompanySchema>
-
-export const reviewDocumentSchema = z.object({
-  documentId: z.string().min(1),
-  status: z.enum(['APPROVED', 'REJECTED']),
-  note: z.string().trim().max(1000).optional(),
-})
-export type ReviewDocumentInput = z.infer<typeof reviewDocumentSchema>
-
-export type QueueEntry = {
-  companyId: string
-  slug: string
-  displayName: string
-  legalName: string
-  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED'
-  taxNumber: string | null
-  createdAt: Date
-  documentCount: number
-  pendingDocumentCount: number
-  rejectionReason: string | null
-}
 
 export const listVerificationQueue = serviceMethod<
   ListVerificationQueueInput,
@@ -121,30 +97,6 @@ export const listVerificationQueue = serviceMethod<
     })),
   })
 })
-
-export type CompanyDetail = QueueEntry & {
-  about: string | null
-  foundedYear: number | null
-  verifiedAt: Date | null
-  members: { userId: string; email: string; fullName: string | null; role: string }[]
-  documents: {
-    id: string
-    type: string
-    status: string
-    note: string | null
-    reviewedBy: string | null
-    reviewedAt: Date | null
-    fileKey: string
-    createdAt: Date
-  }[]
-  /** `17` §Manufacturer verification: the submission history is part of the decision. */
-  history: {
-    action: string
-    reason: string | null
-    actorUserId: string | null
-    createdAt: Date
-  }[]
-}
 
 export const getCompanyForVerification = serviceMethod<
   GetCompanyForVerificationInput,

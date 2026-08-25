@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { prisma } from '@/shared/db'
 import { conflict, err, notFound, ok, precondition } from '@/shared/result'
@@ -8,14 +8,14 @@ import { serviceMethod } from '@/shared/service/registry'
 import type { ActorContext } from '@/shared/context/actor'
 import { MAX_ANONYMOUS_DRAFTS_PER_KEY } from '@/shared/context/anonymous-key'
 
-import { checkReadiness, type ReadinessResult } from '../domain/readiness'
+import { checkReadiness } from '../domain/readiness'
 import {
   canEdit,
   statusAfterEdit,
   statusAfterValidation,
   type ProjectStatus,
 } from '../domain/status'
-import { deriveAreaM2, isStep, STEP_SCHEMAS, type Step } from '../domain/steps'
+import { deriveAreaM2, STEP_SCHEMAS, type Step } from '../domain/steps'
 
 /**
  * The configurator's service — tasks 4.1, 4.2, 4.3, 4.4 and 4.7.
@@ -53,27 +53,25 @@ import { deriveAreaM2, isStep, STEP_SCHEMAS, type Step } from '../domain/steps'
  * `09` §Explainability has to say which.
  */
 
-const projectRef = z.object({ projectId: z.string().min(1) })
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2).
+export * from './dto'
 
-export const createProjectSchema = z.object({
-  productId: z.string().min(1),
-  title: z.string().max(200).optional(),
-})
-export type CreateProjectInput = z.infer<typeof createProjectSchema>
-
-export const getProjectSchema = projectRef
-export type GetProjectInput = z.infer<typeof getProjectSchema>
-
-export const patchStepSchema = z.object({
-  projectId: z.string().min(1),
-  step: z.string().refine(isStep, 'unknown step'),
-  /** Validated a second time against the step's own schema — see `patchStep`. */
-  data: z.unknown(),
-})
-export type PatchStepInput = z.infer<typeof patchStepSchema>
-
-export const validateProjectSchema = projectRef
-export type ValidateProjectInput = z.infer<typeof validateProjectSchema>
+import {
+  type AddAttachmentInput,
+  type ClaimProjectInput,
+  type ClaimResult,
+  type CreateProjectInput,
+  type DuplicateProjectInput,
+  type GetProjectInput,
+  type ListProjectsInput,
+  type ListProjectsResult,
+  type PatchStepInput,
+  type ProjectSummary,
+  type ProjectView,
+  type RemoveAttachmentInput,
+  type ValidateProjectInput,
+  type ValidateResult,
+} from './dto'
 
 /**
  * The `where` fragment that makes ownership structural.
@@ -121,45 +119,6 @@ const PROJECT_INCLUDE = {
     include: { file: { select: { id: true, mime: true, sizeBytes: true, virusScanStatus: true } } },
   },
 } as const
-
-export type ProjectView = {
-  projectId: string
-  status: 'DRAFT' | 'READY' | 'SUBMITTED' | 'CLOSED'
-  productId: string
-  title: string | null
-  widthMm: number | null
-  depthMm: number | null
-  heightMm: number | null
-  /** Derived; there is no input that writes it (`10` §Field specifics). */
-  areaM2: number | null
-  quantity: number
-  projectType: string | null
-  installationType: string | null
-  cityId: string | null
-  districtId: string | null
-  addressNote: string | null
-  pointPrecision: 'EXACT' | 'DISTRICT' | 'CITY' | null
-  timing: string | null
-  note: string | null
-  values: {
-    attributeId: string
-    optionId: string | null
-    numberValue: number | null
-    boolValue: boolean | null
-    textValue: string | null
-  }[]
-  /** Task 4.6. `PHOTO` and `DOCUMENT` both — `10` §Field specifics, `14` §Limits. */
-  attachments: {
-    attachmentId: string
-    fileId: string
-    kind: 'PHOTO' | 'DOCUMENT'
-    mime: string
-    sizeBytes: number
-    /** `14` §Virus scanning: nothing is served to anyone but the uploader until `CLEAN`. */
-    virusScanStatus: 'PENDING' | 'CLEAN' | 'INFECTED' | 'FAILED'
-    sortOrder: number
-  }[]
-}
 
 export const createProject = serviceMethod<CreateProjectInput, { projectId: string }>(
   'project',
@@ -453,8 +412,6 @@ async function resolvePoint(projectId: string, data: Record<string, unknown>): P
   await prisma.project.update({ where: { id: projectId }, data: { pointPrecision: null } })
 }
 
-export type ValidateResult = ReadinessResult & { status: string }
-
 /**
  * `POST /projects/{id}/validate` — task 4.7.
  *
@@ -634,15 +591,6 @@ function toView(project: ProjectRow): ProjectView {
 /* 4.5 · claiming an anonymous draft                                           */
 /* -------------------------------------------------------------------------- */
 
-export const claimProjectSchema = projectRef
-export type ClaimProjectInput = z.infer<typeof claimProjectSchema>
-
-export type ClaimResult = {
-  projectId: string
-  /** `false` when the project was already this customer's — see the idempotency note. */
-  claimed: boolean
-}
-
 /**
  * `POST /projects/{id}/claim` — task 4.5, `10` §Anonymous drafts.
  *
@@ -752,22 +700,6 @@ export const claimProject = serviceMethod<ClaimProjectInput, ClaimResult>(
 /* 4.8 · the customer's own list                                               */
 /* -------------------------------------------------------------------------- */
 
-export const listProjectsSchema = z.object({})
-export type ListProjectsInput = z.infer<typeof listProjectsSchema>
-
-export type ProjectSummary = {
-  projectId: string
-  status: 'DRAFT' | 'READY' | 'SUBMITTED' | 'CLOSED'
-  productId: string
-  title: string | null
-  areaM2: number | null
-  cityId: string | null
-  attachmentCount: number
-  updatedAt: string
-}
-
-export type ListProjectsResult = { projects: ProjectSummary[] }
-
 /**
  * The customer dashboard's list — task 4.8, `customer_dashboard_final` and `_empty_state`.
  *
@@ -831,9 +763,6 @@ export const listProjects = serviceMethod<ListProjectsInput, ListProjectsResult>
 /* -------------------------------------------------------------------------- */
 /* 4.9 · duplicate                                                             */
 /* -------------------------------------------------------------------------- */
-
-export const duplicateProjectSchema = projectRef
-export type DuplicateProjectInput = z.infer<typeof duplicateProjectSchema>
 
 /**
  * "Duplicate project" — task 4.9, `10` §Reuse: *"copies everything except attachments and
@@ -941,41 +870,6 @@ export const duplicateProject = serviceMethod<DuplicateProjectInput, { projectId
 /* 4.6 · attachments                                                           */
 /* -------------------------------------------------------------------------- */
 
-export const addAttachmentSchema = z.object({
-  projectId: z.string().min(1),
-  fileId: z.string().min(1),
-})
-export type AddAttachmentInput = z.infer<typeof addAttachmentSchema>
-
-export const removeAttachmentSchema = z.object({
-  projectId: z.string().min(1),
-  attachmentId: z.string().min(1),
-})
-export type RemoveAttachmentInput = z.infer<typeof removeAttachmentSchema>
-
-/**
- * `PHOTO` **and** `DOCUMENT` — task 4.6.
- *
- * `project_summary_step_10` shows `site_plan_v2.pdf` beside the photos, which is why
- * `AttachmentKind` has two values and why the kind is **derived from the file's MIME type**
- * rather than asked for. A client-declared kind is a client-declared kind: a PDF labelled
- * `PHOTO` would go through the image pipeline, and `14` §Limits is explicit that MIME comes
- * from file content and not from what the caller said.
- *
- * The bytes never pass through here. `14` §Upload flow is presign → PUT straight to storage →
- * complete, and this links an already-uploaded `File` to the project. Two guards make that
- * link safe:
- *
- *   the file must be owned by **this project** (`ownerType: 'PROJECT', ownerId: projectId`),
- *   so a caller cannot attach a company document or another customer's photo by id; and
- *
- *   the project must be owned by **this caller**, through the same `where` clause as
- *   everything else here.
- *
- * The count ceiling is `14` §Limits' ten, read from `UPLOAD_POLICY` rather than repeated, and
- * checked here as well as at presign: presign counts `File` rows, this counts links, and a
- * file that was uploaded but never linked should not consume a customer's tenth slot forever.
- */
 export const addAttachment = serviceMethod<AddAttachmentInput, ProjectView>(
   'project',
   'addAttachment',

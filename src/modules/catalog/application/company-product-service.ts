@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
@@ -30,44 +30,23 @@ import { serviceMethod } from '@/shared/service/registry'
  * writes `true` rows makes "no" and "not asked" indistinguishable forever.
  */
 
-export const listCompanyProductsSchema = z.object({ companyId: z.string().min(1) })
-export type ListCompanyProductsInput = z.infer<typeof listCompanyProductsSchema>
-
-export const setCompanyProductSchema = z.object({
-  companyId: z.string().min(1),
-  productId: z.string().min(1),
-  isActive: z.boolean(),
-})
-export type SetCompanyProductInput = z.infer<typeof setCompanyProductSchema>
-
-export const setCompanyOptionsSchema = z.object({
-  companyId: z.string().min(1),
-  productId: z.string().min(1),
-  /** Every option the company was shown, with its answer. Absent means never asked. */
-  options: z.array(z.object({ optionId: z.string().min(1), isOffered: z.boolean() })).max(500),
-})
-export type SetCompanyOptionsInput = z.infer<typeof setCompanyOptionsSchema>
-
-export type CompanyProductView = {
-  productId: string
-  companyProductId: string | null
-  isActive: boolean
-  name: string
-  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
-  attributes: {
-    attributeId: string
-    key: string
-    label: string
-    isRequired: boolean
-    options: {
-      optionId: string
-      value: string
-      label: string
-      /** `null` when the company has never answered — not the same as `false`. */
-      isOffered: boolean | null
-    }[]
-  }[]
-}
+// The contract lives in ./dto (extracted in 11.2); catalog-service re-exports the same
+// file, so only the names this file owns are re-exported here.
+export {
+  listCompanyProductsSchema,
+  setCompanyOptionsSchema,
+  setCompanyProductSchema,
+  type CompanyProductView,
+  type ListCompanyProductsInput,
+  type SetCompanyOptionsInput,
+  type SetCompanyProductInput,
+} from './dto'
+import type {
+  CompanyProductView,
+  ListCompanyProductsInput,
+  SetCompanyOptionsInput,
+  SetCompanyProductInput,
+} from './dto'
 
 export const listCompanyProducts = serviceMethod<
   ListCompanyProductsInput,

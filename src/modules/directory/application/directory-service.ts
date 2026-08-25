@@ -27,14 +27,21 @@ type Locale = 'tr' | 'en'
 
 const localeOf = (value: string): Locale => (value === 'en' ? 'en' : 'tr')
 
-// ── categories ────────────────────────────────────────────────────────────────
+// The contract lives in ./dto (extracted in 11.2).
+export * from './dto'
 
-export type PublicCategory = {
-  slug: string
-  name: string
-  description: string | null
-  productCount: number
-}
+import {
+  type PublicCategory,
+  type PublicCategoryDetail,
+  type PublicCity,
+  type PublicCityDetail,
+  type PublicManufacturerCard,
+  type PublicManufacturerProfile,
+  type PublicProductDetail,
+  type PublicSlugs,
+} from './dto'
+
+// ── categories ────────────────────────────────────────────────────────────────
 
 export const listPublicCategories = serviceMethod<{ locale: string }, PublicCategory[]>(
   'directory',
@@ -67,16 +74,6 @@ export const listPublicCategories = serviceMethod<{ locale: string }, PublicCate
     )
   },
 )
-
-export type PublicCategoryDetail =
-  | { kind: 'found'; category: PublicCategory; products: PublicProductCard[] }
-  | { kind: 'moved'; slug: string }
-
-export type PublicProductCard = {
-  slug: string
-  name: string
-  shortDescription: string | null
-}
 
 export const getPublicCategory = serviceMethod<
   { locale: string; slug: string },
@@ -147,20 +144,6 @@ export const getPublicCategory = serviceMethod<
 )
 
 // ── products ──────────────────────────────────────────────────────────────────
-
-export type PublicProductDetail =
-  | {
-      kind: 'found'
-      product: {
-        slug: string
-        name: string
-        shortDescription: string | null
-        description: string | null
-        category: { slug: string; name: string } | null
-        attributes: { name: string; options: string[] }[]
-      }
-    }
-  | { kind: 'moved'; slug: string }
 
 export const getPublicProduct = serviceMethod<
   { locale: string; slug: string },
@@ -239,16 +222,6 @@ export const getPublicProduct = serviceMethod<
 
 // ── manufacturers ─────────────────────────────────────────────────────────────
 
-export type PublicManufacturerCard = {
-  slug: string
-  displayName: string
-  about: string | null
-  /** Null below three published reviews (`16` §Aggregates) — "new on the platform". */
-  avgRating: number | null
-  reviewCount: number
-  cityNames: string[]
-}
-
 function averageOrNull(ratingSum: number, reviewCount: number): number | null {
   if (reviewCount < MIN_REVIEWS_FOR_AVERAGE) return null
   return Math.round((ratingSum / reviewCount) * 10) / 10
@@ -309,12 +282,6 @@ export const listPublicManufacturers = serviceMethod<
 
 // ── sitemap feed ──────────────────────────────────────────────────────────────
 
-export type PublicSlugs = {
-  categories: { locale: string; slug: string }[]
-  products: { locale: string; slug: string }[]
-  companies: { slug: string }[]
-}
-
 export const listPublicSlugs = serviceMethod<Record<string, never>, PublicSlugs>(
   'directory',
   'listPublicSlugs',
@@ -341,20 +308,6 @@ export const listPublicSlugs = serviceMethod<Record<string, never>, PublicSlugs>
     })
   },
 )
-
-export type PublicManufacturerProfile = {
-  card: PublicManufacturerCard
-  foundedYear: number | null
-  employeeRange: string | null
-  portfolio: { title: string; description: string | null; completedAt: Date | null }[]
-  reviews: {
-    ratingOverall: number
-    title: string | null
-    body: string
-    publishedAt: Date | null
-    response: { body: string; createdAt: Date } | null
-  }[]
-}
 
 export const getPublicManufacturer = serviceMethod<{ slug: string }, PublicManufacturerProfile>(
   'directory',
@@ -429,8 +382,6 @@ const SUPPLIED_CITY_WHERE = {
   },
 } as const
 
-export type PublicCity = { slug: string; name: string; manufacturerCount: number }
-
 export const listPublicCities = serviceMethod<Record<string, never>, PublicCity[]>(
   'directory',
   'listPublicCities',
@@ -456,11 +407,6 @@ export const listPublicCities = serviceMethod<Record<string, never>, PublicCity[
     )
   },
 )
-
-export type PublicCityDetail = {
-  city: PublicCity
-  manufacturers: PublicManufacturerCard[]
-}
 
 export const getPublicCity = serviceMethod<{ slug: string }, PublicCityDetail>(
   'directory',

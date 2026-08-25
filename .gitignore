@@ -30,3 +30,15 @@ Thumbs.db
 /playwright-report
 /blob-report
 /playwright/.cache
+
+# Expo / mobile (Phase 11). The signing material lines are here BEFORE Phase 14 creates
+# any of it: this repository is public, and a keystore that ever lands in history is a
+# credential leak that outlives the force-push that removes it.
+.expo/
+mobile/ios/
+mobile/android/
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision

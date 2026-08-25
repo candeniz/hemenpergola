@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
@@ -17,6 +17,8 @@ import {
   type DomainError,
 } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+
+import { type ListThreadInput, type SendMessageInput, type ThreadView } from './dto'
 
 import type { OfferRequestStatus } from '@/modules/offer/domain/state-machine'
 
@@ -55,34 +57,9 @@ const PRE_ACCEPTANCE_STATES: readonly OfferRequestStatus[] = ['PENDING']
 
 const MESSAGES_PER_HOUR_PER_THREAD = 60
 
-export const sendMessageSchema = z.object({
-  offerRequestId: z.string().min(1),
-  body: z.string().trim().min(1).max(4000),
-})
-export type SendMessageInput = z.infer<typeof sendMessageSchema>
-
-export const listThreadSchema = z.object({
-  offerRequestId: z.string().min(1),
-  /** Cursor: only messages after this message id. The steady poll returns nothing. */
-  after: z.string().optional(),
-})
-export type ListThreadInput = z.infer<typeof listThreadSchema>
-
-export type MessageView = {
-  id: string
-  /** Which side sent it — never the raw userId, the reader does not need it. */
-  sender: 'customer' | 'company'
-  body: string
-  sentAt: Date
-  readAt: Date | null
-}
-
-export type ThreadView = {
-  offerRequestId: string
-  requestStatus: OfferRequestStatus
-  canSend: boolean
-  messages: MessageView[]
-}
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2); re-exported
+// here so every existing import site keeps working.
+export * from './dto'
 
 type Side = 'customer' | 'company'
 

@@ -17,6 +17,24 @@ import {
 } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
+// Phase 11.2: the result types moved to ./dto with the schemas.
+export {
+  type AcceptInvitationResult,
+  type ChangeMemberRoleResult,
+  type CreateCompanyResult,
+  type InviteMemberResult,
+  type MemberSummary,
+  type RemoveMemberResult,
+} from './dto'
+import type {
+  AcceptInvitationResult,
+  ChangeMemberRoleResult,
+  CreateCompanyResult,
+  InviteMemberResult,
+  MemberSummary,
+  RemoveMemberResult,
+} from './dto'
+
 import { canAssignRole, canRevokeRole, PERMISSIONS, type CompanyRole } from '../domain/permissions'
 import { checkVerificationGate } from '../domain/verification-gates'
 import { getMailer } from '@/modules/notification/infrastructure/mailer'
@@ -67,14 +85,6 @@ function slugify(displayName: string): string {
     .slice(0, 60)
 
   return base.length >= 2 ? base : 'firma'
-}
-
-export type CreateCompanyResult = {
-  companyId: string
-  slug: string
-  /** Always `PENDING` — see below. */
-  status: 'PENDING'
-  role: 'OWNER'
 }
 
 /**
@@ -212,15 +222,6 @@ function fromPrismaConstraint(error: unknown, entity: string): DomainError {
   throw error
 }
 
-export type MemberSummary = {
-  userId: string
-  email: string
-  fullName: string | null
-  role: CompanyRole
-  invitedAt: Date
-  acceptedAt: Date | null
-}
-
 export const listMembers = serviceMethod<ListMembersInput, { members: MemberSummary[] }>(
   'company',
   'listMembers',
@@ -263,8 +264,6 @@ export const listMembers = serviceMethod<ListMembersInput, { members: MemberSumm
 function scopedCompanyId(resolved: string | null, requested: string): string {
   return resolved ?? requested
 }
-
-export type InviteMemberResult = { invited: true; email: string }
 
 export const inviteMember = serviceMethod<InviteMemberInput, InviteMemberResult>(
   'company',
@@ -329,8 +328,6 @@ export const inviteMember = serviceMethod<InviteMemberInput, InviteMemberResult>
   },
 )
 
-export type AcceptInvitationResult = { companyId: string; role: CompanyRole }
-
 /**
  * Accept an invitation.
  *
@@ -381,8 +378,6 @@ export const acceptInvitation = serviceMethod<AcceptInvitationInput, AcceptInvit
     return ok({ companyId: membership.companyId, role: membership.role as CompanyRole })
   },
 )
-
-export type ChangeMemberRoleResult = { userId: string; role: CompanyRole }
 
 /**
  * Change a member's role.
@@ -460,8 +455,6 @@ export const changeMemberRole = serviceMethod<ChangeMemberRoleInput, ChangeMembe
     return ok({ userId: input.userId, role: input.role })
   },
 )
-
-export type RemoveMemberResult = { removed: true }
 
 export const removeMember = serviceMethod<RemoveMemberInput, RemoveMemberResult>(
   'company',

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
@@ -35,54 +35,17 @@ import { transition, type OfferRequestStatus } from '../domain/state-machine'
  * answerable from the table, not from memory.
  */
 
-const offerLineSchema = z.object({
-  description: z.string().trim().min(1).max(300),
-  quantity: z.number().positive().max(10_000),
-  unit: z.string().trim().min(1).max(20),
-  unitPriceKurus: z.number().int().positive(),
-})
+// The contract lives in ./dto (extracted in 11.2).
+export * from './dto'
 
-export const sendOfferSchema = z.object({
-  offerRequestId: z.string().min(1),
-  lines: z.array(offerLineSchema).min(1).max(50),
-  /** Defaults from `PlatformSetting('tax.kdv_default_percent')` — Q6's unconfirmed 20. */
-  taxRate: z.number().min(0).max(100).optional(),
-  validUntil: z.coerce.date(),
-  note: z.string().trim().max(1000).optional(),
-})
-export type SendOfferInput = z.infer<typeof sendOfferSchema>
-
-export const decideOfferSchema = z.object({
-  offerRequestId: z.string().min(1),
-  note: z.string().trim().max(500).optional(),
-})
-export type DecideOfferInput = z.infer<typeof decideOfferSchema>
-
-export const markOutcomeSchema = z.object({
-  offerRequestId: z.string().min(1),
-  reason: z.string().trim().max(500).optional(),
-})
-export type MarkOutcomeInput = z.infer<typeof markOutcomeSchema>
-
-export type OfferView = {
-  offerId: string
-  number: string
-  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'SUPERSEDED'
-  netKurus: number
-  taxRate: number
-  taxKurus: number
-  grossKurus: number
-  validUntil: Date
-  note: string | null
-  sentAt: Date | null
-  lines: {
-    description: string
-    quantity: number
-    unit: string
-    unitPriceKurus: number
-    lineNetKurus: number
-  }[]
-}
+import {
+  type CustomerOfferView,
+  type DecideOfferInput,
+  type GetOffersForRequestInput,
+  type MarkOutcomeInput,
+  type OfferView,
+  type SendOfferInput,
+} from './dto'
 
 async function defaultTaxRate(): Promise<number> {
   const row = await prisma.platformSetting.findUnique({
@@ -498,22 +461,6 @@ export const markLost = serviceMethod<
 )
 
 // ── read (customer) — the offer beside the original estimate (6.9) ──────────
-
-export const getOffersForRequestSchema = z.object({ offerRequestId: z.string().min(1) })
-export type GetOffersForRequestInput = z.infer<typeof getOffersForRequestSchema>
-
-export type CustomerOfferView = {
-  offerRequestId: string
-  requestStatus: OfferRequestStatus
-  companyName: string
-  /** Every version, newest first — a revision supersedes but stays readable (`11`). */
-  offers: OfferView[]
-  /**
-   * The estimate the customer originally saw, band only (`ADR-006`), so the offer screen
-   * explains the gap in place (`ADR-007`): the estimate was net of KDV, the offer is not.
-   */
-  originalEstimate: { bandLowKurus: number; bandHighKurus: number } | null
-}
 
 export const getOffersForRequest = serviceMethod<GetOffersForRequestInput, CustomerOfferView>(
   'offer',

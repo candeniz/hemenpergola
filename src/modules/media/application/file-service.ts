@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { loadMembership } from '@/modules/iam/infrastructure/identify'
@@ -10,6 +10,15 @@ import { enqueue, JOB } from '@/shared/jobs'
 import { conflict, err, forbidden, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 import { getStorage } from '@/shared/storage'
+
+import {
+  type CompleteResult,
+  type CompleteUploadInput,
+  type FileUrlInput,
+  type FileUrlResult,
+  type PresignResult,
+  type PresignUploadInput,
+} from './dto'
 
 import { checkUpload, storageKey, UPLOAD_POLICY, type OwnerType } from '../domain/upload-policy'
 
@@ -35,34 +44,8 @@ export { UPLOAD_POLICY }
  *   serves the file did not exist yet. It does now.
  */
 
-export const presignUploadSchema = z.object({
-  ownerType: z.enum([
-    'PROJECT',
-    'COMPANY_DOCUMENT',
-    'PORTFOLIO',
-    'COMPANY_LOGO',
-    'COMPANY_COVER',
-    'CMS',
-    'OFFER_ATTACHMENT',
-  ]),
-  ownerId: z.string().min(1),
-  mime: z.string().min(3).max(120),
-  sizeBytes: z.number().int().positive(),
-})
-export type PresignUploadInput = z.infer<typeof presignUploadSchema>
-
-export const completeUploadSchema = z.object({ fileId: z.string().min(1) })
-export type CompleteUploadInput = z.infer<typeof completeUploadSchema>
-
-export const fileUrlSchema = z.object({ fileId: z.string().min(1) })
-export type FileUrlInput = z.infer<typeof fileUrlSchema>
-
-export type PresignResult = {
-  fileId: string
-  uploadUrl: string
-  key: string
-  expiresIn: number
-}
+// The contract lives in ./dto (extracted in 11.2); re-exported so import sites hold.
+export * from './dto'
 
 /**
  * Who may attach a file to this owner.
@@ -237,8 +220,6 @@ export const presignUpload = serviceMethod<PresignUploadInput, PresignResult>(
   },
 )
 
-export type CompleteResult = { fileId: string; queued: boolean }
-
 /**
  * The client has uploaded; hand the file to `media.process`.
  *
@@ -268,12 +249,6 @@ export const completeUpload = serviceMethod<CompleteUploadInput, CompleteResult>
     return ok({ fileId: file.id, queued: jobId !== null })
   },
 )
-
-export type FileUrlResult = {
-  url: string
-  accessClass: 'public' | 'semi-private' | 'private'
-  expiresIn: number | null
-}
 
 /**
  * A URL for reading one file.

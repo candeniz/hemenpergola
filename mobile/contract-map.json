@@ -1,0 +1,4 @@
+{
+  "@contracts/*": "src/modules/*/application/dto",
+  "@messages/*": "src/i18n/messages/*"
+}

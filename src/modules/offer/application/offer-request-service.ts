@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
@@ -63,36 +63,21 @@ import {
 
 // ── schemas ──────────────────────────────────────────────────────────────────
 
-export const createOfferRequestsSchema = z.object({
-  projectId: z.string().min(1),
-  companyIds: z.array(z.string().min(1)).min(1).max(5),
-  consent: z.object({
-    /**
-     * `06`: `consent.accepted !== true` → 422. `literal(true)` makes the invalid shape
-     * unrepresentable rather than checked.
-     */
-    accepted: z.literal(true),
-    textVersion: z.string().min(1),
-  }),
-})
-export type CreateOfferRequestsInput = z.infer<typeof createOfferRequestsSchema>
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2).
+export * from './dto'
 
-export const respondSchema = z.object({ offerRequestId: z.string().min(1) })
-export type RespondInput = z.infer<typeof respondSchema>
-
-export const declineSchema = z.object({
-  offerRequestId: z.string().min(1),
-  reason: z.string().trim().min(1).max(500),
-})
-export type DeclineInput = z.infer<typeof declineSchema>
-
-export const getLeadSchema = z.object({ offerRequestId: z.string().min(1) })
-export type GetLeadInput = z.infer<typeof getLeadSchema>
-
-export type CreateOfferRequestsResult = {
-  created: { offerRequestId: string; companyId: string }[]
-  slaExpiresAt: Date
-}
+import {
+  type CreateOfferRequestsInput,
+  type CreateOfferRequestsResult,
+  type CustomerRequestListItem,
+  type DeclineInput,
+  type GetLeadInput,
+  type LeadListItem,
+  type ListLeadsInput,
+  type ListRequestsForProjectInput,
+  type RespondInput,
+  type CloseOfferRequestInput,
+} from './dto'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -721,20 +706,6 @@ export const getLeadForCompany = serviceMethod<GetLeadInput, LeadView>(
 
 // ── list (manufacturer) — the inbox, contact-free by construction ────────────
 
-export const listLeadsSchema = z.object({}).optional()
-export type ListLeadsInput = z.infer<typeof listLeadsSchema>
-
-export type LeadListItem = {
-  offerRequestId: string
-  status: OfferRequestStatus
-  slaExpiresAt: Date
-  createdAt: Date
-  productId: string
-  areaM2: number | null
-  cityName: string | null
-  districtName: string | null
-}
-
 export const listLeadsForCompany = serviceMethod<ListLeadsInput, { leads: LeadListItem[] }>(
   'offer',
   'listLeadsForCompany',
@@ -781,18 +752,6 @@ export const listLeadsForCompany = serviceMethod<ListLeadsInput, { leads: LeadLi
 )
 
 // ── list (customer) — the request tracker on the project page ────────────────
-
-export const listRequestsForProjectSchema = z.object({ projectId: z.string().min(1) })
-export type ListRequestsForProjectInput = z.infer<typeof listRequestsForProjectSchema>
-
-export type CustomerRequestListItem = {
-  offerRequestId: string
-  companyId: string
-  companyName: string
-  status: OfferRequestStatus
-  slaExpiresAt: Date
-  createdAt: Date
-}
 
 export const listRequestsForProject = serviceMethod<
   ListRequestsForProjectInput,
@@ -844,12 +803,6 @@ export const offerRequestService = {
 } satisfies Record<string, { meta: unknown }>
 
 // ── admin close (task 9's carried debt: the machine edge existed, no service did) ────
-
-export const closeOfferRequestSchema = z.object({
-  offerRequestId: z.string().min(1),
-  reason: z.string().trim().min(1).max(500),
-})
-export type CloseOfferRequestInput = z.infer<typeof closeOfferRequestSchema>
 
 export const listClosableRequests = serviceMethod<
   Record<string, never>,

@@ -1,11 +1,34 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+
+// The contract lives in ./dto (extracted in 11.2).
+export {
+  attachDocumentSchema,
+  getCompanyProfileSchema,
+  updateCompanyContactSchema,
+  updateCompanyProfileSchema,
+  updateCompanySlugSchema,
+  type AttachDocumentInput,
+  type CompanyProfileView,
+  type GetCompanyProfileInput,
+  type UpdateCompanyContactInput,
+  type UpdateCompanyProfileInput,
+  type UpdateCompanySlugInput,
+} from './dto'
+import type {
+  AttachDocumentInput,
+  CompanyProfileView,
+  GetCompanyProfileInput,
+  UpdateCompanyContactInput,
+  UpdateCompanyProfileInput,
+  UpdateCompanySlugInput,
+} from './dto'
 
 import { PERMISSIONS } from '../domain/permissions'
 
@@ -20,94 +43,6 @@ import { authorize } from './authorization'
  * "the company" across two modules to satisfy a screen boundary would mean two modules
  * writing `Company`.
  */
-
-const phoneish = z
-  .string()
-  .trim()
-  .max(24)
-  .regex(/^[0-9+()\s-]*$/, 'digits and separators only')
-
-export const updateCompanyProfileSchema = z.object({
-  companyId: z.string().min(1),
-  displayName: z.string().trim().min(2).max(120).optional(),
-  legalName: z.string().trim().min(3).max(200).optional(),
-  taxNumber: z
-    .string()
-    .trim()
-    .regex(/^\d{10,11}$/, 'ten or eleven digits')
-    .optional(),
-  about: z.string().trim().max(4000).optional(),
-  foundedYear: z.number().int().min(1900).max(2100).optional(),
-  employeeRange: z.string().trim().max(40).optional(),
-  /** `Company.slug` is deliberately absent — see `updateCompanySlug`. */
-})
-export type UpdateCompanyProfileInput = z.infer<typeof updateCompanyProfileSchema>
-
-export const updateCompanyContactSchema = z.object({
-  companyId: z.string().min(1),
-  phone: phoneish.optional(),
-  email: z.email().optional(),
-  website: z.url().optional(),
-  addressLine: z.string().trim().max(300).optional(),
-  cityId: z.string().min(1).optional(),
-  districtId: z.string().min(1).optional(),
-  /** Coordinates, when the manufacturer knows them. `ADR-019`: the precision escape hatch. */
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
-})
-export type UpdateCompanyContactInput = z.infer<typeof updateCompanyContactSchema>
-
-export const updateCompanySlugSchema = z.object({
-  companyId: z.string().min(1),
-  slug: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase, digits and single hyphens only')
-    .min(2)
-    .max(60),
-})
-export type UpdateCompanySlugInput = z.infer<typeof updateCompanySlugSchema>
-
-export const getCompanyProfileSchema = z.object({ companyId: z.string().min(1) })
-export type GetCompanyProfileInput = z.infer<typeof getCompanyProfileSchema>
-
-export const attachDocumentSchema = z.object({
-  companyId: z.string().min(1),
-  fileId: z.string().min(1),
-  type: z.string().trim().min(2).max(60),
-})
-export type AttachDocumentInput = z.infer<typeof attachDocumentSchema>
-
-export type CompanyProfileView = {
-  companyId: string
-  slug: string
-  slugLocked: boolean
-  displayName: string
-  legalName: string
-  taxNumber: string | null
-  about: string | null
-  foundedYear: number | null
-  employeeRange: string | null
-  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED'
-  contact: {
-    phone: string | null
-    email: string | null
-    website: string | null
-    addressLine: string | null
-    cityId: string | null
-    districtId: string | null
-    latitude: number | null
-    longitude: number | null
-  } | null
-  documents: {
-    id: string
-    type: string
-    status: string
-    note: string | null
-    fileId: string
-    createdAt: Date
-  }[]
-}
 
 export const getCompanyProfile = serviceMethod<GetCompanyProfileInput, CompanyProfileView>(
   'company',

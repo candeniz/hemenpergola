@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { authorize } from '@/modules/iam/application/authorization'
@@ -9,6 +9,20 @@ import { prisma } from '@/shared/db'
 import { enqueue, JOB } from '@/shared/jobs'
 import { err, notFound, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+
+// The contract lives in ../application/dto (extracted in 11.2); re-exported so import
+// sites hold. match-service re-exports the same file — harmless, same module.
+export * from './dto'
+
+import {
+  type AddServiceAreaInput,
+  type CoversPointInput,
+  type ListCitiesInput,
+  type ListDistrictsInput,
+  type ListServiceAreasInput,
+  type RemoveServiceAreaInput,
+  type ServiceAreaView,
+} from './dto'
 
 /**
  * Service areas — task 3.6, `manufacturer_service_area_management`,
@@ -27,53 +41,6 @@ import { serviceMethod } from '@/shared/service/registry'
  * couples a save to whatever the geocoder is that week, and — the part that matters — a job
  * can be re-run over every row when the geocoder gets better, which an inline call cannot.
  */
-
-export const listServiceAreasSchema = z.object({ companyId: z.string().min(1) })
-export type ListServiceAreasInput = z.infer<typeof listServiceAreasSchema>
-
-export const addServiceAreaSchema = z
-  .object({
-    companyId: z.string().min(1),
-    kind: z.enum(['CITY', 'DISTRICT', 'RADIUS']),
-    cityId: z.string().min(1).optional(),
-    districtId: z.string().min(1).optional(),
-    /** `09`: kilometres. Under 5 km is a street, over 500 km is the whole country. */
-    radiusKm: z.number().int().min(5).max(500).optional(),
-    centerLabel: z.string().trim().max(200).optional(),
-  })
-  .refine((value) => value.kind !== 'CITY' || value.cityId !== undefined, {
-    message: 'a CITY area needs a city',
-    path: ['cityId'],
-  })
-  .refine((value) => value.kind !== 'DISTRICT' || value.districtId !== undefined, {
-    message: 'a DISTRICT area needs a district',
-    path: ['districtId'],
-  })
-  .refine((value) => value.kind !== 'RADIUS' || value.radiusKm !== undefined, {
-    message: 'a RADIUS area needs a radius',
-    path: ['radiusKm'],
-  })
-export type AddServiceAreaInput = z.infer<typeof addServiceAreaSchema>
-
-export const removeServiceAreaSchema = z.object({
-  companyId: z.string().min(1),
-  serviceAreaId: z.string().min(1),
-})
-export type RemoveServiceAreaInput = z.infer<typeof removeServiceAreaSchema>
-
-export type ServiceAreaView = {
-  id: string
-  kind: 'CITY' | 'DISTRICT' | 'RADIUS'
-  cityId: string | null
-  cityName: string | null
-  districtId: string | null
-  districtName: string | null
-  radiusKm: number | null
-  centerLabel: string | null
-  isActive: boolean
-  /** `null` while the geocode job has not run, or could not resolve a centre. */
-  centre: { latitude: number; longitude: number } | null
-}
 
 export const listServiceAreas = serviceMethod<ListServiceAreasInput, { areas: ServiceAreaView[] }>(
   'matching',
@@ -252,14 +219,6 @@ export const removeServiceArea = serviceMethod<RemoveServiceAreaInput, { removed
  * is what `20` §Integration asks for by name, and a test that reimplemented the SQL would be
  * testing itself.
  */
-export const coversPointSchema = z.object({
-  cityId: z.string().min(1),
-  districtId: z.string().min(1).optional(),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-})
-export type CoversPointInput = z.infer<typeof coversPointSchema>
-
 export const listCompaniesCoveringPoint = serviceMethod<CoversPointInput, { companyIds: string[] }>(
   'matching',
   'listCompaniesCoveringPoint',
@@ -301,9 +260,6 @@ export const serviceAreaService = {
   listCompaniesCoveringPoint,
 } satisfies Record<string, { meta: unknown }>
 
-export const listCitiesSchema = z.object({})
-export type ListCitiesInput = z.infer<typeof listCitiesSchema>
-
 /**
  * The provinces, for any screen that needs to name one — service areas, the price book's
  * regional table, and the public configurator's location step.
@@ -343,9 +299,6 @@ export const listCities = serviceMethod<
     return ok({ cities: cities.map((city) => ({ cityId: city.id, name: city.name })) })
   },
 )
-
-export const listDistrictsSchema = z.object({})
-export type ListDistrictsInput = z.infer<typeof listDistrictsSchema>
 
 /**
  * The districts, for the same screens `listCities` serves. Separate rather than nested in

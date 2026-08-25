@@ -225,14 +225,10 @@ export async function revokeAllFamilies(
   return result.count
 }
 
-export type SessionSummary = {
-  familyId: string
-  ip: string | null
-  userAgent: string | null
-  startedAt: Date
-  lastUsedAt: Date
-  current: boolean
-}
+// Moved to ../application/dto in 11.2 (the mobile-importable contract); re-exported so
+// existing import sites hold.
+export type { SessionSummary } from '../application/dto'
+import type { SessionSummary } from '../application/dto'
 
 /**
  * The signed-in sessions of one user, one row per family (`12` §Sessions and revocation).

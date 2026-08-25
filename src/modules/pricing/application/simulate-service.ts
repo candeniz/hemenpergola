@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { authorize } from '@/modules/iam/application/authorization'
 import { PERMISSIONS } from '@/modules/iam/domain/permissions'
@@ -8,12 +8,12 @@ import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
 
-import { inspectPriceBook, type PriceBookWarning } from '../domain/diagnostics'
+import { inspectPriceBook } from '../domain/diagnostics'
 import { bandSettings } from '../infrastructure/band-settings'
 import { calculateEstimate, type ProjectInput } from '../domain/engine'
 
 import { getPriceBook, toEngineInput } from './price-book-service'
-import type { OwnerEstimate } from './estimate-dto'
+import type {} from './estimate-dto'
 
 /**
  * The simulator — task 3.5, `08-pricing-engine.md` §Simulator.
@@ -33,32 +33,11 @@ import type { OwnerEstimate } from './estimate-dto'
  *   is the breakdown. The type makes handing it to a customer surface impossible.
  */
 
-export const simulateSchema = z.object({
-  companyId: z.string().min(1),
-  priceBookId: z.string().min(1),
-  productId: z.string().min(1),
-  basisType: z.enum(['AREA_M2', 'LENGTH_M', 'UNIT']),
-  areaM2: z.number().min(0).optional().nullable(),
-  lengthM: z.number().min(0).optional().nullable(),
-  units: z.number().min(0).optional().nullable(),
-  perimeterM: z.number().min(0).optional().nullable(),
-  heightM: z.number().min(0).optional().nullable(),
-  quantity: z.number().int().min(1).max(999).default(1),
-  selectedOptionIds: z.array(z.string().min(1)).max(100).default([]),
-  cityId: z.string().min(1).optional().nullable(),
-  districtId: z.string().min(1).optional().nullable(),
-})
-export type SimulateInput = z.infer<typeof simulateSchema>
+// The contract lives in ./dto (extracted in 11.2). price-book-service re-exports the
+// same file — harmless, same module.
+export * from './dto'
 
-export type SimulateResult = {
-  estimate: OwnerEstimate | null
-  /** Why there is no estimate, when there is none. */
-  unpricedReason: 'product-not-in-book' | 'missing-basis' | null
-  /** `inspectPriceBook` — things worth fixing before this book goes live. */
-  warnings: PriceBookWarning[]
-  priceBookVersion: number
-  priceBookStatus: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
-}
+import { type EstimateForProjectInput, type SimulateInput, type SimulateResult } from './dto'
 
 export const simulatePriceBook = serviceMethod<SimulateInput, SimulateResult>(
   'pricing',
@@ -135,17 +114,6 @@ export const simulatePriceBook = serviceMethod<SimulateInput, SimulateResult>(
  * Merging the two behind a flag would mean one careless caller writing a row for every
  * keystroke in the editor.
  */
-/**
- * The request shape for the published-book estimate. `priceBookId` is omitted — the
- * method resolves the PUBLISHED book itself, which is its whole difference from the
- * simulator — and `requestIp` is not here at all: the persisted anti-scraping row's IP
- * comes from the actor the adapter resolved, never from a value the client could type.
- */
-export const estimateForProjectSchema = simulateSchema
-  .omit({ priceBookId: true })
-  .extend({ projectId: z.string().min(1).optional() })
-export type EstimateForProjectInput = z.infer<typeof estimateForProjectSchema>
-
 export const estimateForProject = serviceMethod<
   EstimateForProjectInput & { requestIp?: string | null },
   SimulateResult

@@ -43,7 +43,6 @@ import {
   revokeAllFamilies,
   revokeFamily,
   rotateRefreshToken,
-  type SessionSummary,
 } from '../infrastructure/token-service'
 import type {
   ConfirmPhoneVerificationInput,
@@ -58,6 +57,34 @@ import type {
   RevokeSessionInput,
   StartPhoneVerificationInput,
   VerifyEmailInput,
+} from './dto'
+
+// Phase 11.2: the result types moved to ./dto with the schemas.
+export {
+  type AuthTokens,
+  type ConfirmPhoneVerificationResult,
+  type ListSessionsResult,
+  type LoginResult,
+  type LogoutResult,
+  type RegisterResult,
+  type RequestPasswordResetResult,
+  type ResetPasswordResult,
+  type RevokeSessionResult,
+  type StartPhoneVerificationResult,
+  type VerifyEmailResult,
+} from './dto'
+import type {
+  AuthTokens,
+  ConfirmPhoneVerificationResult,
+  ListSessionsResult,
+  LoginResult,
+  LogoutResult,
+  RegisterResult,
+  RequestPasswordResetResult,
+  ResetPasswordResult,
+  RevokeSessionResult,
+  StartPhoneVerificationResult,
+  VerifyEmailResult,
 } from './dto'
 
 /**
@@ -148,44 +175,6 @@ async function sendMail(to: string, body: { subject: string; text: string }): Pr
   } catch (error) {
     console.error('[mail] send failed', body.subject, error)
   }
-}
-
-export type AuthTokens = {
-  /**
-   * Who signed in. Their own id, returned to them.
-   *
-   * Added in Phase 4 for `ADR-022`: `loginAction` opens a browser session row and needs the
-   * user it belongs to. Decoding the access token to recover it would mean the action
-   * verifying a token it had just minted, and a client needs to know who it is signed in as
-   * regardless.
-   */
-  userId: string
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-}
-
-/**
- * What signing in returns — tokens **plus a web session** (`ADR-022`).
- *
- * A separate type from `AuthTokens` because `refresh` returns that one and must **not** open a
- * browser session: refresh is the API path, and a mobile client rotating its token has no
- * cookie jar to put one in. Sharing the type would have made the session optional, and an
- * optional session is one a caller forgets to set.
- *
- * The row is created in the service rather than in the server action because it is a domain
- * fact, not a transport detail — and because `app/` may not reach a module's infrastructure.
- * The action's only job is to put this value in a cookie: the service decides *that* a session
- * exists, the action decides *what the browser is handed*.
- */
-export type LoginResult = AuthTokens & {
-  webSession: { token: string; expires: Date }
-}
-
-export type RegisterResult = {
-  userId: string
-  /** Never the token itself — the caller sends it by email, it does not go in the response. */
-  emailVerificationSent: boolean
 }
 
 /**
@@ -426,8 +415,6 @@ export const refresh = serviceMethod<RefreshInput, AuthTokens>(
   },
 )
 
-export type LogoutResult = { revokedFamilies: number }
-
 /** Log out. `allDevices` kills every family; otherwise just the one presented. */
 /**
  * Close one browser session — `ADR-022`.
@@ -478,8 +465,6 @@ export const logout = serviceMethod<LogoutInput, LogoutResult>(
 
 // ── Password reset (`12` §Recovery) ──────────────────────────────────────────
 
-export type RequestPasswordResetResult = { sent: true }
-
 /**
  * Ask for a reset link.
  *
@@ -511,8 +496,6 @@ export const requestPasswordReset = serviceMethod<
     return ok({ sent: true } as const)
   },
 )
-
-export type ResetPasswordResult = { revokedSessions: number }
 
 /**
  * Complete a reset.
@@ -593,8 +576,6 @@ export const resetPassword = serviceMethod<ResetPasswordInput, ResetPasswordResu
 
 // ── Email verification (`12` §Verification gates) ────────────────────────────
 
-export type VerifyEmailResult = { verified: true }
-
 export const verifyEmail = serviceMethod<VerifyEmailInput, VerifyEmailResult>(
   'auth',
   'verifyEmail',
@@ -651,8 +632,6 @@ export const resendEmailVerification = serviceMethod<
 /** 60 seconds between codes, so "resend" is not an SMS bill. */
 export const OTP_RESEND_INTERVAL_SECONDS = 60
 
-export type StartPhoneVerificationResult = { sent: true; expiresAt: Date }
-
 export const startPhoneVerification = serviceMethod<
   StartPhoneVerificationInput,
   StartPhoneVerificationResult
@@ -692,8 +671,6 @@ export const startPhoneVerification = serviceMethod<
   return ok({ sent: true as const, expiresAt: issued.expiresAt })
 })
 
-export type ConfirmPhoneVerificationResult = { verified: true }
-
 export const confirmPhoneVerification = serviceMethod<
   ConfirmPhoneVerificationInput,
   ConfirmPhoneVerificationResult
@@ -730,8 +707,6 @@ export const confirmPhoneVerification = serviceMethod<
 
 // ── Sessions (`12` §Sessions and revocation) ─────────────────────────────────
 
-export type ListSessionsResult = { sessions: SessionSummary[] }
-
 export const listSessions = serviceMethod<ListSessionsInput, ListSessionsResult>(
   'auth',
   'listSessions',
@@ -744,8 +719,6 @@ export const listSessions = serviceMethod<ListSessionsInput, ListSessionsResult>
     return ok({ sessions: await listSessionFamilies(actor.userId) })
   },
 )
-
-export type RevokeSessionResult = { revoked: number }
 
 export const revokeSession = serviceMethod<RevokeSessionInput, RevokeSessionResult>(
   'auth',

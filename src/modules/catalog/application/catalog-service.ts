@@ -21,7 +21,33 @@ import type {
   UpdateCategoryInput,
   UpdateProductInput,
 } from './dto'
-import { z } from 'zod'
+
+// Phase 11.2: the view types and configurator contract moved to ./dto too.
+export {
+  getConfigurableProductSchema,
+  listConfigurableProductsSchema,
+  type CategorySummary,
+  type ConfigurableProduct,
+  type CreateCategoryResult,
+  type CreateProductResult,
+  type GetConfigurableProductInput,
+  type ListConfigurableProductsInput,
+  type Locale,
+  type ProductDetail,
+  type ProductSummary,
+} from './dto'
+import type {
+  CategorySummary,
+  ConfigurableProduct,
+  CreateCategoryResult,
+  CreateProductResult,
+  GetConfigurableProductInput,
+  ListConfigurableProductsInput,
+  Locale,
+  ProductDetail,
+  ProductSummary,
+} from './dto'
+import { type z } from 'zod'
 import type { seoSchema } from './dto'
 
 type SeoInput = z.infer<typeof seoSchema>
@@ -45,7 +71,6 @@ type SeoInput = z.infer<typeof seoSchema>
  *   hole exactly where the early mistakes are.
  */
 
-export type Locale = 'tr' | 'en'
 const LOCALES: readonly Locale[] = ['tr', 'en']
 
 type TranslationInput = { name: string; slug?: string; description?: string }
@@ -118,15 +143,6 @@ function fromConstraint(error: unknown): DomainError {
 
 /* ── Categories ───────────────────────────────────────────────────────────── */
 
-export type CategorySummary = {
-  id: string
-  parentId: string | null
-  sortOrder: number
-  isActive: boolean
-  productCount: number
-  translations: Record<Locale, { slug: string; name: string }>
-}
-
 export const listCategories = serviceMethod<ListCategoriesInput, { categories: CategorySummary[] }>(
   'catalog',
   'listCategories',
@@ -155,8 +171,6 @@ export const listCategories = serviceMethod<ListCategoriesInput, { categories: C
     })
   },
 )
-
-export type CreateCategoryResult = { categoryId: string; slugs: Record<Locale, string> }
 
 export const createCategory = serviceMethod<CreateCategoryInput, CreateCategoryResult>(
   'catalog',
@@ -363,16 +377,6 @@ export const deleteCategory = serviceMethod<DeleteCategoryInput, { deleted: true
 
 /* ── Products ─────────────────────────────────────────────────────────────── */
 
-export type ProductSummary = {
-  id: string
-  categoryId: string
-  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
-  sortOrder: number
-  isActive: boolean
-  attributeCount: number
-  translations: Record<Locale, { slug: string; name: string }>
-}
-
 export const listProducts = serviceMethod<ListProductsInput, { products: ProductSummary[] }>(
   'catalog',
   'listProducts',
@@ -405,31 +409,6 @@ export const listProducts = serviceMethod<ListProductsInput, { products: Product
     })
   },
 )
-
-export type ProductDetail = ProductSummary & {
-  attributes: {
-    id: string
-    key: string
-    inputType: 'NUMBER' | 'SELECT' | 'MULTISELECT' | 'BOOL' | 'TEXT'
-    unit: string | null
-    min: number | null
-    max: number | null
-    step: number | null
-    isRequired: boolean
-    affectsPrice: boolean
-    sortOrder: number
-    showIfAttributeKey: string | null
-    showIfValue: string | null
-    labels: Record<Locale, string>
-    options: {
-      id: string
-      value: string
-      sortOrder: number
-      isActive: boolean
-      labels: Record<Locale, string>
-    }[]
-  }[]
-}
 
 /** The whole product as the configurator would load it — `10` §What V1 builds. */
 export const getProduct = serviceMethod<GetProductInput, { product: ProductDetail }>(
@@ -496,8 +475,6 @@ export const getProduct = serviceMethod<GetProductInput, { product: ProductDetai
     })
   },
 )
-
-export type CreateProductResult = { productId: string; slugs: Record<Locale, string> }
 
 export const createProduct = serviceMethod<CreateProductInput, CreateProductResult>(
   'catalog',
@@ -670,16 +647,6 @@ export const catalogService = {
 
 export type CatalogActor = ActorContext
 
-export const listConfigurableProductsSchema = z.object({ locale: z.enum(['tr', 'en']) })
-export type ListConfigurableProductsInput = z.infer<typeof listConfigurableProductsSchema>
-
-export type ConfigurableProduct = {
-  productId: string
-  name: string
-  categoryName: string
-  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
-}
-
 /**
  * The products a visitor may configure — the wizard's first two steps (`10` §Step structure).
  *
@@ -720,43 +687,6 @@ export const listConfigurableProducts = serviceMethod<
   },
 )
 
-export const getConfigurableProductSchema = z.object({
-  productId: z.string().min(1),
-  /**
-   * Option ids this project already references, which must render **even if deactivated**.
-   *
-   * Ids rather than a `projectId`, deliberately. This method is `anonymous`; accepting a
-   * project id would let anyone holding one learn which options it selected. The caller has
-   * already loaded the project through `getProject`, which enforces ownership in its `where`
-   * clause — so passing the ids grants no authority the caller did not already have.
-   */
-  includeOptionIds: z.array(z.string().min(1)).max(200).optional(),
-})
-export type GetConfigurableProductInput = z.infer<typeof getConfigurableProductSchema>
-
-/**
- * The product as the **configurator** loads it — `10` §What V1 builds.
- *
- * `getProduct` above carries that description in its comment and is `admin`. That was written
- * in Phase 2, before a configurator existed, and a public wizard calling it would have got
- * `FORBIDDEN` and rendered **zero attributes** — a form with no questions, failing silently.
- *
- * ## Visibility is three-sided, not two
- *
- * The first version of this method returned active options only, which is wrong for the
- * customer it exists to serve. `10` §Admin authoring: *"deactivating an option — hidden from
- * new projects; existing `ProjectAttributeValue` rows keep referencing it and still render."*
- * That is a **customer** rule, not an admin one.
- *
- * With active-only, a customer who left a draft half-finished comes back after an option was
- * deactivated and their answer has vanished. If the attribute is required, readiness reports
- * it unanswered and the customer cannot see what they failed to answer — silent, and it hits
- * the customer who waited longest.
- *
- * So: **active options, plus the inactive ones this project already references.** Closed to
- * new selection, visible and selected where already chosen. On `/proje/yeni` there is no
- * project and active-only is correct; on `/proje/[id]` the read has to know the context.
- */
 export const getConfigurableProduct = serviceMethod<
   GetConfigurableProductInput,
   { product: ProductDetail }

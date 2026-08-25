@@ -1,10 +1,14 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { prisma } from '@/shared/db'
 import { err, forbidden, ok } from '@/shared/result'
 import { serviceMethod } from '@/shared/service/registry'
+
+// The contract lives in ./dto (extracted in 11.2).
+export { listMyCompaniesSchema, type ListMyCompaniesInput, type MyCompany } from './dto'
+import type { ListMyCompaniesInput, MyCompany } from './dto'
 
 /**
  * The companies the signed-in user belongs to — what the portal's company switcher renders.
@@ -19,17 +23,6 @@ import { serviceMethod } from '@/shared/service/registry'
  * No permission check beyond "you are signed in": the answer is derived entirely from the
  * caller's own memberships, so there is nothing here they could not already enumerate.
  */
-
-export const listMyCompaniesSchema = z.object({})
-export type ListMyCompaniesInput = z.infer<typeof listMyCompaniesSchema>
-
-export type MyCompany = {
-  companyId: string
-  displayName: string
-  slug: string
-  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED'
-  role: string
-}
 
 export const listMyCompanies = serviceMethod<ListMyCompaniesInput, { companies: MyCompany[] }>(
   'company',

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import type { ActorContext } from '@/shared/context/actor'
 import { prisma } from '@/shared/db'
@@ -71,52 +71,20 @@ const ownedBy = (actor: ActorContext) => {
 /** `09` §Zero-result handling's "widened by one step", in kilometres. */
 export const WIDEN_STEP_KM = 25
 
-export const runMatchSchema = z.object({ projectId: z.string().min(1) })
-export type RunMatchInput = z.infer<typeof runMatchSchema>
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2); re-exported
+// so every existing import site keeps working.
+export * from './dto'
 
-export const getMatchRunSchema = z.object({ projectId: z.string().min(1) })
-export type GetMatchRunInput = z.infer<typeof getMatchRunSchema>
-
-export const zeroResultFallbackSchema = z.object({ projectId: z.string().min(1) })
-export type ZeroResultFallbackInput = z.infer<typeof zeroResultFallbackSchema>
-
-export const watchSupplyGapSchema = z.object({ projectId: z.string().min(1) })
-export type WatchSupplyGapInput = z.infer<typeof watchSupplyGapSchema>
-
-export type MatchPriceState = 'PRICED' | 'ON_REQUEST' | 'UNAVAILABLE'
-
-/**
- * What the **customer** sees per result. Band only, never line items (`ADR-006`), and no
- * score number — `09` §Explainability gives the customer a sentence, the admin the numbers.
- */
-export type MatchResultView = {
-  rank: number
-  companyId: string
-  displayName: string
-  bandLowKurus: number | null
-  bandHighKurus: number | null
-  priceOnRequest: boolean
-  priceState: MatchPriceState
-  /** An option the book does not price contributed zero — shown as a caveat, not hidden. */
-  incomplete: boolean
-  distanceKm: number | null
-}
-
-export type MatchRunView = {
-  matchRunId: string
-  projectId: string
-  createdAt: Date
-  resultCount: number
-  results: MatchResultView[]
-}
-
-export type ZeroResultFallbackView = {
-  /** `09` step 1 — the radius test widened by one step, labelled by the caller. */
-  widened: MatchResultView[]
-  /** `09` step 2 — serve the area, do not offer the product. Names only, no bands. */
-  nearby: { companyId: string; displayName: string }[]
-  widenedByKm: number
-}
+import {
+  type GetMatchRunInput,
+  type MatchPriceState,
+  type MatchResultView,
+  type MatchRunView,
+  type RunMatchInput,
+  type WatchSupplyGapInput,
+  type ZeroResultFallbackInput,
+  type ZeroResultFallbackView,
+} from './dto'
 
 /** Deterministic ranking — the exact ORDER BY, in one comparator. */
 export function compareForRank(

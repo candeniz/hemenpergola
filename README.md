@@ -18,6 +18,9 @@ Reading the whole set for one feature wastes context and produces worse code, no
 | `src/`, `prisma/`, `e2e/`, `test/` | application code, from Phase 0 onward |
 | `docs/` | the GitHub Pages landing page. **Not documentation** — the numbered documents are in `Yazılım Mimari Promptlar/` |
 
+Getting it running without a terminal: the four `Hemen Pergola*.cmd` launchers at the root
+(ilk kurulum → sunucu → mobil → durdur) wrap the pnpm/docker commands for a double-click on Windows.
+
 Application code lives at the repository root, not inside either of the two reference folders above.
 Both are committed and both are excluded from the Next.js build and from `tsconfig` —
 they are reference material, not source (`20-testing-strategy.md` §What is deliberately not

@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createHash } from 'node:crypto'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { issueAuthToken } from '@/modules/iam/infrastructure/token-service'
@@ -35,9 +35,14 @@ import { getStorage } from '@/shared/storage'
  * text-capable embeddable font has to be chosen before a PDF is honest.
  */
 
-export const requestDataExportSchema = z.object({})
+// The contract lives in ./dto (CLAUDE.md §Conventions, extracted in 11.2).
+export * from './dto'
 
-export type DataExportReceipt = { expiresAt: Date }
+import {
+  type ConfirmAccountErasureInput,
+  type DataExportReceipt,
+  type RequestAccountErasureInput,
+} from './dto'
 
 async function buildExportPackage(userId: string): Promise<Record<string, unknown>> {
   const [user, consents, projects, requests, reviews, sentMessages] = await Promise.all([
@@ -240,15 +245,6 @@ export const requestDataExport = serviceMethod<Record<string, never>, DataExport
  * because keeping it registered would have kept the bypass.
  */
 
-export const requestAccountErasureSchema = z.object({
-  /** Typed confirmation — the account's own email. A deliberate speed bump, not a factor. */
-  confirmEmail: z.string().email(),
-})
-export type RequestAccountErasureInput = z.infer<typeof requestAccountErasureSchema>
-
-export const confirmAccountErasureSchema = z.object({ token: z.string().min(16) })
-export type ConfirmAccountErasureInput = z.infer<typeof confirmAccountErasureSchema>
-
 export const requestAccountErasure = serviceMethod<RequestAccountErasureInput, { expiresAt: Date }>(
   'privacy',
   'requestAccountErasure',
@@ -389,12 +385,6 @@ async function performAnonymisation(
 
   return ok({ anonymisedEmail })
 }
-
-export const downloadDataExportSchema = z.object({
-  token: z.string().min(16),
-  /** The same package in either shape — the token's target is the JSON key. */
-  format: z.enum(['json', 'pdf']).default('json'),
-})
 
 /**
  * Resolve an export link — anonymous BY the token: possession of the 256-bit value is the

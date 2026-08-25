@@ -10,7 +10,7 @@
       // fourth consumer that RETYPES the contract is drift with extra steps. Only PURE
       // modules may be aliased here (zod + domain constants, no 'server-only', no Prisma);
       // the api-surface report tracks which dto files qualify.
-      "@contracts/iam": ["../src/modules/iam/application/dto.ts"],
+      "@contracts/*": ["../src/modules/*/application/dto"],
       // One message catalogue, two renderers (I18N-01). The mobile bundle carries the same
       // files next-intl serves; test/mobile-i18n.test.ts holds the keys together.
       "@messages/*": ["../src/i18n/messages/*"]

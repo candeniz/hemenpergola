@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { z } from 'zod'
+import {} from 'zod'
 
 import { recordAudit } from '@/modules/audit/infrastructure/audit-log'
 import { requireAdmin } from '@/modules/iam/application/authorization'
@@ -23,29 +23,17 @@ import {
  * after**.
  */
 
-export const listSettingsSchema = z.object({})
-export type ListSettingsInput = z.infer<typeof listSettingsSchema>
+// The contract lives in ./dto (extracted in 11.2).
+export * from './dto'
 
-export const updateSettingSchema = z.object({
-  key: z.string().min(1).max(120),
-  /** Every setting in the catalogue is currently a number; the schema per key is the gate. */
-  value: z.unknown(),
-  /** `17`: writes that affect standing require a reason. Settings move money, so they do. */
-  reason: z.string().trim().min(3).max(400),
-})
-export type UpdateSettingInput = z.infer<typeof updateSettingSchema>
-
-export type SettingView = {
-  key: string
-  value: unknown
-  unit: 'percent' | 'kurus' | 'hours' | 'count'
-  rationale: string
-  source: string
-  updatedAt: Date | null
-  updatedBy: string | null
-  /** True when the row is missing and the screen is showing nothing rather than a value. */
-  unset: boolean
-}
+import {
+  type DashboardCounts,
+  type DashboardCountsInput,
+  type ListSettingsInput,
+  type SettingView,
+  type UpdateSettingInput,
+  type UpdateSettingResult,
+} from './dto'
 
 export const listSettings = serviceMethod<ListSettingsInput, { settings: SettingView[] }>(
   'platform',
@@ -81,8 +69,6 @@ export const listSettings = serviceMethod<ListSettingsInput, { settings: Setting
     })
   },
 )
-
-export type UpdateSettingResult = { key: string; value: unknown; previous: unknown }
 
 export const updateSetting = serviceMethod<UpdateSettingInput, UpdateSettingResult>(
   'platform',
@@ -141,15 +127,6 @@ export const settingsService = { listSettings, updateSetting } satisfies Record<
   string,
   { meta: unknown }
 >
-
-export const dashboardCountsSchema = z.object({})
-export type DashboardCountsInput = z.infer<typeof dashboardCountsSchema>
-
-export type DashboardCounts = {
-  pendingManufacturers: number
-  catalogCategories: number
-  catalogProducts: number
-}
 
 /**
  * The counters on `super_admin_command_center`.

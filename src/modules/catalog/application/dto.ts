@@ -213,3 +213,120 @@ export type DeleteOptionInput = z.infer<typeof deleteOptionSchema>
 
 export const deactivateOptionSchema = z.object({ optionId: z.string().min(1) })
 export type DeactivateOptionInput = z.infer<typeof deactivateOptionSchema>
+
+/* ── Phase 11.2 extraction: the view types and configurator contract ─────── */
+
+export type Locale = 'tr' | 'en'
+
+export type CategorySummary = {
+  id: string
+  parentId: string | null
+  sortOrder: number
+  isActive: boolean
+  productCount: number
+  translations: Record<Locale, { slug: string; name: string }>
+}
+
+export type CreateCategoryResult = { categoryId: string; slugs: Record<Locale, string> }
+
+export type ProductSummary = {
+  id: string
+  categoryId: string
+  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
+  sortOrder: number
+  isActive: boolean
+  attributeCount: number
+  translations: Record<Locale, { slug: string; name: string }>
+}
+
+export type ProductDetail = ProductSummary & {
+  attributes: {
+    id: string
+    key: string
+    inputType: 'NUMBER' | 'SELECT' | 'MULTISELECT' | 'BOOL' | 'TEXT'
+    unit: string | null
+    min: number | null
+    max: number | null
+    step: number | null
+    isRequired: boolean
+    affectsPrice: boolean
+    sortOrder: number
+    showIfAttributeKey: string | null
+    showIfValue: string | null
+    labels: Record<Locale, string>
+    options: {
+      id: string
+      value: string
+      sortOrder: number
+      isActive: boolean
+      labels: Record<Locale, string>
+    }[]
+  }[]
+}
+
+export type CreateProductResult = { productId: string; slugs: Record<Locale, string> }
+
+export type ConfigurableProduct = {
+  productId: string
+  name: string
+  categoryName: string
+  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
+}
+
+export const listConfigurableProductsSchema = z.object({ locale: z.enum(['tr', 'en']) })
+export type ListConfigurableProductsInput = z.infer<typeof listConfigurableProductsSchema>
+
+export const getConfigurableProductSchema = z.object({
+  productId: z.string().min(1),
+  /**
+   * Option ids this project already references, which must render **even if deactivated**.
+   *
+   * Ids rather than a `projectId`, deliberately. This method is `anonymous`; accepting a
+   * project id would let anyone holding one learn which options it selected. The caller has
+   * already loaded the project through `getProject`, which enforces ownership in its `where`
+   * clause — so passing the ids grants no authority the caller did not already have.
+   */
+  includeOptionIds: z.array(z.string().min(1)).max(200).optional(),
+})
+export type GetConfigurableProductInput = z.infer<typeof getConfigurableProductSchema>
+
+/* ── company products (company-product-service) ─────────────────────────── */
+
+export const listCompanyProductsSchema = z.object({ companyId: z.string().min(1) })
+export type ListCompanyProductsInput = z.infer<typeof listCompanyProductsSchema>
+
+export const setCompanyProductSchema = z.object({
+  companyId: z.string().min(1),
+  productId: z.string().min(1),
+  isActive: z.boolean(),
+})
+export type SetCompanyProductInput = z.infer<typeof setCompanyProductSchema>
+
+export const setCompanyOptionsSchema = z.object({
+  companyId: z.string().min(1),
+  productId: z.string().min(1),
+  /** Every option the company was shown, with its answer. Absent means never asked. */
+  options: z.array(z.object({ optionId: z.string().min(1), isOffered: z.boolean() })).max(500),
+})
+export type SetCompanyOptionsInput = z.infer<typeof setCompanyOptionsSchema>
+
+export type CompanyProductView = {
+  productId: string
+  companyProductId: string | null
+  isActive: boolean
+  name: string
+  basisType: 'AREA_M2' | 'LENGTH_M' | 'UNIT'
+  attributes: {
+    attributeId: string
+    key: string
+    label: string
+    isRequired: boolean
+    options: {
+      optionId: string
+      value: string
+      label: string
+      /** `null` when the company has never answered — not the same as `false`. */
+      isOffered: boolean | null
+    }[]
+  }[]
+}

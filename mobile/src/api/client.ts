@@ -1,23 +1,20 @@
-import { loginSchema, type LoginInput } from '@contracts/iam'
+import { loginSchema, type AuthTokens, type LoginInput, type MyCompany } from '@contracts/iam'
 
 import { clearTokens, readTokens, writeTokens } from '../auth/token-store'
+
+export type { AuthTokens, MyCompany }
 
 /**
  * The `/api/v1` client — the fourth consumer of the contract, after the server action, the
  * route handler and the tests (`05` §Two entry points).
  *
- * **Request shapes are imported, never retyped**: `loginSchema` here IS the schema the
- * route handler parses with, aliased straight out of `src/modules/iam/application/dto.ts`
- * (see tsconfig `paths`). Only PURE dto modules can cross this boundary — a module with
- * `import 'server-only'` or a Prisma import cannot load in a React Native runtime, and the
- * schemas still living inside service files are exactly the sharing gap the Phase 11
- * report tracks.
- *
- * **Response shapes are local minimal types for now** — the flip side of the same gap:
- * `LoginResult` lives in `auth-service.ts`, whose import closure drags Prisma into `tsc`,
- * so even a type-only import is off the table until the result types move next to their
- * schemas. These local types name only the fields the app reads; a field the server
- * renames breaks the compile the moment the real type becomes importable.
+ * **Requests and responses are imported, never retyped.** `loginSchema` here IS the schema
+ * the route handler parses with, and `AuthTokens`/`MyCompany` are the very types the
+ * services return — aliased out of `src/modules/iam/application/dto.ts` via
+ * `contract-map.json`. The dto closure is runtime-pure by test (`dto-purity.test.ts`),
+ * which is what makes this import legal in a React Native bundle; the local copies this
+ * file carried for one turn are gone, and a field the server renames now breaks this
+ * compile instead of a device at runtime.
  *
  * The envelope is `06` §Envelope; clients switch on `error.code`, never parse `message`.
  */
@@ -27,15 +24,6 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000'
 type ErrorBody = { error: { code: string; message: string; requestId: string } }
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; code: string; message: string }
-
-export type AuthTokens = {
-  userId: string
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-}
-
-export type MyCompany = { companyId: string; displayName: string; role: string; status: string }
 
 async function request<T>(
   path: string,

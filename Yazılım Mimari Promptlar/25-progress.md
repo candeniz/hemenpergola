@@ -63,7 +63,7 @@ proven — not when the code is written.
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
-| 11 | Mobile application (Expo / React Native) | **🟡 · iskelet** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
+| 11 | Mobile application (Expo / React Native) | **🟡 · iskelet + sözleşme** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
 
@@ -3537,6 +3537,54 @@ command.
 **CI.** The static job gains `pnpm --filter mobile lint && pnpm --filter mobile
 typecheck`. No Expo build in CI, deliberately: store credentials do not exist and `29`
 A5/C6 gate the store anyway (`ADR-030`'s sequencing).
+
+### 2026-08-25 — Phase 11.2 · the DTO extraction, and the boundary that had to come first (commit `P11.2 · DTO çıkarma ve mobil sınırı`)
+
+**Order mattered and was kept: gitignore → boundary test → extraction → launchers.**
+
+**`.gitignore` first**, because Phase 14 will mint signing keys and this repository is
+public: `.expo/`, the native `mobile/ios|android` folders, and every signing-material
+extension (`*.keystore`, `*.jks`, `*.p8`, `*.p12`, `*.mobileprovision`) are ignored
+before any of them exists — a keystore that ever lands in history is a credential leak
+that outlives the force-push that removes it.
+
+**`test/mobile-boundary.test.ts` before the extraction, green before the surface it
+guards grew.** Three invariants, in the `reference-dirs` shape: no relative import
+escapes `mobile/` (the aliases are the only door into `src/`); `@contracts/*` points
+only at `application/dto`; and — the sharpest edge — **tsconfig and Metro resolve the
+aliases identically**, because they are two independent resolvers and a divergence means
+`tsc` passes against one mapping while the device bundles the other. Writing the test
+found exactly that bug already live: 11.1's Metro mapped `@contracts` → `src/modules`
+(no `/application/dto` tail), so `@contracts/iam` typechecked and would have crashed the
+first real bundle. The fix is structural, not a patch: `mobile/contract-map.json` is the
+single mapping, Metro `require`s it into a `resolveRequest`, tsconfig must equal it by
+test — the config that cannot import is pinned, the one that can, imports.
+
+**The extraction: 16/16 modules now carry `application/dto.ts`,** schemas and result
+types moved out of the `server-only` + Prisma service files, services re-export so no
+import site moved. `test/dto-purity.test.ts` holds both halves: every module has the
+file, and every dto closure is **runtime-pure** — no `server-only`, no Prisma, no env
+parse, no `process.env`, transitively, with `import type` exempt because it is erased
+before a bundle exists. Two structural notes from the sweep: `SessionSummary` moved from
+`token-service` into the dto and the infra file now imports it back — even a type-only
+import of infrastructure makes mobile's tsc parse a file whose `@/` aliases do not
+resolve, so the dependency had to invert (the right direction anyway); and the offer and
+pricing modules' existing `lead-dto.ts`/`estimate-dto.ts` stayed where they are with
+`dto.ts` re-exporting them — they predate the convention and carry the disclosure
+boundary's argument in place. **No schema changed shape**; the sweep was mechanical, and
+its one casualty was self-inflicted tooling (a cut helper that silently no-opped on
+two-argument calls — caught by typecheck, not by luck, and the cuts were re-verified
+file by file).
+
+**The mobile client's temporary types are gone.** `AuthTokens` and `MyCompany` now come
+from `@contracts/iam` — the very types the services return — so a field the server
+renames breaks the mobile compile instead of a device at runtime. `loginSchema` was
+already shared; now the whole login/refresh/role-split loop rides imported contract, zero
+retyped shapes.
+
+**The four `.cmd` launchers are committed** (contents untouched) and `README.md` §Where
+things are points at them: ilk kurulum → sunucu → mobil → durdur, a double-click wrapper
+for the pnpm/docker commands on Windows.
 
 ## Open questions — need a human answer before the phase that hits them
 
