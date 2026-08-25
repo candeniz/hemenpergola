@@ -60,11 +60,20 @@ Server Action  ──┐
 
 Both are adapters: parse input with the **same Zod schema**, build an `ActorContext`, call
 the service, map `Result` to their own transport. A feature is not "done" if it works
-through a server action but has no route-handler path, because the mobile app in the next
-phase consumes `/api/v1` and a retrofitted API is a rewrite (`00-project-overview.md`).
+through a server action but has no route-handler path, because the mobile app consumes
+`/api/v1` and a retrofitted API is a rewrite (`ADR-030`).
 
-Web forms use server actions (progressive enhancement, no client fetch layer). Everything a
-mobile client would need exists under `/api/v1` — see `06-api-specification.md`.
+Web forms use server actions (progressive enhancement, no client fetch layer). The `/api/v1`
+surface is specified in `06-api-specification.md`.
+
+> **This rule was prose for nine phases and nothing enforced it, so it drifted.** Measured
+> against the running code: of 132 registered service methods, 55 are reachable through a
+> route handler and **46 server-action capabilities have no `/api/v1` path at all** —
+> including every transition in `11`'s table, all of `09`'s matching output, all of `15` and
+> all of `16`. `test/api-surface.test.ts` now measures this by matching on the service
+> method both adapters call, with a named web-only exception list. Closing it is Phase 10
+> (`21-development-roadmap.md`); until that gate is green, do not read the paragraph above
+> as a description of what exists.
 
 ## ActorContext
 

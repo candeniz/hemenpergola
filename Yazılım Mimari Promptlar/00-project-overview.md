@@ -56,10 +56,15 @@ Rationale and rejected alternatives: `24-decisions-log.md` (ADR-001..003).
 
 ## Non-goals for V1
 
-- Mobile application code of any kind.
 - Payments and subscriptions as working features — data model only (`ADR-010`).
 - A general-purpose configurator rules engine — deferred, see `ADR-008`.
 - Elasticsearch, microservices, event sourcing, multi-currency.
+
+**No longer on this list: a mobile application.** It was the first entry here, and
+`ADR-030` reverses it — an Expo / React Native app covering the core flow, built against
+the same `/api/v1` the web already has, and submitted to the stores *after* the web
+launches. It is still outside V1's launch, which is what this list is about; it is
+`21-development-roadmap.md` Phases 10 and 11. The rest of the list stands.
 
 ## How to use this documentation
 

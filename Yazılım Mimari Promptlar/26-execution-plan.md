@@ -82,8 +82,11 @@ Front-load the thing that can still teach you something. A demo of a beautiful w
 prices nothing is worth less than an ugly price-book screen that a real manufacturer filled in.
 
 ```
-0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9
-              ▲                    ▲
+0 ─► 1 ─► 2 ─► 3 ─► 4 ─► 5 ─► 6 ─► 7 ─► 8 ─► 9 ─► 10 ─► 11
+              ▲                    ▲                          ▲
+              │                    │                          └─ built alongside the launch
+              │                    │                             checklist, in the stores
+              │                    │                             after it (ADR-030)
               │                    └─ first demo worth showing (unchanged from 21)
               └─ D3 pilot feedback lands here, while it is still cheap
 ```
@@ -320,6 +323,58 @@ including one full pass on a mid-range Android phone over a slow connection.
 Launch city by city (Q5), not nationwide. Zero-result telemetry from Phase 5 is the input to
 that decision, and it has been collecting since then precisely so this is a measurement rather
 than an opinion.
+
+---
+
+## Phase 10 — The API the mobile app consumes
+
+Entry: `ADR-030` accepted. Gate: `test/api-surface.test.ts` green — no capability reachable
+from a server action alone, and every exception on the web-only list carries a written
+reason.
+
+Do the drift test **first and watch it fail**, before writing a single handler. It was
+written in the measurement turn and produced the number that justifies this phase: 46
+missing capabilities, listed by action. Adding endpoints until a red test turns green is a
+different activity from adding endpoints until you think you are finished, and only the
+first one ends.
+
+Order the work by what the phone actually needs first, which is also the riskiest half:
+`11`'s transitions (11 actions, none of them exposed today), then `09`'s match run and
+results, then `15` and `16`. Company profile, supply-side and file endpoints follow.
+
+Two specification gaps to close before implementing them, because `06` does not describe
+them at all: **file upload** — `06` says `{ fileId }` in three request bodies and never says
+where a `fileId` comes from, while `presign → complete → url` has existed in the code since
+Phase 3 — and project duplication. Write them into `06` first; the rest of this phase is
+implementation catching up with a specification that was already right.
+
+Nothing new goes into the application layer here. If a route handler needs a service method
+that does not exist, that is a sign the web surface was doing domain work in `app/`, and the
+repair is to move it, not to write a second implementation behind the API.
+
+---
+
+## Phase 11 — Mobile application (Expo / React Native)
+
+Entry: Phase 10 gate met. Gate: the core flow walkable on a physical device against
+production, and a manufacturer answering a lead inside the SLA without a browser.
+
+Scope is `ADR-030`'s table and it is a short list on purpose. The app splits by role after
+login the same way the web splits into shells; the price-book editor, the simulator,
+portfolio management, verification documents, admin and the CMS are not ported.
+
+Reuse the Zod DTOs in `modules/*/application/dto` as the client contract — that is the
+reason the language is TypeScript on both sides, and the reason Flutter lost. Auth is the
+Bearer pair `06` §Auth already issues, with refresh in secure device storage; there is no
+cookie on this client (`ADR-022` is a web-session decision and does not travel).
+
+Push notifications extend `13`'s catalogue with a transport rather than inventing a second
+catalogue. `ADR-027`'s at-least-once rule for mandatory events applies to push unchanged: a
+duplicate push is a nuisance, a missing contact-disclosure notice is a KVKK problem.
+
+**This phase must not block the launch.** Store submission needs A5 and C6 from `29`, both
+behind Q2, and Apple's review adds days on top with a rejection costing a round trip. Build
+while `29` is being worked through; submit after the web is live.
 
 ---
 

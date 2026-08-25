@@ -968,3 +968,81 @@ since 2026-08-23.
 **Reverses if.** The root gains so many reference folders that a single flat list stops
 being the right shape — at which point the answer is a manifest with per-consumer
 metadata, not a return to five copies.
+
+---
+
+## ADR-030 — There is a mobile application, it is Expo/React Native, and it ships after the web
+
+**Context.** `00-project-overview.md` §Non-goals opened with "Mobile application code of any
+kind". That was the right call for V1's *build* order and it is the wrong call for the
+product: the audience on both sides of this marketplace is phone-first. A manufacturer
+answers a lead from a van between two installations; the 48-hour SLA in
+`11-offer-request-lifecycle.md` is a promise that is kept or broken on a phone. A customer
+photographs the terrace they want covered.
+
+Two things make this decidable now rather than a rewrite later. First, the API was designed
+for it from Phase 0: `05` §Two entry points makes every capability an application service
+with two thin adapters, and `06` §Auth already issues `accessToken` / `refreshToken` pairs
+rather than only a session cookie — Bearer JWT exists because a mobile client was always
+the reason it exists. Second, Phase 9 closed the code work for the web, so mobile is the
+next thing there is room for.
+
+**Decision.** Build a mobile application in **Expo / React Native**, one codebase, one
+store listing, splitting by role after login the way the web splits into shells.
+
+**Scope — the core flow, not the whole product.**
+
+| On the phone | Stays on the web | Why |
+|---|---|---|
+| Manufacturer: see, accept, decline a request; schedule and complete a survey; send an offer; mark won/lost | Price-book editor and simulator | The SLA clock runs where the person is. A five-table grid of `PriceBookItem` rows with two adjustment modes is desk work; `08` §Editor already assumes a wide screen. |
+| Both sides: messaging, offer status tracking, notifications | Portfolio management, verification documents | `15` is polling with a short window (`ADR-009`) — the shape a phone wants. Uploading a trade-registry PDF is a once-per-company act performed next to a scanner. |
+| Customer: projects, matches, offers, reviews | Admin, CMS | `17` and `18` §Editor are an operator console. |
+
+The split is not "phase 1 / phase 2 of the same app". Everything in the right column is
+deliberately *not* planned for the phone, so that the app stays the size of the flow it
+serves.
+
+**Sequencing — the web launches first, and this is a constraint rather than a preference.**
+A store submission needs two things this project does not yet have:
+`29-launch-checklist.md` **A5**, a privacy text approved by a lawyer and reachable at a
+public URL (both stores reject on a missing or dead privacy URL), and **C6**, a live
+backend for the reviewer to sign into. Both hang off the Q2 legal chain, which is the
+longest external lead time in the project (`26` §Decision calendar). Apple's review adds
+days on top, and a rejection adds a round trip.
+
+So: the web launches on the schedule `29` already tracks; the app is built **in parallel**
+against the same API and enters the stores afterwards. Nothing in the mobile plan is
+allowed to become a blocker for the web launch.
+
+**Why Expo/React Native, and not the alternatives.**
+
+- **Capacitor / a WebView wrapper** — the cheapest option and the one that fails at the
+  gate. App Store Review Guideline 4.2 rejects apps that are a repackaged website, and
+  "our site in a shell" is exactly the described case. It would also give up push
+  notifications as a first-class surface, which is the single feature that makes the SLA
+  promise keepable.
+- **PWA only** — no store presence, and iOS web push remains conditional on the user having
+  added the app to the home screen. A marketplace whose manufacturers must be reachable
+  within 48 hours cannot make its notification path depend on that.
+- **Native Swift + Kotlin** — the best result and the wrong economics for a codebase with
+  one developer. Two more toolchains, two more release trains, for screens that are lists
+  and forms over an API that already exists.
+- **Flutter** — a defensible answer that loses on the specifics here: the team's language
+  is TypeScript, the Zod schemas in `modules/*/application/dto` are the contract, and
+  reusing them costs nothing in React Native and requires regeneration in Dart.
+
+**What this decision immediately exposes.** `05` §Two entry points claims "Everything a
+mobile client would need exists under `/api/v1`". Measured this turn against the running
+code: of 132 registered service methods, **55** are reachable through a route handler and
+**46 server-action capabilities have no `/api/v1` path at all** — including every single
+transition in `11`'s table, all of `09`'s matching output, all of `15`, and all of `16`.
+The rule was prose and nothing enforced it. Closing that gap is Phase 10's work and its
+gate; the app cannot be started against an API that does not answer.
+
+**Consequences.** `00` §Non-goals loses its first line. `21` and `26` gain Phases 10 and 11.
+The `/api/v1` surface stops being a secondary adapter maintained out of principle and
+becomes the thing a second client depends on — which is also what makes it testable.
+
+**Reverses if.** The endpoint work in Phase 10 shows the API surface is a genuine rewrite
+rather than an adapter pass, or Q2 stalls long enough that web launch itself is at risk. In
+either case mobile returns to the non-goal list with a date and a reason, not silently.

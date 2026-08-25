@@ -11,8 +11,14 @@ and its launch is not** (2026-08-25). The build is finished: the release gate wa
 nine F1 steps, the five public templates meet `18`'s budgets in CI, KVKK export (JSON +
 Turkish-rendering PDF), erasure-as-anonymisation and the retention sweep work end to end,
 the two-profile CSP is on with no `unsafe-inline` for scripts, every queue has a handler
-and every notification event has both a template and a trigger. **There is no remaining
-code task.**
+and every notification event has both a template and a trigger. **There was no remaining code task
+for the web.**
+
+**As of 2026-08-25 there is a next phase, and it is not the web.** `ADR-030` reverses the
+mobile non-goal: an Expo / React Native app for the core flow, built alongside the launch
+checklist and submitted to the stores after the web launches. It exposed that `05` §Two
+entry points has been half true — 46 of 132 service capabilities have no `/api/v1` path —
+which is Phase 10.
 
 What remains is not code: 18 of `29-launch-checklist.md`'s 36 items wait on a legal
 entity, processor agreements, hosting and provider accounts, an editorial session with a
@@ -29,7 +35,7 @@ building one from nothing is the thing being observed.
 The application runs: `docker compose up -d && pnpm seed demo && pnpm dev` gives a working
 local stack with 81 provinces, 974 districts, the full account flow with real web sessions
 (`ADR-022`), an anonymous configurator with claiming (`ADR-023`), and a manufacturer who can
-price their work. **1081 unit tests, 340 integration tests** against real PostGIS and MinIO
+price their work. **1085 unit tests, 340 integration tests** against real PostGIS and MinIO
 containers, and the **release gate is green — `core-flow.spec.ts` walks all nine F1 steps**
 (64 Playwright tests green, 10 skipped for later phases). Mail and
 SMS go to the log adapters, which is what Q3 and Q2 leave available.
@@ -56,6 +62,8 @@ proven — not when the code is written.
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
+| 10 | The API the mobile app consumes | **⬜ not started · measured** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. **Measured 2026-08-25: 46 of them are.** The test was written and run this turn and is deliberately not committed; it lands with the endpoints |
+| 11 | Mobile application (Expo / React Native) | **⬜ not started** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
 
@@ -3252,6 +3260,69 @@ imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`.
 | KVKK not mentioned | consent, disclosure, retention, erasure built in | ADR-011 |
 | §37 payments deferred | tables modelled, `501` on reserved paths | ADR-010 |
 | 10-step wizard screens | 3 stages × 10 logical steps | ADR-013 |
+
+### 2026-08-25 — Mobile is no longer a non-goal, and the `/api/v1` drift is measured (commit `P10.1 · ADR-030 ve API sapmasının ölçümü`)
+
+No endpoint code. This turn makes one decision and takes one measurement.
+
+**`ADR-030` — mobile application, Expo / React Native.** `00` §Non-goals opened with
+"Mobile application code of any kind"; that line is gone. The app covers the core flow —
+the manufacturer's lead inbox and SLA response, survey, offer, outcome; the customer's
+projects, matches, offers, reviews; messaging and notifications — and deliberately does not
+cover the price-book editor, the simulator, portfolio management, verification documents,
+admin or the CMS. One codebase, one store listing, split by role at login.
+
+Rejected with reasons in the ADR: Capacitor / WebView wrapper (App Store Review Guideline
+4.2 rejects repackaged websites, and it gives up push as a first-class surface), PWA only
+(no store presence; iOS web push depends on the user adding to the home screen, which an
+SLA promise cannot depend on), native Swift + Kotlin (right result, wrong economics for one
+developer), Flutter (loses on the Zod DTOs being the contract).
+
+**Sequencing is a constraint, not a preference.** Store submission needs `29` A5
+(lawyer-approved privacy text at a public URL) and C6 (a live backend for the reviewer),
+both behind the Q2 chain, plus Apple's review time. The web launches first; the app is
+built in parallel and enters the stores afterwards. `21` and `26` now carry Phases 10 and
+11 with that written into them.
+
+**The measurement.** `05` §Two entry points has said since Phase 0 that a capability
+reachable through a server action with no route-handler path is a defect, and then claimed
+"Everything a mobile client would need exists under `/api/v1`". Nothing enforced it and it
+is not true.
+
+`test/api-surface.test.ts` — same shape as the authorisation-matrix scan and
+`reference-dirs.test.ts` — extracts every method registered with `serviceMethod()` from
+`src/modules/**/application/`, then asks whether each exported action's service method is
+also named by some handler under `src/app/api/v1/`. **Matching on the service method rather
+than on names or paths is what makes it reliable**: the action files use four different
+calling conventions, and a first version that matched only `service.x(a, d)` reported 86
+missing when the real number is 46. The test also fails if any action resolves to *no*
+service method, so a broken extraction is loud rather than being counted as missing
+endpoints.
+
+Result: **132 registered service methods · 55 reachable through `/api/v1` · 46 with no API
+path.** Whole areas are absent rather than patchy — there is not one route under
+`api/v1/offer-requests`, `matches`, `messages`, `reviews`, `service-areas`, `portfolio` or
+`files`.
+
+Three deliberate web-only exceptions, each carrying its reason in the test: `logoutAction`
+(clears the web session cookie, `ADR-022`; a mobile client holds tokens), `patchStepAction`
+(the no-JS wizard's form-post shim — `PATCH /projects/{id}` is the API path for the same
+capability) and `upsertContentPageAction` (the admin block editor).
+
+**`06` is mostly right; the code is behind it.** Of the 46, the large majority are already
+specified — `/offer-requests/{id}/…`, `/companies/{companyId}/…`, `/offer-requests/{id}/messages`,
+the review endpoints, `POST /projects/{id}/matches`. Two genuine specification gaps found:
+**file upload has no endpoints in `06` at all** (three request bodies take a `{ fileId }`
+and nothing says where one comes from, while `presign → complete → url` has been in the
+code since Phase 3), and project duplication. Those get written into `06` before they get
+implemented; the rest of Phase 10 is implementation catching up.
+
+**The failing test is not in this commit.** It was written, run and reported, and it lands
+with the endpoints in Phase 10 — leaving CI red for a phase would train people to ignore
+it, and `it.fails` or `describe.skip` would make it stop measuring. Only `ADR-030` and the
+document changes are committed. `05` §Two entry points now says what is actually true, with
+the number, and warns the reader not to take the paragraph above it as a description of
+what exists.
 
 ## How to update this file
 
