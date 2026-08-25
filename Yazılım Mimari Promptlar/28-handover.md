@@ -42,6 +42,7 @@ application code and are excluded from the build, from `tsconfig` and from lint:
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | 77 Stitch design screens, `code.html` + `screen.png` each, plus four `DESIGN.md` themes |
 | `CLAUDE.md`, `README.md` | repository root |
 | `src/`, `prisma/`, `e2e/`, `test/`, `scripts/` | application code |
+| `docs/` | the static landing page served by GitHub Pages (`index.html` + `.nojekyll`, source `master` + `/docs`). **Not documentation** — the numbered documents are in `Yazılım Mimari Promptlar/`; this is a marketing page whose every claim comes from them. No module imports it, and Prettier ignores it |
 
 Both folder names contain a space and Turkish characters. That is deliberate and load-bearing
 in `CLAUDE.md` §Layout — do not "tidy" them; the paths appear in `tsconfig.json`,

@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config'
 
 import { VALID_ENV } from './test/fixtures/env.js'
 
+import { REFERENCE_DIRS } from './reference-dirs.mjs'
+
 export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
@@ -22,8 +24,7 @@ export default defineConfig({
     exclude: [
       'node_modules/**',
       '.next/**',
-      'Frontend Tasarım/**',
-      'Yazılım Mimari Promptlar/**',
+      ...REFERENCE_DIRS.map((dir) => `${dir}/**`),
       // Integration tests are their own pipeline stage and need a container.
       'test/integration/**',
     ],

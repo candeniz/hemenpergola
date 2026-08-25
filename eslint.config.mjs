@@ -6,6 +6,8 @@ import { FlatCompat } from '@eslint/eslintrc'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import tseslint from 'typescript-eslint'
 
+import { REFERENCE_DIRS as SHARED_REFERENCE_DIRS } from './reference-dirs.mjs'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const compat = new FlatCompat({ baseDirectory: __dirname })
 
@@ -108,8 +110,11 @@ export const DYNAMIC_LAYERING_BANS = [
   ),
 ]
 
-/** Committed reference material, never linted and never imported (CLAUDE.md §Layout). */
-const REFERENCE_DIRS = ['Frontend Tasarım/**', 'Yazılım Mimari Promptlar/**', 'Prompt/**']
+/**
+ * Committed reference material, never linted and never imported (CLAUDE.md §Layout).
+ * The names come from the shared list (ADR-029); the `/**` shape is this config's own.
+ */
+const REFERENCE_DIRS = SHARED_REFERENCE_DIRS.map((dir) => `${dir}/**`)
 
 /**
  * The only files allowed to touch `process.env` directly. `instrumentation.ts` is on the

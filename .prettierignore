@@ -6,7 +6,6 @@ pnpm-lock.yaml
 # Committed reference material, not source (CLAUDE.md §Layout)
 Frontend Tasarım
 Yazılım Mimari Promptlar
-Prompt
 
 # Hand-maintained documentation — Prettier repads markdown tables, which is churn
 # on files nobody asked it to touch.

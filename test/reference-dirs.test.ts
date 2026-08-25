@@ -1,0 +1,78 @@
+import { readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+
+import { describe, expect, it } from 'vitest'
+
+// The single source the executable configs import (`ADR-029`).
+import { REFERENCE_DIRS } from '../reference-dirs.mjs'
+
+/**
+ * The reference-folder list had two copies and they drifted: `Prompt/` was named in
+ * `eslint.config.mjs` and not in `next.config.ts`, and the handover document said both
+ * had been cleaned when neither had. `ADR-029` collapsed the executable configs onto one
+ * module — but `.prettierignore` and `tsconfig.json` are text and JSON, with no imports,
+ * so they still repeat the names.
+ *
+ * This test is the seam for those two. Without it the drift removed from three files
+ * simply re-enters through the two that cannot import anything.
+ */
+describe('reference directories · one list, every consumer', () => {
+  const root = process.cwd()
+
+  it('names exactly the two committed reference folders', () => {
+    expect(REFERENCE_DIRS).toEqual(['Frontend Tasarım', 'Yazılım Mimari Promptlar'])
+  })
+
+  it('.prettierignore ignores exactly those folders — no more, no fewer', () => {
+    const lines = readFileSync(join(root, '.prettierignore'), 'utf8')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== '' && !line.startsWith('#'))
+
+    for (const dir of REFERENCE_DIRS) {
+      expect(lines, `.prettierignore must ignore ${dir}`).toContain(dir)
+    }
+
+    // A folder ignored here that no longer exists is a path the next reader goes looking
+    // for — the exact defect `Prompt` was. Every non-comment entry either names a
+    // reference folder or is one of the deliberate non-folder entries.
+    const deliberate = new Set([
+      'node_modules',
+      '.next',
+      'coverage',
+      'pnpm-lock.yaml',
+      '/README.md',
+      '/CLAUDE.md',
+      '/docs',
+    ])
+    const unexplained = lines.filter(
+      (line) => !deliberate.has(line) && !(REFERENCE_DIRS as string[]).includes(line),
+    )
+    expect(unexplained, 'unexplained .prettierignore entries').toEqual([])
+  })
+
+  it('tsconfig.json excludes exactly those folders among its reference entries', () => {
+    const raw = readFileSync(join(root, 'tsconfig.json'), 'utf8')
+    const exclude = /"exclude"\s*:\s*\[([\s\S]*?)\]/.exec(raw)?.[1] ?? ''
+    const entries = [...exclude.matchAll(/"([^"]+)"/g)].map((match) => match[1])
+
+    for (const dir of REFERENCE_DIRS) {
+      expect(entries, `tsconfig must exclude ${dir}`).toContain(dir)
+    }
+    // And no stale reference folder lingers there either.
+    const referenceLike = entries.filter(
+      (entry) => entry === 'Prompt' || entry?.startsWith('Frontend') || entry?.includes('Prompt'),
+    )
+    expect(referenceLike.sort()).toEqual([...REFERENCE_DIRS].sort())
+  })
+
+  it('every named folder actually exists — a dead entry is a path someone will hunt for', () => {
+    for (const dir of REFERENCE_DIRS) {
+      expect(statSync(join(root, dir)).isDirectory(), `${dir} must exist`).toBe(true)
+      expect(
+        readFileSync(join(root, 'CLAUDE.md'), 'utf8'),
+        `CLAUDE.md §Layout must name ${dir}`,
+      ).toContain(dir)
+    }
+  })
+})

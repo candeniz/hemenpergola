@@ -3188,6 +3188,28 @@ Pages source is **`master` + `/docs`** — note `master`, not `main`: this repos
 only ever had `master`, and it is the remote's default branch. Enabling Pages needs the
 repository settings (or an authenticated `gh`, which this machine does not have).
 
+### 2026-08-25 — `docs/` in the third table, and a cleanup that had only been written down
+
+`28-handover.md` §2 gained the `docs/` row — the third copy of the same layout table, and
+the one the cold-start reader actually opens. `README.md`'s sentence under its table became
+"the two **reference** folders above", because the `docs/` row now sits directly above it
+and the sentence is positional.
+
+**A documented cleanup that never ran.** `28` §2 has claimed since 2026-08-23 that `Prompt/`
+— a stale duplicate of three documents — was deleted and that two ignore-lists were cleaned
+with it. Verification found the folder still on disk with three files tracked in git, and
+both entries still present. Removing only the ignore entries would have made things worse:
+measured, it turns `pnpm format:check` red on three stale files. So the cleanup was
+*performed* rather than the sentence rewritten — folder deleted, `.prettierignore` and
+`eslint.config.mjs` entries removed. The sentence's **date is now the one inaccuracy left**
+(deleted 2026-08-25, not the 23rd); it was left exactly as written, on instruction.
+
+**`ADR-029`** collapses the reference-folder list onto one module (`reference-dirs.mjs`),
+imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`.
+`.prettierignore` and `tsconfig.json` cannot import anything, so
+`test/reference-dirs.test.ts` asserts they agree with it — and that test caught the live
+`Prompt` entry on its first run, which is the seam proving itself.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

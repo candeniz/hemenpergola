@@ -925,3 +925,46 @@ reading marks the company side read`) is unchanged, and `15` is updated in the s
 
 **Reverses if.** Pilot evidence shows pre-acceptance information exchange is decisive for
 accept rates — in which case the structured-field design above gets an ADR of its own.
+
+---
+
+## ADR-029 — One list of reference folders, and a test for the configs that cannot import it
+
+**Context.** `CLAUDE.md` §Layout names two committed reference folders that must stay out
+of the build, the linter, the type-checker, the test runner and the formatter. That list
+was written out **five times**: `eslint.config.mjs`, `next.config.ts`, `tsconfig.json`,
+`vitest.config.ts` and `.prettierignore`. Copies drift, and these had: `Prompt/` — a stale
+duplicate of three documents at the root — was named in `eslint.config.mjs` and in
+`.prettierignore` but in neither of the others.
+
+Worse, `28-handover.md` §2 asserted the folder had been **deleted** and both ignore-lists
+**cleaned**. Neither had happened: the folder was still on disk with three files tracked in
+git, and both entries were still there. A wrong list is a bug; a document confidently
+describing a cleanup that never ran is how the bug survives review.
+
+**Decision.** One module, `reference-dirs.mjs` at the repository root, exporting the bare
+directory names. `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts` import it and
+apply their own glob shape (`dir/**`, `./dir/**/*`, `**/dir/**`). `.mjs` rather than `.ts`
+because ESLint's flat config is plain Node ESM with no TypeScript loader, and `allowJs` was
+already on, so the TypeScript configs import it without a declaration file.
+
+`.prettierignore` and `tsconfig.json` **cannot** import anything — one is a text file, the
+other JSON. For those two, `test/reference-dirs.test.ts` asserts they name exactly the
+shared list, plus that every named folder actually exists on disk. Without that test the
+drift removed from three files simply re-enters through the two that cannot participate.
+
+**Why not leave two copies with cross-referencing comments.** That was the alternative, and
+it is what the codebase would have had to trust: a comment saying "keep this in step with
+its twin". The twin had *already* fallen out of step, with a comment-free copy on each
+side, and nobody noticed for two phases. A comment asks the next reader to remember; a
+shared module and a failing test do not.
+
+**Consequences.** Adding or removing a reference folder is now one edit plus two text
+files, and forgetting either text file fails `pnpm test`. The new test also caught the
+live `Prompt` entry the moment it ran, which is the cheapest possible demonstration that
+the seam is in the right place. `Prompt/` itself is deleted — the thing `28` §2 had claimed
+since 2026-08-23.
+
+**Reverses if.** The root gains so many reference folders that a single flat list stops
+being the right shape — at which point the answer is a manifest with per-consumer
+metadata, not a return to five copies.
