@@ -1,3 +1,11 @@
+# The workspace members. The web app deliberately STAYS the root package rather than
+# moving under packages/ — every path in nine documents, the CI file, the reference-dir
+# machinery and three years of muscle memory says 'src/', and repotting the plant to make
+# room for a second pot risks the plant for the pot's sake (ADR-030 adds mobile BESIDE the
+# web, not around it). 'mobile' is the Expo app; the root is implicitly a member.
+packages:
+  - mobile
+
 # pnpm 11 reads settings from here, not from the "pnpm" field in package.json.
 # (`onlyBuiltDependencies` was removed in v11 and replaced by `allowBuilds`.)
 #

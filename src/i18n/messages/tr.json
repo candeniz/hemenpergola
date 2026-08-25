@@ -928,5 +928,21 @@
       "failed": "Bağlantı geçersiz, kullanılmış ya da süresi dolmuş. Silme talebini hesabınızdan yeniden başlatın.",
       "missingToken": "Bağlantı eksik görünüyor. Silme talebini hesabınızdaki Verilerim sayfasından başlatın."
     }
+  },
+  "mobile": {
+    "login": {
+      "title": "Giriş yap",
+      "email": "E-posta",
+      "password": "Şifre",
+      "submit": "Giriş yap",
+      "failed": "Giriş yapılamadı. Bilgilerinizi kontrol edin.",
+      "rateLimited": "Çok fazla deneme yapıldı. Lütfen biraz bekleyin."
+    },
+    "home": {
+      "customerTitle": "Hoş geldiniz",
+      "manufacturerTitle": "{company} paneli",
+      "placeholder": "Çekirdek akış ekranları bir sonraki adımda geliyor.",
+      "signOut": "Çıkış yap"
+    }
   }
 }

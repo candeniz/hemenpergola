@@ -66,6 +66,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Mobile lint + typecheck (ADR-030 — the Expo app shares the pipeline, not the store)
+        run: pnpm --filter mobile lint && pnpm --filter mobile typecheck
+
       - name: Format
         run: pnpm format:check
 

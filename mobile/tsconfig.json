@@ -1,0 +1,21 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "paths": {
+      // The contract surface, imported from the web's source tree rather than copied —
+      // Phase 10's whole point was one schema per use case shared by every adapter, and a
+      // fourth consumer that RETYPES the contract is drift with extra steps. Only PURE
+      // modules may be aliased here (zod + domain constants, no 'server-only', no Prisma);
+      // the api-surface report tracks which dto files qualify.
+      "@contracts/iam": ["../src/modules/iam/application/dto.ts"],
+      // One message catalogue, two renderers (I18N-01). The mobile bundle carries the same
+      // files next-intl serves; test/mobile-i18n.test.ts holds the keys together.
+      "@messages/*": ["../src/i18n/messages/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

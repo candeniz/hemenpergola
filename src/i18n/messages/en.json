@@ -928,5 +928,21 @@
       "failed": "The link is invalid, already used, or expired. Start the deletion request again from your account.",
       "missingToken": "The link looks incomplete. Start the deletion request from the My data page in your account."
     }
+  },
+  "mobile": {
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "failed": "Could not sign in. Check your details.",
+      "rateLimited": "Too many attempts. Please wait a moment."
+    },
+    "home": {
+      "customerTitle": "Welcome",
+      "manufacturerTitle": "{company} panel",
+      "placeholder": "The core-flow screens arrive in the next slice.",
+      "signOut": "Sign out"
+    }
   }
 }

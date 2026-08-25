@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Hemen Pergola",
+    "slug": "hemen-pergola",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "platforms": ["ios", "android"]
+  }
+}

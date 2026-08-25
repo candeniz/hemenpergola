@@ -74,7 +74,8 @@ describe('reference directories · one list, every consumer', () => {
     // caught `Yazılım Mimari Promptlar` only because "Promptlar" happens to contain
     // "Prompt". A stale entry outside that pattern passed, and a third reference folder
     // outside it would have failed a correct tsconfig. Name the exceptions instead.
-    const deliberate = new Set(['node_modules', '.next', 'test/fixtures/boundary'])
+    // `mobile` joined in Phase 11: the Expo app typechecks under its own tsconfig.
+    const deliberate = new Set(['node_modules', '.next', 'test/fixtures/boundary', 'mobile'])
     const remainder = entries.filter((entry) => !deliberate.has(entry)).sort()
     expect(remainder, 'unexplained tsconfig exclude entries').toEqual([...REFERENCE_DIRS].sort())
   })

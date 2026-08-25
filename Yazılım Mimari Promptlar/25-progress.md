@@ -63,7 +63,7 @@ proven — not when the code is written.
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
-| 11 | Mobile application (Expo / React Native) | **⬜ not started** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
+| 11 | Mobile application (Expo / React Native) | **🟡 · iskelet** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
 
@@ -3467,6 +3467,76 @@ A customer has no membership → `FORBIDDEN`; a member of company A calling comp
 gets no membership resolved → `FORBIDDEN`; a global admin passes, which is `ADR-006`'s own
 carve-out (admins may read breakdowns). The api-leak exemption rests on that chain, and the
 chain holds.
+
+### 2026-08-25 — Phase 11.1 · the Expo skeleton and its sharing seams (commit `P11.1 · Expo iskeleti ve paylaşım dikişleri`)
+
+**Layout.** `pnpm-workspace.yaml` existed but declared no `packages` — it only carried
+pnpm settings, so the repo was never actually a multi-package workspace until now. It
+gains `packages: [mobile]` and the web **stays the root package**: every path in nine
+documents, the CI file and the reference-dir machinery says `src/`, and repotting the
+plant to make room for a second pot risks the plant for the pot's sake. `mobile/` sits
+beside it — Expo SDK 57, versions taken from the `expo-template-blank-typescript`
+manifest rather than guessed. Root configs each needed one line: tsconfig excludes
+`mobile` (own tsconfig; the `deliberate` set in `reference-dirs.test.ts` grew with a
+comment), root eslint ignores it (eslint-config-expo flat config inside — the two
+environments disagree about globals and JSX), prettier covers it unchanged.
+
+**The contract crosses without being retyped — where it can.** `mobile`'s tsconfig aliases
+`@contracts/iam` → `src/modules/iam/application/dto.ts` and Metro mirrors the alias, so
+`loginSchema` on the phone IS the schema the route handler parses with: the same parse
+runs on the device first, and a malformed input never spends a network round trip or an
+auth rate-limit slot. This works because `dto.ts` is PURE — zod plus a domain constant.
+
+**And the seam it exposes, reported rather than papered over:** most modules' schemas
+still live inside service files that open with `import 'server-only'` and import Prisma —
+unimportable in a React Native runtime even as types, because tsc must still parse the
+closure. `CLAUDE.md` §Conventions has said all along that schemas live in
+`modules/*/application/dto`; the codebase drifted, and mobile is the consumer that makes
+the drift cost something. The fix is a mechanical extraction sweep (schemas + result types
+into dto files, services re-export) — **a module-boundary change, flagged per instruction
+and not done in this turn**. Until then the client's response types are local minimal
+shapes, named as such in `client.ts`.
+
+**Auth.** Bearer pair in `expo-secure-store` (Keychain/Keystore, never AsyncStorage — a
+plaintext file any rooted device reads). One refresh, one retry on 401, then the wall:
+looping would hammer the auth limit with a dead family. Logout revokes server-side
+best-effort and wipes locally regardless.
+
+**Role split without a new capability.** `06`'s `GET /me` is still unbuilt — but
+`GET /companies` (listMyCompanies) already answers the only question the shell asks:
+memberships non-empty → manufacturer, empty → customer. The same derivation the web's
+shells make through `resolveActor`. Whether a true `getMe` is worth building is a
+decision for the screens that need profile data, and `06` §Auth still carries the line.
+
+**Design tokens: derived, never maintained.** `scripts/generate-mobile-tokens.mjs` parses
+`globals.css`'s `@theme` blocks (Tailwind 4: the block IS the config) into
+`mobile/src/theme/tokens.json` — committed, because a Metro that depends on a build hook
+breaks on fresh checkout — and `test/design-tokens-parity.test.ts` re-derives and
+`toEqual`s on every `pnpm test`: the `reference-dirs.mjs` discipline, applied to the
+palette. 130 tokens travel; the three font-stack tokens do not, because they point at
+next/font's runtime-injected variables and font FACES are platform assets, loaded by name
+when the real screens arrive.
+
+**i18n: one catalogue, two renderers.** Mobile imports the same `tr.json`/`en.json`
+next-intl serves (Metro alias), with a deliberately tiny resolver — dot-path plus
+`{name}` interpolation; ICU plurals arrive with the screens that need them. What
+`messages.test.ts`'s equality cannot see is a key mobile asks for that exists in NEITHER
+catalogue, so `test/mobile-i18n.test.ts` scans `mobile/` for `t(locale, '…')` calls and
+resolves every key in both.
+
+**One flow, wired end to end:** login → shared-schema parse → `POST /auth/login` →
+SecureStore → `GET /companies` → role → empty customer or manufacturer home → logout. No
+navigation library — one screen either side of the auth wall does not need a router, and
+choosing one is a decision the real screens should force. **Honestly stated:** this
+environment has no emulator, so the proof is compile-level and seam-level — mobile
+typecheck resolves the real contract import, both parity tests pin the shares, and every
+endpoint the flow calls is integration/e2e-proven server-side. The first device run is
+`pnpm --filter mobile start` against a running web, and it is the next session's first
+command.
+
+**CI.** The static job gains `pnpm --filter mobile lint && pnpm --filter mobile
+typecheck`. No Expo build in CI, deliberately: store credentials do not exist and `29`
+A5/C6 gate the store anyway (`ADR-030`'s sequencing).
 
 ## Open questions — need a human answer before the phase that hits them
 

@@ -165,6 +165,9 @@ export default tseslint.config(
       '.next/**',
       'next-env.d.ts',
       'coverage/**',
+      // The Expo app lints under its own flat config (eslint-config-expo) — the RN and web
+      // environments disagree about globals, JSX runtime and import resolution.
+      'mobile/**',
       // A deliberate boundary violation, linted on purpose by test/module-boundary.test.ts.
       'test/fixtures/boundary/**',
       ...REFERENCE_DIRS,
