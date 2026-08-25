@@ -9,6 +9,7 @@ Guidance for any AI agent working in this repository.
 | `Yazılım Mimari Promptlar/` | the numbered documents `00`–`29`. **Every bare `NN-*.md` reference in any document resolves here**, including inside the documents themselves |
 | `Frontend Tasarım/stitch_outdoor_architectural_marketplace/` | 77-screen design reference |
 | `src/`, `prisma/`, `e2e/`, `test/` | application code, at the repository root |
+| `docs/` | the static landing page published on GitHub Pages. **Not documentation** — the numbered documents are under `Yazılım Mimari Promptlar/`. Independent of the application code, imported by no module, ignored by Prettier |
 
 Both reference folders are committed and both are excluded from the Next.js build, from
 `tsconfig.json` and from lint. Never import from them.
