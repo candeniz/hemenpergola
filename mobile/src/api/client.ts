@@ -25,7 +25,7 @@ type ErrorBody = { error: { code: string; message: string; requestId: string } }
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; code: string; message: string }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   init: { method?: string; body?: unknown; retryOn401?: boolean } = {},
 ): Promise<ApiResult<T>> {

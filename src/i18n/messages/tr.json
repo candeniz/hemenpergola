@@ -486,7 +486,9 @@
     "declined": "Reddedildi",
     "expired": "Süresi doldu",
     "lost": "Kaybedildi",
-    "cancelled": "İptal edildi"
+    "cancelled": "İptal edildi",
+    "offerRejected": "Teklif reddedildi",
+    "closed": "Kapatıldı"
   },
   "supply": {
     "settingsTitle": "Firma bilgileri",
@@ -943,6 +945,118 @@
       "manufacturerTitle": "{company} paneli",
       "placeholder": "Çekirdek akış ekranları bir sonraki adımda geliyor.",
       "signOut": "Çıkış yap"
+    },
+    "common": {
+      "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+      "empty": "Henüz bir şey yok.",
+      "retry": "Tekrar dene",
+      "send": "Gönder",
+      "cancel": "Vazgeç",
+      "settings": "Bildirim ayarları"
+    },
+    "leads": {
+      "title": "Talepler",
+      "empty": "Bekleyen talebiniz yok.",
+      "slaHours": "Yanıt için {hours} saat",
+      "slaExpired": "Süre doldu",
+      "area": "{area} m²",
+      "accept": "Kabul et",
+      "decline": "Reddet",
+      "declineReason": "Red gerekçesi (zorunlu)",
+      "contactTitle": "Müşteri iletişim",
+      "contactHidden": "İletişim bilgileri kabulden sonra görünür.",
+      "customerNote": "Müşteri notu",
+      "schedule": "Keşif planla",
+      "scheduleDate": "Tarih (YYYY-AA-GG)",
+      "scheduleTime": "Saat (SS:DD)",
+      "scheduleSubmit": "Randevuyu kaydet",
+      "completeSurvey": "Keşfi tamamlandı işaretle",
+      "badDate": "Tarih/saat okunamadı. Örnek: 2026-09-01 ve 14:30.",
+      "markWon": "Kazanıldı",
+      "markLost": "Kaybedildi",
+      "lostReason": "Kayıp gerekçesi (zorunlu)",
+      "project": "Proje",
+      "dimensions": "Ölçüler"
+    },
+    "offerForm": {
+      "title": "Teklif hazırla",
+      "line": "Kalem {n}",
+      "description": "Açıklama",
+      "quantity": "Miktar",
+      "unit": "Birim (ör. adet, m²)",
+      "unitPrice": "Birim fiyat (TL)",
+      "addLine": "Kalem ekle",
+      "removeLine": "Kalemi sil",
+      "validUntil": "Geçerlilik (YYYY-AA-GG)",
+      "note": "Not (isteğe bağlı)",
+      "submit": "Teklifi gönder",
+      "badMoney": "Tutar okunamadı. Örnek: 12.500 ya da 12500,50.",
+      "needLine": "En az bir kalem gerekiyor."
+    },
+    "projects": {
+      "title": "Projelerim",
+      "empty": "Henüz bir projeniz yok. Web sitesinden yapılandırmaya başlayabilirsiniz.",
+      "matches": "Eşleşmeler",
+      "requests": "Taleplerim"
+    },
+    "matches": {
+      "title": "Eşleşmeler",
+      "empty": "Bu proje için kayıtlı bir eşleşme koşusu yok.",
+      "priceOnRequest": "Fiyat talep üzerine",
+      "incomplete": "Bazı seçenekler fiyatlandırılamadı; band eksik kalemler olmadan hesaplandı.",
+      "reviews": "{count} yorum",
+      "compareHint": "Karşılaştırmak için en fazla 3 üretici seçin.",
+      "compare": "Karşılaştır ({count})",
+      "select": "Seç",
+      "selected": "Seçildi",
+      "requestCta": "Teklif iste ({count})",
+      "requestHint": "En fazla 5 üretici seçebilirsiniz."
+    },
+    "consentScreen": {
+      "title": "Onay",
+      "submit": "Onayla ve talebi gönder",
+      "sent": "Talebiniz gönderildi. Üreticilerin yanıtını Taleplerim ekranından izleyebilirsiniz.",
+      "staleVersion": "Onay metni güncellendi. Lütfen uygulamayı güncelleyip tekrar deneyin."
+    },
+    "requests": {
+      "title": "Taleplerim",
+      "empty": "Bu proje için gönderilmiş talep yok."
+    },
+    "offer": {
+      "title": "Teklif",
+      "none": "Henüz teklif gelmedi.",
+      "total": "Toplam",
+      "net": "Ara toplam",
+      "tax": "KDV (%{rate})",
+      "validUntil": "Geçerlilik: {date}",
+      "originalEstimate": "İlk tahmin bandı: {band}",
+      "estimateNote": "Tahmin KDV içermez; teklif içerir.",
+      "accept": "Teklifi kabul et",
+      "reject": "Teklifi reddet",
+      "superseded": "Önceki sürüm"
+    },
+    "review": {
+      "title": "Deneyiminizi değerlendirin",
+      "overall": "Genel değerlendirme",
+      "quality": "İşçilik kalitesi",
+      "communication": "İletişim",
+      "timeliness": "Zamanlama",
+      "body": "Yorumunuz (en az 50 karakter)",
+      "submit": "Yorumu gönder",
+      "pending": "Yorumunuz moderasyonda — yayınlandığında görünür olacak.",
+      "notYet": "Değerlendirme, keşif tamamlandıktan sonra açılır."
+    },
+    "messages": {
+      "title": "Mesajlar",
+      "empty": "Henüz mesaj yok. İlk mesajı siz yazabilirsiniz.",
+      "placeholder": "Mesajınız",
+      "closed": "Bu talepte mesajlaşma kapalı."
+    },
+    "prefs": {
+      "title": "Bildirim ayarları",
+      "email": "E-posta",
+      "sms": "SMS",
+      "mandatory": "Yasal kaydın parçası; kapatılamaz."
     }
   }
 }

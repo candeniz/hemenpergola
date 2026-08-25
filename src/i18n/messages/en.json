@@ -486,7 +486,9 @@
     "declined": "Declined",
     "expired": "Expired",
     "lost": "Lost",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "offerRejected": "Offer rejected",
+    "closed": "Closed"
   },
   "supply": {
     "settingsTitle": "Company settings",
@@ -943,6 +945,118 @@
       "manufacturerTitle": "{company} panel",
       "placeholder": "The core-flow screens arrive in the next slice.",
       "signOut": "Sign out"
+    },
+    "common": {
+      "error": "Something went wrong. Please try again.",
+      "empty": "Nothing here yet.",
+      "retry": "Retry",
+      "send": "Send",
+      "cancel": "Cancel",
+      "settings": "Notification settings"
+    },
+    "leads": {
+      "title": "Leads",
+      "empty": "No pending leads.",
+      "slaHours": "{hours} h to respond",
+      "slaExpired": "Expired",
+      "area": "{area} m²",
+      "accept": "Accept",
+      "decline": "Decline",
+      "declineReason": "Decline reason (required)",
+      "contactTitle": "Customer contact",
+      "contactHidden": "Contact details become visible after acceptance.",
+      "customerNote": "Customer note",
+      "schedule": "Schedule survey",
+      "scheduleDate": "Date (YYYY-MM-DD)",
+      "scheduleTime": "Time (HH:MM)",
+      "scheduleSubmit": "Save appointment",
+      "completeSurvey": "Mark survey completed",
+      "badDate": "Could not read the date/time. Example: 2026-09-01 and 14:30.",
+      "markWon": "Won",
+      "markLost": "Lost",
+      "lostReason": "Loss reason (required)",
+      "project": "Project",
+      "dimensions": "Dimensions"
+    },
+    "offerForm": {
+      "title": "Compose offer",
+      "line": "Line {n}",
+      "description": "Description",
+      "quantity": "Quantity",
+      "unit": "Unit (e.g. pcs, m²)",
+      "unitPrice": "Unit price (TL)",
+      "addLine": "Add line",
+      "removeLine": "Remove line",
+      "validUntil": "Valid until (YYYY-MM-DD)",
+      "note": "Note (optional)",
+      "submit": "Send offer",
+      "badMoney": "Could not read the amount. Example: 12.500 or 12500,50.",
+      "needLine": "At least one line is required."
+    },
+    "projects": {
+      "title": "My projects",
+      "empty": "No projects yet. Start configuring on the website.",
+      "matches": "Matches",
+      "requests": "My requests"
+    },
+    "matches": {
+      "title": "Matches",
+      "empty": "No stored match run for this project.",
+      "priceOnRequest": "Price on request",
+      "incomplete": "Some options could not be priced; the band excludes them.",
+      "reviews": "{count} reviews",
+      "compareHint": "Select up to 3 manufacturers to compare.",
+      "compare": "Compare ({count})",
+      "select": "Select",
+      "selected": "Selected",
+      "requestCta": "Request offers ({count})",
+      "requestHint": "You can select up to 5 manufacturers."
+    },
+    "consentScreen": {
+      "title": "Consent",
+      "submit": "Consent and send the request",
+      "sent": "Your request was sent. Track responses on the My requests screen.",
+      "staleVersion": "The consent text has changed. Please update the app and try again."
+    },
+    "requests": {
+      "title": "My requests",
+      "empty": "No requests sent for this project."
+    },
+    "offer": {
+      "title": "Offer",
+      "none": "No offer yet.",
+      "total": "Total",
+      "net": "Subtotal",
+      "tax": "VAT (%{rate})",
+      "validUntil": "Valid until: {date}",
+      "originalEstimate": "Original estimate band: {band}",
+      "estimateNote": "The estimate excludes VAT; the offer includes it.",
+      "accept": "Accept offer",
+      "reject": "Reject offer",
+      "superseded": "Previous version"
+    },
+    "review": {
+      "title": "Rate your experience",
+      "overall": "Overall",
+      "quality": "Workmanship",
+      "communication": "Communication",
+      "timeliness": "Timeliness",
+      "body": "Your review (at least 50 characters)",
+      "submit": "Submit review",
+      "pending": "Your review is in moderation — it appears once published.",
+      "notYet": "Reviewing opens after the survey is completed."
+    },
+    "messages": {
+      "title": "Messages",
+      "empty": "No messages yet. You can write the first one.",
+      "placeholder": "Your message",
+      "closed": "Messaging is closed on this request."
+    },
+    "prefs": {
+      "title": "Notification settings",
+      "email": "Email",
+      "sms": "SMS",
+      "mandatory": "Part of the legal record; cannot be switched off."
     }
   }
 }

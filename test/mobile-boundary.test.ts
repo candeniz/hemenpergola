@@ -29,7 +29,7 @@ import { describe, expect, it } from 'vitest'
 const ROOT = process.cwd()
 const MOBILE = join(ROOT, 'mobile')
 
-const ALIAS_PREFIXES = ['@contracts/', '@messages/']
+const ALIAS_PREFIXES = ['@contracts/', '@messages/', '@legal/']
 
 function mobileSourceFiles(): string[] {
   const files: string[] = []
@@ -121,8 +121,14 @@ describe('mobile → src boundary', () => {
 
     expect(map['@contracts/*']).toBe('src/modules/*/application/dto')
     expect(map['@messages/*']).toBe('src/i18n/messages/*')
-    // Two aliases, no third: a new shared surface is a decision, made here first.
-    expect(Object.keys(map).sort()).toEqual(['@contracts/*', '@messages/*'])
+    // 11.4's decision, made here as the docblock demands: the consent-version constant.
+    // The consent TEXT already crosses via @messages; the VERSION the service validates
+    // against (19 §Consent, CONTACT_SHARING_TEXT_VERSION) must be the same constant on
+    // both sides or a bundled copy goes stale the day the web bumps it. shared/legal is
+    // pure by construction — a text version is a string in a docblocked file.
+    expect(map['@legal/*']).toBe('src/shared/legal/*')
+    // Three aliases, no fourth: a new shared surface is a decision, made here first.
+    expect(Object.keys(map).sort()).toEqual(['@contracts/*', '@legal/*', '@messages/*'])
   })
 
   it('keeps tsconfig paths identical to the map metro resolves — divergence is a device crash', () => {
@@ -140,7 +146,27 @@ describe('mobile → src boundary', () => {
     }
     const paths = tsconfig.compilerOptions.paths
 
-    expect(Object.keys(paths).sort()).toEqual(Object.keys(map).sort())
+    // tsconfig carries exactly ONE key beyond the runtime map: '@/*', for TYPE resolution
+    // only — the dto files type-import across modules with the web root alias, erased
+    // before Metro exists. It must never enter contract-map.json (that would open the
+    // whole of src/ as a runtime door), and no mobile file may write an @/ import — both
+    // asserted here.
+    expect(Object.keys(map)).not.toContain('@/*')
+    expect(paths['@/*']).toEqual(['../src/*'])
+    const runtimeKeys = Object.keys(paths).filter((key) => key !== '@/*')
+    expect(runtimeKeys.sort()).toEqual(Object.keys(map).sort())
+    for (const file of files) {
+      for (const specifier of importSpecifiers(readFileSync(file, 'utf8'))) {
+        expect(
+          specifier.startsWith('@/'),
+          file +
+            ' imports ' +
+            specifier +
+            ' — the web root alias is type-resolution only and may not appear in mobile source',
+        ).toBe(false)
+      }
+    }
+
     for (const [pattern, target] of Object.entries(map)) {
       // tsconfig paths are relative to mobile/, the map to the workspace root.
       expect(paths[pattern]).toEqual([`../${target}`])

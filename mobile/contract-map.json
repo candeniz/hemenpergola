@@ -1,4 +1,5 @@
 {
   "@contracts/*": "src/modules/*/application/dto",
-  "@messages/*": "src/i18n/messages/*"
+  "@messages/*": "src/i18n/messages/*",
+  "@legal/*": "src/shared/legal/*"
 }

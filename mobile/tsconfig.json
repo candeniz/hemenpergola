@@ -13,7 +13,17 @@
       "@contracts/*": ["../src/modules/*/application/dto"],
       // One message catalogue, two renderers (I18N-01). The mobile bundle carries the same
       // files next-intl serves; test/mobile-i18n.test.ts holds the keys together.
-      "@messages/*": ["../src/i18n/messages/*"]
+      "@messages/*": ["../src/i18n/messages/*"],
+      // The consent-version constant (19 §Consent): the TEXT ships in the catalogues above;
+      // the VERSION the service validates against must be the same constant, not a copy.
+      "@legal/*": ["../src/shared/legal/*"],
+      // TYPE RESOLUTION ONLY — never a runtime door. The dto files type-import across
+      // modules with the web root alias (import type { X } from '@/…'); those imports are
+      // erased before Metro exists, but tsc still follows them and must resolve the names.
+      // mobile-boundary.test.ts holds the two guarantees that keep this safe: the runtime
+      // map (contract-map.json) does NOT carry this key, and no file under mobile/ may
+      // write an @/ import of its own.
+      "@/*": ["../src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

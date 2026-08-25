@@ -63,7 +63,7 @@ proven — not when the code is written.
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
-| 11 | Mobile application (Expo / React Native) | **🟡 · iskelet + sözleşme** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
+| 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
 
@@ -3610,6 +3610,61 @@ The skeleton moved into the router (11.1's App.tsx state machine retired; `/` is
 `/giris` the wall, group layouts the guards), re-bundled clean, and the new compiler lint
 caught one real thing — the boot probe's setState-in-effect, now deferred a tick with the
 reason in place.
+
+### 2026-08-26 — Phase 11.4–11.6 · the core-flow screens, and what the gate can and cannot say from here (commit `P11.4-11.6 · mobil çekirdek akış ekranları`)
+
+**Zero new endpoints, as ordered — and the order held under pressure twice.**
+
+**Finding 1, resolved without an endpoint:** request creation needs the consent text AND
+the version the service validates against (`19` §Consent). The text was already crossing —
+it lives in the i18n catalogues (`consent.contactSharing.*`) that `@messages` imports
+whole. The version is `CONTACT_SHARING_TEXT_VERSION` in `shared/legal/consent-version.ts`
+— pure, but outside both aliases. The boundary test's own sentence ("a new shared surface
+is a decision, made here first") got exercised as designed: **`@legal/*`** is the third
+alias, pinned in `contract-map.json` with the reasoning in the test. A stale bundle now
+fails LOUDLY — the service 422s and the screen says "update the app" — instead of a copied
+string failing silently, which is the web's stale-tab rule translated to a client that
+ships.
+
+**Finding 2, reported and NOT built: there is no in-app notification list capability.**
+`13` calls the `Notification` row "the in-app delivery and the user's history", the
+dispatcher writes the rows — and no service method lists them, for web or mobile.
+`api-surface` is structurally blind to it: the test counts REGISTERED methods, and a
+capability that was never registered is not a drifted adapter, it is an unbuilt feature.
+11.6 ships preferences (which exist end to end) and no notification list; building
+`listNotifications` + surfaces is follow-up work, not a quiet extra endpoint in a
+no-new-endpoints phase.
+
+**A tsc-only seam, pinned:** the dto files type-import across modules with the web root
+alias, and mobile's tsc must resolve those names even though every one is erased before
+Metro exists. `@/*` is now in mobile's tsconfig ONLY — the boundary test asserts it never
+enters `contract-map.json` (that would open all of `src/` as a runtime door) and that no
+mobile file writes an `@/` import of its own.
+
+**The screens** (all four states, all keys from the shared catalogues, all colours through
+the parity-tested tokens, every target ≥44 px): manufacturer — lead inbox with SLA hours,
+lead detail rendering `lead-dto`'s discriminated union (the contact block cannot render on
+PENDING because the pending TYPE has no contact fields to render), every `11` transition
+from the current status with the reason-required asymmetries intact, and the offer composer
+(TL → integer kuruş at exactly one boundary; `taxRate` deliberately absent from the form —
+Q6 lives in `PlatformSetting`, not in a client's text field). Customer — projects,
+the STORED match run (no run button; band or "fiyat talep üzerine", `priceOnRequest` rows
+never dropped, `incomplete` as caveat), one selection set with two ceilings (compare ≤3
+per `CUS-06`, request ≤5 per `11`), consent → fan-out, request detail with the offer's
+lines and KDV beside the original estimate band (`ADR-007`'s gap, explained in place),
+accept/reject, and the review that opens when `16` §Eligibility says so. Messaging both
+sides through one component over `ADR-009`'s polling (`refetchInterval`, focus-aware —
+the battery argument for free). **No optimistic status anywhere**: every transition
+invalidates and re-renders from the server's answer.
+
+**What the gate can say from here, honestly:** the full core-flow surface compiles into a
+real Android bundle (Metro, Hermes bytecode, zero resolution errors — run twice), every
+endpoint it calls is integration/e2e-proven server-side, and the parity/boundary/i18n
+tests hold the seams. **What it cannot say: no physical Android device exists in this
+environment.** The two-role walk, the slow-connection pass and the screenshots the gate
+demands are prepared but not executed; `29` E6 stays open, and this entry is the record
+of why rather than a claim it happened. First command on a machine with a phone attached:
+`pnpm --filter mobile start`, both seeded roles, the walk as written in the phase brief.
 
 ## Open questions — need a human answer before the phase that hits them
 
