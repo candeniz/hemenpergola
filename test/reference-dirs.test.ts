@@ -51,19 +51,23 @@ describe('reference directories · one list, every consumer', () => {
     expect(unexplained, 'unexplained .prettierignore entries').toEqual([])
   })
 
-  it('tsconfig.json excludes exactly those folders among its reference entries', () => {
+  it('tsconfig.json excludes exactly those folders, plus a named set of non-folders', () => {
     const raw = readFileSync(join(root, 'tsconfig.json'), 'utf8')
     const exclude = /"exclude"\s*:\s*\[([\s\S]*?)\]/.exec(raw)?.[1] ?? ''
-    const entries = [...exclude.matchAll(/"([^"]+)"/g)].map((match) => match[1])
+    const entries = [...exclude.matchAll(/"([^"]+)"/g)].map((match) => match[1] as string)
 
     for (const dir of REFERENCE_DIRS) {
       expect(entries, `tsconfig must exclude ${dir}`).toContain(dir)
     }
-    // And no stale reference folder lingers there either.
-    const referenceLike = entries.filter(
-      (entry) => entry === 'Prompt' || entry?.startsWith('Frontend') || entry?.includes('Prompt'),
-    )
-    expect(referenceLike.sort()).toEqual([...REFERENCE_DIRS].sort())
+
+    // Same shape as the `.prettierignore` block above, and for the same reason: the first
+    // version of this assertion filtered for entries matching /Prompt|^Frontend/, which
+    // caught `Yazılım Mimari Promptlar` only because "Promptlar" happens to contain
+    // "Prompt". A stale entry outside that pattern passed, and a third reference folder
+    // outside it would have failed a correct tsconfig. Name the exceptions instead.
+    const deliberate = new Set(['node_modules', '.next', 'test/fixtures/boundary'])
+    const remainder = entries.filter((entry) => !deliberate.has(entry)).sort()
+    expect(remainder, 'unexplained tsconfig exclude entries').toEqual([...REFERENCE_DIRS].sort())
   })
 
   it('every named folder actually exists — a dead entry is a path someone will hunt for', () => {

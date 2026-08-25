@@ -45,13 +45,15 @@ application code and are excluded from the build, from `tsconfig` and from lint:
 | `docs/` | the static landing page served by GitHub Pages (`index.html` + `.nojekyll`, source `master` + `/docs`). **Not documentation** — the numbered documents are in `Yazılım Mimari Promptlar/`; this is a marketing page whose every claim comes from them. No module imports it, and Prettier ignores it |
 
 Both folder names contain a space and Turkish characters. That is deliberate and load-bearing
-in `CLAUDE.md` §Layout — do not "tidy" them; the paths appear in `tsconfig.json`,
-`next.config.ts` and several scripts.
+in `CLAUDE.md` §Layout — do not "tidy" them; the names live in `reference-dirs.mjs` at the
+root — one list, imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`,
+with `test/reference-dirs.test.ts` holding the two that cannot import it (`.prettierignore`,
+`tsconfig.json`) to the same names (`ADR-029`).
 
-`Prompt/` at the root was a stale duplicate of three documents. **Deleted 2026-08-23.** Two
-ignore-lists still named it and were cleaned with it (`.prettierignore`, `eslint.config.mjs`
-§`REFERENCE_DIRS`) — neither would have broken, but a dead ignore entry is a path the next
-reader goes looking for.
+`Prompt/` at the root was a stale duplicate of three documents. **Deleted 2026-08-25.** Two
+ignore-lists still named it and were cleaned with it (`.prettierignore`, and the list
+`eslint.config.mjs` now imports from `reference-dirs.mjs`) — neither would have broken, but
+a dead ignore entry is a path the next reader goes looking for.
 
 ---
 

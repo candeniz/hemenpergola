@@ -1,20 +1,16 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
-import { REFERENCE_DIRS as SHARED_REFERENCE_DIRS } from './reference-dirs.mjs'
+// Reference material that is committed but is not source (CLAUDE.md §Layout): kept out of
+// the build, the trace and the dev watcher. One shared list — this file used to carry its
+// own copy, and the copies drifted (`ADR-029`).
+import { REFERENCE_DIRS } from './reference-dirs.mjs'
 
 // The env parse deliberately does NOT run here. 23-deployment-and-environments.md
 // §Configuration says a bad variable fails *startup*, not the build, and §Runtime builds
 // one image that later runs as web and as worker — production secrets do not exist at
 // image-build time. The parse runs from `src/instrumentation.ts`, which Next calls once
 // per server process.
-
-/**
- * Reference material that is committed but is not source (CLAUDE.md §Layout). Kept out of
- * the build, the trace and the dev watcher. The names come from the shared list — this
- * file used to carry its own copy, and the copies drifted (`ADR-029`).
- */
-const REFERENCE_DIRS = SHARED_REFERENCE_DIRS
 
 /**
  * Where `next/image` is allowed to fetch from.
