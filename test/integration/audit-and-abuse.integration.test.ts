@@ -162,6 +162,9 @@ describe('rate limits', () => {
     expect(RATE_LIMITS.priceEstimateIp).toEqual({ limit: 60, windowSeconds: 3600 })
     expect(RATE_LIMITS.messages).toEqual({ limit: 60, windowSeconds: 3600 })
     expect(RATE_LIMITS.publicRead).toEqual({ limit: 300, windowSeconds: 60 })
+    // Phase 10.3, with the erase endpoint (29 B3): every call on this surface is one
+    // emailed token, and the irreversible surface must not be the unmetered one.
+    expect(RATE_LIMITS.privacy).toEqual({ limit: 5, windowSeconds: 3600 })
   })
 
   it('allows exactly the limit and then refuses, with a Retry-After that makes sense', async () => {

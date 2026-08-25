@@ -301,7 +301,7 @@ export const serviceAreaService = {
   listCompaniesCoveringPoint,
 } satisfies Record<string, { meta: unknown }>
 
-export const listCitiesSchema = z.object({ companyId: z.string().min(1) })
+export const listCitiesSchema = z.object({})
 export type ListCitiesInput = z.infer<typeof listCitiesSchema>
 
 /**
@@ -344,7 +344,7 @@ export const listCities = serviceMethod<
   },
 )
 
-export const listDistrictsSchema = z.object({ companyId: z.string().min(1) })
+export const listDistrictsSchema = z.object({})
 export type ListDistrictsInput = z.infer<typeof listDistrictsSchema>
 
 /**

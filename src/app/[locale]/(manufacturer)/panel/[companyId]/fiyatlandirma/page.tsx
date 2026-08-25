@@ -57,7 +57,7 @@ export default async function PricingPage({
   // Provinces for the regional table. A raw list rather than a service call: `City` is
   // reference data seeded in Phase 0 and has no permissions of its own.
   const { listCities } = await import('@/modules/matching/application/service-area-service')
-  const cities = await listCities(actor, { companyId })
+  const cities = await listCities(actor, {})
 
   return (
     <PortalShell

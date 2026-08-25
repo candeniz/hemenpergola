@@ -61,17 +61,33 @@ export async function requestDataExportAction(
 }
 
 /**
- * Erase — which is to say anonymise (`ADR-011`).
+ * Ask to erase — which starts the verification loop, not the anonymisation (Q30).
  *
- * `confirmEmail` is carried through untouched so the service can reject a mismatch. The
- * form asks the user to type their own address; the check that makes it mean something
- * lives one layer down, where every entry point meets it.
+ * `confirmEmail` is a deliberate speed bump the service checks; the thing that authorises
+ * the erasure is the emailed single-use token, confirmed by the action below. `19`'s
+ * "request → verification → anonymisation" — this is the first word.
  */
-export async function anonymiseAccountAction(
+export async function requestAccountErasureAction(
+  input: unknown,
+): Promise<ActionResult<{ expiresAt: Date }>> {
+  const service = await privacy()
+  return run(
+    service.requestAccountErasureSchema,
+    (a, d) => service.requestAccountErasure(a, d),
+    input,
+  )
+}
+
+/** The second word: the emailed token comes back and the anonymisation runs (`ADR-011`). */
+export async function confirmAccountErasureAction(
   input: unknown,
 ): Promise<ActionResult<{ anonymisedEmail: string }>> {
   const service = await privacy()
-  return run(service.anonymiseAccountSchema, (a, d) => service.anonymiseAccount(a, d), input)
+  return run(
+    service.confirmAccountErasureSchema,
+    (a, d) => service.confirmAccountErasure(a, d),
+    input,
+  )
 }
 
 export async function listNotificationPreferencesAction(): Promise<

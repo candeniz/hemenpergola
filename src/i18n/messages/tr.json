@@ -893,7 +893,8 @@
       "acknowledge": "Bu işlemin geri alınamayacağını anlıyorum.",
       "submit": "Hesabımı kalıcı olarak sil",
       "cancel": "Vazgeç",
-      "failed": "Silme işlemi tamamlanamadı. E-posta adresini doğru yazdığınızdan emin olun."
+      "failed": "Silme işlemi tamamlanamadı. E-posta adresini doğru yazdığınızdan emin olun.",
+      "sent": "Onay bağlantısı e-posta adresinize gönderildi. Bağlantı bir saat geçerlidir; açılmadığı sürece hesabınıza hiçbir şey olmaz."
     },
     "events": {
       "offer_request_created": "Teklif talebiniz oluşturuldu",
@@ -917,6 +918,15 @@
       "company_rejected": "Firma doğrulaması reddedildi",
       "price_book_published": "Fiyat kitabı yayımlandı",
       "supply_gap_watch": "Bölgenize üretici eklendi"
+    },
+    "confirm": {
+      "title": "Silme talebini onaylayın",
+      "subtitle": "Bu sayfa e-postanızdaki bağlantıdan açılır.",
+      "warning": "Onayladığınızda adınız, e-postanız ve telefonunuz kalıcı olarak anonimleştirilir ve hesabınıza bir daha giriş yapamazsınız. Bu işlem geri alınamaz.",
+      "cta": "Hesabımı kalıcı olarak sil",
+      "done": "Hesabınız anonimleştirildi. Bizi tercih ettiğiniz için teşekkürler.",
+      "failed": "Bağlantı geçersiz, kullanılmış ya da süresi dolmuş. Silme talebini hesabınızdan yeniden başlatın.",
+      "missingToken": "Bağlantı eksik görünüyor. Silme talebini hesabınızdaki Verilerim sayfasından başlatın."
     }
   }
 }

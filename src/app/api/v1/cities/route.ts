@@ -1,21 +1,19 @@
-import { respond } from '@/shared/http/respond'
+import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/cities` — `06` §Catalogue (public), the 81 provinces.
  *
- * Anonymous by decision, not by omission: the service carries
- * `why: 'public reference data … the public configurator location step reads it with no
- * session (ADR-021)'`. Phase 3 gated it behind `MEMBER_READ` and the public wizard's
- * location step then silently rendered two empty selects — the history is in the service's
- * own comment.
+ * Anonymous by decision, not by omission: the service's own `why` records the Phase 3
+ * gating that once hid this from the public wizard's location step. The vestigial
+ * `companyId` that gating left in the schema is gone as of Phase 10.3 — see the service.
  *
- * **A wart travels with it, and it is reported rather than hidden.** `listCitiesSchema`
- * still requires a `companyId` that the service ignores (`void input`), left over from that
- * gating. The wizard already passes the literal `'public'`
- * (`(public-owner)/proje/[id]/page.tsx`), and this route follows the same existing
- * convention rather than inventing a second one. Removing the field is a service-signature
- * change, which is a decision for 10.4 — a public endpoint should not make an anonymous
- * client invent a company id.
+ * **Cached, because it is reference data on the launch checklist's connection.** 81 rows
+ * measure 1.7 KB gzipped; the cost was never the payload but the habit — `force-dynamic`
+ * meant every phone ran the query and carried the bytes on every visit, on the mid-range
+ * Android over a slow connection that `29` E6 tests against. An hour of freshness against
+ * data that changes by seed script is not a trade-off. `force-dynamic` stays: it keeps the
+ * handler out of the build (non-negotiable 9); the caching lives in the response header,
+ * which is the API analog of the public pages' ISR (`05` §Caching).
  *
  * Imports are dynamic (`CLAUDE.md` non-negotiable 9).
  */
@@ -27,5 +25,7 @@ export async function GET(request: Request): Promise<Response> {
     import('@/shared/context/actor'),
   ])
 
-  return respond(await listCities(await resolveActor(request), { companyId: 'public' }))
+  return respond(await listCities(await resolveActor(request), {}), undefined, {
+    cacheControl: REFERENCE_CACHE,
+  })
 }

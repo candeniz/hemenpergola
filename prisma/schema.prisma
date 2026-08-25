@@ -550,6 +550,8 @@ enum AuthTokenType {
   PHONE_OTP
   /// 19 §Access/portability: signed download link for the personal-data export, 30 days.
   DATA_EXPORT
+  /// 19 §Erasure: the emailed verification for account anonymisation (Q30). One hour, single-use.
+  ACCOUNT_ERASURE
 }
 
 /**

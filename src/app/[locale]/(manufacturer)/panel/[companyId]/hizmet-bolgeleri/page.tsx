@@ -40,8 +40,8 @@ export default async function ServiceAreaPage({
   // non-negotiable 2 violation hidden behind a dynamic import.
   const [areas, cityResult, districtResult] = await Promise.all([
     listServiceAreas(actor, { companyId }),
-    listCities(actor, { companyId }),
-    listDistricts(actor, { companyId }),
+    listCities(actor, {}),
+    listDistricts(actor, {}),
   ])
 
   const cities = cityResult.ok

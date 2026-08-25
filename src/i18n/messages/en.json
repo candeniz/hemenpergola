@@ -893,7 +893,8 @@
       "acknowledge": "I understand that this cannot be undone.",
       "submit": "Permanently delete my account",
       "cancel": "Cancel",
-      "failed": "The deletion could not be completed. Check that the email address is correct."
+      "failed": "The deletion could not be completed. Check that the email address is correct.",
+      "sent": "A confirmation link has been emailed to you. It is valid for one hour; nothing happens to your account unless it is opened."
     },
     "events": {
       "offer_request_created": "Your offer request was created",
@@ -917,6 +918,15 @@
       "company_rejected": "Company verification was rejected",
       "price_book_published": "A price book was published",
       "supply_gap_watch": "A manufacturer now covers your area"
+    },
+    "confirm": {
+      "title": "Confirm the deletion request",
+      "subtitle": "This page opens from the link in your email.",
+      "warning": "When you confirm, your name, email and phone number are permanently anonymised and you will not be able to sign in again. This cannot be undone.",
+      "cta": "Permanently delete my account",
+      "done": "Your account has been anonymised. Thank you for having been with us.",
+      "failed": "The link is invalid, already used, or expired. Start the deletion request again from your account.",
+      "missingToken": "The link looks incomplete. Start the deletion request from the My data page in your account."
     }
   }
 }

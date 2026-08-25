@@ -1,16 +1,19 @@
-import { respond } from '@/shared/http/respond'
+import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/cities/districts` — all 974 districts, each carrying its `cityId`.
  *
- * `06` line 77 sketched this as `GET /cities/{id}/districts`, one province at a time. The
- * service answers the whole set in a single query and the page it was written for needs the
- * whole set — a location step lets the visitor change province, and per-province fetching
- * would turn one query into a round trip per keystroke. The path is flat for the same
- * reason: there is no `{id}` to address. `06` is corrected to match rather than the service
- * being reshaped to match `06`.
+ * The first version of this file defended the whole-set shape against a strawman ("per
+ * keystroke") — the real alternative was one request per selected province, and it loses
+ * on the numbers, which are now measured rather than guessed: the whole set is **22 KB
+ * gzipped** (87 KB raw), one cacheable fetch that then answers every province change
+ * offline, against a fresh round trip per selection on `29` E6's slow connection. `06`'s
+ * sketched `GET /cities/{id}/districts` is corrected accordingly.
  *
- * Anonymous, and carrying the same vestigial `companyId` as `GET /cities` — see that file.
+ * What actually needed fixing was the missing cache: seeded reference data was shipped
+ * `no-store` to every phone on every visit. Same header profile as `/cities`; same
+ * `force-dynamic` note too — it keeps the handler out of the build, and the caching lives
+ * in the header.
  *
  * Imports are dynamic (`CLAUDE.md` non-negotiable 9).
  */
@@ -22,5 +25,7 @@ export async function GET(request: Request): Promise<Response> {
     import('@/shared/context/actor'),
   ])
 
-  return respond(await listDistricts(await resolveActor(request), { companyId: 'public' }))
+  return respond(await listDistricts(await resolveActor(request), {}), undefined, {
+    cacheControl: REFERENCE_CACHE,
+  })
 }

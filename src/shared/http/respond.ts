@@ -12,6 +12,13 @@ import { httpStatusFor, type DomainError, type Result } from '@/shared/result'
  * from the one the web app exercises — which is the failure `05` is written to prevent.
  */
 
+/**
+ * The cache profile for anonymous reference-data endpoints — cities, districts, the
+ * public reads: fresh within the hour, servable stale for a day while revalidating.
+ * One constant so the endpoints cannot drift apart header by header.
+ */
+export const REFERENCE_CACHE = 'public, max-age=3600, stale-while-revalidate=86400'
+
 export type SuccessEnvelope<T> = { data: T; meta: { requestId: string } }
 
 export type ErrorEnvelope = {
@@ -82,6 +89,15 @@ export function envelopeFor<T>(
 export function respond<T>(
   result: Result<T, DomainError>,
   requestId: string = randomUUID(),
+  init?: {
+    /**
+     * Set on anonymous reference-data endpoints only (cities, districts, the public
+     * reads) — the API analog of the public pages' ISR (`05` §Caching). Never on
+     * anything personal, priced or stateful, and never on an error: a cached 404 for a
+     * slug that was just published would outlive its own wrongness.
+     */
+    cacheControl?: string
+  },
 ): Response {
   const body = envelopeFor(result, requestId)
   const status = result.ok ? 200 : httpStatusFor(result.error)
@@ -89,6 +105,10 @@ export function respond<T>(
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-request-id': requestId,
+  }
+
+  if (result.ok && init?.cacheControl !== undefined) {
+    headers['cache-control'] = init.cacheControl
   }
 
   if (!result.ok && result.error.kind === 'RATE_LIMITED') {

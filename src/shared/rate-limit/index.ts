@@ -38,6 +38,13 @@ export const RATE_LIMITS = {
   priceEstimateUser: { limit: 30, windowSeconds: 60 * 60 },
   priceEstimateIp: { limit: 60, windowSeconds: 60 * 60 },
   messages: { limit: 60, windowSeconds: 60 * 60 },
+  /**
+   * Export request and erasure request — both issue an emailed token, so each call is one
+   * email to the account holder. Five an hour is generous for a person and useless for a
+   * mail bomb. Added with the erase endpoint (29 B3): an irreversible surface must not be
+   * the unmetered one.
+   */
+  privacy: { limit: 5, windowSeconds: 60 * 60 },
   publicRead: { limit: 300, windowSeconds: 60 },
 } as const satisfies Record<string, RateLimitRule>
 

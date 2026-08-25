@@ -83,8 +83,11 @@ export type AuditAction =
   // Phase 7 · review moderation (`16` §Moderation: an admin decision over user content)
   | 'review_published'
   | 'review_rejected'
-  // Phase 9 · KVKK rights (19 §Access, §Erasure)
+  // Phase 9 · KVKK rights (19 §Access, §Erasure); the request entry arrived with Q30's
+  // verification step in Phase 10.3 — an erasure that was asked for but never confirmed
+  // should still be visible to the person investigating a complaint.
   | 'data_exported'
+  | 'account_erasure_requested'
   | 'account_anonymised'
   | 'offer_request_closed'
 

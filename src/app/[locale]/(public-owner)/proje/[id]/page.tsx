@@ -82,8 +82,8 @@ export default async function ProjectWizardPage({
       : []
 
   const [cityResult, districtResult, { UPLOAD_POLICY }] = await Promise.all([
-    matching.listCities(actor, { companyId: 'public' }),
-    matching.listDistricts(actor, { companyId: 'public' }),
+    matching.listCities(actor, {}),
+    matching.listDistricts(actor, {}),
     /*
      * `14` §Limits, read on the server and handed to the client as three plain values.
      *

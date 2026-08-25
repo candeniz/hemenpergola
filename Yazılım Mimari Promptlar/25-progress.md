@@ -62,7 +62,7 @@ proven — not when the code is written.
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
-| 10 | The API the mobile app consumes | **🟡 · 2/4** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. Measured at the capability level: **76 of 132 missing on 2026-08-25, 41 after 10.2.** 10.1 decided and measured, 10.2 closed the KVKK surfaces and opened match / offer / messaging / files. 10.3 (supply, review, company-profile) and 10.4 (catalogue, pricing, audit, the public reads) remain, so the test is still red and still uncommitted; it lands the turn it goes green |
+| 10 | The API the mobile app consumes | **🟡 · 3/4** | `test/api-surface.test.ts` green — no capability reachable from a server action alone. Measured at the capability level: **76 of 132 missing on 2026-08-25, 41 after 10.2.** 10.1 decided and measured, 10.2 closed the KVKK surfaces and opened match / offer / messaging / files. 10.3 (supply, review, company-profile) and 10.4 (catalogue, pricing, audit, the public reads) remain, so the test is still red and still uncommitted; it lands the turn it goes green |
 | 11 | Mobile application (Expo / React Native) | **⬜ not started** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 
 ## Log
@@ -3313,6 +3313,67 @@ left from a Phase 3 gating that `ADR-021` invalidated. The wizard already passes
 second one. Removing the field is a service-signature change, which touches the web and is a
 10.4 decision, not a quiet edit made while adding an endpoint.
 
+### 2026-08-25 — Phase 10.3 · erasure gets its verification, reference data gets its cache, supply side and reviews get their API (commit `P10.3 · silme doğrulaması, referans önbelleği, tedarik ve yorum uçları`)
+
+**Two fixes first, both of them corrections to 10.2's own work.**
+
+**The erase endpoint shipped one turn too early, and the fix closed Q30.** 10.2's
+`POST /privacy/erase` docblock claimed the typed `confirmEmail` "holds for every caller".
+It does hold — and it authorises nothing: the caller is already the account, and `GET /me`
+returns the very address being typed, so over HTTP the irreversible operation was two
+requests with one credential. The web form's three gates are a thinking tool with no API
+equivalent. Of the three options (withdraw the route until Q30; demand fresh credentials on
+the API path; close Q30 properly), the third won — withdrawing would have parked
+`requestAccountErasure` in an exception list with a lie for a reason, and a fresh-password
+check would have satisfied the API while leaving `19`'s "verification" word unmet on the
+web too.
+
+Built: `ACCOUNT_ERASURE` on `AuthTokenType` (migration; one-hour TTL beside
+`PASSWORD_RESET`), `requestAccountErasure` (typed-email speed bump kept, then token
+issued and mailed) and `confirmAccountErasure` (anonymous — the token is the credential,
+the password-reset trust model; consumed race-safely so a replayed link answers `used`).
+The emailed link lands on `/hesap-silme-onay`, a public page with a button, because mail
+scanners prefetch URLs and a prefetch must never erase an account. The single-step
+`anonymiseAccount` is **retired**, not kept alongside — a registered method that skips the
+verification is the bypass. `privacy.integration.test.ts` walks the loop the way a person
+would: request → captured mail → token → confirm → replay refused. `29` A2 is ✅ again,
+this time for the right reason. New `privacy` rate-limit surface (5/h/account) on both
+token-issuing endpoints — an irreversible surface must not be the unmetered one (`29` B3,
+`06` §Rate limits).
+
+**The cities/districts docblock argued against a strawman, and the real defect was the
+missing cache.** "Per keystroke" was never the alternative — one request per selected
+province was. Measured rather than guessed: 81 provinces = 1.7 KB gzip, 974 districts =
+**22 KB gzip** (87 KB raw). One cacheable fetch that then answers every province change
+offline beats a round trip per selection on `29` E6's connection, so the whole-set shape
+stays — but it was being shipped `no-store` to every phone on every visit.
+`REFERENCE_CACHE` (`public, max-age=3600, stale-while-revalidate=86400`) now rides
+`respond()`'s new optional cache parameter, success-only — a cached 404 for a
+just-published slug would outlive its own wrongness. `force-dynamic` stays: it keeps the
+handler out of the build (non-negotiable 9); the caching is the header, the API analog of
+the public pages' ISR (`05` §Caching).
+
+**And the dead `companyId` died.** `listCitiesSchema`/`listDistrictsSchema` required a
+field the handlers ignored (`void input`), left from the Phase 3 gating `ADR-021`
+invalidated; every caller had learnt to pass the literal `'public'` to satisfy a check
+that checked nothing. Removed from the schemas, the three page call sites and both routes
+in one change — the 10.2 log's "deliberately not fixed" note is superseded.
+
+**Then the endpoints:** service areas (list/add/remove — `addServiceAreaSchema`'s
+refinements make an impossible area a 422, not a row the matcher trips over), portfolio
+(owner's view with scan states; `null`-clears-vs-absent-leaves in the patch), company
+product options (`PUT` of the full answer sheet — "never asked" and "answered no" filter
+differently in matching), reviews (submit + eligibility on the customer side; published
+list + response on the company side — `PENDING` is invisible to the company too, a
+manufacturer who could read an unmoderated review could pressure its author; moderation
+queue + decision on the admin side), and the company profile five (`GET`/`PATCH` with
+the profile-vs-contact field split refused when mixed, `PUT .../slug` with `18`'s
+redirect discipline, `POST .../documents`).
+
+Count: **41 → 21 of 133** (the population grew by one: two erasure methods in, one
+retired). Remaining is 10.4 — catalogue/pricing/audit, the public reads, and
+`estimateForProject`. The measurement test stays out of the commit until it is green.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3342,7 +3403,7 @@ second one. Removing the field is a service-signature change, which touches the 
 | ~~Q24~~ | ~~**The `(customer)` and `(manufacturer)` segments are not actually auth-gated.** `07` §Rendering strategy calls them "auth-gated" and "auth + company-scoped"; `middleware.ts` deliberately does locale only — correctly, since authorisation needs the database — and there is no layout guard, so `/hesap` renders for anyone. Nothing leaks today because every page loads its data through a service that scopes by ownership or permission, so an unauthenticated visitor sees an empty shell. Found while asserting session revocation in Phase 4: the natural check, "a protected page redirects", proves nothing. Where does the gate belong?~~ **CLOSED 2026-08-23 by `ADR-024`.** A `layout.tsx` per gated segment resolves the actor and redirects to `/giris`; `07` §Rendering strategy now names the mechanism instead of the intention. The company half stays in the services, where `02` §Enforcement rule wants it. Task 4.8 is what forced the answer: a dashboard that lists a customer's projects is not harmless when it renders for anyone. | — | — |
 | ~~Q28~~ | ~~The notification delivery log has a retention rule and no sweeper.~~ **CLOSED 2026-08-24 (task 9.1):** the same sweep executes `retentionWhere()` — 90 days, mandatory events excluded — under the same dry-run/apply/idempotence proof. | ~~Faz 9~~ closed | Q25 and Q28 closed together, by ONE sweeper over ONE policy file, which was the reason both waited. |
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
-| Q30 | **Erasure has no separate verification step.** `19` §Data subject rights describes it as "account deletion request → verification → anonymisation job". What exists is confirmation, not verification: the form is behind a disclosure, requires the account's own email typed, and requires an irreversibility checkbox — and `anonymiseAccountSchema.confirmEmail` enforces the typed address in the service, so every entry point meets it. What is absent is an emailed confirm-link before the job runs, which needs a new service method and an `AuthToken` purpose. Decide whether `19` means an emailed step or whether typed confirmation satisfies it, and change one of the two. | Before launch — it is a KVKK-facing claim (`29` A2, now 🟡 rather than ✅) | Confirmation only: disclosure + typed email + acknowledgement, enforced in the service |
+| ~~Q30~~ | ~~Erasure has no separate verification step.~~ **CLOSED 2026-08-25 (10.3):** the question resolved itself the moment the erase endpoint went on the API — over HTTP the typed email authorised nothing (`GET /me` returns it), so `19` has to mean an emailed step. Built: `ACCOUNT_ERASURE` token (one hour, single-use, race-safe consume), `requestAccountErasure` → mail → `/hesap-silme-onay` page → `confirmAccountErasure`. The single-step `anonymiseAccount` is retired — keeping it registered would have kept the bypass. | ~~Before launch~~ closed | `29` A2 is ✅ again, this time for the right reason |
 | ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

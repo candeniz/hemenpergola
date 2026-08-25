@@ -45,6 +45,7 @@ Cursor-based (`?cursor=&limit=`). Offset pagination is not offered — admin tab
 | price estimate | 30 / hour / user, 60 / hour / IP (`ADR-006` anti-scraping) |
 | messages | 60 / hour / thread |
 | public read | 300 / min / IP |
+| privacy (export request, erasure request) | 5 / hour / account — each call is one emailed token |
 
 Exceeded → `429` with `Retry-After`. Every price-estimate call is recorded with actor and IP
 regardless of outcome.
@@ -284,7 +285,8 @@ override gets added later without anyone deciding to add one.
 ```
 POST   /privacy/export                ask for the package -> { expiresAt }
 GET    /privacy/export?token=&format= download it (json | pdf); the token is emailed
-POST   /privacy/erase                 { confirmEmail } — erasure is anonymisation
+POST   /privacy/erase                 { confirmEmail } — ASK to erase; emails a token
+POST   /privacy/erase/confirm         { token } — the anonymisation itself runs here
 ```
 
 `19` §Data subject rights, and the reason this section is dated rather than original: only
@@ -295,12 +297,18 @@ not exercise their access right at all.
 `POST /privacy/export` takes no body: the subject is always the caller, so there is no
 parameter with which to ask for somebody else's data.
 
-`POST /privacy/erase` requires the account's own email in `confirmEmail` and answers
-`PRECONDITION` on a mismatch, so the confirmation holds for every client rather than living
-in one form. **Erasure is anonymisation** (`ADR-011`): consents, contact disclosures,
-commercial records, message transcripts and the audit trail survive, stripped of the fields
-that identify the subject. `19`'s separate emailed *verification* step before the job runs
-is **not** built — see `29` A2 and `25` §Open questions Q30.
+`POST /privacy/erase` requires the account's own email in `confirmEmail` — a deliberate
+speed bump, not a factor: the caller is already the account and `GET /me` returns the very
+address being typed. What authorises the erasure is the emailed one-hour single-use token,
+which comes back through `/erase/confirm` — proof of control of the inbox, the
+password-reset trust model, and the *verification* in `19`'s "request → verification →
+anonymisation" (Q30, closed in Phase 10.3). The emailed link opens a page with a button
+rather than acting on `GET`, because mail scanners prefetch URLs and a prefetch must never
+erase an account. Both request endpoints sit on the `privacy` rate-limit surface.
+
+**Erasure is anonymisation** (`ADR-011`): consents, contact disclosures, commercial
+records, message transcripts and the audit trail survive, stripped of the fields that
+identify the subject.
 
 ### Deferred — reserved, returns 501
 

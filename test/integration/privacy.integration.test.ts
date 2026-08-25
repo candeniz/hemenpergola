@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import {
-  anonymiseAccount,
+  confirmAccountErasure,
+  requestAccountErasure,
   downloadDataExport,
   requestDataExport,
 } from '@/modules/privacy/application/privacy-service'
@@ -309,14 +310,31 @@ describe('9.1 · export and erasure', () => {
   it('erasure anonymises: personal fields go, commercial ids stay, sessions die', async () => {
     const prisma = getPrisma()
 
-    const wrongEmail = await anonymiseAccount(customerActor(), {
+    const wrongEmail = await requestAccountErasure(customerActor(), {
       confirmEmail: 'baskasi@example.com',
     })
     expect(wrongEmail.ok).toBe(false)
 
-    const result = await anonymiseAccount(customerActor(), {
+    /*
+     * Q30: request → verification → anonymisation. The request only sends the email; the
+     * token in it is what anonymises — captured from the captured mail, exactly the way a
+     * person would use it.
+     */
+    const before = sentMail.length
+    const requested = await requestAccountErasure(customerActor(), {
       confirmEmail: 'privacy-customer@example.com',
     })
+    expect(requested.ok).toBe(true)
+    expect(sentMail.length).toBe(before + 1)
+
+    // Nothing has happened yet — the request is not the erasure.
+    const untouched = await prisma.user.findUniqueOrThrow({ where: { id: customerId } })
+    expect(untouched.status).not.toBe('DELETED')
+
+    const token = /token=([A-Za-z0-9_-]+)/.exec(sentMail.at(-1)?.text ?? '')?.[1]
+    expect(token).toBeDefined()
+
+    const result = await confirmAccountErasure(anonymousActor(), { token: token! })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value.anonymisedEmail).toMatch(/^deleted-[0-9a-f]{16}@anonymised\.local$/)
@@ -338,8 +356,12 @@ describe('9.1 · export and erasure', () => {
     })
     expect(notes.every((project) => project.note === null)).toBe(true)
 
-    // A second call is refused — already anonymised.
-    const again = await anonymiseAccount(customerActor(), {
+    // The token is single-use: a replayed link is refused, not replayed.
+    const replayed = await confirmAccountErasure(anonymousActor(), { token: token! })
+    expect(replayed.ok).toBe(false)
+
+    // And a fresh request against the anonymised account is refused too.
+    const again = await requestAccountErasure(customerActor(), {
       confirmEmail: result.value.anonymisedEmail,
     })
     expect(again.ok).toBe(false)

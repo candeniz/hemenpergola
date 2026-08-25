@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 
-import { anonymiseAccountAction } from '@/app/actions/privacy'
+import { requestAccountErasureAction } from '@/app/actions/privacy'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -12,22 +12,17 @@ import { Label } from '@/components/ui/label'
 /**
  * `19` §Data subject rights — erasure, which is **anonymisation** (`ADR-011`).
  *
- * Three gates before the call, because this is the one control on the site that cannot be
- * undone:
+ * Submitting does not erase. It starts `19`'s "request → verification → anonymisation"
+ * (Q30): the service emails a one-hour single-use link, and `/hesap-silme-onay` is where
+ * the anonymisation actually runs. What this form's gates are for is honesty at the point
+ * of asking:
  *
- *  1. the destructive form is behind a disclosure — the default state is a description of
- *     what will happen and what will survive, not a button;
- *  2. the account's own email address, typed. The service enforces this
- *     (`anonymiseAccountSchema.confirmEmail` + a `PRECONDITION` on mismatch), so it holds
- *     for the route handler and the mobile client too — this field is the way to satisfy
- *     it, not the check itself;
+ *  1. the form is behind a disclosure — the default state describes what will happen and
+ *     what survives, not a button;
+ *  2. the account's own email address, typed. A deliberate speed bump the service checks
+ *     (`PRECONDITION` on mismatch) — a thinking tool, not a second factor: the thing that
+ *     authorises the erasure is the emailed token;
  *  3. an explicit acknowledgement that it is irreversible, checked by hand.
- *
- * **What is still missing, and is recorded rather than papered over:** `19` §Data subject
- * rights describes erasure as *"account deletion request → verification → anonymisation
- * job"*. Gates 1–3 are the request and its confirmation; there is no separate emailed
- * **verification** step, because that needs a service method and an `AuthToken` purpose
- * that do not exist. `29` A2 says so, and `25` §Open questions carries it as Q30.
  */
 export function AccountErasure() {
   const t = useTranslations('privacy')
@@ -35,7 +30,16 @@ export function AccountErasure() {
   const [email, setEmail] = useState('')
   const [acknowledged, setAcknowledged] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sent, setSent] = useState(false)
   const [pending, start] = useTransition()
+
+  if (sent) {
+    return (
+      <p role="status" className="text-body-md">
+        {t('erase.sent')}
+      </p>
+    )
+  }
 
   if (!open) {
     return (
@@ -53,13 +57,11 @@ export function AccountErasure() {
         setError(null)
 
         start(async () => {
-          const result = (await anonymiseAccountAction({ confirmEmail: email })) as
+          const result = (await requestAccountErasureAction({ confirmEmail: email })) as
             { data: unknown } | { error: { message: string } }
 
           if ('data' in result) {
-            // The session belongs to an account that no longer identifies anyone; a full
-            // reload lands on the sign-in wall rather than leaving a stale personal page.
-            window.location.assign('/')
+            setSent(true)
             return
           }
           setError(t('erase.failed'))

@@ -523,19 +523,23 @@ describe('every service method has a matrix entry', () => {
     ])
   })
 
-  it('keeps the privacy service to its three pinned methods — two owned, one token-authorised', () => {
+  it('keeps the privacy service to its four pinned methods — two owned, two token-authorised', () => {
     /*
-     * Task 9.1: the KVKK rights surface. Export and erasure are customer-owned (userId in
-     * the where clause); the download link is `anonymous` because possession of the
-     * emailed 256-bit token IS the authorisation — the verification-link trust model. A
-     * fourth method here, or a second anonymous one, is a reviewed diff.
+     * Task 9.1, reshaped by Q30 in Phase 10.3: the KVKK rights surface. The two *requests*
+     * are customer-owned (userId in the where clause); the two *resolutions* are
+     * `anonymous` because possession of the emailed 256-bit token IS the authorisation —
+     * the verification-link trust model. The erasure pair replaced the single-step
+     * `anonymiseAccount`, whose typed-email check was a speed bump and not a factor: over
+     * HTTP, `GET /me` handed any bearer of the session the very address it asked for. A
+     * fifth method here, or a third anonymous one, is a reviewed diff.
      */
     const privacy = registeredMethods().filter((meta) => meta.service === 'privacy')
 
     expect(privacy.map((meta) => `${meta.method}:${meta.authorisation.kind}`).sort()).toEqual(
       [
-        'anonymiseAccount:customer-owned',
+        'confirmAccountErasure:anonymous',
         'downloadDataExport:anonymous',
+        'requestAccountErasure:customer-owned',
         'requestDataExport:customer-owned',
       ].sort(),
     )
