@@ -45,10 +45,13 @@ application code and are excluded from the build, from `tsconfig` and from lint:
 | `docs/` | the static landing page served by GitHub Pages (`index.html` + `.nojekyll`, source `master` + `/docs`). **Not documentation** — the numbered documents are in `Yazılım Mimari Promptlar/`; this is a marketing page whose every claim comes from them. No module imports it, and Prettier ignores it |
 
 Both folder names contain a space and Turkish characters. That is deliberate and load-bearing
-in `CLAUDE.md` §Layout — do not "tidy" them; the names live in `reference-dirs.mjs` at the
-root — one list, imported by `eslint.config.mjs`, `next.config.ts` and `vitest.config.ts`,
-with `test/reference-dirs.test.ts` holding the two that cannot import it (`.prettierignore`,
-`tsconfig.json`) to the same names (`ADR-029`).
+in `CLAUDE.md` §Layout — and renaming either is not one edit. The build-exclusion list lives
+once, in `reference-dirs.mjs` at the root, imported by `eslint.config.mjs`, `next.config.ts`
+and `vitest.config.ts`; `.prettierignore` and `tsconfig.json` cannot import and repeat the
+names as text, held to the list by `test/reference-dirs.test.ts` (`ADR-029`). Four more files
+embed a folder name in a **document path** and are held by nothing:
+`scripts/generate-permission-table.mjs`, `permissions.test.ts`, `nav-items.test.ts` and
+`performance-templates.test.ts`. Nine places, three of them import — do not "tidy" the names.
 
 `Prompt/` at the root was a stale duplicate of three documents. **Deleted 2026-08-25.** Two
 ignore-lists still named it and were cleaned with it (`.prettierignore`, and the list

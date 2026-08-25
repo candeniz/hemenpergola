@@ -8,13 +8,22 @@ import { REFERENCE_DIRS } from '../reference-dirs.mjs'
 
 /**
  * The reference-folder list had two copies and they drifted: `Prompt/` was named in
- * `eslint.config.mjs` and not in `next.config.ts`, and the handover document said both
- * had been cleaned when neither had. `ADR-029` collapsed the executable configs onto one
- * module — but `.prettierignore` and `tsconfig.json` are text and JSON, with no imports,
- * so they still repeat the names.
+ * `eslint.config.mjs` and not in `next.config.ts`, and the handover document said both had
+ * been cleaned when neither had. `ADR-029` collapsed the executable configs onto one module.
  *
- * This test is the seam for those two. Without it the drift removed from three files
- * simply re-enters through the two that cannot import anything.
+ * **This test closes exactly two doors**, the two build-exclusion consumers whose formats
+ * cannot import anything:
+ *
+ *   `.prettierignore` — every non-comment entry is either a reference folder or one of the
+ *   named deliberate entries, so a stale folder cannot linger there.
+ *   `tsconfig.json` — its `exclude`, minus a named set of non-folders, equals the list.
+ *
+ * **What it does not close.** Four files embed a folder name inside a document path —
+ * `generate-permission-table.mjs`, `permissions.test.ts`, `nav-items.test.ts`,
+ * `performance-templates.test.ts` — and nothing here pins them. A rename surfaces there as
+ * a failed file read in whichever suite touches it first, which is late but not silent.
+ * Prose in `CLAUDE.md`, `README.md` and `28-handover.md` names the folders too, and no test
+ * can hold prose to a list.
  */
 describe('reference directories · one list, every consumer', () => {
   const root = process.cwd()
