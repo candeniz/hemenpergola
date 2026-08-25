@@ -1,4 +1,4 @@
-import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
+import { MODERATED_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/cities/pages` — the cities that have landing pages, which is to say the
@@ -20,6 +20,6 @@ export async function GET(request: Request): Promise<Response> {
   ])
 
   return respond(await listPublicCities(await resolveActor(request), {}), undefined, {
-    cacheControl: REFERENCE_CACHE,
+    cacheControl: MODERATED_CACHE,
   })
 }

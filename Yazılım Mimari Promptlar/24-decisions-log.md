@@ -1046,3 +1046,49 @@ becomes the thing a second client depends on — which is also what makes it tes
 **Reverses if.** The endpoint work in Phase 10 shows the API surface is a genuine rewrite
 rather than an adapter pass, or Q2 stalls long enough that web launch itself is at risk. In
 either case mobile returns to the non-goal list with a date and a reason, not silently.
+
+---
+
+## ADR-031 — Two cache classes for the anonymous API, split by whether moderation can make the response wrong
+
+**Context.** Phase 10 put the public reads behind `/api/v1` with one cache profile,
+`REFERENCE_CACHE` (1 h fresh, 1 day stale-while-revalidate). That profile is right for
+provinces, districts and the admin-authored catalogue — nothing there is ever suspended,
+removed or anonymised — and wrong for manufacturer cards, profiles, supplied-city pages and
+CMS pages, where a cached copy served after a suspension is correct arithmetic and a wrong
+page. The question a cache header on those surfaces actually answers is not "how fresh is
+nice" but **"how long may a suspended manufacturer stay publicly visible?"** — which is a
+moderation-effectiveness decision, not a tuning knob. `17` §Suspension and `19` state no
+propagation time.
+
+**Decision.** The number is **15 minutes, worst case** — and it is not new: Phase 8 set
+`revalidate = 900` on the very same public pages, so the web has accepted that ceiling
+since launch-prep. This ADR makes the implicit decision explicit and applies it to the API:
+`MODERATED_CACHE` = `public, max-age=300, stale-while-revalidate=600` (same 900 s worst
+case, fresher in the common case) on `/manufacturers`, `/manufacturers/{slug}`,
+`/cities/pages`, `/cities/{slug}` and `/pages/{slug}`. `REFERENCE_CACHE` stays on
+`/cities`, `/cities/districts`, `/categories*` and `/products*`. The split lives in two
+named constants in `shared/http/respond.ts`, so an endpoint chooses a *class* and cannot
+invent a third header ad hoc.
+
+Suspension's sharp edges do not ride this cache at all: matching excludes a suspended
+company at query time and its PENDING requests pause server-side immediately (`17`). What
+the cache delays is the public *listing* — the brochure, not the machinery.
+
+**Noted in passing and corrected:** `05` §Caching described the public pages as "ISR with
+tag-based revalidation on admin publish". The code has been plain time-based
+`revalidate = 900` since Phase 8; the doc now says what the code does. Tag-based
+invalidation would tighten 15 minutes to seconds and may still arrive — as an improvement,
+not a correction.
+
+**Consequences.** A moderation act reaches every browser within 15 minutes. When the
+edge/CDN layer arrives (`29` C6), the `public` directive starts applying to a shared
+cache and the same 15-minute bound holds there — but a shared cache can also be *purged*,
+which browsers cannot; the invalidation path that exploits that is Q31 in `25` §Open
+questions, parked deliberately because today the browser is the only cache and the problem
+is asleep. It wakes at launch.
+
+**Reverses if.** Counsel or a KVKK complaint demands faster takedown than 15 minutes —
+then `MODERATED_CACHE` shrinks (a one-constant change) or tag-based invalidation gets
+built, and the web's `revalidate` moves with it, because the two surfaces must keep one
+answer to the visibility question.

@@ -35,11 +35,15 @@ const V1_DIR = join(APP_DIR, 'api', 'v1')
 const MODULES_DIR = join(process.cwd(), 'src', 'modules')
 
 /**
- * The only capability that cannot be an HTTP endpoint — one entry, and the bar it had to
- * clear is written below.
+ * Capabilities that need no `/api/v1` route, in exactly two flavours — each entry's reason
+ * says which one it is: the capability **cannot** be an HTTP endpoint (`endWebSession` —
+ * its credential exists only as a cookie), or the capability **already has** its HTTP
+ * surface somewhere other than `/api/v1` (`listPublicSlugs` — `sitemap.xml` is an HTTP
+ * endpoint; it is just not this tree's). A third flavour is not welcome without widening
+ * this sentence first.
  *
- * **This list answers "can this exist as an endpoint at all?", not "will the mobile app
- * show this screen?"** The two questions were conflated in the first version, which
+ * **The list answers "does this need a v1 route?", never "will the mobile app show this
+ * screen?"** The two questions were conflated in the first version, which
  * exempted the admin CMS editor as "wide-screen work". That reason does not survive
  * contact with the codebase: admin catalogue, admin settings and admin verification are
  * equally wide-screen operator work, all three have complete `/api/v1/admin` trees, and
@@ -61,7 +65,7 @@ const WEB_ONLY: Record<string, string> = {
   endWebSession:
     'deletes the Session row addressed by an httpOnly cookie (ADR-022); a token client has no cookie and uses `logout`, which exists as POST /auth/logout',
   listPublicSlugs:
-    'feeds sitemap.xml, and sitemap.xml IS this capability HTTP surface — a crawler-facing web artifact (18 §SEO). An /api/v1/slugs twin would be a second copy of the same enumeration with no client: a phone navigates the directory, it does not crawl it',
+    'already has its HTTP surface: sitemap.xml (18 §SEO) is an HTTP endpoint serving exactly this enumeration to its only consumer, the crawler. An /api/v1/slugs twin would be a second copy with no client — a phone navigates the directory, it does not crawl it',
 }
 
 /**

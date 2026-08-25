@@ -1,4 +1,4 @@
-import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
+import { MODERATED_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/cities/{slug}` — one city landing page: the city and its manufacturer
@@ -24,6 +24,6 @@ export async function GET(
 
   const { slug } = await params
   return respond(await getPublicCity(await resolveActor(request), { slug }), undefined, {
-    cacheControl: REFERENCE_CACHE,
+    cacheControl: MODERATED_CACHE,
   })
 }

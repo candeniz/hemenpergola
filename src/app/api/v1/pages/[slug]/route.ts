@@ -1,4 +1,4 @@
-import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
+import { MODERATED_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/pages/{slug}?locale=` — a CMS page's blocks (`06` §Public read, `18`
@@ -27,6 +27,6 @@ export async function GET(
   return respond(
     await getPublicContentPage(await resolveActor(request), { key: slug, locale }),
     undefined,
-    { cacheControl: REFERENCE_CACHE },
+    { cacheControl: MODERATED_CACHE },
   )
 }

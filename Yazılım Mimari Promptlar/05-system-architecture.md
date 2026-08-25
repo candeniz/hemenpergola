@@ -162,8 +162,15 @@ Matching and pricing are **not** jobs. They run in the request (`03-user-flows.m
 
 ## Caching
 
-- Public catalogue and CMS pages: ISR with tag-based revalidation on admin publish.
-- Manufacturer profiles: ISR, revalidated on profile/portfolio/review changes.
+- Public catalogue and CMS pages: ISR, time-based — `revalidate = 900`. (This line used
+  to promise tag-based revalidation on admin publish; the code has been time-based since
+  Phase 8, and `ADR-031` leans on that 900 s ceiling, so the doc now says what runs.
+  Tag-based invalidation remains a possible tightening, not a description.)
+- Manufacturer profiles: ISR, the same 900 s window.
+- The anonymous `/api/v1` reads: two `Cache-Control` classes split by whether a
+  moderation act can make the response wrong — `REFERENCE_CACHE` (1 h) for
+  provinces/districts/catalogue, `MODERATED_CACHE` (15 min worst case, matching the ISR
+  ceiling) for manufacturer, city and CMS surfaces (`ADR-031`).
 - Price books: in-process memoisation per request only. Never cache across requests — a
   stale price book is a wrong price.
 - Match results: persisted in `MatchRun`/`MatchResult`, so revisiting results does not

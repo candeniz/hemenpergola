@@ -12,12 +12,26 @@ import { httpStatusFor, type DomainError, type Result } from '@/shared/result'
  * from the one the web app exercises — which is the failure `05` is written to prevent.
  */
 
+/*
+ * Two cache classes for anonymous endpoints, split by one question: CAN this response
+ * become wrong by a moderation act? (`ADR-031`)
+ */
+
 /**
- * The cache profile for anonymous reference-data endpoints — cities, districts, the
- * public reads: fresh within the hour, servable stale for a day while revalidating.
- * One constant so the endpoints cannot drift apart header by header.
+ * Immutable-in-practice reference data — provinces, districts, the admin-authored
+ * catalogue. Nothing here is suspended, removed or anonymised; it changes by seed script
+ * or admin authoring. Fresh within the hour, servable stale for a day.
  */
 export const REFERENCE_CACHE = 'public, max-age=3600, stale-while-revalidate=86400'
+
+/**
+ * Surfaces a moderation act must be able to take back — manufacturer cards and profiles,
+ * supplied-city pages, CMS pages. `ADR-031`: a suspended manufacturer may stay visible for
+ * at most 15 minutes, which is the ceiling the web already accepted when Phase 8 set
+ * `revalidate = 900` on the same pages; this profile keeps the same worst case
+ * (5 min fresh + 10 min stale-while-revalidate) and is fresher in the common one.
+ */
+export const MODERATED_CACHE = 'public, max-age=300, stale-while-revalidate=600'
 
 export type SuccessEnvelope<T> = { data: T; meta: { requestId: string } }
 

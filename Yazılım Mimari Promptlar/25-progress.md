@@ -3429,6 +3429,45 @@ What Phase 10 leaves for Phase 11: an API where every capability answers over HT
 drift test that fails on the next capability built without a surface, and `ADR-030`'s
 scope table for what the phone renders first.
 
+### 2026-08-25 — Phase 10.5 · the cache split, and the question a header was hiding (commit `P10.5 · moderasyon önbelleği ve ADR-031`)
+
+One profile went to two classes of surface, and the split is a decision, not a tuning:
+**how long may a suspended manufacturer stay publicly visible?** `17` and `19` state no
+number — but Phase 8 already answered implicitly with `revalidate = 900` on the same
+pages. `ADR-031` makes it explicit: **15 minutes worst case**, both renderers.
+`MODERATED_CACHE` (5 min fresh + 10 min SWR) now rides `/manufacturers`,
+`/manufacturers/{slug}`, `/cities/pages`, `/cities/{slug}` and `/pages/{slug}`;
+`REFERENCE_CACHE` stays on provinces, districts and the admin-authored catalogue, where
+nothing is ever suspended, removed or anonymised. `/cities/pages` was not in the asked
+list and belongs in the moderated class anyway — its counts are derived from VERIFIED
+companies, so a suspension changes it.
+
+The profile docblock's *"the gates hold on this surface because they hold in the service"*
+is corrected: true at computation, false at delivery — a cached copy served after a takedown
+is correct arithmetic and a wrong page.
+
+In passing, `05` §Caching claimed tag-based revalidation; the code has been time-based 900 s
+since Phase 8, and the ADR leans on exactly that ceiling, so the doc now says what runs.
+**Q31** goes in the table: when the CDN lands (C6), `public` starts applying to a shared
+cache that *can* be purged, and suspension/moderation/erasure should purge instead of
+waiting out the window — asleep today because the browser is the only cache, awake at
+launch.
+
+`WEB_ONLY` reworded per review: the list holds exactly two flavours — "cannot be an HTTP
+endpoint" (`endWebSession`) and "**already has** its HTTP surface" (`listPublicSlugs` —
+`sitemap.xml` is an HTTP endpoint; it is just not `/api/v1`'s), and a third flavour must
+widen the docblock sentence first.
+
+**Confirmed on request — `estimateForProject` is company-scoped end to end.** The matrix
+entry is `kind: 'permission'` with `PRICE_BOOK_READ`, a `company:`-prefixed permission
+granted only to company roles. `authorize()` refuses any actor without a company membership
+carrying it; the route resolves the actor against the **path** companyId, so membership and
+the book lookup (`input.companyId` = the same path value) cannot name different companies.
+A customer has no membership → `FORBIDDEN`; a member of company A calling company B's path
+gets no membership resolved → `FORBIDDEN`; a global admin passes, which is `ADR-006`'s own
+carve-out (admins may read breakdowns). The api-leak exemption rests on that chain, and the
+chain holds.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3459,6 +3498,7 @@ scope table for what the phone renders first.
 | ~~Q28~~ | ~~The notification delivery log has a retention rule and no sweeper.~~ **CLOSED 2026-08-24 (task 9.1):** the same sweep executes `retentionWhere()` — 90 days, mandatory events excluded — under the same dry-run/apply/idempotence proof. | ~~Faz 9~~ closed | Q25 and Q28 closed together, by ONE sweeper over ONE policy file, which was the reason both waited. |
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
 | ~~Q30~~ | ~~Erasure has no separate verification step.~~ **CLOSED 2026-08-25 (10.3):** the question resolved itself the moment the erase endpoint went on the API — over HTTP the typed email authorised nothing (`GET /me` returns it), so `19` has to mean an emailed step. Built: `ACCOUNT_ERASURE` token (one hour, single-use, race-safe consume), `requestAccountErasure` → mail → `/hesap-silme-onay` page → `confirmAccountErasure`. The single-step `anonymiseAccount` is retired — keeping it registered would have kept the bypass. | ~~Before launch~~ closed | `29` A2 is ✅ again, this time for the right reason |
+| Q31 | **The moderated cache has no invalidation path for the CDN that does not exist yet.** `ADR-031` bounds a suspended manufacturer's visibility at 15 minutes via `MODERATED_CACHE` and the web's `revalidate = 900`. Today the only cache is the browser, which cannot be purged and needs no purging beyond that bound. The moment the edge/CDN layer lands (`29` C6), `public` starts applying to a **shared** cache that CAN be purged — suspension, review takedown and erasure should then purge `/manufacturers*`, `/cities/pages`, `/cities/{slug}` and the ISR pages instead of waiting out the window. Needs: provider chosen (provisioning chain), a purge call in the suspension/moderation/erasure services, and a decision on whether 15 min stays acceptable as the no-purge fallback. | **C6 — it is part of go-live, not after it**: the problem is asleep only while there is no shared cache | 15-minute bound with no purge path, per `ADR-031` |
 | ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

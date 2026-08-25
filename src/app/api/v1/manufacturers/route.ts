@@ -1,4 +1,4 @@
-import { REFERENCE_CACHE, respond } from '@/shared/http/respond'
+import { MODERATED_CACHE, respond } from '@/shared/http/respond'
 
 /**
  * `GET /api/v1/manufacturers` — the public directory (`06` §Public read).
@@ -23,6 +23,6 @@ export async function GET(request: Request): Promise<Response> {
   ])
 
   return respond(await listPublicManufacturers(await resolveActor(request), {}), undefined, {
-    cacheControl: REFERENCE_CACHE,
+    cacheControl: MODERATED_CACHE,
   })
 }
