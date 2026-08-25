@@ -3586,6 +3586,31 @@ retyped shapes.
 things are points at them: ilk kurulum → sunucu → mobil → durdur, a double-click wrapper
 for the pnpm/docker commands on Windows.
 
+### 2026-08-26 — Phase 11.3 · the first real bundle, and the two deferred decisions (commit `P11.3 · ilk bundle, expo-router ve TanStack Query`)
+
+**The first real Metro bundle succeeded on the first try**: `expo export --platform
+android` → 672 modules, 2 MB Hermes bytecode, zero resolution errors — the
+`contract-map.json` resolveRequest, the `@messages` JSON imports and workspace-root
+`zod` all resolve on the device path, not only under tsc. (No emulator exists in this
+environment; `expo export` runs the same Metro resolution and compilation a device
+receives, which is the strongest proof available headless. The physical-device walk is
+the 11.6 gate.)
+
+**ADR-032, both deferred decisions**: **expo-router**, because the file tree IS the
+linking table and Phase 13's push notifications must open the right screen — a
+notification tap becomes `router.push(url)` with no hand-kept linking map; and the role
+split now lives in the navigation itself, `app/(musteri)` and `app/(uretici)` as guarded
+groups mirroring the web's route-group shape. **TanStack Query**, because `ADR-009`'s
+short-window polling is its first-class case and hand-rolling invalidation after every
+state-machine transition is the enqueue-that-never-fired class of bug waiting to recur.
+Config deliberately mild: 30 s staleness, one retry, mutations never retried — a timed-out
+offer send must surface, not double-send into the machine's CONFLICT.
+
+The skeleton moved into the router (11.1's App.tsx state machine retired; `/` is the fork,
+`/giris` the wall, group layouts the guards), re-bundled clean, and the new compiler lint
+caught one real thing — the boot probe's setState-in-effect, now deferred a tick with the
+reason in place.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

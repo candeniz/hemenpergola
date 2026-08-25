@@ -1092,3 +1092,57 @@ is asleep. It wakes at launch.
 then `MODERATED_CACHE` shrinks (a one-constant change) or tag-based invalidation gets
 built, and the web's `revalidate` moves with it, because the two surfaces must keep one
 answer to the visibility question.
+
+---
+
+## ADR-032 — expo-router for navigation, TanStack Query for server state
+
+**Context.** 11.1 deliberately shipped the skeleton with no navigation library — one
+screen either side of the auth wall does not need a router, and the choice deserved to be
+forced by real screens. 11.3 brings the screens, and one requirement from the future
+decides most of the present: **Phase 13's push notifications must open the right screen.**
+A notification about a new lead that lands the manufacturer on a generic home screen is a
+notification that trained its user to ignore it.
+
+**Decision 1 — expo-router.** The file tree IS the linking table: every screen gets a URL
+under the `hemenpergola://` scheme by existing, so a notification tap becomes
+`router.push(url)` with no hand-maintained linking configuration. Two more properties paid
+for the choice:
+
+- **The role split lives in the navigation itself.** `app/(musteri)` and `app/(uretici)`
+  are separate stacks whose `_layout` guards redirect the wrong role away — the mobile
+  analog of the web's `(customer)`/`(manufacturer)` route groups, and the same shape
+  `07` §Route map already taught everyone to read. A screen inside a group needs no own
+  auth check, exactly like the web (`ADR-024`'s idea, this file's mechanism).
+- It is Expo's own router, built ON react-navigation — the escape hatch to the underlying
+  navigator exists if a screen ever needs it.
+
+**Rejected.** *Bare react-navigation*: the same engine minus file-based linking, which
+means writing and maintaining the deep-link map by hand — the exact cost this decision
+pre-pays. *No router* (11.1's state machine grown up): dies at the first notification that
+must open a nested screen, and grows a hand-rolled history stack, which is a router written
+accidentally.
+
+**Decision 2 — TanStack Query for server state.** The deciding screen is messaging:
+`ADR-009` is short-window polling, and `refetchInterval` plus focus-aware pausing is the
+library's first-class case. Hand-rolling it means writing cache invalidation after every
+state-machine transition (accept → the lead list AND the detail both stale), retry
+discipline that must not stack onto the API client's own 401-refresh, and per-screen
+loading/error plumbing — each one a place for the enqueue-that-never-fired class of bug.
+Configuration is deliberately mild: 30 s staleness, ONE retry, mutations never retried —
+an offer send that times out must surface, not silently double-send against the state
+machine's CONFLICT.
+
+**Rejected.** *Hand-rolled hooks*: the polling loop alone is a page of subtle code, and
+every screen would reimplement the four states. *SWR*: fine library, but mutation +
+invalidation is the half this app leans on hardest and Query's is the more complete;
+choosing the Expo-ecosystem default also keeps Phase 13's examples directly applicable.
+
+**Consequences.** `main: "expo-router/entry"`, `scheme: "hemenpergola"`, screens live in
+`mobile/app/` with the shared components in `mobile/src/`. The boundary and purity tests
+are unaffected — routes are mobile-internal files. Phase 13 wires notification payload →
+URL and nothing else.
+
+**Reverses if.** expo-router's conventions fight a screen the core flow actually needs —
+the escape hatch is dropping to react-navigation APIs inside the same dependency, not a
+rewrite.
