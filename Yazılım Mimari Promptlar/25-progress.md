@@ -64,6 +64,8 @@ proven — not when the code is written.
 | 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
+| 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
+| 13 | Store readiness | **✅ gate met (kod+içerik) · gönderim ⏳** | everything money-and-law-free done: identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety derived from `19`+`04` — `29` §F carries eleven rows with owners; submission waits on F6–F11 |
 
 ## Log
 
@@ -3697,6 +3699,18 @@ Bir alet dersi daha, kayda: korumasız `s.replace` bir kez daha sessiz no-op yap
 (anonimleştirmeye pushToken silme eklemesi girinti farkına takıldı) — entegrasyon testi
 yakaladı, ekleme guard'lı yeniden yapıldı. Bu oturumun kuralı artık: her mekanik yamada
 guard, her yamadan sonra onu sınayan test.
+
+### 2026-08-26 — Faz 13 · mağaza hazırlığı: paranın ve hukukun kapısına kadar (commit `P13 · mağaza hazırlığı`)
+
+Kimlik `mobile/app.json`'da (ad, com.hemenpergola.app, 0.1.0 + build no şeması, tr+en);
+ikon/splash `scripts/generate-mobile-brand.mjs` ile `docs/index.html`'in pergola
+işaretinden + parite-testli token'lardan türetildi ve **açıkça yer tutucu** — gerçek marka
+görseli kullanıcının kararı. `eas.json` üç profil taşıyor, CI'da build yok (kimlik
+bilgisi yok; 11.1'in gerekçesi ayakta). Mağaza metni tr+en, ekran görüntüsü planı, yaş ve
+kategori önerisi gerekçeleriyle `mobile/store/`te; veri güvenliği beyanları `19`+`04`'ten
+satır satır türetildi — cihaz konumu TOPLANMAZ (konum kullanıcı beyanıdır), takip ve
+reklam yok, silme yolu 10.2'nin akışı. Sürümleme ve imzalama YOLLARI yazıldı, anahtar
+üretilmedi — depo public. `29` §F: on bir satır, her birinde kanıt ya da bekleyenin adı.
 
 ## Open questions — need a human answer before the phase that hits them
 

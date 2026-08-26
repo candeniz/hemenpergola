@@ -69,6 +69,26 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | E5 | An SMS and an email actually arriving | ⏳ | bekliyor: **Q2→Q3** — providers; log adapters prove the seams |
 | E6 | Full pass on a mid-range Android over a slow connection | ⏳ | bekliyor: **9.8 — a physical device**; the lab budgets are not this (`18` §What these numbers claim) |
 
+## F · Store readiness (mobile — `ADR-030`; added Phase 13)
+
+Everything money-and-law-free is DONE and sits in `mobile/store/`; every ⏳ names who it
+waits for. **No submission happens before A5 (privacy URL) and C6 (live backend)** — that
+sequencing is `ADR-030`'s, not a preference.
+
+| # | Item | Status | Evidence / waiting on |
+|---|---|---|---|
+| F1 | App identity: name, bundle id, version scheme, locales | ✅ | `mobile/app.json` — com.hemenpergola.app, 0.1.0, tr+en; versioning rules in `mobile/store/surumleme-ve-imza.md` |
+| F2 | Icon and splash — placeholder, token-derived | ✅ (placeholder) | `scripts/generate-mobile-brand.mjs` → `mobile/assets/`; PLACEHOLDER by declaration — real brand art is the user's call (13.1) |
+| F3 | Build profiles | ✅ | `mobile/eas.json` — development / preview / production, autoIncrement; NOT in CI (no credentials; 11.1's reasoning stands) |
+| F4 | Store listing, tr + en | ✅ | `mobile/store/listing.tr.md`, `listing.en.md` — name, short/long copy, keywords, screenshot plan, age+category with reasons; claims cross-checked against `00` and `docs/index.html` |
+| F5 | Data-safety declarations, derived from `19` + `04` | ✅ | `mobile/store/veri-guvenligi.md` — per-class rows, deletion path (10.2's flow), no tracking/ads/diagnostics |
+| F6 | Expo account + EAS projectId | ⏳ | **user** — unlocks `eas build`, and push-token fetch on some dev paths (Q32) |
+| F7 | Firebase project → FCM key in EAS | ⏳ | **user** — standalone Android push (Q32); dev path works without |
+| F8 | Apple Developer account ($99/yr) | ⏳ | **user** — bundle id registration, signing, TestFlight; also iOS push |
+| F9 | Google Play Console ($25 once) | ⏳ | **user** — package registration, signing, internal testing track |
+| F10 | Privacy policy URL in both consoles | ⏳ | **A5 (lawyer)** — the slot is wired in F5; the text does not publish unapproved |
+| F11 | Store submission | ⏳ | **A5 + C6 + F6–F10**, then the walk in `27`'s spirit on TestFlight/internal track |
+
 ## Summary
 
 **Evidenced: 18 · Waiting on a named human or infrastructure step: 18 · Not started: 0.**

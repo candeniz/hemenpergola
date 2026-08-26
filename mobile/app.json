@@ -2,12 +2,34 @@
   "expo": {
     "name": "Hemen Pergola",
     "slug": "hemen-pergola",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "platforms": ["ios", "android"],
-    "plugins": ["expo-router"],
-    "scheme": "hemenpergola"
+    "scheme": "hemenpergola",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#162839"
+    },
+    "ios": {
+      "bundleIdentifier": "com.hemenpergola.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleLocalizations": ["tr", "en"]
+      }
+    },
+    "android": {
+      "package": "com.hemenpergola.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#162839"
+      }
+    },
+    "plugins": ["expo-router"]
   }
 }
