@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { runNotificationDispatch } from '@/modules/notification/infrastructure/dispatch-job'
+import { setPushSender, type PushMessage } from '@/modules/notification/infrastructure/push-sender'
 import { logMailer, setMailer, type Email } from '@/modules/notification/infrastructure/mailer'
 import { notify } from '@/modules/notification/infrastructure/notify'
 import {
@@ -26,6 +27,7 @@ import { getPrisma } from './setup'
 
 const sentMail: Email[] = []
 const sentSms: Sms[] = []
+const sentPush: PushMessage[] = []
 
 let userId = ''
 
@@ -52,6 +54,12 @@ beforeAll(async () => {
     name: 'recording',
     async send(sms) {
       sentSms.push(sms)
+    },
+  })
+  setPushSender({
+    name: 'recording',
+    async send(message) {
+      sentPush.push(message)
     },
   })
 
@@ -284,4 +292,68 @@ describe('subscriptions and dedupe', () => {
     expect(otherRequest.deduped).toBe(false)
     expect(otherRequest.notificationId).not.toBe(first.notificationId)
   }, 60_000)
+})
+
+describe('12.3 · the push leg rides the same discipline', () => {
+  it('sends to every registered device with the deep-link url, and none when no token exists', async () => {
+    // No token yet: dispatch succeeds without a push leg.
+    sentPush.length = 0
+    const withoutToken = await notified('offer_received', {
+      offerRequestId: 'ofr_push_none',
+      companyName: 'Push Co',
+      grossTl: '1.000',
+    })
+    await runNotificationDispatch(withoutToken)
+    expect(sentPush.length).toBe(0)
+
+    await getPrisma().pushToken.create({
+      data: { userId, token: 'ExponentPushToken[dispatch-a]', platform: 'android' },
+    })
+    await getPrisma().pushToken.create({
+      data: { userId, token: 'ExponentPushToken[dispatch-b]', platform: 'ios' },
+    })
+
+    const id = await notified('offer_received', {
+      offerRequestId: 'ofr_push_1',
+      companyName: 'Push Co',
+      grossTl: '1.000',
+    })
+    const outcome = await runNotificationDispatch(id)
+    expect(outcome.status).toBe('dispatched')
+    if (outcome.status === 'dispatched') expect(outcome.channels).toContain('push')
+
+    const push = sentPush.at(-1)
+    expect(push?.to.sort()).toEqual([
+      'ExponentPushToken[dispatch-a]',
+      'ExponentPushToken[dispatch-b]',
+    ])
+    // offer_received addresses the customer; the tap must land on the request screen.
+    expect(push?.data.url).toBe('/(musteri)/talep/ofr_push_1')
+    expect((push?.title ?? '').length).toBeGreaterThan(0)
+  })
+
+  it('honours the push preference — and mandatory events ignore it (ADR-027)', async () => {
+    await getPrisma().notificationPreference.create({
+      data: { userId, channel: 'push', type: 'offer_received', enabled: false },
+    })
+    sentPush.length = 0
+    const suppressed = await notified('offer_received', {
+      offerRequestId: 'ofr_push_2',
+      companyName: 'Push Co',
+      grossTl: '1.000',
+    })
+    await runNotificationDispatch(suppressed)
+    expect(sentPush.length).toBe(0)
+
+    // contact_disclosed is the mandatory event: a disabled row must not silence it.
+    await getPrisma().notificationPreference.create({
+      data: { userId, channel: 'push', type: 'contact_disclosed', enabled: false },
+    })
+    const mandatory = await notified('contact_disclosed', {
+      offerRequestId: 'ofr_push_3',
+      companyName: 'Push Co',
+    })
+    await runNotificationDispatch(mandatory)
+    expect(sentPush.at(-1)?.data.url).toBe('/(musteri)/talep/ofr_push_3')
+  })
 })

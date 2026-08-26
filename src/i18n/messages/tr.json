@@ -336,7 +336,8 @@
       "messages": "Mesajlar",
       "savedCompanies": "Kayıtlı firmalar",
       "settings": "Ayarlar",
-      "myData": "Verilerim"
+      "myData": "Verilerim",
+      "notifications": "Bildirimler"
     },
     "manufacturer": {
       "section": "Üretici portalı",
@@ -877,7 +878,9 @@
       "sms": "SMS",
       "emailLabel": "{event} için e-posta bildirimi",
       "smsLabel": "{event} için SMS bildirimi",
-      "mandatory": "Yasal kaydın parçası; kapatılamaz."
+      "mandatory": "Yasal kaydın parçası; kapatılamaz.",
+      "push": "Push",
+      "pushLabel": "{event} için push bildirimi"
     },
     "export": {
       "title": "Verilerimi indir",
@@ -1056,7 +1059,17 @@
       "title": "Bildirim ayarları",
       "email": "E-posta",
       "sms": "SMS",
-      "mandatory": "Yasal kaydın parçası; kapatılamaz."
+      "mandatory": "Yasal kaydın parçası; kapatılamaz.",
+      "push": "Push"
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "empty": "Henüz bildiriminiz yok."
     }
+  },
+  "notificationsPage": {
+    "title": "Bildirimler",
+    "empty": "Henüz bildiriminiz yok.",
+    "error": "Bildirimler yüklenemedi."
   }
 }

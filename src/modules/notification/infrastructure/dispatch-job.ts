@@ -12,6 +12,8 @@ import {
 import { channelsFor, renderNotification } from '../domain/notification-templates'
 import { getMailer } from './mailer'
 import { getSmsSender } from './sms-sender'
+import { getPushSender } from './push-sender'
+import { pushTargetPath } from '../domain/push-target'
 
 /**
  * `notification.dispatch` — task 7.1, `13` §Delivery. The worker's third handler.
@@ -132,7 +134,7 @@ export async function runNotificationDispatch(notificationId: string): Promise<D
   const granted = channelsFor(claim.type)
   const sent: NotificationChannel[] = ['in_app'] // the row itself is the in-app delivery
 
-  const wants = async (channel: 'email' | 'sms'): Promise<boolean> => {
+  const wants = async (channel: 'email' | 'sms' | 'push'): Promise<boolean> => {
     if (isMandatory(claim.type)) return true
     const preference = await prisma.notificationPreference.findUnique({
       where: { userId_channel_type: { userId: claim.userId, channel, type: claim.type } },
@@ -154,6 +156,30 @@ export async function runNotificationDispatch(notificationId: string): Promise<D
     if (await wants('sms')) {
       await getSmsSender().send({ to: claim.user.phone, text: rendered.sms })
       sent.push('sms')
+    }
+  }
+
+  /*
+   * Push rides the SAME idempotency discipline as the other channels: at-most-once rows
+   * were stamped at claim, mandatory events stamp after this block. The title and body are
+   * the catalogue's own rendered template — push invented no second copywriter — and
+   * data.url is the deep-link path (ADR-032: every screen is a URL, so a tap is
+   * router.push and nothing more).
+   */
+  if (granted.includes('push') && (await wants('push'))) {
+    const tokens = await prisma.pushToken.findMany({
+      where: { userId: claim.userId },
+      select: { token: true },
+    })
+    if (tokens.length > 0) {
+      const target = pushTargetPath(claim.type, claim.payload)
+      await getPushSender().send({
+        to: tokens.map((row) => row.token),
+        title: rendered.title,
+        body: rendered.body,
+        data: target === null ? {} : { url: target },
+      })
+      sent.push('push')
     }
   }
 

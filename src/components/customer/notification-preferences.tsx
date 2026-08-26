@@ -25,6 +25,8 @@ export type PreferenceRow = {
   mandatory: boolean
   email: boolean
   sms: boolean
+  /** 12.3 — the phone joins the same catalogue with the same ADR-027 rules. */
+  push: boolean
 }
 
 export function NotificationPreferences({ rows }: { rows: PreferenceRow[] }) {
@@ -32,7 +34,7 @@ export function NotificationPreferences({ rows }: { rows: PreferenceRow[] }) {
   const [state, setState] = useState(rows)
   const [pending, start] = useTransition()
 
-  const toggle = (type: string, channel: 'email' | 'sms', enabled: boolean) => {
+  const toggle = (type: string, channel: 'email' | 'sms' | 'push', enabled: boolean) => {
     // Optimistic, then reconciled: a failed write puts the switch back where it was, so the
     // screen never claims a preference the server refused (mandatory events do refuse).
     setState((current) =>
@@ -65,6 +67,9 @@ export function NotificationPreferences({ rows }: { rows: PreferenceRow[] }) {
           <th scope="col" className="w-24 py-2">
             {t('preferences.sms')}
           </th>
+          <th scope="col" className="w-24 py-2">
+            {t('preferences.push')}
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -76,7 +81,7 @@ export function NotificationPreferences({ rows }: { rows: PreferenceRow[] }) {
                 <span className="block text-body-sm text-muted">{t('preferences.mandatory')}</span>
               ) : null}
             </th>
-            {(['email', 'sms'] as const).map((channel) => (
+            {(['email', 'sms', 'push'] as const).map((channel) => (
               <td key={channel} className="py-3">
                 <Switch
                   checked={row[channel]}

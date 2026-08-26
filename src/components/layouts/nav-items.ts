@@ -37,6 +37,7 @@ export const customerNav: readonly NavItem[] = [
   { href: '/hesap/talepler', labelKey: 'requests', icon: 'pending_actions' },
   { href: '/hesap/mesajlar', labelKey: 'messages', icon: 'contact_support' },
   { href: '/hesap/kayitli-firmalar', labelKey: 'savedCompanies', icon: 'star' },
+  { href: '/hesap/bildirimler', labelKey: 'notifications', icon: 'notifications' },
   { href: '/hesap/verilerim', labelKey: 'myData', icon: 'visibility' },
   { href: '/hesap/ayarlar', labelKey: 'settings', icon: 'settings' },
 ]

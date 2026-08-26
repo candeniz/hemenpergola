@@ -336,7 +336,8 @@
       "messages": "Messages",
       "savedCompanies": "Saved companies",
       "settings": "Settings",
-      "myData": "My data"
+      "myData": "My data",
+      "notifications": "Notifications"
     },
     "manufacturer": {
       "section": "Manufacturer portal",
@@ -877,7 +878,9 @@
       "sms": "SMS",
       "emailLabel": "Email notification for {event}",
       "smsLabel": "SMS notification for {event}",
-      "mandatory": "Part of the legal record; cannot be switched off."
+      "mandatory": "Part of the legal record; cannot be switched off.",
+      "push": "Push",
+      "pushLabel": "Push notification for {event}"
     },
     "export": {
       "title": "Download my data",
@@ -1056,7 +1059,17 @@
       "title": "Notification settings",
       "email": "Email",
       "sms": "SMS",
-      "mandatory": "Part of the legal record; cannot be switched off."
+      "mandatory": "Part of the legal record; cannot be switched off.",
+      "push": "Push"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "No notifications yet."
     }
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "error": "Notifications could not be loaded."
   }
 }

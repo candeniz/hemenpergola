@@ -39,7 +39,7 @@ export const LEGAL_HOLD_TABLES = {
 
 export type SweepRule = {
   /** The Prisma model the rule acts on — the sweeper derives its table set from here. */
-  table: 'Project' | 'Notification' | 'OfferRequest' | 'RateLimitHit'
+  table: 'Project' | 'Notification' | 'OfferRequest' | 'PushToken' | 'RateLimitHit'
   rule: string
   action: 'delete' | 'anonymise'
   /** The where-clause, built at sweep time. */
@@ -76,6 +76,12 @@ export const SWEEP_RULES: readonly SweepRule[] = [
     // The row, its ids and its status history stay — the manufacturer's commercial
     // record survives. What goes is the free text that can carry personal context.
     anonymiseData: { declineReason: null, closedReason: null },
+  },
+  {
+    table: 'PushToken',
+    rule: 'device addresses unseen 180 days — a token that stopped reporting is a device that moved on (12.3, 19 §Retention)',
+    action: 'delete',
+    where: (now) => ({ lastSeenAt: { lt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000) } }),
   },
   {
     table: 'RateLimitHit',

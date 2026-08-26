@@ -12,7 +12,7 @@ import {
  * and pinned by `dto-purity.test.ts`.
  */
 
-const CHANNELS = ['email', 'sms'] as const
+const CHANNELS = ['email', 'sms', 'push'] as const
 
 const eventTypes = ALL_NOTIFICATION_TYPES.filter(
   (type) => NOTIFICATION_EVENTS[type].kind === 'event',
@@ -44,3 +44,26 @@ export type NotificationPreferenceView = {
   type: NotificationType
   enabled: boolean
 }
+
+/* ── Phase 12.2 · the in-app inbox, and 12.3 · push tokens ─────────────── */
+
+export const listNotificationsSchema = z.object({})
+export type ListNotificationsInput = z.infer<typeof listNotificationsSchema>
+
+export type NotificationListItem = {
+  id: string
+  type: NotificationType
+  payload: Record<string, unknown>
+  readAt: Date | null
+  createdAt: Date
+}
+
+export const registerPushTokenSchema = z.object({
+  /** An Expo push token from the device — opaque here, validated by shape only. */
+  token: z.string().min(10).max(400),
+  platform: z.enum(['ios', 'android']),
+})
+export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>
+
+export const removePushTokenSchema = z.object({ token: z.string().min(10).max(400) })
+export type RemovePushTokenInput = z.infer<typeof removePushTokenSchema>

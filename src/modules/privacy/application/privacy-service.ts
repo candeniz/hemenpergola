@@ -369,6 +369,9 @@ async function performAnonymisation(
     prisma.refreshToken.deleteMany({ where: { userId: user.id } }),
     prisma.authToken.deleteMany({ where: { userId: user.id } }),
     prisma.notificationPreference.deleteMany({ where: { userId: user.id } }),
+    // A push token is a device ADDRESS for this person — personal data, dead the moment
+    // the account no longer identifies anyone (12.3, 19 §Erasure).
+    prisma.pushToken.deleteMany({ where: { userId: user.id } }),
     // Notifications are a store of personal payloads (names, addresses in bodies) —
     // they go. The DISCLOSURE evidence is ContactDisclosure + Consent, which stay.
     prisma.notification.deleteMany({ where: { userId: user.id } }),

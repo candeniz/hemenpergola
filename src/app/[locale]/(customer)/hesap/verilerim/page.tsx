@@ -63,6 +63,7 @@ export default async function MyDataPage({ params }: { params: Promise<{ locale:
     mandatory: preferences.isMandatory(type),
     email: !off.has(`email:${type}`),
     sms: !off.has(`sms:${type}`),
+    push: !off.has(`push:${type}`),
   }))
 
   return (

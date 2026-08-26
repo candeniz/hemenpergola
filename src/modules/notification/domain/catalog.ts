@@ -21,7 +21,7 @@
  * Everything else is convenience and opts out per (channel, type).
  */
 
-export type NotificationChannel = 'in_app' | 'email' | 'sms'
+export type NotificationChannel = 'in_app' | 'push' | 'email' | 'sms'
 
 export type NotificationEventEntry = {
   /**
@@ -44,100 +44,100 @@ export const NOTIFICATION_EVENTS = {
   offer_request_created: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyCount: 2 },
   },
   offer_request_received: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email', 'sms'],
+    channels: ['in_app', 'push', 'email', 'sms'],
     sample: { cityName: 'İstanbul', areaM2: 20 },
   },
   offer_request_sla_reminder: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { hoursLeft: 24 },
   },
   contact_disclosed: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email', 'sms'],
+    channels: ['in_app', 'push', 'email', 'sms'],
     sample: { companyName: 'Ege Pergola' },
   },
   offer_request_declined: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyName: 'Ege Pergola' },
   },
   offer_request_expired: {
     kind: 'event',
     audience: 'both',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyName: 'Ege Pergola' },
   },
   // ── appointments (`13` rows 6–7) ───────────────────────────────────────────
   survey_scheduled: {
     kind: 'event',
     audience: 'both',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { when: '26 Ağustos 2026 14:00' },
   },
   appointment_reminder: {
     kind: 'event',
     audience: 'both',
-    channels: ['in_app', 'sms'],
+    channels: ['in_app', 'push', 'sms'],
     sample: { when: '26 Ağustos 2026 14:00' },
   },
   // ── offers (`13` rows 8–10) ────────────────────────────────────────────────
   offer_received: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email', 'sms'],
+    channels: ['in_app', 'push', 'email', 'sms'],
     sample: { companyName: 'Ege Pergola', validUntil: '7 Eylül 2026' },
   },
   offer_revised: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyName: 'Ege Pergola' },
   },
   offer_expiring: {
     kind: 'event',
     audience: 'both',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyName: 'Ege Pergola', validUntil: '7 Eylül 2026' },
   },
   offer_accepted: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email', 'sms'],
+    channels: ['in_app', 'push', 'email', 'sms'],
     sample: { offerNumber: 'EGE-2026-0002' },
   },
   offer_rejected: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { offerNumber: 'EGE-2026-0002' },
   },
   // ── communication and trust (`13` rows 11–13; triggers land in 7.2) ────────
   message_received: {
     kind: 'event',
     audience: 'both',
-    channels: ['in_app'],
+    channels: ['in_app', 'push'],
     sample: { senderName: 'Ege Pergola' },
   },
   review_published: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { rating: 5 },
   },
   review_responded: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { companyName: 'Ege Pergola' },
   },
   // `16` §Moderation: "REJECTED (reason, notified)" — the customer learns why, with the
@@ -145,7 +145,7 @@ export const NOTIFICATION_EVENTS = {
   review_rejected: {
     kind: 'event',
     audience: 'customer',
-    channels: ['in_app', 'email'],
+    channels: ['in_app', 'push', 'email'],
     sample: { reason: 'Üçüncü kişilere ait kişisel veri içeriyor' },
   },
   // ── platform (`13` rows 14–15) ─────────────────────────────────────────────
@@ -155,19 +155,19 @@ export const NOTIFICATION_EVENTS = {
   company_verified: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app'],
+    channels: ['in_app', 'push'],
     sample: { companyName: 'Ege Pergola' },
   },
   company_rejected: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app'],
+    channels: ['in_app', 'push'],
     sample: { companyName: 'Ege Pergola', reason: 'Vergi levhası okunaklı değil' },
   },
   price_book_published: {
     kind: 'event',
     audience: 'manufacturer',
-    channels: ['in_app'],
+    channels: ['in_app', 'push'],
     sample: { version: 2 },
   },
   // ── standing intents, not events ───────────────────────────────────────────

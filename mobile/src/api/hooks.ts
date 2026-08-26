@@ -136,7 +136,7 @@ export const usePreferences = () =>
 export function useSetPreference() {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (input: { channel: 'email' | 'sms'; type: string; enabled: boolean }) =>
+    mutationFn: (input: { channel: 'email' | 'sms' | 'push'; type: string; enabled: boolean }) =>
       unwrap(api.setPreference(input.channel, input.type, input.enabled)),
     onSuccess: () => void client.invalidateQueries({ queryKey: keys.preferences }),
   })

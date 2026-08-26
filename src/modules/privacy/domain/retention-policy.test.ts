@@ -27,6 +27,8 @@ describe('retention policy · legal hold is untouchable', () => {
       'Project:delete',
       'Notification:delete',
       'OfferRequest:anonymise',
+      // 12.3: device addresses are personal data with their own clock (19 §Retention).
+      'PushToken:delete',
       'RateLimitHit:delete',
     ])
 
@@ -53,7 +55,14 @@ describe('retention policy · legal hold is untouchable', () => {
     const models = [
       ...source.matchAll(/prisma\.([a-zA-Z]+)\.(?:deleteMany|updateMany|count|findMany)/g),
     ].map((match) => match[1])
-    const allowed = new Set(['project', 'notification', 'offerRequest', 'rateLimitHit', 'file'])
+    const allowed = new Set([
+      'project',
+      'notification',
+      'offerRequest',
+      'pushToken',
+      'rateLimitHit',
+      'file',
+    ])
     for (const model of models) {
       expect(allowed.has(model!), `sweeper touches prisma.${model}`).toBe(true)
     }

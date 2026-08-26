@@ -48,6 +48,11 @@ export default function MusteriProjects() {
         )}
       </QueryStates>
       <View style={styles.footer}>
+        <Link href="/bildirimler" asChild>
+          <Pressable accessibilityRole="button" style={styles.footerLink}>
+            <Text style={styles.footerLinkText}>{t(locale, 'mobile.notifications.title')}</Text>
+          </Pressable>
+        </Link>
         <Link href="/ayarlar/bildirimler" asChild>
           <Pressable accessibilityRole="button" style={styles.footerLink}>
             <Text style={styles.footerLinkText}>{t(locale, 'mobile.common.settings')}</Text>

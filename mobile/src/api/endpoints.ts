@@ -203,7 +203,7 @@ export function listPreferences(): Promise<ApiResult<NotificationPreferenceView[
 }
 
 export function setPreference(
-  channel: 'email' | 'sms',
+  channel: 'email' | 'sms' | 'push',
   type: string,
   enabled: boolean,
 ): Promise<ApiResult<NotificationPreferenceView>> {

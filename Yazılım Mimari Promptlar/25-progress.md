@@ -3666,6 +3666,38 @@ demands are prepared but not executed; `29` E6 stays open, and this entry is the
 of why rather than a claim it happened. First command on a machine with a phone attached:
 `pnpm --filter mobile start`, both seeded roles, the walk as written in the phase brief.
 
+### 2026-08-26 — Faz 12 · bildirimler: harita-güdümlü saflık, gelen kutusu, push (commit `P12 · bildirim kutusu ve push kanalı`)
+
+**12.1** — `dto-purity` artık `mobile/contract-map.json`'u okuyor ve haritanın telefona
+açtığı HER kapanışı tarıyor: dördüncü takma ad korumasız doğamaz. (11.4'ün dersi: `@legal`
+bir klasörü açtı ve hiçbir test taramıyordu — sorun örnek değil sınıftı.)
+
+**12.2** — `listNotifications`: servis (owner-scoped, en yeni 50) + `GET /me/notifications`
++ web `/hesap/bildirimler` + mobil `/bildirimler` (dokunuş, push'un damgaladığı aynı
+hedef eşlemesiyle ekrana gider). **`api-surface` bu deliği göremezdi: kayıtlı metotları
+sayar, hiç kaydedilmemiş yeteneği değil.** Okundu-işaretleme bilerek YOK: `readAt` kolonu
+`13`'ün mesaj-digest katlaması için var, doc kullanıcıya dönük bir okundu etkileşimi
+tanımlamıyor — istenirse önce `13` değişir.
+
+**12.3** — push, `13`'e DÖRDÜNCÜ kanal olarak: katalogdaki 21 olayın kanal listesi
+`'push'` kazandı (in-app'in taşıyıcısı), tercih sözleşmesi ve İKİ tercih ekranı üç kanal
+gösteriyor, `ADR-027` değişmeden geçerli (dispatch testi: kapalı tercih push'u susturur,
+zorunlu olay tercihi yok sayar). Cihaz token'ı KİŞİSEL VERİ: `PushToken` modeli (migration),
+kayıt/silme owner-scoped (el değiştiren cihaz ŞİMDİ oturum açana yeniden ebeveynlenir —
+eski sahibin adresi tutması yeni sahibin etkinliğini sızdırırdı), anonimleştirme siler
+(`privacy.integration.test.ts` iddia ediyor), süpürge 180 gün görülmemişi budar (kural +
+pinler + sweep case'leri). Sevk: `push-sender` portu (mailer düzeni; testler kaydedici
+takar), worker'ın mevcut claim-then-send / zorunluda-at-least-once disiplini AYNEN —
+başlık/gövde kataloğun kendi şablonu, `data.url` `push-target.ts`'in saf eşlemesi
+(audience kabuğu, payload id'si ekranı seçer). Mobil: kayıt best-effort ve SESSİZ düşer
+(emülatör / izin reddi / projectId yok — Q32), çıkışta token silinir, `_layout` dinleyicisi
+dokunuşu `router.push(data.url)` yapar — ADR-032'nin bedeli burada ödendi.
+
+Bir alet dersi daha, kayda: korumasız `s.replace` bir kez daha sessiz no-op yaptı
+(anonimleştirmeye pushToken silme eklemesi girinti farkına takıldı) — entegrasyon testi
+yakaladı, ekleme guard'lı yeniden yapıldı. Bu oturumun kuralı artık: her mekanik yamada
+guard, her yamadan sonra onu sınayan test.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3697,6 +3729,7 @@ of why rather than a claim it happened. First command on a machine with a phone 
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
 | ~~Q30~~ | ~~Erasure has no separate verification step.~~ **CLOSED 2026-08-25 (10.3):** the question resolved itself the moment the erase endpoint went on the API — over HTTP the typed email authorised nothing (`GET /me` returns it), so `19` has to mean an emailed step. Built: `ACCOUNT_ERASURE` token (one hour, single-use, race-safe consume), `requestAccountErasure` → mail → `/hesap-silme-onay` page → `confirmAccountErasure`. The single-step `anonymiseAccount` is retired — keeping it registered would have kept the bypass. | ~~Before launch~~ closed | `29` A2 is ✅ again, this time for the right reason |
 | Q31 | **The moderated cache has no invalidation path for the CDN that does not exist yet.** `ADR-031` bounds a suspended manufacturer's visibility at 15 minutes via `MODERATED_CACHE` and the web's `revalidate = 900`. Today the only cache is the browser, which cannot be purged and needs no purging beyond that bound. The moment the edge/CDN layer lands (`29` C6), `public` starts applying to a **shared** cache that CAN be purged — suspension, review takedown and erasure should then purge `/manufacturers*`, `/cities/pages`, `/cities/{slug}` and the ISR pages instead of waiting out the window. Needs: provider chosen (provisioning chain), a purge call in the suspension/moderation/erasure services, and a decision on whether 15 min stays acceptable as the no-purge fallback. | **C6 — it is part of go-live, not after it**: the problem is asleep only while there is no shared cache | 15-minute bound with no purge path, per `ADR-031` |
+| Q32 | **Push works in development; a standalone Android build needs credentials the repo must never hold.** 12.3 built the channel end to end — token registration, the worker's Expo-push leg, preferences, deep-link taps — and it runs against Expo Go with no credentials. What is missing is user-side: an Expo account (EAS `projectId`, which `getExpoPushTokenAsync` needs even in dev on some paths — the app degrades silently without it, see `mobile/src/push/register.ts`) and, for a standalone Android build, a Firebase project's FCM key uploaded to EAS. iOS push joins with the Apple Developer account (Faz 13's list). No code change waits on this; the sender port (`push-sender.ts`) is identical either way. | Faz 14 (build) — the dev path is unblocked | Push silently absent on devices until the accounts exist |
 | ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

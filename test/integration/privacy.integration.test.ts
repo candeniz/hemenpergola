@@ -310,6 +310,11 @@ describe('9.1 · export and erasure', () => {
   it('erasure anonymises: personal fields go, commercial ids stay, sessions die', async () => {
     const prisma = getPrisma()
 
+    // 12.3: a device address is personal data — plant one and watch erasure take it.
+    await prisma.pushToken.create({
+      data: { userId: customerId, token: 'ExponentPushToken[erasure-test]', platform: 'android' },
+    })
+
     const wrongEmail = await requestAccountErasure(customerActor(), {
       confirmEmail: 'baskasi@example.com',
     })
@@ -344,6 +349,7 @@ describe('9.1 · export and erasure', () => {
     expect(user.fullName).toBeNull()
     expect(user.phone).toBeNull()
     expect(user.status).toBe('DELETED')
+    expect(await prisma.pushToken.count({ where: { userId: customerId } })).toBe(0)
 
     // Commercial records keep their ids; the disclosure evidence keeps its content.
     expect(await prisma.offerRequest.count({ where: { customerId } })).toBeGreaterThan(0)

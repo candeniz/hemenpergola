@@ -46,6 +46,8 @@ async function countFor(rule: SweepRule, now: Date): Promise<number> {
       return prisma.notification.count({ where })
     case 'OfferRequest':
       return prisma.offerRequest.count({ where })
+    case 'PushToken':
+      return prisma.pushToken.count({ where })
     case 'RateLimitHit':
       return prisma.rateLimitHit.count({ where })
   }
@@ -96,6 +98,10 @@ async function applyFor(rule: SweepRule, now: Date): Promise<number> {
         where,
         data: rule.anonymiseData ?? {},
       })
+      return result.count
+    }
+    case 'PushToken': {
+      const result = await prisma.pushToken.deleteMany({ where })
       return result.count
     }
     case 'RateLimitHit': {

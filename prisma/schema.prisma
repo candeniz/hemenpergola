@@ -137,6 +137,7 @@ model User {
   offerRequests OfferRequest[]
   // Phase 5 · migration 7 — the zero-result subscription (5.7)
   notifications Notification[]
+  pushTokens    PushToken[]
   // Phase 7 · migration 9
   notificationPreferences NotificationPreference[]
   // Phase 7 · migration 10
@@ -1258,6 +1259,21 @@ model MatchResult {
  * the table 5.7 reads is built; `NotificationPreference` stays deferred with the rest of
  * Phase 7.
  */
+/// Phase 12.3 · a device address for the push channel. PERSONAL DATA (19): erasure
+/// deletes every row (privacy.integration.test.ts asserts it), the retention sweeper
+/// prunes tokens unseen for 180 days, and the token is never logged.
+model PushToken {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  platform   String
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model Notification {
   id        String    @id @default(cuid())
   userId    String

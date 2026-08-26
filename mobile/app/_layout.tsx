@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Stack } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+import * as Notifications from 'expo-notifications'
 
 import { SessionProvider } from '../src/state/session'
 import { colors } from '../src/theme'
@@ -19,6 +21,19 @@ import { colors } from '../src/theme'
  * auth retries is how a dead session hammers the rate limit.
  */
 export default function RootLayout() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // The whole of deep-link wiring (ADR-032): the worker stamped data.url with a route
+    // path, every screen is a URL, so a tap is one push. The group guards do the rest —
+    // a wrong-role url redirects at the layout, same as any navigation.
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const url = response.notification.request.content.data?.url
+      if (typeof url === 'string' && url.startsWith('/')) router.push(url as never)
+    })
+    return () => subscription.remove()
+  }, [router])
+
   const [queryClient] = useState(
     () =>
       new QueryClient({

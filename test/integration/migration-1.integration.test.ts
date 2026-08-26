@@ -276,6 +276,8 @@ describe('migration scope', () => {
       'Project',
       'ProjectAttachment',
       'ProjectAttributeValue',
+      // Phase 12 · migration 14 — the push channel's device address (13 + Q32)
+      'PushToken',
       'RateLimitHit',
       'RefreshToken',
       // Phase 7 · migration 10 — reviews (16)

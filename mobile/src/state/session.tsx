@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 import { logout, myCompanies } from '../api/client'
+import { registerForPush, unregisterPush } from '../push/register'
 import { readTokens } from '../auth/token-store'
 
 /**
@@ -49,6 +50,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    // The device becomes an address for this account — best-effort, silent without
+    // permission or credentials (see register.ts; Q32).
+    void registerForPush()
+
     const [first] = companies.data.companies
     setSession(
       first === undefined
@@ -63,6 +68,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    await unregisterPush()
     await logout()
     setSession({ state: 'signed-out' })
   }, [])

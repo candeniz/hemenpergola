@@ -48,7 +48,7 @@ export default function Bildirimler() {
                         <Text style={styles.mandatory}>{t(locale, 'mobile.prefs.mandatory')}</Text>
                       ) : null}
                     </View>
-                    {(['email', 'sms'] as const).map((channel) => (
+                    {(['email', 'sms', 'push'] as const).map((channel) => (
                       <View key={channel} style={styles.toggleRow}>
                         <Text style={styles.channel}>{t(locale, `mobile.prefs.${channel}`)}</Text>
                         <Switch
