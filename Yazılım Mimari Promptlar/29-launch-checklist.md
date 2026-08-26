@@ -18,7 +18,7 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | A4 | Export PDF rendering | ✅ | `export-pdf.ts` + `privacy.integration.test.ts` — a real PDF with an EMBEDDED OFL subset (`fonts/LICENSE-noto-sans.md`) that carries `ı İ ş Ş ğ Ğ ₺`; the standard-14 faces cannot, and the first font found in the tree was rejected after reading its cmap |
 | A5 | Privacy notice, cookie notice, terms, consent text — lawyer-reviewed, versioned | ⏳ | bekliyor: **9.2 / Q2** — Turkish counsel; `shared/legal/` carries the versioned texts to review |
 | A6 | VERBİS registration assessed | ⏳ | bekliyor: **Q2** — legal entity first |
-| A7 | Processor agreements (mail, SMS, hosting, storage, geocoding, error tracking) | ⏳ | bekliyor: **Q2 chain + provisioning** — no processor is wired that is not contracted; the ports (`Mailer`, `SmsSender`, `ErrorTracker`, `StorageProvider`) are the seams |
+| A7 | Processor agreements (mail, SMS, hosting, storage, geocoding, error tracking, **Expo push — joined Phase 12**) | ⏳ | bekliyor: **Q2 chain + provisioning** — no processor is wired that is not contracted, and Expo is IN the Q2 chain like the rest: it handles device tokens and notification contents as a processor (`veri-guvenligi.md` declares it), so its terms/DPA get the same lawyer pass before production sends. The ports (`Mailer`, `SmsSender`, `ErrorTracker`, `StorageProvider`, `PushSender`) are the seams; the dev-mode Expo Go path carries seeded test data only |
 | A8 | Audit log append-only enforced by a database GRANT | ⏳ | bekliyor: **9.4 / provisioning** — needs the production role; the application never issues UPDATE/DELETE on `AuditLog` (source-greppable) but the grant is the guarantee |
 
 ## B · Security (`19` §Application security)

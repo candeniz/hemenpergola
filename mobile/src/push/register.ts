@@ -20,6 +20,14 @@ export async function registerForPush(): Promise<void> {
   try {
     if (!Device.isDevice) return // emulators have no push transport
 
+    if (Platform.OS === 'android') {
+      // The channel Android files everything under; the plugin's icon/colour apply to it.
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Hemen Pergola',
+        importance: Notifications.AndroidImportance.HIGH,
+      })
+    }
+
     const existing = await Notifications.getPermissionsAsync()
     const permission = existing.granted ? existing : await Notifications.requestPermissionsAsync()
     if (!permission.granted) return

@@ -32,6 +32,18 @@ differently in each PR:
 
 ## Tokens
 
+### One colour scheme, on purpose (noted 2026-08-26, Faz 13.1)
+
+The system is deliberately **single-scheme light**, everywhere: `globals.css` carries no
+`prefers-color-scheme` block and no dark variant of any token — the two occurrences of
+the word "dark" in it are prose about light containers with dark text. The mobile app's
+`userInterfaceStyle: "light"` is therefore a statement of what exists, not a shortcut:
+its palette is DERIVED from these tokens (parity-tested), and "automatic" would hand half
+the UI to OS defaults with no palette behind them. A dark scheme is a design task — a full
+second semantic mapping here first, then the web, then the derived mobile tokens follow for
+free — and it belongs to the post-placeholder visual pass, not to a config flag.
+
+
 Defined once in `src/app/[locale]/globals.css` inside `@theme`. Never a hex literal in a
 component.
 

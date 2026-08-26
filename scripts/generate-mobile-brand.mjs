@@ -42,6 +42,13 @@ await render(mark(1024, { background: true, pad: 0 }), 1024, 'icon.png')
 // Android crops adaptive icons to a circle of ~66/108 of the canvas: pad the strokes in.
 await render(mark(1024, { background: false, pad: 7 }), 1024, 'adaptive-icon.png')
 await render(mark(512, { background: false, pad: 2 }), 512, 'splash-icon.png')
+// Android status-bar icon: an ALPHA MASK — white strokes on transparency; any colour
+// would render as a grey blob. The plugin's color prop paints it at display time.
+await render(
+  mark(96, { background: false, pad: 2 }).replaceAll(amber, '#ffffff'),
+  96,
+  'notification-icon.png',
+)
 
 writeFileSync(
   join(out, 'README.md'),

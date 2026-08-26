@@ -18,6 +18,9 @@ taşıyor; geçmişe bir kez giren anahtar, onu silen force-push'tan uzun yaşar
   üretip **EAS hesabında** saklar (önerilen yol). Yerel keystore tercih edilirse dosya
   `.gitignore`'un tuttuğu uzantılarda kalır ve parolası bir parola kasasına yazılır.
   Standalone push için FCM anahtarı da EAS'e yüklenir (Q32) — dosya olarak repoya değil.
+  `expo-notifications` eklentisi standalone build'e bildirim ikonunu, rengini ve Android
+  kanal altyapısını kimlik bilgisi OLMADAN kurar; FCM anahtarının tek işi teslimattır —
+  anahtar yokken build alınır, bildirim gelmez (Q32).
 - **iOS:** sertifika ve provisioning profillerini `eas credentials` Apple Developer
   hesabıyla üretir ve EAS'te saklar; `.p8`/`.p12` indirilse bile ignore listesindedir.
 - **Kural:** kimlik bilgisi = hesap + kasa. Depo yalnız _yolları_ bilir.
