@@ -46,6 +46,25 @@ export async function startDraft(page: Page, productName = 'Bioklimatik Pergola'
  * survived Phase 4.
  */
 export async function walkWizardToReady(page: Page, cityName: string): Promise<void> {
+  await walkToAttachments(page, cityName)
+
+  // The ADR-026 trap, planted on every walk: contact data written INTO the free text,
+  // which must not surface anywhere pre-acceptance and must surface after it.
+  await page.getByLabel('Eklemek istedikleriniz').fill(NOTE_TRAP)
+  await page.getByRole('button', { name: 'Devam' }).click()
+
+  await assertReady(page)
+}
+
+/**
+ * The same walk, stopped one step short — at `attachments`, where the file input and the
+ * note share a step.
+ *
+ * Split out for `attachment-upload.spec.ts` (task 13.4), which needs to *be* on that step
+ * rather than pass through it. `walkWizardToReady` is this plus the note and the verdict,
+ * so the two specs still walk one wizard and cannot drift.
+ */
+export async function walkToAttachments(page: Page, cityName: string): Promise<void> {
   // ── dimensions, then Devam (which saves) ──────────────────────────────────
   await page.getByLabel(/genişlik|width/i).fill('5000')
   await page.getByLabel(/derinlik|depth/i).fill('4000')
@@ -102,15 +121,9 @@ export async function walkWizardToReady(page: Page, cityName: string): Promise<v
   await districtSelect.selectOption({ index: 1 })
   await page.getByRole('button', { name: 'Devam' }).click()
 
-  // ── timing (advances itself) → attachments → summary ─────────────────────
+  // ── timing (advances itself) → attachments ───────────────────────────────
   await page.getByRole('button', { name: 'En kısa sürede' }).click()
   await expect(page.getByLabel('Eklemek istedikleriniz')).toBeVisible({ timeout: 30_000 })
-  // The ADR-026 trap, planted on every walk: contact data written INTO the free text,
-  // which must not surface anywhere pre-acceptance and must surface after it.
-  await page.getByLabel('Eklemek istedikleriniz').fill(NOTE_TRAP)
-  await page.getByRole('button', { name: 'Devam' }).click()
-
-  await assertReady(page)
 }
 
 /**

@@ -65,7 +65,7 @@ proven — not when the code is written.
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
-| 13 | Store readiness | **✅ gate met (kod+içerik) · gönderim ⏳** | everything money-and-law-free done: identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety derived from `19`+`04` — `29` §F carries eleven rows with owners; submission waits on F6–F11 |
+| 13 | Store readiness (13.1–13.4) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). `29` §F carries eleven rows with owners; submission waits on F6–F11 |
 
 ## Log
 
@@ -3712,6 +3712,28 @@ satır satır türetildi — cihaz konumu TOPLANMAZ (konum kullanıcı beyanıd�
 reklam yok, silme yolu 10.2'nin akışı. Sürümleme ve imzalama YOLLARI yazıldı, anahtar
 üretilmedi — depo public. `29` §F: on bir satır, her birinde kanıt ya da bekleyenin adı.
 
+### 2026-08-26 — Faz 13.1 · üç düzeltme (commit `36bdfcf`, geriye dönük yazıldı)
+
+Bu girdi 13.3 turunda atlandı; 13.4'te tamamlandı — kayıt eksikse tur olmamış sayılır.
+
+`29` §A7: Expo push işleyici listesine girdi, aynı "sözleşme yoksa bağlantı yok" kuralı
+altında — cihaz token'ını ve bildirim içeriğini işliyor, yani Q2 zincirinin içinde;
+`PushSender` port dikişleri arasında adlandırıldı.
+
+`app.json` `plugins`'e `expo-notifications` eklendi (ikon + renk). Android durum çubuğu
+ikonu **alfa maskesi** olmak zorunda — şeffaf zeminde beyaz çizgi; renkli bir PNG orada gri
+bir lekeye dönüşüyor — ve aynı marka script'iyle üretildi. Çalışma anında `default` Android
+kanalı kayıtta kuruluyor. `surumleme-ve-imza.md`'ye tek cümle: eklenti FCM kimlik bilgisi
+**olmadan** da ikonu, rengi ve kanal altyapısını kuruyor; anahtarın tek işi teslimat, yani
+kimlik bilgisiz build derlenir ve yalnızca bildirim almaz (Q32).
+
+`userInterfaceStyle` `"light"` kaldı ve gerekçesi kararların yaşadığı yere yazıldı
+(`22` §Tokens): tasarım sistemi **her yerde** tek şema — `globals.css`'te ne
+`prefers-color-scheme` bloğu var ne de koyu token varyantı. Mobilin paleti o token'lardan
+türetildiği için `"automatic"` arayüzün yarısını arkasında palet olmayan işletim sistemi
+varsayılanlarına bırakırdı. Koyu şema bir tasarım işi (önce `22`'de ikinci semantik eşleme,
+sonra web, mobil türetmeyle bedavaya gelir), bir yapılandırma bayrağı değil.
+
 ### 2026-08-28 — Faz 13.3 · test APK'sının önündeki tek engel: adres
 
 `preview` profilinin `env` bloğu yoktu, `EXPO_PUBLIC_API_URL` tanımsızdı ve `client.ts`
@@ -3739,10 +3761,76 @@ Tünel açıkken yerel sunucu internete açık — script bunu her koşuda iki k
 standalone'da sessiz olduğu (Q32) `mobile/store/surumleme-ve-imza.md`'ye ve
 `mobile/TEST-APK.md`'ye yazıldı: test eden kişi bunu hata sanmasın.
 
+### 2026-08-28 — Faz 13.4 · E6 turunun içinde patlayacak üç şey
+
+Bağımsız inceleme 13.3'ün üstünde üç şey buldu. İkisi 13.3'ün getirdiği bir şeyin eksiği,
+biri **Faz 9'dan beri kırık ve görünmeyen** bir hata.
+
+**1 · CSP her tarayıcı yüklemesini kesiyordu.** `middleware.ts` Faz 9'dan beri her yanıta
+`connect-src 'self'` basıyor; `14` §Upload flow ise baytları tarayıcıdan **doğrudan**
+depoya `PUT` ediyor — başka bir origin. Yani ürünün içindeki her dosya yükleme, her
+tarayıcıda, başlığın indiği günden beri bloklanıyordu. Hiçbir şey yakalamadı, çünkü hata
+istemci tarafında (`net::ERR_BLOCKED_BY_CSP`), sunucu hiçbir istek görmüyor ve `e2e/`
+altında dosya yükleyen **tek bir test yoktu**. Üretim build'i altında yeniden üretildi,
+tarayıcının kendi cümlesiyle:
+
+```
+Connecting to 'http://localhost:9000/pergola-local/protected/project/…?X-Amz-Signature=…'
+violates the following Content Security Policy directive: "connect-src 'self'".
+The action has been blocked.
+```
+
+Düzeltme sabit bir host değil: `connect-src` ve `img-src` depolama origin'ini
+`S3_ENDPOINT` + `CDN_BASE_URL`'den **türetiyor** — tünelde host her koşuda değiştiği için
+sabit yazan her şey yalnız geliştiricinin makinesinde doğru olurdu. `img-src`'deki eski
+`http://localhost:9000` sabiti de aynı türetmeye geçti. Ölçüldü: aynı build farklı
+`S3_ENDPOINT` ile başlatıldığında başlık yeni origin'i taşıyor, yani değer **çalışma
+anında** okunuyor — tünel senaryosunun dayandığı şey buydu.
+
+Asıl iş test: `e2e/attachment-upload.spec.ts` sihirbazı ek adımına yürüyor, gerçek bir PNG
+yüklüyor ve ekranda görünmesini bekliyor; ikinci test başlığın origin'i taşıdığını iddia
+ediyor. Yükleme testi konsolu dinliyor ve bloklanmayı *bloklanma olarak* raporluyor —
+açıklanamayan bir timeout olarak değil, ki hatanın bu kadar yaşamasının sebebi tam olarak
+oydu. `wizard-walk.ts` `walkToAttachments` olarak bölündü; iki spec hâlâ tek sihirbaz
+yürüyor. `eslint-boundaries.test.ts`'in beş dosyalık listesi altıya çıktı — `middleware.ts`
+tipli env'i okumuyor, çünkü Edge'de her istekte koşuyor ve hevesli parse alakasız bir
+eksik değişkeni site çapında kesintiye çevirirdi (`next.config.ts` ile aynı gerekçe).
+
+**2 · Tünel ölümü sessizdi.** `startTunnel` `exit`'i yalnızca adres yakalanmadan önce
+işliyordu; sonrasında düşen tünel hiçbir şey yazmıyor, pencere ölü adresi göstermeye devam
+ediyordu. Artık yerleştikten sonra da dinleniyor: hangi tünelin düştüğü, ne anlama geldiği
+ve yığının kapandığı ekrana basılıyor. **Yeniden bağlanma kasten yok** — quick tunnel her
+açılışta yeni hostname veriyor, sessizce yeni adres almak sağlıklı görünen bir pencere,
+ayakta bir sunucu ve bir daha asla ulaşamayan bir telefon bırakırdı.
+
+**3 · Tek APK kararı (`ADR-033`).** Maliyeti yazılı olarak: (A) her turda yeniden derle =
+tur başına 10–20 dk + 1 bulut build, tünel kuyruğu boyunca ayakta kalmak zorunda, ertesi
+oturumda APK ölü. (B) çalışma anında adres = tur başına ~45 sn, 0 build, tünel yalnız test
+süresince gerekli; bedeli bir dosya, giriş ekranında bir alan ve **alanın mağaza sürümüne
+sızma riski**. B seçildi; risk profil bayrağıyla kapatıldı —`__DEV__` ile değil, çünkü
+`__DEV__` release bundle'da `false` ve tam da ihtiyaç duyan `preview` build'inde alanı
+kapatırdı, tersi ise production'da açardı. `test/mobile-server-override.test.ts` bayrağın
+`production` profilinde bulunmadığını iddia ediyor.
+
+**Ayrıca iki cümle.** Tünel banner'ı artık MinIO kimlik bilgilerinin `.env.example`'da —
+public depoda — olduğunu söylüyor: adresi bulan okumakla kalmaz, yazabilir de. Ve `default`
+Android kanalı bugüne kadar **kullanılmıyordu**: kurulu `expo-notifications` kaynağından
+doğrulandı — `FirebaseNotificationTrigger.kt` kanalı `remoteMessage.data["channelId"]`'den
+okuyor, `BaseNotificationBuilder.kt` yoksa kendi
+`expo_notifications_fallback_notification_channel`'ına düşüyor. `push-sender.ts` artık
+`channelId` gönderiyor ve `notification-dispatch.integration.test.ts` alanı iddia ediyor.
+13.1'in kurduğu kanal kuruluydu ve boştaydı; gerçek bir cihazın kanal ayarlarına bakmadan
+görünmezdi.
+
+**13.5'e bırakıldı:** Faz 12'nin doküman borcu (`13`, `04`, `06`, `19`), KVKK dışa
+aktarımı ve `29`'un sayılarının tazelenmesi. Bu turun konusu değildi ve kasten
+açılmadı.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q33 | **Phase 12's documentation debt, the KVKK data export, and `29`'s numbers are deferred to 13.5.** Not a question so much as a debt with a name, and it is in this table rather than only in a dated log entry because that is exactly the mistake `ADR-022`/Q23 cost three phases (`CLAUDE.md` §Definition of done). Three items: `13`, `04`, `06` and `19` still describe the notification surface as it was before Phase 12 added the inbox and the push channel; the KVKK data-export path is designed and unbuilt; and `29`'s summary counts predate 13.1–13.4. 13.4 deliberately did not open any of them — it was scoped to what would break the E6 round itself. | 13.5. Nothing in the running system waits on it; a reader of `13`/`19` does | the documents stay one phase behind the code, which is the state that produced Q23 |
 | ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |

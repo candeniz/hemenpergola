@@ -41,6 +41,11 @@ taşıyor; geçmişe bir kez giren anahtar, onu silen force-push'tan uzun yaşar
 kanalı standalone build'de sessizdir; uygulamanın geri kalanı normal çalışır, bu bir hata
 değil eksik hesaptır (`mobile/src/push/register.ts` sessizce geçer, `mobile/TEST-APK.md`).
 
-`preview` profilinin `env.EXPO_PUBLIC_API_URL` değeri build anında APK'ya gömülür ve
-sonradan düzeltilemez; commit'li değer `http://localhost:3000`'dir ve telefonda çalışmaz.
-Gerçek adresi `scripts/tunnel.mjs` build sırasında yazar, tur bitince geri alır.
+`preview` profilinin `env.EXPO_PUBLIC_API_URL` değeri build anında APK'ya gömülür; commit'li
+değer `http://localhost:3000`'dir ve telefonda çalışmaz. `scripts/tunnel.mjs` build sırasında
+o turun adresini yazar, tur bitince geri alır — ama artık **zorunlu değil**: 13.4'ten beri
+`preview` ve `development` profilleri `EXPO_PUBLIC_ALLOW_SERVER_OVERRIDE=1` taşıyor ve adres
+giriş ekranındaki alandan çalışma anında değiştirilebiliyor, yani APK bir kez derlenir
+(`mobile/TEST-APK.md`). `production` bu bayrağı **taşımaz** ve
+`test/mobile-server-override.test.ts` bunu iddia eder: mağaza sürümünde uygulamayı yabancı
+bir sunucuya yönlendirebilen bir alan, kimlik bilgisini o sunucuya teslim eder.

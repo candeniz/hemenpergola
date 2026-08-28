@@ -12,7 +12,7 @@ import {
 import { channelsFor, renderNotification } from '../domain/notification-templates'
 import { getMailer } from './mailer'
 import { getSmsSender } from './sms-sender'
-import { getPushSender } from './push-sender'
+import { ANDROID_CHANNEL_ID, getPushSender } from './push-sender'
 import { pushTargetPath } from '../domain/push-target'
 
 /**
@@ -178,6 +178,9 @@ export async function runNotificationDispatch(notificationId: string): Promise<D
         title: rendered.title,
         body: rendered.body,
         data: target === null ? {} : { url: target },
+        // Without this the notification lands on expo-notifications' own fallback channel,
+        // not the one the app created — see `ANDROID_CHANNEL_ID` (task 13.4).
+        channelId: ANDROID_CHANNEL_ID,
       })
       sent.push('push')
     }

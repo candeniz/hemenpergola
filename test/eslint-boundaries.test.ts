@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest'
  * not a line to slip into the eslint config.
  */
 describe('eslint env-boundary exemptions', () => {
-  it('keeps the src/** exemption list to the five decided files', () => {
+  it('keeps the src/** exemption list to the six decided files', () => {
     const config = readFileSync(join(process.cwd(), 'eslint.config.mjs'), 'utf8')
 
     const listMatch = /const ENV_BOUNDARY_FILES = \[([\s\S]*?)\n\]/.exec(config)
@@ -32,6 +32,11 @@ describe('eslint env-boundary exemptions', () => {
       // The site origin for canonical/sitemap/JSON-LD — read at build-time prerender,
       // where the eager Zod parse cannot run (23 §Configuration). See the file's comment.
       'src/shared/seo/site-url.ts',
+      // The CSP's storage origin (task 13.4). Middleware runs in the Edge runtime on every
+      // request; the eager parse would turn any unrelated missing variable into a
+      // site-wide outage, and S3_ENDPOINT/CDN_BASE_URL are public hostnames. Argued in the
+      // file, and the same argument next.config.ts makes for the image host.
+      'src/middleware.ts',
     ])
   })
 })

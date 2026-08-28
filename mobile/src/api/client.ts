@@ -1,6 +1,7 @@
 import { loginSchema, type AuthTokens, type LoginInput, type MyCompany } from '@contracts/iam'
 
 import { clearTokens, readTokens, writeTokens } from '../auth/token-store'
+import { getBaseUrl } from './server-address'
 
 export type { AuthTokens, MyCompany }
 
@@ -17,9 +18,11 @@ export type { AuthTokens, MyCompany }
  * compile instead of a device at runtime.
  *
  * The envelope is `06` §Envelope; clients switch on `error.code`, never parse `message`.
+ *
+ * The base address is NOT read from `process.env` here any more — `server-address.ts` is
+ * the single door, because a `preview` build lets the person retarget it at runtime
+ * (task 13.4) and two readers of the same setting is how one of them goes stale.
  */
-
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 type ErrorBody = { error: { code: string; message: string; requestId: string } }
 
@@ -29,9 +32,9 @@ export async function request<T>(
   path: string,
   init: { method?: string; body?: unknown; retryOn401?: boolean } = {},
 ): Promise<ApiResult<T>> {
-  const { access } = await readTokens()
+  const [{ access }, baseUrl] = await Promise.all([readTokens(), getBaseUrl()])
 
-  const response = await fetch(`${BASE_URL}/api/v1${path}`, {
+  const response = await fetch(`${baseUrl}/api/v1${path}`, {
     method: init.method ?? 'GET',
     headers: {
       'content-type': 'application/json',

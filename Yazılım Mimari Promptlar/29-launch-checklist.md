@@ -67,7 +67,7 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | E3 | Turkish characters in PDFs | ✅ | `privacy.integration.test.ts` — the export PDF renders `Işıl Şahingöz`, `İstanbul`, `Ağustos` and `₺` through the embedded subset; pdfkit refuses a character the subset lacks, so a narrowed subset fails there rather than in a download |
 | E4 | KDV arithmetic on a real offer vs hand calculation | ✅ | `offer-math.test.ts` + core-flow step 7's on-screen totals |
 | E5 | An SMS and an email actually arriving | ⏳ | bekliyor: **Q2→Q3** — providers; log adapters prove the seams |
-| E6 | Full pass on a mid-range Android over a slow connection | ⏳ | bekliyor: **9.8 — a physical device** + F6; the road to the device is built (`scripts/tunnel.mjs` + `mobile/TEST-APK.md`, Faz 13.3), the lab budgets are still not this (`18` §What these numbers claim) |
+| E6 | Full pass on a mid-range Android over a slow connection | ⏳ | bekliyor: **9.8 — a physical device** + F6; the road to the device is built and the three things that would have broken the round itself are closed (13.3 `scripts/tunnel.mjs` + `mobile/TEST-APK.md`; 13.4 the upload CSP, the silent tunnel death, one APK per device rather than per round — `ADR-033`). The lab budgets are still not this (`18` §What these numbers claim) |
 
 ## F · Store readiness (mobile — `ADR-030`; added Phase 13)
 

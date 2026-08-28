@@ -10,6 +10,21 @@ import 'server-only'
  * which is Q32's user-side chain — the code path is identical either way.
  */
 
+/**
+ * The Android notification channel the app creates on registration
+ * (`mobile/src/push/register.ts`), and the one this message must name.
+ *
+ * Verified against the installed `expo-notifications` (task 13.4):
+ * `FirebaseNotificationTrigger.kt` resolves the channel as
+ * `remoteMessage.notification?.channelId ?: remoteMessage.data["channelId"]`, and
+ * `BaseNotificationBuilder.kt` falls back to its own
+ * `expo_notifications_fallback_notification_channel` when that is null. So a message with
+ * no `channelId` did NOT land on the channel the app configured — it landed on a channel
+ * expo-notifications creates for itself, carrying neither the app's importance setting nor
+ * anything the user tuned on the configured one. The channel existed and was unused.
+ */
+export const ANDROID_CHANNEL_ID = 'default'
+
 export type PushMessage = {
   /** Expo push tokens — `ExponentPushToken[…]` strings from the device. */
   to: string[]
@@ -17,6 +32,8 @@ export type PushMessage = {
   body: string
   /** Lands in the notification tap handler; `url` is the deep-link path (`ADR-032`). */
   data: Record<string, string>
+  /** Android only, ignored by iOS. See `ANDROID_CHANNEL_ID`. */
+  channelId: string
 }
 
 export type PushSender = {
@@ -43,6 +60,7 @@ const expoPushSender: PushSender = {
             title: message.title,
             body: message.body,
             data: message.data,
+            channelId: message.channelId,
           })),
         ),
       })

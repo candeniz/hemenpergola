@@ -943,6 +943,13 @@
       "failed": "Could not sign in. Check your details.",
       "rateLimited": "Too many attempts. Please wait a moment."
     },
+    "serverAddress": {
+      "label": "Server address (test builds only)",
+      "placeholder": "https://example.trycloudflare.com",
+      "save": "Save address",
+      "saved": "Saved: {address}",
+      "invalid": "Could not read that address. It must start with http:// or https://."
+    },
     "home": {
       "customerTitle": "Welcome",
       "manufacturerTitle": "{company} panel",

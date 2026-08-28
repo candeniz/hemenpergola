@@ -83,16 +83,29 @@ function say(line = '') {
   process.stdout.write(`${line}\n`)
 }
 
+const WARNING = [
+  'DIKKAT - tunel acikken yerel sunucun INTERNETE ACIK.',
+  '',
+  'Adresi bilen herkes uygulamaya ve MinIO deposuna ulasabilir.',
+  '',
+  'MinIO kimlik bilgileri .env.example icinde, yani PUBLIC depoda:',
+  'adresi bulan yalnizca okumakla kalmaz, DEPOYA YAZABILIR de.',
+  '',
+  'Bu turda YALNIZ demo verisi bulunsun: gercek kisisel veri,',
+  'gercek sozlesme, gercek fotograf koyma.',
+  'Is bitince Ctrl+C ile kapat - tunel iner, sunucu kapanir.',
+]
+
 function banner() {
+  // Padded from the text, not by hand: a box drawn with counted spaces goes crooked the
+  // first time a line is edited.
+  const width = Math.max(...WARNING.map((line) => line.length)) + 4
+  const rule = `  +${'-'.repeat(width)}+`
+
   say()
-  say('  +--------------------------------------------------------------------+')
-  say('  |  DIKKAT - tunel acikken yerel sunucun INTERNETE ACIK.               |')
-  say('  |                                                                    |')
-  say('  |  Adresi bilen herkes uygulamaya ve MinIO deposuna ulasabilir.       |')
-  say('  |  Bu turda YALNIZ demo verisi bulunsun: gercek kisisel veri,         |')
-  say('  |  gercek sozlesme, gercek fotograf koyma.                            |')
-  say('  |  Is bitince Ctrl+C ile kapat - tunel iner, sunucu kapanir.          |')
-  say('  +--------------------------------------------------------------------+')
+  say(rule)
+  for (const line of WARNING) say(`  |  ${line.padEnd(width - 2)}|`)
+  say(rule)
   say()
 }
 
@@ -208,9 +221,39 @@ function startTunnel(binary, port, label) {
     child.stderr.on('data', scan)
     child.once('error', (error) => finish(reject, error))
     child.once('exit', (code) => {
-      finish(reject, new Error(`${label} tuneli beklenmedik bicimde kapandi (kod ${code}).`))
+      // Before the address arrives this is a startup failure; after it, it is the death of
+      // a live address — a different event with a different meaning, and the one that used
+      // to pass silently because `finish` no-ops once settled.
+      if (settled) tunnelDied(label, code)
+      else finish(reject, new Error(`${label} tuneli beklenmedik bicimde kapandi (kod ${code}).`))
     })
   })
+}
+
+/**
+ * A tunnel that dies **after** the address was published.
+ *
+ * The whole stack comes down, deliberately, and no reconnect is attempted. A quick tunnel
+ * gets a NEW random hostname every time it starts, and the address the APK carries was
+ * burned in at build time — so a silent reconnect would leave a window that looks healthy,
+ * a server that is up, and a phone that can never reach it again. Better to say the address
+ * is dead once, loudly, than to keep printing one that resolves to nothing.
+ */
+function tunnelDied(label, code) {
+  if (shuttingDown) return
+  say()
+  say('  ####################################################################')
+  say(`  #  TUNEL DUSTU: ${label} (kod ${code})`)
+  say('  #')
+  say('  #  Adres oldu. Bu adresle derlenmis APK artik calismaz.')
+  say('  #  Yapilacak: bu pencereyi yeniden baslat (yeni adres alir),')
+  say('  #  sonra APK yi YENIDEN DERLE - ya da uygulamadaki "sunucu adresi"')
+  say('  #  alanina yeni adresi yapistir (preview build bunu destekler).')
+  say('  #')
+  say('  #  Yeniden baglanma DENENMEDI: her acilista adres degisiyor, sessizce')
+  say('  #  yeni adres almak telefonu sessizce disarida birakirdi.')
+  say('  ####################################################################')
+  shutdown(1)
 }
 
 /**

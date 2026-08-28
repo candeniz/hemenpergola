@@ -943,6 +943,13 @@
       "failed": "Giriş yapılamadı. Bilgilerinizi kontrol edin.",
       "rateLimited": "Çok fazla deneme yapıldı. Lütfen biraz bekleyin."
     },
+    "serverAddress": {
+      "label": "Sunucu adresi (yalnız test sürümü)",
+      "placeholder": "https://ornek.trycloudflare.com",
+      "save": "Adresi kaydet",
+      "saved": "Kaydedildi: {address}",
+      "invalid": "Adres okunamadı. http:// veya https:// ile başlamalı."
+    },
     "home": {
       "customerTitle": "Hoş geldiniz",
       "manufacturerTitle": "{company} paneli",

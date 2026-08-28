@@ -1146,3 +1146,46 @@ URL and nothing else.
 **Reverses if.** expo-router's conventions fight a screen the core flow actually needs —
 the escape hatch is dropping to react-navigation APIs inside the same dependency, not a
 rewrite.
+
+---
+
+## ADR-033 — The test APK is built once; its server address is set at runtime, behind a profile flag
+
+**Context.** 13.3 removed the address problem for the *build* (`EXPO_PUBLIC_API_URL` now
+comes from a tunnel rather than `localhost`), but not for the *round*. `EXPO_PUBLIC_*` is
+burned into the bundle, and a Cloudflare quick tunnel hands out a new random hostname on
+every start. So the loop was: start the tunnel, wait for the EAS queue, wait for the build
+(10–20 min), install, test — with the tunnel obliged to stay alive across all of it, and
+the APK dead by the next session. E6 is not a one-round exercise; every fix attempt paid
+that price again, and a quick tunnel that dropped mid-queue threw the build away.
+
+**Decision.** `mobile/src/api/server-address.ts` is the single reader of the base URL. When
+the build profile allows it, the address is read from SecureStore and can be set from a
+field on the sign-in screen; the compiled-in `EXPO_PUBLIC_API_URL` remains the default. The
+APK is built once and retargeted per round by pasting the address.
+
+**The gate is a build-profile flag, `EXPO_PUBLIC_ALLOW_SERVER_OVERRIDE`, not `__DEV__`.**
+This is the part that matters. `__DEV__` is false in any release bundle — including a
+`preview` APK, which is precisely the build that needs the field — so the obvious test
+switches it off exactly where it is required, and its inverse (`!__DEV__`) opens it in
+production. Neither expresses the rule, which is about the profile: `development` and
+`preview` may retarget, the store build may never. `mobile/eas.json` sets the flag on those
+two profiles and omits it from `production`, and `test/mobile-server-override.test.ts`
+asserts the omission — a flag whose off state nothing checks is a flag that turns itself on
+during a merge.
+
+**Rejected.** *Rebuild every round* (the status quo): 10–20 minutes and one cloud build per
+round, forever, plus a tunnel that must survive the queue. *A stable tunnel hostname*: a
+Cloudflare or ngrok account, a domain, and a paid tier — real setup for a local test loop,
+and it re-introduces an account the repository would have to know about. *QR scanning*: an
+`expo-camera` dependency and a camera permission to save a paste; the address copies to the
+clipboard already. *`extra` in `app.config.js`*: still build-time, so it solves nothing.
+
+**Consequences.** `mobile/TEST-APK.md` splits into "once" (account, build, install) and
+"every round" (tunnel, paste, test). The field is the only place in the app that reads a
+server address from a human, and it lives on the sign-in screen because the address must be
+settable before the first request — which is the sign-in itself.
+
+**Reverses if.** The store build ever needs a configurable endpoint (it should not — that is
+what a build profile is for), or the address moves into a signed configuration rather than
+free text.

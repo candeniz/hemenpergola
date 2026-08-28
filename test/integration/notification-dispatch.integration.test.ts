@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { runNotificationDispatch } from '@/modules/notification/infrastructure/dispatch-job'
-import { setPushSender, type PushMessage } from '@/modules/notification/infrastructure/push-sender'
+import {
+  ANDROID_CHANNEL_ID,
+  setPushSender,
+  type PushMessage,
+} from '@/modules/notification/infrastructure/push-sender'
 import { logMailer, setMailer, type Email } from '@/modules/notification/infrastructure/mailer'
 import { notify } from '@/modules/notification/infrastructure/notify'
 import {
@@ -330,6 +334,16 @@ describe('12.3 · the push leg rides the same discipline', () => {
     // offer_received addresses the customer; the tap must land on the request screen.
     expect(push?.data.url).toBe('/(musteri)/talep/ofr_push_1')
     expect((push?.title ?? '').length).toBeGreaterThan(0)
+
+    /*
+     * Task 13.4. `mobile/src/push/register.ts` creates an Android channel called `default`
+     * and sets its importance; without this field the message never reaches it. Verified
+     * in the installed expo-notifications: `FirebaseNotificationTrigger.kt` reads
+     * `remoteMessage.data["channelId"]` and `BaseNotificationBuilder.kt` otherwise falls
+     * back to `expo_notifications_fallback_notification_channel`. The channel was built and
+     * unused, which is invisible until someone looks at a real device's channel settings.
+     */
+    expect(push?.channelId).toBe(ANDROID_CHANNEL_ID)
   })
 
   it('honours the push preference — and mandatory events ignore it (ADR-027)', async () => {
