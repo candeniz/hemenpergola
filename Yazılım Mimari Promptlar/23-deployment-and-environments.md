@@ -27,6 +27,37 @@ storage   → S3-compatible bucket + CDN for public paths
 Stateless web is why sessions are cookies + DB, uploads go straight to object storage, and
 messaging polls instead of holding sockets (`15-messaging.md`).
 
+### The CSP has a development branch, and only one of the two ships
+
+`src/shared/security/csp.ts` emits `'unsafe-eval'` in `script-src` when
+`NODE_ENV !== 'production'`, and nothing else changes between the two profiles.
+
+**Why.** `next dev` compiles with webpack's eval-based devtool, so the dev bundle evaluates
+strings as JavaScript. Under the strict profile that is a violation and the page never
+hydrates — `EvalError: Evaluating a string as JavaScript violates the following Content
+Security Policy directive: "script-src 'self' 'nonce-…' 'strict-dynamic'"`. Every strict
+surface (`/giris`, `/kayit`, `/proje/*`, `/hesap`, `/panel/*`, `/yonetim/*` — most of the
+application) had therefore been **dead under `pnpm dev` since Phase 9**, silently: the HTML
+renders, nothing is interactive, and no server-side log says a word. It went unseen because
+the release gate runs `pnpm build && pnpm start` (`playwright.config.ts`), which is the one
+profile without the problem, and because a broken dev server looks like a broken feature.
+
+**The alternative, and why not.** `scripts/tunnel.mjs` could have run `pnpm build &&
+pnpm start` instead — closer to what a device meets, and it was the narrower change. It
+fixes the E6 round and leaves the development server broken for everyone doing web work: a
+minute of build per change, or no strict page at all. The relaxation is the smaller cost.
+
+**What bounds it.** `NODE_ENV` is inlined by the compiler, so a production bundle contains
+the strict string and no path to the other one. `'unsafe-eval'` permits evaluating strings;
+it does not permit injected inline script, which is what the nonce exists for and what stays
+enforced in both profiles. Two tests hold the line: `src/shared/security/csp.test.ts` calls
+the function both ways and asserts that no directive other than `script-src` differs, and
+`e2e/public-directory.spec.ts` asserts the header a real `next start` emits carries neither
+`unsafe-inline` nor `unsafe-eval`.
+
+The honest cost is that there are now two policies where there was one. That is the reason
+the policy lives in its own module with its own test rather than inline in the middleware.
+
 ## Configuration
 
 All configuration is environment variables, validated at boot by a Zod schema in

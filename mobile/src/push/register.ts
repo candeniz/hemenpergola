@@ -44,13 +44,23 @@ export async function registerForPush(): Promise<void> {
   }
 }
 
-/** Sign-out's leg: this device stops being an address for the account. */
-export async function unregisterPush(): Promise<void> {
+/**
+ * Sign-out's leg: this device stops being an address for the account.
+ *
+ * `bearer` because sign-out clears the keystore FIRST (task 13.5) — by the time this runs
+ * the stored access token is gone, so the caller hands over the one it captured. Without
+ * it the DELETE goes out unauthenticated and 401s, which is a silent no-op.
+ */
+export async function unregisterPush(bearer?: string): Promise<void> {
   if (registeredToken === null) return
   const token = registeredToken
   registeredToken = null
   try {
-    await request('/me/push-tokens', { method: 'DELETE', body: { token } })
+    await request('/me/push-tokens', {
+      method: 'DELETE',
+      body: { token },
+      ...(bearer === undefined ? {} : { bearer }),
+    })
   } catch {
     // Best-effort: the server's 180-day sweep prunes what a flaky sign-out leaves.
   }

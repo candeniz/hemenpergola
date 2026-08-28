@@ -32,11 +32,11 @@ describe('eslint env-boundary exemptions', () => {
       // The site origin for canonical/sitemap/JSON-LD — read at build-time prerender,
       // where the eager Zod parse cannot run (23 §Configuration). See the file's comment.
       'src/shared/seo/site-url.ts',
-      // The CSP's storage origin (task 13.4). Middleware runs in the Edge runtime on every
-      // request; the eager parse would turn any unrelated missing variable into a
-      // site-wide outage, and S3_ENDPOINT/CDN_BASE_URL are public hostnames. Argued in the
-      // file, and the same argument next.config.ts makes for the image host.
-      'src/middleware.ts',
+      // The CSP's storage origin (13.4) and its NODE_ENV branch (13.5). Runs in the Edge
+      // runtime on every request, so the eager parse would turn any unrelated missing
+      // variable into a site-wide outage; S3_ENDPOINT/CDN_BASE_URL are public hostnames.
+      // Argued in the file, and the same argument next.config.ts makes for the image host.
+      'src/shared/security/csp.ts',
     ])
   })
 })

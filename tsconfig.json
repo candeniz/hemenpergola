@@ -25,7 +25,13 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // `test/mobile-session-network.test.ts` imports the mobile API client, which imports
+      // the contract surface through the alias `mobile/tsconfig.json` defines. `exclude`
+      // does not stop tsc following an import, so the root project has to resolve the same
+      // name — the SAME mapping `mobile/contract-map.json` carries, which
+      // `mobile-boundary.test.ts` holds all three copies to.
+      "@contracts/*": ["./src/modules/*/application/dto"]
     }
   },
   "include": [

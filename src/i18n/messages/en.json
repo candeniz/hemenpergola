@@ -943,6 +943,12 @@
       "failed": "Could not sign in. Check your details.",
       "rateLimited": "Too many attempts. Please wait a moment."
     },
+    "unreachable": {
+      "title": "Cannot reach the server",
+      "body": "No connection. Check your network and try again.",
+      "bodyTest": "No connection. The tunnel may have closed or the address may have changed — paste the new one below.",
+      "retry": "Try again"
+    },
     "serverAddress": {
       "label": "Server address (test builds only)",
       "placeholder": "https://example.trycloudflare.com",

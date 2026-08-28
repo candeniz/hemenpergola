@@ -11,6 +11,7 @@ export default function MusteriLayout() {
   const { session } = useSession()
 
   if (session.state === 'booting') return null
+  if (session.state === 'unreachable') return <Redirect href="/sunucu" />
   if (session.state === 'signed-out') return <Redirect href="/giris" />
   if (session.role !== 'customer') return <Redirect href="/" />
 

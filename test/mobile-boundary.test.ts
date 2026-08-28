@@ -179,4 +179,36 @@ describe('mobile → src boundary', () => {
       'extraNodeModules',
     )
   })
+
+  /**
+   * A THIRD resolver joined in 13.5. `test/mobile-session-network.test.ts` imports the
+   * mobile API client, and `exclude` does not stop `tsc` from following an import — so the
+   * root project must resolve `@contracts/*` too, and Vitest must resolve it the same way
+   * at runtime. Same failure shape as the pair above: one resolver typechecks a mapping the
+   * other does not load, and the divergence surfaces as a green pipeline plus a broken run.
+   */
+  it('the root project resolves @contracts the same way mobile does', () => {
+    const map = JSON.parse(readFileSync(join(MOBILE, 'contract-map.json'), 'utf8')) as Record<
+      string,
+      string
+    >
+    const stripComments = (text: string): string =>
+      text
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('//'))
+        .join('\n')
+
+    const root = JSON.parse(stripComments(readFileSync(join(ROOT, 'tsconfig.json'), 'utf8'))) as {
+      compilerOptions: { paths: Record<string, string[]> }
+    }
+    // Relative to the root, where the map's own targets already are — no `../`.
+    expect(root.compilerOptions.paths['@contracts/*']).toEqual([`./${map['@contracts/*']}`])
+
+    // Vitest aliases the one specifier the test's import closure actually uses. An alias
+    // table that drifted from the path above would resolve a different file than tsc
+    // typechecked.
+    const vitestConfig = readFileSync(join(ROOT, 'vitest.config.ts'), 'utf8')
+    expect(vitestConfig).toContain("'@contracts/iam'")
+    expect(vitestConfig).toContain('src/modules/iam/application/dto.ts')
+  })
 })

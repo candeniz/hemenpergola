@@ -943,6 +943,12 @@
       "failed": "Giriş yapılamadı. Bilgilerinizi kontrol edin.",
       "rateLimited": "Çok fazla deneme yapıldı. Lütfen biraz bekleyin."
     },
+    "unreachable": {
+      "title": "Sunucuya ulaşılamıyor",
+      "body": "Bağlantı kurulamadı. İnternet bağlantını kontrol edip tekrar dene.",
+      "bodyTest": "Bağlantı kurulamadı. Tünel kapanmış ya da adres değişmiş olabilir — aşağıya yeni adresi yapıştır.",
+      "retry": "Tekrar dene"
+    },
     "serverAddress": {
       "label": "Sunucu adresi (yalnız test sürümü)",
       "placeholder": "https://ornek.trycloudflare.com",

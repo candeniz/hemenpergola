@@ -31,6 +31,7 @@ export default function Bildirimler() {
     },
   })
 
+  if (session.state === 'unreachable') return <Redirect href="/sunucu" />
   if (session.state === 'signed-out') return <Redirect href="/giris" />
 
   const shell =

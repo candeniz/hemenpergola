@@ -67,6 +67,9 @@ POST   /auth/password/reset           { token, password }
 GET    /me                            -> user + memberships
 PATCH  /me                            { channel, type, enabled }  one notification preference
 GET    /me/notification-preferences   -> the stored rows; absence of a row means enabled
+GET    /me/notifications              -> the in-app inbox, own rows, newest 50
+POST   /me/push-tokens                { token, platform: ios|android }
+DELETE /me/push-tokens                { token }
 ```
 
 `POST /auth/logout` revokes an API refresh-token family — `{ refreshToken?, allDevices? }`,
@@ -79,6 +82,23 @@ no cookie to delete.
 the shape `13` §Preferences stores. Mandatory events (`ADR-027`) are refused here with
 `PRECONDITION` rather than silently ignored. Profile and locale writes are named in this
 line and not yet built — Phase 10.4.
+
+`GET /me/notifications` is the in-app channel read back (`13` §Channels: the row IS the
+delivery and the history). Own rows only — the ownership is in the `where` clause, not a
+post-fetch comparison — newest 50, unpaginated on purpose: an inbox nobody has scrolled past
+50 entries of does not need a cursor, and the endpoint gains one when a real user does.
+`payload` comes back as stored; the client renders it through the shared catalogue, so a
+template change never needs a migration.
+
+`POST /me/push-tokens` registers a device as an address for the signed-in account and
+refreshes `lastSeenAt` on a token already stored (`04` §PushToken). A token that changes
+hands **re-parents to whoever is signed in now** rather than being refused: the device is
+physically in the new person's possession, and leaving the row pointing at the previous
+account would send that account's notifications to a phone they no longer hold.
+`DELETE /me/push-tokens` is sign-out's leg, and it is best-effort by design — the mobile
+client wipes its keystore first and tells the server after (`ADR-033`, 13.5), because a
+device that cannot reach the server must still be able to sign out. What a missed delete
+costs is bounded by `19` §Retention's 180-day idle sweep.
 
 ### Catalogue (public)
 

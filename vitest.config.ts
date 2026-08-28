@@ -38,6 +38,20 @@ export default defineConfig({
       // so without this every test touching a server-only module fails at import.
       // See test/stubs/server-only.ts for why this weakens nothing.
       'server-only': fileURLToPath(new URL('./test/stubs/server-only.ts', import.meta.url)),
+      /*
+       * The mobile package's one native dependency in the closure `mobile-session-network`
+       * imports (task 13.5). Vite would happily resolve the real package out of
+       * `mobile/node_modules`, and it would then reach for a native module that does not
+       * exist in Node. See test/stubs/expo-secure-store.ts for why an in-memory Map is a
+       * faithful stand-in for what these tests assert.
+       */
+      'expo-secure-store': fileURLToPath(
+        new URL('./test/stubs/expo-secure-store.ts', import.meta.url),
+      ),
+      /* The contract surface, resolved the way `mobile/contract-map.json` resolves it. */
+      '@contracts/iam': fileURLToPath(
+        new URL('./src/modules/iam/application/dto.ts', import.meta.url),
+      ),
     },
   },
 })

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 
 import { routing } from './i18n/routing'
+import { contentSecurityPolicy } from './shared/security/csp'
 
 /**
  * Locale negotiation + the security headers (task 9.3, `19` §App security). Still NO
@@ -27,56 +28,15 @@ import { routing } from './i18n/routing'
  * nine steps included — now executes under this exact policy, and
  * `public-directory.spec.ts` asserts the headers and the absence of `unsafe-inline` in
  * `script-src` explicitly.
+ *
+ * **The policy itself now lives in `shared/security/csp.ts`** (task 13.5). It grew a
+ * development branch — `next dev`'s eval-based bundle had made every strict surface
+ * non-interactive since Phase 9 — and a branch that relaxes a security header belongs
+ * somewhere a unit test can call it. What stays here is the routing question: which paths
+ * are strict, and how the header rides next-intl's rewrite.
  */
 
 const intl = createMiddleware(routing)
-
-/**
- * The object-storage origin(s) the browser is allowed to reach — **derived, never
- * hardcoded** (task 13.4).
- *
- * `14` §Upload flow sends the bytes from the browser **straight to storage**: the page
- * presigns, then `PUT`s to `uploadUrl`, which is a different origin from the application.
- * `connect-src 'self'` blocks exactly that, so every upload in
- * `components/project/attachments.tsx` and `components/manufacturer/supply-forms.tsx` died
- * at the CSP with no server-side trace. It went unseen since Phase 9 because no e2e test
- * uploaded a file; `attachment-upload.spec.ts` is now the one that would.
- *
- * The origins come from `S3_ENDPOINT` (presigned PUT and signed private reads) and
- * `CDN_BASE_URL` (public reads) rather than a literal, because 13.3's tunnel gives MinIO a
- * fresh `https://<random>.trycloudflare.com` on every run — a hardcoded `localhost:9000`
- * is a policy that is correct only on the developer's own machine and silently wrong on
- * the phone. Two variables, because a real CDN is not the S3 endpoint; deduplicated,
- * because locally they are.
- *
- * Read from `process.env` rather than through `shared/config/env`: this runs in the Edge
- * runtime on every request, and that module parses the *whole* environment and throws on
- * the first missing secret — a config typo in an unrelated variable would become a
- * site-wide middleware outage. Same argument as `next.config.ts`'s `imageHosts()`, which
- * derives the image host from the same variable. Both are public hostnames, not secrets.
- *
- * The `localhost:9000` fallback applies **only when neither variable is set**, which the
- * typed env forbids at startup anyway (`REQUIRED_SERVER_KEYS`). It exists so a developer
- * who bypasses that path still gets a working policy, not so production quietly permits a
- * host it does not use — which is what the old img-src literal did.
- */
-const STORAGE_FALLBACK_ORIGIN = 'http://localhost:9000'
-
-function storageOrigins(): string[] {
-  const origins = new Set<string>()
-
-  for (const configured of [process.env.S3_ENDPOINT, process.env.CDN_BASE_URL]) {
-    if (configured === undefined || configured === '') continue
-    try {
-      origins.add(new URL(configured).origin)
-    } catch {
-      // A malformed URL must not take every request down; the origin is simply not
-      // allowed, and the browser reports the block with the offending URL in it.
-    }
-  }
-
-  return origins.size === 0 ? [STORAGE_FALLBACK_ORIGIN] : [...origins]
-}
 
 /**
  * The paths that get the STRICT (nonce'd script-src) profile — every surface that renders
@@ -120,31 +80,7 @@ export default function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64')
   const strict = isStrictPath(request.nextUrl.pathname)
 
-  const storage = storageOrigins().join(' ')
-
-  const shared = [
-    `style-src 'self' 'unsafe-inline'`,
-    // CMS image blocks are https-anywhere by schema; a local (or tunnelled) MinIO is
-    // served over the configured storage origin, which may be plain http in development.
-    `img-src 'self' https: data: ${storage}`,
-    `font-src 'self'`,
-    // 'self' plus storage: `14` §Upload flow PUTs the bytes from the browser to the
-    // presigned URL, which is never this origin.
-    `connect-src 'self' ${storage}`,
-    `frame-ancestors 'none'`,
-    `base-uri 'self'`,
-    `form-action 'self'`,
-    `object-src 'none'`,
-  ]
-
-  const csp = strict
-    ? [
-        `default-src 'self'`,
-        // strict-dynamic: the nonce'd bootstrap may load the chunks it imports.
-        `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
-        ...shared,
-      ].join('; ')
-    : shared.join('; ')
+  const csp = contentSecurityPolicy({ strict, nonce })
 
   // Next reads the nonce from the REQUEST's CSP header and applies it to its inline
   // scripts — so the header must ride the request that reaches the route, through

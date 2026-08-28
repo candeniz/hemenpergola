@@ -21,6 +21,9 @@ export default function Index() {
     )
   }
 
+  // Unreachable is NOT signed-out: the wall would ask for a password that is not the
+  // problem. `/sunucu` says what happened and carries the field that fixes it (13.5).
+  if (session.state === 'unreachable') return <Redirect href="/sunucu" />
   if (session.state === 'signed-out') return <Redirect href="/giris" />
   return session.role === 'manufacturer' ? (
     <Redirect href="/(uretici)" />

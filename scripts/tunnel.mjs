@@ -385,6 +385,13 @@ async function main() {
 
   say('  [6/6] Web sunucusu ve worker baslatiliyor...')
   const environment = { ...process.env, ...overrides }
+  /*
+   * `pnpm dev` is correct again as of 13.5: the strict-CSP surfaces were non-interactive
+   * under the dev server since Faz 9 (`23` §Runtime, "The CSP has a development branch"),
+   * which would have walked the E6 round straight into a dead page. The alternative
+   * considered here was `pnpm build && pnpm start` — closer to what a device meets, but a
+   * minute of build per change, and it would have left the everyday dev server broken.
+   */
   startChild('web', 'pnpm dev', environment)
   startChild('worker', 'pnpm worker', environment)
 

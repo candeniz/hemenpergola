@@ -69,6 +69,7 @@ transaction, which is not what erasure requires.
 | Consent and disclosure records | 10 years — they are the evidence |
 | Audit log | 2 years hot, then cold archive |
 | Notification delivery logs | 90 days |
+| Device push tokens (`PushToken`) | 180 days idle, by `lastSeenAt` |
 | Access logs | 12 months |
 | Uploaded project photos | with the project; EXIF stripped on upload |
 
@@ -77,9 +78,17 @@ Enforced by the `audit.retention_sweep` job, not by manual cleanup.
 ### Data location
 
 Application, database, backups and object storage in the EU or Turkey. Any third-party
-processor (mail, SMS, geocoding, error tracking) is listed in the privacy notice with its
-purpose, and each needs a processor agreement before it is wired in. No customer personal
-data is sent to a processor for a purpose the notice does not name.
+processor (mail, SMS, **push**, geocoding, error tracking) is listed in the privacy notice
+with its purpose, and each needs a processor agreement before it is wired in. No customer
+personal data is sent to a processor for a purpose the notice does not name.
+
+**Expo's push service is a processor** and is in this chain, not beside it (`29` §A7, Phase
+12). It handles two classes of personal data: the device token, which identifies an
+installation and is stored as `PushToken` (`04`), and the *rendered notification content*,
+which carries names and amounts on its way to Apple's and Google's delivery networks. That
+content leaves the EU/TR perimeter, which is exactly what makes it a processor question
+rather than a transport detail. Same rule as the others: no agreement, no connection —
+`PushSender` is the port, and its adapter is the seam where the decision is enforced.
 
 ## Application security
 
@@ -155,7 +164,7 @@ runbook, contacts and template notices live in `23-deployment-and-environments.m
 - [ ] Privacy notice, cookie notice, terms, and the consent text — reviewed by a Turkish
       lawyer, versioned in the repo
 - [ ] VERBİS registration assessed
-- [ ] Processor agreements signed for mail, SMS, hosting, storage, geocoding
+- [ ] Processor agreements signed for mail, SMS, push (Expo), hosting, storage, geocoding
 - [ ] Data export and erasure jobs tested end to end
 - [ ] Authorisation matrix suite green (`20-testing-strategy.md`)
 - [ ] Headers verified in production, CSP without `unsafe-inline`

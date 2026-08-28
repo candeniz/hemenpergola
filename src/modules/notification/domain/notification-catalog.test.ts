@@ -7,6 +7,7 @@ import {
   ALL_NOTIFICATION_TYPES,
   MANDATORY_EVENTS,
   NOTIFICATION_EVENTS,
+  type NotificationChannel,
   type NotificationType,
 } from './catalog'
 import { channelsFor, renderNotification, TEMPLATES } from './notification-templates'
@@ -142,5 +143,65 @@ describe('notification catalogue (phase gate)', () => {
     expect(writers).toEqual([
       join(process.cwd(), 'src/modules/notification/infrastructure/notify.ts').replace(/\\/g, '/'),
     ])
+  })
+
+  /**
+   * `13`'s event catalogue must say what the code sends — task 13.5.
+   *
+   * It did not. The table was written before Phase 12 added push and still read
+   * "in-app, email" for events the dispatcher had been sending four ways for weeks, which
+   * is the worst state a document can be in: confidently wrong, and therefore quoted. It is
+   * generated now (`scripts/generate-notification-table.mjs`), and this is the check that
+   * keeps it so — the arrangement `02`'s permission table has had since Phase 1.
+   *
+   * Regenerate with: node scripts/generate-notification-table.mjs
+   */
+  it('13 §Event catalogue names every event with the channels the code sends', () => {
+    const document = readFileSync(
+      join(process.cwd(), 'Yazılım Mimari Promptlar/13-notifications.md'),
+      'utf8',
+    )
+    const begin = document.indexOf('<!-- BEGIN GENERATED NOTIFICATION TABLE -->')
+    const end = document.indexOf('<!-- END GENERATED NOTIFICATION TABLE -->')
+
+    expect(begin, 'generated block missing from 13').toBeGreaterThan(-1)
+    const block = document.slice(begin, end)
+
+    const LABEL: Record<NotificationChannel, string> = {
+      in_app: 'in-app',
+      push: 'push',
+      email: 'email',
+      sms: 'SMS',
+    }
+
+    for (const type of ALL_NOTIFICATION_TYPES) {
+      const row = block.split('\n').find((line) => line.startsWith('| `' + type + '` |'))
+      expect(row, `no row for ${type} in 13`).toBeDefined()
+      if (row === undefined) continue
+
+      const entry = NOTIFICATION_EVENTS[type]
+      const cells = row.split('|').map((cell) => cell.trim())
+      const customer = cells[2]
+      const manufacturer = cells[3]
+      const channels = cells[4] ?? ''
+
+      expect(customer === '✓', `${type} customer audience disagrees with the code`).toBe(
+        entry.audience === 'customer' || entry.audience === 'both',
+      )
+      expect(manufacturer === '✓', `${type} manufacturer audience disagrees`).toBe(
+        entry.audience === 'manufacturer' || entry.audience === 'both',
+      )
+
+      // Every channel the code sends is named, and no channel it does not send is.
+      const named = channels.split(',').map((part) => part.trim().replace(/\s.*$/, ''))
+      for (const channel of ['in_app', 'push', 'email', 'sms'] as const) {
+        const sends = (entry.channels as readonly string[]).includes(channel)
+        expect(named.includes(LABEL[channel]), `${type} × ${channel} disagrees`).toBe(sends)
+      }
+
+      expect(channels.includes('**(mandatory)**'), `${type} mandatory flag`).toBe(
+        (MANDATORY_EVENTS as readonly string[]).includes(type),
+      )
+    }
   })
 })

@@ -20,9 +20,11 @@ checklist and submitted to the stores after the web launches. It exposed that `0
 entry points has been half true — 46 of 132 service capabilities have no `/api/v1` path —
 which is Phase 10.
 
-What remains is not code: 18 of `29-launch-checklist.md`'s 36 items wait on a legal
-entity, processor agreements, hosting and provider accounts, an editorial session with a
-pilot manufacturer, five product decisions, and one Android phone. `28-handover.md` §12 is
+What remains is mostly not code: 25 of `29-launch-checklist.md`'s **47** items wait on a
+legal entity, processor agreements, hosting and provider accounts, an editorial session with
+a pilot manufacturer, five product decisions, and one Android phone. (Recounted in 13.5 —
+the number here and in `29` said "18 of 36" against a file that had grown through Phases
+10–13. Two rows carry both marks; see `29` §Summary.) `28-handover.md` §12 is
 written for the person doing that, with owners and dependencies. The repository is public
 at `github.com/candeniz/hemenpergola` and CI runs the whole pipeline — including the
 performance gate — on every push.
@@ -61,11 +63,11 @@ proven — not when the code is written.
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
-| 9 | Hardening + launch | **🟡 · 18 evidenced / 18 waiting** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The 18 waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
+| 9 | Hardening + launch | **🟡 · 24 evidenced / 25 waiting (47 rows)** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
-| 13 | Store readiness (13.1–13.4) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). `29` §F carries eleven rows with owners; submission waits on F6–F11 |
+| 13 | Store readiness (13.1–13.5) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). **13.5** the leg that carries that decision — an unreachable server is now a result and a state rather than a rejected promise, the address field reaches the screen where it is needed, and the CSP's development branch revived every strict page under `pnpm dev` (dead since Faz 9). Q33's documentation half closed with it. `29` §F carries eleven rows with owners; submission waits on F6–F11 |
 
 ## Log
 
@@ -3826,11 +3828,91 @@ görünmezdi.
 aktarımı ve `29`'un sayılarının tazelenmesi. Bu turun konusu değildi ve kasten
 açılmadı.
 
+### 2026-08-29 — Faz 13.5 · adres ölünce uygulama ölmesin, ve Q33'ün doküman yarısı
+
+13.4 doğru kararı verdi (`ADR-033`: adres çalışma anında değişir) ama **kararı taşıyan
+bacağı sınamadı**. Bu tur önce onu sağlamlaştırdı.
+
+**1 · Ağ hatası artık bir sonuç.** `client.ts`'te `fetch` sarmalı yoktu: ulaşılamayan
+host'ta istek *reddediyor*, `ApiResult` dönmüyordu — yani tipin verdiği söz, uygulamanın en
+sık karşılaşacağı hatada tutulmuyordu. Üç yerde onarıldı:
+
+- `request()` hem `fetch`i hem gövde okumasını yakalıyor ve `code: 'NETWORK'` dönüyor
+  (`06` §Envelope: istemciler `error.code`'a bakar; bu hatanın kodu yoktu). Zarf olmayan bir
+  200 de aynı sınıfa giriyor — otel wifi'sinin giriş sayfası her gün olan şey.
+- Oturum makinesi ayrıldı (`state/session-machine.ts`, React'siz) ve dördüncü bir durum
+  kazandı: **`unreachable`**. `signed-out` değil, çünkü ikisi farklı ekran ister — biri
+  "giriş yap", öteki "adres yanlış". Ulaşılamayan sunucuda eski kod `signed-out` diyordu,
+  yani tester'a hiç sorun olmamış bir şifreyi yeniden yazdırıyordu. `refresh()` artık
+  reddedemiyor; `void refresh()` yerine `.catch` var, çünkü yutulan hata tam da bu turun
+  kaldırmaya geldiği şeydi — boot'ta reddeden bir promise uygulamayı sonsuza kadar
+  `booting` spinner'ında bırakıyordu.
+- `signOut` yerelden başlıyor: `logout()` önce keystore'u siliyor (tek `await` edilen adım),
+  sunucu **arkada** bilgilendiriliyor. Dosyanın kendi yorumu zaten "local wipe is what signs
+  the device out" diyordu; kod tam tersini yapıyordu. `request()` bir `bearer` parametresi
+  aldı, çünkü artık depo boşken haber veriliyor — yakalanan token açıkça geçiliyor.
+
+**2 · Adres alanı, adres yanlışken erişilebilir.** Alan tek bileşene taşındı
+(`ui/server-address-field.tsx`) ve üç yerde: giriş ekranı, yeni `app/sunucu.tsx`
+(`unreachable` ekranı) ve ayarlar. Tek okuyucu `server-address.ts` kaldı. Adres
+değiştiğinde token'lar siliniyor ve Query önbelleği boşaltılıyor — A sunucusunun oturumuyla
+B'ye konuşmak tester'a "build bozuk" diye görünür. Alan, bayrak kapalıyken hiç render
+edilmiyor, yani mağaza sürümü onu yönlendirme kazasıyla bile gösteremiyor.
+
+Çivi: `test/mobile-session-network.test.ts` — reddeden sahte bir `fetch` ile oturum
+`unreachable`'a iniyor (`booting` değil, duvar değil), `logout()` çözülüyor ve keystore
+boşalıyor. Kök vitest mobil modülleri gerçekten *çalıştırabilsin* diye `expo-secure-store`
+bir Map'e takılandı ve `@contracts/iam` hem kök `tsconfig`'e hem vitest'e eklendi;
+`mobile-boundary.test.ts` artık **üçüncü** çözücüyü de aynı eşlemeye bağlıyor.
+
+**3 · `pnpm dev` strict CSP altında ölüydü — Faz 9'dan beri.** Ölçüldü, tahmin edilmedi:
+`pnpm dev --port 3200` → `/giris` → konsol
+
+```
+EvalError: Evaluating a string as JavaScript violates the following Content Security
+Policy directive: "script-src 'self' 'nonce-…' 'strict-dynamic'".
+```
+
+`next dev` webpack'in eval tabanlı devtool'uyla derliyor. Yani `/giris`, `/kayit`,
+`/proje/*`, `/hesap`, `/panel/*`, `/yonetim/*` — uygulamanın çoğu — dev sunucusunda
+hidratlanmıyordu; HTML geliyor, hiçbir şey tıklanmıyor, sunucu tarafında tek satır iz yok.
+Görünmedi çünkü sürüm kapısı `pnpm build && pnpm start` koşuyor (`playwright.config.ts`),
+yani sorunun olmadığı tek profil. 13.3'ün tüneli `pnpm dev` başlattığı için E6'nın web
+yarısı aynı duvara çarpacaktı.
+
+**Seçim: (b) middleware'de dev dalı.** (a) tünelin `build && start` koşması E6'yı
+kurtarırdı ve dev sunucusunu herkes için kırık bırakırdı — her değişiklikte bir dakika
+build, ya da hiç strict sayfa. Politika kendi modülüne alındı (`shared/security/csp.ts`),
+çünkü bir güvenlik başlığını gevşeten dal, gözden geçirilecek değil **iddia edilecek**
+koddur. `NODE_ENV` derleyici tarafından gömülüyor, yani production paketinde diğer dala
+giden yol yok. `'unsafe-eval'` string değerlendirmeye izin verir, enjekte edilmiş inline
+script'e değil — onu nonce tutuyor ve iki profilde de duruyor. İki test: `csp.test.ts` iki
+dalı da çağırıp `script-src` dışındaki her direktifin **birebir aynı** kaldığını iddia
+ediyor, `public-directory.spec.ts` gerçek `next start`'ın başlığında `unsafe-eval` de
+aramıyor artık. Karar `23` §Runtime'a yazıldı. Doğrulandı: aynı sayfa artık hidratlanıyor
+(`__reactProps` + `onChange`), production başlığı değişmedi.
+
+**4 · Q33'ün doküman yarısı kapandı.** `13`: kanal tablosu push'u anlatıyor, akış diyagramı
+dört bacaklı, "Preferences govern email and SMS only" cümlesi düzeltildi, ve olay kataloğu
+artık **`domain/catalog.ts`'ten üretiliyor** (`scripts/generate-notification-table.mjs`,
+`02`'nin izin tablosuyla aynı düzen) — `notification-catalog.test.ts` sapmada düşüyor,
+mutasyonla doğrulandı. `04`'e `PushToken`; `06`'ya `GET /me/notifications` ve
+`POST/DELETE /me/push-tokens`; `19`'un işleyici listesine Expo push (token **ve** işlenmiş
+bildirim içeriği perimetreden çıkıyor — bu yüzden işleyici sorusu) ve `Retention` tablosuna
+180 günlük boşta kalma satırı. `29`'un özeti **sayılarak** yeniden yazıldı: 36 değil **47**
+satır, 24 kanıtlı / 25 bekleyen, iki satır (C2, C10) iki sütunda birden, iki satır daha
+(B3, D3) tikli ama bitmemiş — hepsi gerekçesiyle. `25` §Status ve Faz 9 satırındaki aynı
+sayı düzeltildi.
+
+Q33 artık yalnız **KVKK dışa aktarımını** gösteriyor: `buildExportPackage` `PushToken`,
+`NotificationPreference` ve `Notification` satırlarını toplamıyor. Üçüncü kez ertelenmedi —
+13.6, tek başına.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q33 | **Phase 12's documentation debt, the KVKK data export, and `29`'s numbers are deferred to 13.5.** Not a question so much as a debt with a name, and it is in this table rather than only in a dated log entry because that is exactly the mistake `ADR-022`/Q23 cost three phases (`CLAUDE.md` §Definition of done). Three items: `13`, `04`, `06` and `19` still describe the notification surface as it was before Phase 12 added the inbox and the push channel; the KVKK data-export path is designed and unbuilt; and `29`'s summary counts predate 13.1–13.4. 13.4 deliberately did not open any of them — it was scoped to what would break the E6 round itself. | 13.5. Nothing in the running system waits on it; a reader of `13`/`19` does | the documents stay one phase behind the code, which is the state that produced Q23 |
+| Q33 | **The KVKK data export does not carry the notification surface.** `buildExportPackage` (`modules/privacy/application/privacy-service.ts`) collects the user row, consents, projects, offer requests, reviews and sent messages — and **not** `PushToken`, `NotificationPreference` or `Notification`. All three are personal data held about the subject (`04`, `19` §Retention), so an export that omits them is incomplete in the KVKK sense, not merely thin. Narrowed here in 13.5: the phase-12 documentation debt it used to also name is **closed** — `13`'s channel table, flow and event catalogue (generated from `domain/catalog.ts` now, with a drift test), `04` §PushToken, `06`'s three endpoints, `19`'s processor and retention entries, and `29`'s recount. **Third deferral refused: this goes in 13.6, alone.** | 13.6 · a complete subject access request | the export ships silently incomplete, which is the failure mode a regulator asks about |
 | ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |

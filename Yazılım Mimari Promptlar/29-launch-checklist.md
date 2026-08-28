@@ -91,9 +91,19 @@ sequencing is `ADR-030`'s, not a preference.
 
 ## Summary
 
-**Evidenced: 18 · Waiting on a named human or infrastructure step: 18 · Not started: 0.**
-(Two rows count in both columns — B3 has one of five surfaces waiting on an edge layer,
-C10 is measured here and unsized on real hardware.)
+**47 rows. Evidenced: 24 · Waiting on a named human or infrastructure step: 25 · Not
+started: 0.**
+
+The two numbers exceed 47 because **C2 and C10 carry both marks** — an error-tracking port
+that is built and a provider that is not contracted; a matching path measured here and
+unsized on real hardware. Two further rows are ticked and still not *finished*: **B3** (4 of
+6 rate-limited surfaces; the remaining two want an edge layer) and **D3** (the city-page
+mechanism exists, real pages want real supply). Both say so in their own evidence, which is
+why the count is 24 rather than 22 and why this paragraph exists.
+
+The count was stale until 13.5: it read "18 · 18" against a file that had grown to 47 rows
+through Phases 10–13, which is the same failure the rest of that task went after — a
+document confidently asserting a number nobody had recounted.
 
 **There is remaining code work, and pretending otherwise is how A1 kept a ✅ it had not
 earned.** The sentence that stood here until 2026-08-25 said the opposite. What it meant was

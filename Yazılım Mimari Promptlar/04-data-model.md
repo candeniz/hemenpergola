@@ -242,6 +242,7 @@ CmsPageTranslation(pageId, locale, slug, title, body)   pk(pageId, locale)
 Seo(id, metaTitle?, metaDescription?, canonicalUrl?, ogImageId?, noIndex, jsonLd Json?)
 Notification(id, userId, type, payload Json, readAt?, createdAt)
 NotificationPreference(id, userId, channel, type, enabled)
+PushToken(id, userId, token unique, platform, createdAt, lastSeenAt)
 AuditLog(id, actorUserId?, actorRole, companyId?, entityType, entityId, action,
          before Json?, after Json?, reason?, ip, userAgent, createdAt)
 PlatformSetting(key primary, value Json, updatedBy, updatedAt)
@@ -249,6 +250,14 @@ PlatformSetting(key primary, value Json, updatedBy, updatedAt)
 
 `Review` is unique per `offerRequestId` — one engagement, one review
 (`16-reviews-and-ratings.md`).
+
+`PushToken` is Phase 12's addition (`13` §Channels): one row per *device*, not per user —
+`token` is unique because Expo's token identifies the installation, so re-registering the
+same device updates the row rather than growing a second address for the same phone.
+`lastSeenAt` is what the retention sweep reads (`19` §Retention: 180 days idle and the row
+goes). `onDelete: Cascade` from `User`, so erasure takes the device addresses with the
+account without a second code path. The token is written by `POST /me/push-tokens` and
+removed by `DELETE /me/push-tokens` (`06`); sign-out sends the delete.
 
 `CmsPage` follows `ADR-017`: **the slug is per locale, on the translation row.** It is the
 same shape as `Category` and `Product` and for the same reason — `07` §Route map lists

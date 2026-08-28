@@ -132,12 +132,13 @@ const ENV_BOUNDARY_FILES = [
   // pages, where `23` §Configuration guarantees no environment exists. A soft read with a
   // dev fallback — the file's comment carries the full argument.
   'src/shared/seo/site-url.ts',
-  // The CSP's storage origin (task 13.4). Middleware runs in the Edge runtime on every
-  // request; the typed env parses the WHOLE environment and throws on the first missing
-  // secret, so importing it here would turn an unrelated config typo into a site-wide
-  // outage. `S3_ENDPOINT`/`CDN_BASE_URL` are public hostnames, and the file's own comment
-  // carries the argument — the same one `next.config.ts` makes one line below.
-  'src/middleware.ts',
+  // The CSP's storage origin (task 13.4), and since 13.5 its NODE_ENV branch too. This
+  // runs in the Edge runtime on every request; the typed env parses the WHOLE environment
+  // and throws on the first missing secret, so importing it here would turn an unrelated
+  // config typo into a site-wide outage. `S3_ENDPOINT`/`CDN_BASE_URL` are public
+  // hostnames, and the file's own comment carries the argument — the same one
+  // `next.config.ts` makes one line below.
+  'src/shared/security/csp.ts',
   // The build configuration. `images.remotePatterns` needs the CDN host at build time, and
   // the typed env cannot be used here: it parses the *whole* environment and throws on the
   // first missing secret, which is precisely the build-needs-production-secrets failure

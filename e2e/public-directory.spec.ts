@@ -166,6 +166,14 @@ test.describe('9.3 · security headers and the two-profile CSP', () => {
       // The whole point: no unsafe-inline in script-src, ever.
       const scriptSrc = /script-src[^;]*/.exec(csp)?.[0] ?? ''
       expect(scriptSrc, path).not.toContain('unsafe-inline')
+      /*
+       * And no `unsafe-eval` either (task 13.5). The policy grew a development branch —
+       * `next dev`'s eval-based bundle had left every strict surface non-interactive since
+       * Phase 9 — and this suite runs against `pnpm build && pnpm start`, so it is the
+       * assertion that the relaxed branch cannot be reached by what ships. The unit twin,
+       * which tests both branches without a server, is `src/shared/security/csp.test.ts`.
+       */
+      expect(scriptSrc, path).not.toContain('unsafe-eval')
       expect(csp, path).toContain("frame-ancestors 'none'")
     }
   })

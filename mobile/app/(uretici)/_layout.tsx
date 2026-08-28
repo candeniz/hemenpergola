@@ -7,6 +7,7 @@ export default function UreticiLayout() {
   const { session } = useSession()
 
   if (session.state === 'booting') return null
+  if (session.state === 'unreachable') return <Redirect href="/sunucu" />
   if (session.state === 'signed-out') return <Redirect href="/giris" />
   if (session.role !== 'manufacturer') return <Redirect href="/" />
 

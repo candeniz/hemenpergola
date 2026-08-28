@@ -1,32 +1,25 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-import { logout, myCompanies } from '../api/client'
 import { registerForPush, unregisterPush } from '../push/register'
-import { readTokens } from '../auth/token-store'
+import { deriveSession, localSignOut, type Session } from './session-machine'
 
 /**
- * The app's whole auth state: booting → signed-out → signed-in(role).
+ * The app's whole auth state: booting → signed-out | unreachable | signed-in(role).
  *
- * The role comes from `GET /companies` (`ADR-030`: a membership opens the manufacturer
- * shell, none opens the customer shell) — the same derivation the web's shells make
- * through `resolveActor`. It lives in context rather than in each route because the router
- * groups' guards and the login screen all consume the one answer, and two fetches of it
+ * The decision itself is `session-machine.ts`; this file is the React half — context, the
+ * boot effect, and the push registration that needs a live session. The split is task
+ * 13.5's: the decision has a right answer and is now tested without a renderer.
+ *
+ * It lives in context rather than in each route because the router groups' guards, the
+ * login screen and the unreachable screen all consume the one answer, and two fetches of it
  * would be two chances to disagree during a navigation.
  */
 
-export type Session =
-  | { state: 'booting' }
-  | { state: 'signed-out' }
-  | {
-      state: 'signed-in'
-      role: 'customer' | 'manufacturer'
-      companyId: string | null
-      companyName: string | null
-    }
+export type { Session }
 
 type SessionContextValue = {
   session: Session
-  /** Re-derive from the server — after login, or when a 401 killed the family. */
+  /** Re-derive from the server — after login, after an address change, or on retry. */
   refresh: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -37,47 +30,36 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session>({ state: 'booting' })
 
   const refresh = useCallback(async () => {
-    const { refresh: token } = await readTokens()
-    if (token === null) {
-      setSession({ state: 'signed-out' })
-      return
-    }
-
-    const companies = await myCompanies()
-    if (!companies.ok) {
-      // A dead token family lands here via the client's failed refresh; the wall is next.
-      setSession({ state: 'signed-out' })
-      return
-    }
+    // `deriveSession` never rejects, which is what keeps the app off the `booting` spinner
+    // when the server is unreachable — the failure it used to throw had no catch anywhere,
+    // so the provider stayed in `booting` forever and the app looked frozen.
+    const next = await deriveSession()
+    setSession(next)
 
     // The device becomes an address for this account — best-effort, silent without
     // permission or credentials (see register.ts; Q32).
-    void registerForPush()
-
-    const [first] = companies.data.companies
-    setSession(
-      first === undefined
-        ? { state: 'signed-in', role: 'customer', companyId: null, companyName: null }
-        : {
-            state: 'signed-in',
-            role: 'manufacturer',
-            companyId: first.companyId,
-            companyName: first.displayName,
-          },
-    )
+    if (next.state === 'signed-in') void registerForPush()
   }, [])
 
   const signOut = useCallback(async () => {
-    await unregisterPush()
-    await logout()
+    // Local first, and the state flips on the local wipe alone: an unreachable server must
+    // not be able to keep this device signed in (13.5).
+    const access = await localSignOut()
     setSession({ state: 'signed-out' })
+
+    // Told, not asked. Nothing below this line is awaited or can fail the sign-out.
+    void unregisterPush(access ?? undefined)
   }, [])
 
   useEffect(() => {
     // Deferred a tick: the boot probe's first setState then happens outside the effect
     // body, which is both what the compiler lint asks for and honest about what this is —
     // a subscription to SecureStore + the API, not a synchronous derivation.
-    const timer = setTimeout(() => void refresh(), 0)
+    const timer = setTimeout(() => {
+      // `refresh` cannot reject, but the floor is here anyway: a `void` on a promise that
+      // could reject is exactly the swallowed failure 13.5 came to remove.
+      refresh().catch(() => setSession({ state: 'unreachable' }))
+    }, 0)
     return () => clearTimeout(timer)
   }, [refresh])
 

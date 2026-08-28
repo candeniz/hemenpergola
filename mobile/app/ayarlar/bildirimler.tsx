@@ -8,6 +8,7 @@ import { t } from '../../src/i18n'
 import { useSession } from '../../src/state/session'
 import { colors } from '../../src/theme'
 import { QueryStates } from '../../src/ui/primitives'
+import { ServerAddressField } from '../../src/ui/server-address-field'
 
 /**
  * Notification preferences — `13` §Preferences, both roles, one screen (preferences are
@@ -21,10 +22,11 @@ import { QueryStates } from '../../src/ui/primitives'
  */
 export default function Bildirimler() {
   const locale = 'tr'
-  const { session } = useSession()
+  const { session, refresh } = useSession()
   const preferences = usePreferences()
   const setPreference = useSetPreference()
 
+  if (session.state === 'unreachable') return <Redirect href="/sunucu" />
   if (session.state === 'signed-out') return <Redirect href="/giris" />
 
   return (
@@ -68,6 +70,16 @@ export default function Bildirimler() {
           )
         }}
       </QueryStates>
+
+      {/*
+       * The server address, for someone already signed in (13.5). This is the app's only
+       * settings surface, and the field renders itself away on any profile that does not
+       * allow the override. Changing it clears the tokens, so the session re-derives to
+       * the wall — which is correct: you are on a different server now.
+       */}
+      <View style={styles.list}>
+        <ServerAddressField locale={locale} onChanged={() => void refresh()} />
+      </View>
     </ScrollView>
   )
 }
