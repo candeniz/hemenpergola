@@ -10,7 +10,11 @@ taşıyor; geçmişe bir kez giren anahtar, onu silen force-push'tan uzun yaşar
   tek numara; kapsamlı ekleme minor, düzeltme patch. `eas.json` →
   `cli.appVersionSource: "local"`: bu dosya tek kaynak, EAS sunucusu numara uydurmaz.
 - **Build numaraları** `ios.buildNumber` / `android.versionCode` (şu an `1`): production
-  profili `autoIncrement: true` ile her mağaza build'inde artırır; elle dokunulmaz.
+  **ve** `preview` profilleri `autoIncrement: true` ile her build'de artırır; elle
+  dokunulmaz. `preview` de artırıyor, çünkü aynı `versionCode` ile ikinci bir test APK'sı
+  telefonda "daha yeni sürüm değil" diye takılıyor ve test eden kişi bir önceki turu
+  yeniden kuruyor. Numara `app.json`'da yerelde artar (`appVersionSource: "local"`), yani
+  build'den sonra `app.json` değişmiş görünür — bu beklenen, commit'lenir.
 
 ## İmzalama — yol, anahtar değil
 
@@ -32,3 +36,11 @@ taşıyor; geçmişe bir kez giren anahtar, onu silen force-push'tan uzun yaşar
 | `development`      | geliştirme istemcisi, `localhost` API           | internal dağıtım             |
 | `preview`          | cihazda elden paylaşılan deneme                 | Android APK, internal        |
 | `production`       | mağaza gönderimi (F-satırları + A5/C6 açılınca) | AAB / IPA, otomatik build no |
+
+**`preview` APK'sında bildirim gelmez** — FCM kimlik bilgisi yüklenmediği için (Q32) push
+kanalı standalone build'de sessizdir; uygulamanın geri kalanı normal çalışır, bu bir hata
+değil eksik hesaptır (`mobile/src/push/register.ts` sessizce geçer, `mobile/TEST-APK.md`).
+
+`preview` profilinin `env.EXPO_PUBLIC_API_URL` değeri build anında APK'ya gömülür ve
+sonradan düzeltilemez; commit'li değer `http://localhost:3000`'dir ve telefonda çalışmaz.
+Gerçek adresi `scripts/tunnel.mjs` build sırasında yazar, tur bitince geri alır.

@@ -25,6 +25,11 @@ Thumbs.db
 # local data volumes
 .docker-data
 
+# The tunnel session (Faz 13.3): the downloaded cloudflared binary and the address of the
+# current run. Both are per-machine and per-run — `scripts/tunnel.mjs` deletes the address
+# on exit, and a committed one would be a dead hostname within the hour.
+.tunnel/
+
 # playwright
 /test-results
 /playwright-report

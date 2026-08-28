@@ -98,6 +98,21 @@ The worker is a second entrypoint from the same image (`23` §Runtime):
 pnpm worker
 ```
 
+**On a physical phone** (`29` §E, E6) `localhost` is the phone, so neither of the above is
+reachable and `EXPO_PUBLIC_API_URL` is burned into the APK at build time. One command
+replaces both lines above with an HTTPS tunnel in front of them, and starts the stack with
+the tunnel's address in its environment:
+
+```
+node scripts/tunnel.mjs
+```
+
+It prints the address, writes it into `mobile/eas.json` for `eas build`, and takes it back
+out on exit — nothing is hand-edited and nothing stale is left. **While it runs the local
+server is on the public internet: demo data only, and close it when done.** The account
+chain, the build command and the phone-side install are `mobile/TEST-APK.md`; the tool
+choice and the two-tunnel reasoning are in the script's own header.
+
 The five commands that must be green before any commit, plus the two suites:
 
 ```

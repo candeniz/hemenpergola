@@ -3712,6 +3712,33 @@ satır satır türetildi — cihaz konumu TOPLANMAZ (konum kullanıcı beyanıd�
 reklam yok, silme yolu 10.2'nin akışı. Sürümleme ve imzalama YOLLARI yazıldı, anahtar
 üretilmedi — depo public. `29` §F: on bir satır, her birinde kanıt ya da bekleyenin adı.
 
+### 2026-08-28 — Faz 13.3 · test APK'sının önündeki tek engel: adres
+
+`preview` profilinin `env` bloğu yoktu, `EXPO_PUBLIC_API_URL` tanımsızdı ve `client.ts`
+`http://localhost:3000`'e düşüyordu — telefonda `localhost` telefonun kendisi, yani APK
+ölü doğuyordu. Değişken **derleme anında gömüldüğü** için bu çalışma anında düzeltilebilir
+bir şey değil; tek çözüm build'in doğru adresi görmesi.
+
+`scripts/tunnel.mjs`: Cloudflare quick tunnel (hesap yok, kurulum yok — ikili `.tunnel/`
+altına iniyor, PATH'te varsa o kullanılıyor). **İki** tünel, çünkü `14` §Upload flow
+yüklemeyi MinIO'ya doğrudan gönderiyor; telefonun `S3_ENDPOINT`'e de erişmesi gerek ve
+imzalı URL'ler o host'la üretiliyor. HTTPS olması ikinci bir işi de bitiriyor: Android'in
+cleartext yasağı hiç devreye girmiyor, yani `expo-build-properties` eklenmedi ve
+production'a sızacak bir `usesCleartextTraffic` yok.
+
+Adres iki yere birden geçiyor: `mobile/eas.json`'a (build'in okuduğu yer, çıkışta bire bir
+geri alınıyor) ve web + worker süreçlerinin **ortamına** — dosyaya değil. Node'un
+`--env-file`'ı mevcut ortamı ezmediği için worker da, `process.env` önceliği yüzünden Next
+de doğru adresi görüyor; `.env` ve `.env.example` `localhost` kalıyor, `23` §Configuration
+ile çelişmiyor. Elle düzenlenen hiçbir dosya yok, bayat adres kalmıyor.
+
+Bir tercih daha: `preview` artık `autoIncrement: true`. Aynı `versionCode` ile ikinci APK
+telefonda kurulmuyor ve test eden kişi farkında olmadan bir önceki turu deniyor.
+
+Tünel açıkken yerel sunucu internete açık — script bunu her koşuda iki kez basıyor. Push'un
+standalone'da sessiz olduğu (Q32) `mobile/store/surumleme-ve-imza.md`'ye ve
+`mobile/TEST-APK.md`'ye yazıldı: test eden kişi bunu hata sanmasın.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
@@ -3743,7 +3770,7 @@ reklam yok, silme yolu 10.2'nin akışı. Sürümleme ve imzalama YOLLARI yazıl
 | Q27 | **`DIMENSION_ATTRIBUTE_KEYS` is a fixed alias table, and that breaks `CAT-03`'s promise at the margin.** Readiness resolves the catalogue's dimension attributes (`genislik_mm` family) to project fields through a hard-coded list in `modules/project/domain/steps.ts`. An admin who authors a new product with a differently-spelt dimension key (`en_mm`, `boy_mm`) gets a product that can never reach `READY`, and the fix is a code change — while `10` §What V1 builds says catalogue changes are data changes. The right shape is a semantic-role column on `ProductAttribute` (`dimensionRole: WIDTH\|DEPTH\|HEIGHT?`) the admin sets when authoring, with readiness resolving through it. | Phase 8 (admin catalogue authoring gets revisited there) | The alias table, plus `catalogue-data.test.ts`'s tripwire: every seed `NUMBER` attribute must resolve through the table, so a drift between seed and code fails the build instead of shipping an un-READY product. Admin-authored products are not covered by the tripwire — that is exactly the gap. |
 | ~~Q30~~ | ~~Erasure has no separate verification step.~~ **CLOSED 2026-08-25 (10.3):** the question resolved itself the moment the erase endpoint went on the API — over HTTP the typed email authorised nothing (`GET /me` returns it), so `19` has to mean an emailed step. Built: `ACCOUNT_ERASURE` token (one hour, single-use, race-safe consume), `requestAccountErasure` → mail → `/hesap-silme-onay` page → `confirmAccountErasure`. The single-step `anonymiseAccount` is retired — keeping it registered would have kept the bypass. | ~~Before launch~~ closed | `29` A2 is ✅ again, this time for the right reason |
 | Q31 | **The moderated cache has no invalidation path for the CDN that does not exist yet.** `ADR-031` bounds a suspended manufacturer's visibility at 15 minutes via `MODERATED_CACHE` and the web's `revalidate = 900`. Today the only cache is the browser, which cannot be purged and needs no purging beyond that bound. The moment the edge/CDN layer lands (`29` C6), `public` starts applying to a **shared** cache that CAN be purged — suspension, review takedown and erasure should then purge `/manufacturers*`, `/cities/pages`, `/cities/{slug}` and the ISR pages instead of waiting out the window. Needs: provider chosen (provisioning chain), a purge call in the suspension/moderation/erasure services, and a decision on whether 15 min stays acceptable as the no-purge fallback. | **C6 — it is part of go-live, not after it**: the problem is asleep only while there is no shared cache | 15-minute bound with no purge path, per `ADR-031` |
-| Q32 | **Push works in development; a standalone Android build needs credentials the repo must never hold.** 12.3 built the channel end to end — token registration, the worker's Expo-push leg, preferences, deep-link taps — and it runs against Expo Go with no credentials. What is missing is user-side: an Expo account (EAS `projectId`, which `getExpoPushTokenAsync` needs even in dev on some paths — the app degrades silently without it, see `mobile/src/push/register.ts`) and, for a standalone Android build, a Firebase project's FCM key uploaded to EAS. iOS push joins with the Apple Developer account (Faz 13's list). No code change waits on this; the sender port (`push-sender.ts`) is identical either way. | Faz 14 (build) — the dev path is unblocked | Push silently absent on devices until the accounts exist |
+| Q32 | **Push works in development; a standalone Android build needs credentials the repo must never hold.** 12.3 built the channel end to end — token registration, the worker's Expo-push leg, preferences, deep-link taps — and it runs against Expo Go with no credentials. What is missing is user-side: an Expo account (EAS `projectId`, which `getExpoPushTokenAsync` needs even in dev on some paths — the app degrades silently without it, see `mobile/src/push/register.ts`) and, for a standalone Android build, a Firebase project's FCM key uploaded to EAS. iOS push joins with the Apple Developer account (Faz 13's list). No code change waits on this; the sender port (`push-sender.ts`) is identical either way. **13.3 unblocked the build without touching this:** an installable `preview` APK now exists (`scripts/tunnel.mjs`, `mobile/TEST-APK.md`) and push is silent on it by design — written down in `mobile/store/surumleme-ve-imza.md` so a tester reads it as a missing account, not a bug. | Faz 14 (build) — the dev path is unblocked | Push silently absent on devices until the accounts exist |
 | ~~Q25~~ | ~~The anonymous-draft retention sweep has no scheduler.~~ **CLOSED 2026-08-24 (task 9.1):** `audit.retention_sweep` runs the rule — `retention-policy.ts` carries it as a sweep rule, the worker has the handler, `privacy.integration.test.ts` proves dry-run/apply/idempotence, and the draft's uploaded files leave storage with it. | ~~Faz 9~~ closed | The rule that waited since Phase 4 is now executed, not merely written. |
 | ~~Q8~~ | ~~Development machine cannot run containers.~~ **CLOSED 2026-08-16.** Virtualization was enabled in firmware and the machine restarted; `systeminfo` now reports a running hypervisor and `docker info` returns server 29.7.2. The full eight-item verification ran green — see the log entry for that date. | — | — |
 

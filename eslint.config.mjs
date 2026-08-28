@@ -144,6 +144,11 @@ const ENV_BOUNDARY_FILES = [
   'scripts/ci-lighthouse.mjs',
   // The load-test runner: same class — a CLI targeting an arbitrary stack.
   'scripts/load-test-matching.ts',
+  // The tunnel launcher (Faz 13.3): it *composes* the environment it hands to the web and
+  // worker children, which is the opposite of reading configuration — the typed env is
+  // what those children then parse at their own startup. It also runs before any of them
+  // exists, so there is nothing typed to read.
+  'scripts/tunnel.mjs',
   // Test tooling, not application code: Playwright reads `CI` to decide retries and
   // workers, and it runs before — and outside — the app's typed configuration.
   'playwright.config.ts',
