@@ -69,3 +69,36 @@ TS 6 geçişi `25-progress.md` §Open questions'ta Q35 olarak duruyor.
 Komut, `run` ile: `pnpm doctor` pnpm'in yerleşik komutu olduğu için script'i gölgeler, ve
 script'e `expo-doctor` adı verilemez — doctor'ın kendisi `node_modules/.bin` ile çakışan
 script adını hata sayıyor.
+
+## Native bir peer ağaca giriyorsa beyan edilir
+
+**Bu projenin kuralı, iki bulut build'i yakarak öğrenildi:** `mobile/package.json`'da
+beyan edilmemiş bir native modül, sürümü hiç kimse tarafından denetlenmeyen bir modüldür.
+
+İkinci `preview` build'i de birincisiyle aynı yerde öldü —
+`expo-modules-core/.../worklets/WorkletJSCallInvoker.cpp:27`, `no member named 'executeSync'`.
+Sebep 13.6b'de kapatılmamıştı çünkü `expo doctor` yeşildi ve **haklıydı**: doctor beyan
+edilmiş bağımlılıkları denetler. `react-native-worklets` ağaca `expo-modules-core`'un
+_opsiyonel peer_'ı olarak girmişti, `react-native-reanimated` ise
+`react-native-drawer-layout`'un **zorunlu** peer'ı olarak (`>= 2.0.0`) — ikisi de beyan
+edilmemişti, ikisini de pnpm "aralığı sağlayan en yeni" diye seçmişti, ve denetleyecek bir
+kayıt yoktu.
+
+İkisi de artık beyan edilmiş, `expo/bundledNativeModules.json`'ın pinlediği **tam**
+sürümlerde (`react-native-reanimated@4.5.1`, `react-native-worklets@0.10.1`) — tilde ile
+değil, çünkü `~4.5.1` 4.5.5'e çözülüyor ve native modülde yama farkı da bir ABI farkıdır.
+
+`scripts/check-native-peers.mjs` bunun kalıcı bekçisi: derlenecek C++'ı okuyor,
+`expo-modules-core`'un çağırdığı her `WorkletRuntime::` sembolünün worklets başlıklarında
+bildirildiğini ve hiçbir native modülün iki kopyasının erişilebilir olmadığını doğruluyor.
+`pnpm --filter mobile run doctor` ikisini birden koşar; CI'da aynı adımda.
+
+**Doctor'ın "React Native Directory" kontrolü kapatıldı** (`expo.doctor.reactNativeDirectoryCheck`).
+Üçüncü taraf bir API'ye çıkıyor ve bu turda bir kez `unexpected server response` verdi;
+artık CI'yı kapatan bir adım olduğu için, değişiklikle ilgisiz bir sebeple kırmızıya dönen
+bir kapı olurdu — ve okunmayan bir uyarı tam olarak iki build'i öldüren şeydi. Kaybedilen
+sinyal küçük: bağımlılık listesi baştan sona Expo'nun kendi paketleri, ve sürümlerini
+doctor'ın sürüm kontrolü ile yukarıdaki script zaten denetliyor.
+
+`expo-doctor` **tam sürüme sabit** (`1.20.4`, caret yok): CI'yı kapatan aracın kendisi
+habersiz güncellenmemeli.

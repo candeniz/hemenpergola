@@ -4021,6 +4021,77 @@ doğru olan daha basit ve daha kötü: demo parolaları `1234` ve biri (`admin@d
 yönetim paneli admini, yani tünel açıkken `/yonetim` internette. Adresin rastgele olması
 güvenlik değil — tahmin edilmeye karşı korur, sızmaya karşı korumaz.
 
+### 2026-08-29 — Faz 13.6c · beyan edilmemiş native peer'lar, ve doctor'ın göremediği yer
+
+İkinci `preview` build'i de birincisiyle **aynı satırda** öldü:
+`expo-modules-core/.../worklets/WorkletJSCallInvoker.cpp:27`, `no member named 'executeSync'`.
+13.6b sürümleri hizaladı ve `expo-doctor`'ı CI'ya koydu; doctor yeşildi ve **haklıydı**.
+Kör nokta yapısal.
+
+**Ölçüm (tahmin değil).** Zincir, sürüm numaralarıyla:
+
+| paket | ne istiyor |
+|---|---|
+| `expo-modules-core@57.0.13/14` | `react-native-worklets: ^0.7.4 \|\| ^0.8.0 \|\| ^0.9.0 \|\| ^0.10.0` — **opsiyonel** peer |
+| `react-native-drawer-layout@4.2.10` | `react-native-reanimated: >= 2.0.0` — **ZORUNLU** peer |
+| `react-native-reanimated@4.6.0` | `react-native-worklets: 0.12.x` — zorunlu peer |
+| Expo SDK 57 (`bundledNativeModules.json`) | `react-native-reanimated 4.5.1`, `react-native-worklets 0.10.1` |
+
+`drawer-layout` (expo-router → react-navigation) reanimated'i zorunlu peer olarak istiyor;
+hiçbir şey sürümünü sabitlemediği için pnpm `>= 2.0.0`'ın en yenisini — **4.6.0** — seçti; o
+da worklets **0.12.1**'i getirdi; ve 0.12.1, modules-core'un kabul ettiği `≤0.10.x`'in
+dışında. Semboller: `react-native-worklets@0.10.4`'ün `WorkletRuntime.h:186/188/190`'ı
+`executeSync`'in üç aşırı yüklemesini bildiriyor, **0.12.1'in başlığında hiç yok** — build
+log'undaki cümlenin birebir karşılığı.
+
+reanimated → worklets eşlemesi de ölçüldü: `4.1.7 → 0.5-0.8`, `4.3.4 → 0.8.x`,
+`4.4.3 → 0.9.x||0.10.x`, `4.5.0 → 0.10.x`, `4.5.5 → 0.10.x-0.11.x`, `4.6.0 → 0.12.x`. Yani
+modules-core'un aralığıyla uyumlu en yeni reanimated **4.5.x**, ve SDK 57'nin pinlediği
+`4.5.1` tam oraya düşüyor.
+
+**Karar: (a) — ikisini de açıkça beyan et**, `expo/bundledNativeModules.json`'ın pinlediği
+**tam** sürümlerde: `react-native-reanimated@4.5.1`, `react-native-worklets@0.10.1`. Tilde
+ile değil — `~4.5.1` 4.5.5'e çözülüyor ve native bir modülde yama farkı da ABI farkıdır;
+doctor da tam pin istiyor.
+
+*(b) `overrides` ile worklets'i çekmek* denenmedi çünkü ölçüm onu yanlış gösteriyor:
+reanimated 4.6.0 worklets `0.12.x`'i **zorunlu** peer olarak istiyor, yani 0.10'a çekmek onu
+kırardı. *(c) reanimated'i ağaçtan çıkarmak* en temiz sonuç olurdu — uygulama ondan hiçbir
+şey `import` etmiyor ve `expo-router` onu yalnız *opsiyonel* peer olarak listeliyor — ama
+`react-native-drawer-layout` **zorunlu** istiyor; çıkarmak `autoInstallPeers`'ı workspace
+genelinde kapatmak demekti, kökü Next uygulaması olan bir monorepo'da fazla geniş bir
+yarıçap.
+
+**Ön kontrol: `scripts/check-native-peers.mjs`.** Bulut build'ini yakmadan, kurulu ağaçtan
+doğruluyor: `expo-modules-core`'un çağırdığı her `WorkletRuntime::` sembolü, include
+yolundaki worklets başlıklarında bildirilmiş mi, ve hiçbir native modülün iki erişilebilir
+kopyası var mı. Tek sembole gömülü değil — bu dikişteki bir sonraki sapmanın adı farklı,
+şekli aynı olacak. Çözümleme `mobile/`'dan ve symlink'lerin **gerçek** yolundan yapılıyor,
+çünkü pnpm'in katı yerleşiminde `expo-modules-core` `mobile/node_modules`'a hoist edilmiyor;
+Metro de aynı yolu izliyor.
+
+Mutasyonla kanıtlandı: aynı mantık önceki ağacın 0.12.1 kopyasına karşı
+`EKSIK -> executeSync` diyor, bugünküne karşı temiz. **İki build'i de kırmızıya çevirecek
+tek kontrol buydu.** `pnpm --filter mobile run doctor` artık doctor + bu script.
+
+**Doctor'ın kör noktası yazıldı** (`ci.yml`, burada ve `surumleme-ve-imza.md`'de): doctor
+beyan edilmiş bağımlılıkları denetler, opsiyonel peer olarak ağaca giren native modülleri
+denetlemez. **Bu projede native bir peer ağaca giriyorsa beyan edilir; beyan edilmemişse
+sürümünü kimse denetlemiyor demektir.**
+
+**Devreden üç madde.** `expo-doctor` caret'ten **tam sürüme** (`1.20.4`) sabitlendi — CI'yı
+kapatan araç habersiz güncellenmemeli. Doctor'ın **React Native Directory** kontrolü
+gerekçesiyle **kapatıldı**: üçüncü taraf bir API'ye çıkıyor, bu turda bir kez
+`unexpected server response` verdi, ve artık CI kapısı olduğu için değişiklikle ilgisiz bir
+sebeple kırmızıya dönerdi — okunmayan bir uyarı tam olarak iki build'i öldüren şeydi.
+Kaybedilen sinyal küçük: liste baştan sona Expo'nun kendi paketleri. Doctor 20/20 koşuyor.
+
+Ve `pnpm-workspace.yaml`'daki `minimumReleaseAgeExclude` yorumu **yanlıştı**, düzeltildi:
+`minimumReleaseAge` ne orada, ne bir kök `.npmrc`'de (yok), ne de global bir `.npmrc`'de
+(yok) tanımlı, ve pnpm'in kendi varsayılanı `0` — kaynağında `minimumReleaseAge ?? 0`.
+Hiçbir şey reddedilmedi; `pnpm install` listeye ekliyor çünkü liste var. Liste bugün etkisiz
+ve temiz bir klon aynı şekilde çözer.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

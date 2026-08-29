@@ -69,19 +69,37 @@ jobs:
       - name: Mobile lint + typecheck (ADR-030 — the Expo app shares the pipeline, not the store)
         run: pnpm --filter mobile lint && pnpm --filter mobile typecheck
 
-      # The native half, which lint and typecheck cannot see. The first preview build died
-      # inside `gradlew` on `expo-modules-core` calling a symbol `react-native-worklets` did
-      # not export — a version skew INSIDE SDK 57 that expo-doctor had already reported and
-      # nobody had read (13.6b). It also catches the two things that make a config key
-      # silently dead (`newArchEnabled`, `splash`) and duplicate native modules.
+      # The native half, which lint and typecheck cannot see. Two `preview` builds died
+      # inside `gradlew`, both compiling
+      # `expo-modules-core/.../worklets/WorkletJSCallInvoker.cpp:27` with
+      # `no member named 'executeSync'` — a version skew INSIDE SDK 57.
       #
-      # Nothing is excluded from doctor itself; the one dependency it is told to ignore is
-      # `typescript`, argued in `mobile/store/surumleme-ve-imza.md`. Red here fails the job.
+      # This step runs TWO things, because they cover different blind spots:
+      #
+      #   `expo-doctor` audits the packages the project DECLARES. It caught the first
+      #   build's cause (13.6b) and it caught the dead config keys. What it cannot see is a
+      #   native module that entered the tree as an OPTIONAL PEER nobody declared — and
+      #   that is exactly what `react-native-worklets` was. Doctor was green for the second
+      #   build too, and it was right to be: there was nothing declared to audit.
+      #
+      #   `scripts/check-native-peers.mjs` closes that gap by reading the C++ itself:
+      #   every `WorkletRuntime::` symbol `expo-modules-core` calls must be declared in the
+      #   worklets headers that will be on the include path, and no native module may have
+      #   two reachable copies. It is the only check that would have failed BOTH builds.
+      #
+      # The lesson, written where it applies: in this project a native peer that reaches the
+      # tree gets DECLARED in `mobile/package.json`, at the version
+      # `expo/bundledNativeModules.json` pins. Undeclared means unpoliced.
+      #
+      # Two things are switched off, both argued in `mobile/store/surumleme-ve-imza.md`:
+      # `typescript` in doctor's dependency check (a root-workspace decision, Q35), and
+      # doctor's React Native Directory check, which calls a third-party API and would fail
+      # this job for reasons unrelated to the change. Red here fails the job.
       #
       # `run` is not optional: `pnpm doctor` is a built-in pnpm command and would shadow
       # the script. The script cannot be renamed to `expo-doctor` either — doctor itself
       # fails a script whose name collides with a binary in `node_modules/.bin`.
-      - name: Mobile doctor (Expo SDK 57 — the native half a typecheck cannot see)
+      - name: Mobile doctor + native peer check (the half a typecheck cannot see)
         run: pnpm --filter mobile run doctor
 
       - name: Format

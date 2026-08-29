@@ -42,13 +42,16 @@ allowBuilds:
 overrides:
   expo-constants: 57.0.16
 
-# pnpm 11 refuses packages published within its minimum release age unless they are listed
-# here. `jose` was the first; the rest were added by `pnpm install` during 13.6b, when the
-# mobile dependencies were aligned with what Expo SDK 57 expects (`npx expo install
-# --check`). Every one of them is a PATCH inside SDK 57 — no major, no minor — and the
-# reason for taking them is that `expo-modules-core` was calling a symbol
-# `react-native-worklets` did not export yet, which is what killed the first cloud build.
-# `expo-doctor` in CI is what keeps this list honest.
+# NOTE (corrected in 13.6c): this list is INERT as things stand. `minimumReleaseAge` is not
+# set here, there is no root `.npmrc`, the machine has no global one, and pnpm's own default
+# is `0` — `pnpm config list` shows no such key. The previous comment claimed "pnpm 11
+# refuses packages published within its minimum release age", which was wrong: nothing was
+# refused. `pnpm install` appends to this list because the list exists, and keeps it in sync
+# when it moves a package; the entries only start meaning something if someone sets
+# `minimumReleaseAge`. A clean clone therefore resolves exactly as this one does.
+#
+# `jose` came first; the rest arrived in 13.6b when the mobile dependencies were aligned
+# with Expo SDK 57. Every one is a PATCH inside SDK 57.
 minimumReleaseAgeExclude:
   - jose@6.2.9
   - '@expo/cli@57.0.20'
