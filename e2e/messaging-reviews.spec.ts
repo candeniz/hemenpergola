@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { SEED_CUSTOMER_EMAIL, SEED_MANUFACTURER_EMAIL } from '../prisma/seed/accounts'
+
 /**
  * **F5 (messaging) and F6 (reviews)** — `03-user-flows.md`, the two secondary flows that
  * sat as `fixme` from Phase 0 until their surfaces existed. Phase 9's last code pass
@@ -47,7 +49,7 @@ async function pgQuery<T>(sql: string, params: unknown[]): Promise<T[]> {
  */
 async function signInCustomer(page: Page): Promise<void> {
   const { seedSessionCookie } = await import('./session-fixture')
-  await seedSessionCookie(page, 'musteri@pergola.local')
+  await seedSessionCookie(page, SEED_CUSTOMER_EMAIL)
 }
 
 /**
@@ -55,16 +57,15 @@ async function signInCustomer(page: Page): Promise<void> {
  * return the project it hangs off. Everything the surfaces need, nothing they do not.
  */
 async function plantEngagement(status: string): Promise<{ projectId: string; requestId: string }> {
-  const [customer] = await pgQuery<{ id: string }>(
-    `SELECT "id" FROM "User" WHERE "email" = 'musteri@pergola.local'`,
-    [],
-  )
+  const [customer] = await pgQuery<{ id: string }>(`SELECT "id" FROM "User" WHERE "email" = $1`, [
+    SEED_CUSTOMER_EMAIL,
+  ])
   const [company] = await pgQuery<{ id: string }>(
     `SELECT c."id" FROM "Company" c
      JOIN "CompanyMembership" m ON m."companyId" = c."id"
      JOIN "User" u ON u."id" = m."userId"
-     WHERE u."email" = 'owner@egepergola.local' LIMIT 1`,
-    [],
+     WHERE u."email" = $1 LIMIT 1`,
+    [SEED_MANUFACTURER_EMAIL],
   )
   const [product] = await pgQuery<{ id: string }>(
     `SELECT p."id" FROM "Product" p

@@ -1,6 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { NOTE_TRAP, startDraft, walkWizardToReady } from './wizard-walk'
+import {
+  SEED_CUSTOMER_EMAIL,
+  SEED_MANUFACTURER_EMAIL,
+  SEED_PASSWORD,
+} from '../prisma/seed/accounts'
 
 /**
  * THE RELEASE GATE.
@@ -43,8 +48,8 @@ test.beforeEach(async ({ page }, testInfo) => {
 /** The seeded customer, signed in through the real form — the same login step 2 tests. */
 async function signIn(page: Page): Promise<void> {
   await page.goto('/giris')
-  await page.getByLabel('E-posta').fill('musteri@pergola.local')
-  await page.getByLabel('Şifre').fill('phase4-core-flow-customer-password')
+  await page.getByLabel('E-posta').fill(SEED_CUSTOMER_EMAIL)
+  await page.getByLabel('Şifre').fill(SEED_PASSWORD)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
   await page.waitForURL(/\/hesap/, { timeout: 30_000 })
 }
@@ -96,8 +101,8 @@ test.describe('F1 · core flow (release gate)', () => {
      */
     await page.goto('/giris')
     // The same locators `account.spec.ts` already proves against this form.
-    await page.getByLabel('E-posta').fill('musteri@pergola.local')
-    await page.getByLabel('Şifre').fill('phase4-core-flow-customer-password')
+    await page.getByLabel('E-posta').fill(SEED_CUSTOMER_EMAIL)
+    await page.getByLabel('Şifre').fill(SEED_PASSWORD)
     await page.getByRole('button', { name: 'Giriş yap' }).click()
 
     // Wait for the navigation the form performs once a session exists (`ADR-022`). Asserting
@@ -335,8 +340,8 @@ test.describe('F1 · core flow (release gate)', () => {
       const page = manufacturerPage
 
       await page.goto('/giris')
-      await page.getByLabel('E-posta').fill('owner@egepergola.local')
-      await page.getByLabel('Şifre').fill('phase3-pilot-manufacturer-password')
+      await page.getByLabel('E-posta').fill(SEED_MANUFACTURER_EMAIL)
+      await page.getByLabel('Şifre').fill(SEED_PASSWORD)
       await page.getByRole('button', { name: 'Giriş yap' }).click()
       await page.waitForURL(/\/hesap/, { timeout: 30_000 })
 
@@ -360,7 +365,7 @@ test.describe('F1 · core flow (release gate)', () => {
        * hidden inside the free-text note (ADR-026).
        */
       const preAcceptHtml = await page.content()
-      expect(preAcceptHtml).not.toContain('musteri@pergola.local')
+      expect(preAcceptHtml).not.toContain(SEED_CUSTOMER_EMAIL)
       expect(preAcceptHtml).not.toContain('0532 555 0000')
       expect(preAcceptHtml).not.toContain(NOTE_TRAP)
 
@@ -377,7 +382,7 @@ test.describe('F1 · core flow (release gate)', () => {
 
       // ── accept ────────────────────────────────────────────────────────────
       await page.getByRole('button', { name: 'Talebi kabul et' }).click()
-      await expect(page.getByText('musteri@pergola.local')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByText(SEED_CUSTOMER_EMAIL)).toBeVisible({ timeout: 30_000 })
       // …and the note crossed WITH the disclosure (ADR-026): same source-level check.
       await expect(page.getByText(NOTE_TRAP)).toBeVisible()
       expect(await page.content()).toContain('0532 555 0000')

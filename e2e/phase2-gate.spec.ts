@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
 
+import { SEED_ADMIN_EMAIL, SEED_PASSWORD } from '../prisma/seed/accounts'
+
 /**
  * The Phase 2 gate — `21-development-roadmap.md`: *"an admin adds a product and its options
  * with no deployment, and verifies a manufacturer."*
@@ -28,9 +30,8 @@ import { expect, test, type APIRequestContext } from '@playwright/test'
  * shape for this).
  */
 
-const ADMIN_EMAIL = 'admin@pergola.local'
-/** `SEED_ADMIN_PASSWORD` in `prisma/seed/profiles.ts`. */
-const ADMIN_PASSWORD = 'phase2-gate-admin-password'
+const ADMIN_EMAIL = SEED_ADMIN_EMAIL
+const ADMIN_PASSWORD = SEED_PASSWORD
 const CUSTOMER_PASSWORD = 'phase2-gate-founder-password'
 
 const stamp = () => `${Date.now()}-${Math.floor(Math.random() * 10_000)}`

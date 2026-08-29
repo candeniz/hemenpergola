@@ -20,7 +20,7 @@ checklist and submitted to the stores after the web launches. It exposed that `0
 entry points has been half true — 46 of 132 service capabilities have no `/api/v1` path —
 which is Phase 10.
 
-What remains is mostly not code: 25 of `29-launch-checklist.md`'s **47** items wait on a
+What remains is mostly not code: 24 of `29-launch-checklist.md`'s **47** items wait on a
 legal entity, processor agreements, hosting and provider accounts, an editorial session with
 a pilot manufacturer, five product decisions, and one Android phone. (Recounted in 13.5 —
 the number here and in `29` said "18 of 36" against a file that had grown through Phases
@@ -63,7 +63,7 @@ proven — not when the code is written.
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
-| 9 | Hardening + launch | **🟡 · 24 evidenced / 25 waiting (47 rows)** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
+| 9 | Hardening + launch | **🟡 · 25 evidenced / 24 waiting (47 rows)** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
@@ -3908,10 +3908,65 @@ Q33 artık yalnız **KVKK dışa aktarımını** gösteriyor: `buildExportPackag
 `NotificationPreference` ve `Notification` satırlarını toplamıyor. Üçüncü kez ertelenmedi —
 13.6, tek başına.
 
+### 2026-08-29 — Faz 13.6a · tohum giriş bilgileri, insanın yazabileceği hâle
+
+E6 turu için mekanik bir tur. İnsanın giriş yaptığı tohum hesapları `@dikont.com`'a taşındı
+ve parolaları `1234` oldu:
+
+```
+Musteri   musteri@dikont.com    Uretici   uretici@dikont.com    (Ege Pergola)
+Admin     admin@dikont.com      Uretici2  uretici2@dikont.com   (Marmara Cam, D3 pilotu)
+```
+
+Firma çalışanları aynı düzende (`satis@`, `yonetici@`, `satis2@`). `e2e-*` fixture'ları
+`.local` kaldı — onlara insan girmiyor. Sahibine kimsenin girmediği üç dizin firması
+(Anadolu Güneş, Akdeniz Tente, Karadeniz Yapı) da `.local` kaldı; Anadolu Güneş'in parolası
+tohumlanıyor ama hiçbir belge onu bir insana vermiyor.
+
+**Parola `1234`, ve bu `MIN_PASSWORD_LENGTH`'in (10) altında — bilerek.** Yalnız
+tohumlanmış hesapları etkiliyor: giriş şeması `min(1)` doğruluyor (boş alanı reddetmek
+için; saklanmış bir parola politikadan zaten geçmiş), politikayı **kayıt** şeması uyguluyor
+ve tohum oradan geçmiyor — Argon2 hash'ini doğrudan yazıyor. Yani bir insanın açtığı hesap
+hâlâ dört karakterli parola alamıyor. Kazandırdığı şey, E6 turunun ve D3 seansının 34
+karakterlik bir dizeyi sesli okuyarak başlamaması.
+
+**Bulgu (Q34): tohumun üretime koşmasını engelleyen bir mekanizma yok.**
+`prisma/seed/index.ts` `DATABASE_URL` neyi gösteriyorsa ona koşuyor; ortam kontrolü,
+onay adımı, hiçbir şey yok. `20` §Test data ve `23` §Environments bunu bir *konvansiyon*
+olarak yazıyor, `profiles.ts`'in yorumu da "seeds run against development and test
+databases" diyordu — ikisi de doğru niyeti anlatıyor, hiçbiri engellemiyor. Bu turda
+eklenmedi (kapsam dışı), tabloya Q34 olarak yazıldı.
+
+Literal'lar sabite bağlandı. Sabitler `prisma/seed/accounts.ts`'e alındı — `profiles.ts`'in
+bir bölümü değil, ayrı bir modül, çünkü spec'ler onu import ediyor ve `profiles.ts` coğrafya
++ katalog + içerik tohumlarını çekiyor: tek e-posta adresi isteyen her spec hepsini
+yüklerdi. `profiles.ts` yeniden dışa aktarıyor. Beş spec (`core-flow`, `a11y`,
+`account-data`, `messaging-reviews`, `phase2-gate`) artık sabitten okuyor; `phase3-gate` de
+eklendi, çünkü zaten sabitleri yorumda gösteriyordu. `messaging-reviews`'ın iki SQL'i
+literal yerine parametre alıyor. Bir daha e-posta değişimi tek satır.
+
+**Tohum e-posta değişince eski veritabanında çakışıyor** — e-posta kullanıcının doğal
+anahtarı, yani yeni sahip eklenirken `CompanyMembership_one_owner_per_company` patlıyor.
+Bu değişiklikten sonra yerel veritabanını **bir kez sıfırlayın**:
+
+```bash
+pnpm exec prisma migrate reset --force && pnpm seed demo
+```
+
+Tohuma kalıcı bir sahip-devri mantığı eklenmedi: tek seferlik bir göç için sonsuza kadar
+duracak kod olurdu.
+
+**Ek iş.** `eas init`/`eas build` artıkları temizlendi: `mobile/app.json` `projectId` +
+`owner` taşıyor, `versionCode` 2, biçim `pnpm format` ile düzeltildi. `29` §F'de **F6 ✅**
+(kanıt: `expo.dev/accounts/enesaakkus/projects/hemen-pergola`), yani sayım 25 kanıtlı / 24
+bekleyen oldu — `29` §Summary ve buradaki §Status ile Faz 9 satırı buna göre düzeltildi.
+`mobile/eas.json` ölü bir tünel adresiyle yamalı kalmıştı, geri alındı ve commit'lenmedi.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q34 | **Nothing stops `pnpm seed` from running against production.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal. `20` §Test data and `23` §Environments describe seeds as a `local`/`preview`/test thing, and `prisma/seed/accounts.ts` leans on that when it justifies a four-character password — but a described convention is not a mechanism, and the profiles wipe-and-rewrite users and companies. Found while moving the demo credentials in 13.6a and deliberately NOT fixed there (out of that task's scope). The fix is small: refuse unless `APP_ENV` is `local`/`test`, with an explicit override flag for `preview`. | nothing today; the first production database is where it stops being theoretical | the guard is the operator's memory, which is the control `19` §Data location does not accept anywhere else |
 | Q33 | **The KVKK data export does not carry the notification surface.** `buildExportPackage` (`modules/privacy/application/privacy-service.ts`) collects the user row, consents, projects, offer requests, reviews and sent messages — and **not** `PushToken`, `NotificationPreference` or `Notification`. All three are personal data held about the subject (`04`, `19` §Retention), so an export that omits them is incomplete in the KVKK sense, not merely thin. Narrowed here in 13.5: the phase-12 documentation debt it used to also name is **closed** — `13`'s channel table, flow and event catalogue (generated from `domain/catalog.ts` now, with a drift test), `04` §PushToken, `06`'s three endpoints, `19`'s processor and retention entries, and `29`'s recount. **Third deferral refused: this goes in 13.6, alone.** | 13.6 · a complete subject access request | the export ships silently incomplete, which is the failure mode a regulator asks about |
 | ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |

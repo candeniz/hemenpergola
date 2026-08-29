@@ -1,5 +1,15 @@
 import type { CompanyRole, CompanyStatus, PrismaClient } from '@prisma/client'
 
+import {
+  SEED_ADMIN_EMAIL,
+  SEED_COMPANY_ADMIN_EMAIL,
+  SEED_CUSTOMER_EMAIL,
+  SEED_MANUFACTURER_EMAIL,
+  SEED_PASSWORD,
+  SEED_PILOT_OWNER_EMAIL,
+  SEED_PILOT_SALES_EMAIL,
+  SEED_SALES_EMAIL,
+} from './accounts'
 import { seedCatalogue } from './catalogue/seed-catalogue'
 import { seedContent } from './content'
 import { seedGeography } from './geo/seed-geo'
@@ -24,7 +34,15 @@ import { seedPlatformSettings } from './platform-settings'
  * Each profile builds its own skeleton now and later phases extend their own slice. Nothing
  * here seeds a table that does not exist.
  *
- * Every profile is idempotent: keyed on natural unique columns and re-runnable.
+ * Every profile is idempotent: keyed on natural unique columns and re-runnable — with one
+ * caveat that 13.6a earned. An **email is a user's natural key**, so renaming a seeded
+ * account (as 13.6a did) does not update the old row, it creates a second one; the old
+ * owner is still the company's OWNER and `CompanyMembership_one_owner_per_company` refuses
+ * the new one. Reset the development database once after such a rename:
+ *
+ *   pnpm exec prisma migrate reset --force && pnpm seed demo
+ *
+ * No ownership-transfer path was added for it: permanent seed logic for a one-time move.
  */
 
 export type ProfileName = 'minimal' | 'demo' | 'e2e'
@@ -64,41 +82,14 @@ export const E2E_IDS = {
 } as const
 
 /**
- * The bootstrap admin, and a password for it.
+ * The accounts a human signs into live in `./accounts` — one module, imported by the specs
+ * and the launchers too, so a rename is one line rather than nine files (task 13.6a). They
+ * are re-exported here because this file has always been where callers looked for them.
  *
- * Phase 1 built the credential flow, so a seeded admin with no password is an admin nobody
- * can sign in as — including `e2e/phase2-gate.spec.ts`, which has to be an admin to prove
- * the Phase 2 gate at all.
- *
- * The password is a constant in a seed file on purpose and is safe to be one: seeds run
- * against development and test databases, and `23` §Runtime never runs them in production —
- * the production admin is created by an operator, not by `pnpm seed`.
+ * Everything else in this file — the `e2e-*` fixtures below — keeps its `.local` address:
+ * nobody types those.
  */
-const ADMIN_EMAIL = 'admin@pergola.local'
-export const SEED_ADMIN_PASSWORD = 'phase2-gate-admin-password'
-
-/**
- * The manufacturer sign-in for the **D3 pilot session** (`26-execution-plan.md` §Phase 3
- * task 3.8) and for `e2e/phase3-gate.spec.ts`.
- *
- * Same reasoning as the admin constant: development and test databases only. What it buys is
- * that the pilot manufacturer's session does not begin with somebody resetting a password
- * over a video call.
- */
-export const SEED_MANUFACTURER_EMAIL = 'owner@marmaracam.local'
-export const SEED_MANUFACTURER_PASSWORD = 'phase3-pilot-manufacturer-password'
-
-/**
- * The customer sign-in for `e2e/core-flow.spec.ts` step 2.
- *
- * Phase 4's gate is *a **signed-in** customer walks the wizard to `READY`*. Anonymous drafts
- * are task 4.5, in the second half — until then `createProject` refuses a caller with no
- * identity, because `04` §Project's CHECK constraint would otherwise reject the row.
- *
- * Same reasoning as the other two constants: development and test databases only.
- */
-export const SEED_CUSTOMER_EMAIL = 'musteri@pergola.local'
-export const SEED_CUSTOMER_PASSWORD = 'phase4-core-flow-customer-password'
+export * from './accounts'
 
 type CompanySpec = {
   id?: string
@@ -207,7 +198,7 @@ async function seedCommon(prisma: PrismaClient, adminId?: string) {
 
   const admin = await upsertUser(prisma, {
     ...(adminId === undefined ? {} : { id: adminId }),
-    email: ADMIN_EMAIL,
+    email: SEED_ADMIN_EMAIL,
     fullName: 'Platform Admin',
     globalRole: 'ADMIN',
   })
@@ -216,7 +207,7 @@ async function seedCommon(prisma: PrismaClient, adminId?: string) {
   // cannot sign in as, and the failure would read as a broken gate rather than a stale row.
   await prisma.user.update({
     where: { id: admin.id },
-    data: { passwordHash: await hash(SEED_ADMIN_PASSWORD, ARGON2_OPTIONS) },
+    data: { passwordHash: await hash(SEED_PASSWORD, ARGON2_OPTIONS) },
   })
 
   return { ...geo, settings, ...catalogue }
@@ -246,10 +237,10 @@ const DEMO_COMPANIES: CompanySpec[] = [
     displayName: 'Ege Pergola',
     status: 'VERIFIED',
     cityPlate: 35, // İzmir
-    owner: { email: 'owner@egepergola.local', fullName: 'Deniz Ege' },
+    owner: { email: SEED_MANUFACTURER_EMAIL, fullName: 'Deniz Ege' },
     members: [
-      { email: 'satis@egepergola.local', fullName: 'Sinem Ak', role: 'SALES' },
-      { email: 'yonetici@egepergola.local', fullName: 'Kaan Ünal', role: 'ADMIN' },
+      { email: SEED_SALES_EMAIL, fullName: 'Sinem Ak', role: 'SALES' },
+      { email: SEED_COMPANY_ADMIN_EMAIL, fullName: 'Kaan Ünal', role: 'ADMIN' },
     ],
   },
   {
@@ -258,8 +249,8 @@ const DEMO_COMPANIES: CompanySpec[] = [
     displayName: 'Marmara Cam Sistemleri',
     status: 'VERIFIED',
     cityPlate: 34, // İstanbul
-    owner: { email: 'owner@marmaracam.local', fullName: 'Elif Şahin' },
-    members: [{ email: 'satis@marmaracam.local', fullName: 'Burak Yıldız', role: 'SALES' }],
+    owner: { email: SEED_PILOT_OWNER_EMAIL, fullName: 'Elif Şahin' },
+    members: [{ email: SEED_PILOT_SALES_EMAIL, fullName: 'Burak Yıldız', role: 'SALES' }],
   },
   {
     slug: 'anadolu-gunes-kontrol',
@@ -292,7 +283,7 @@ async function seedDemo(prisma: PrismaClient): Promise<SeedSummary> {
 
   let companies = 0
   let memberships = 0
-  const emails = new Set<string>([ADMIN_EMAIL])
+  const emails = new Set<string>([SEED_ADMIN_EMAIL])
 
   for (const spec of DEMO_COMPANIES) {
     const result = await upsertCompany(prisma, spec)
@@ -323,7 +314,7 @@ async function seedDemo(prisma: PrismaClient): Promise<SeedSummary> {
     await prisma.user.update({
       where: { id: customer.id },
       data: {
-        passwordHash: await hash(SEED_CUSTOMER_PASSWORD, ARGON2_OPTIONS),
+        passwordHash: await hash(SEED_PASSWORD, ARGON2_OPTIONS),
         emailVerifiedAt: new Date(),
       },
     })
@@ -363,14 +354,14 @@ async function seedMatchableSupply(prisma: PrismaClient): Promise<void> {
       import('@node-rs/argon2'),
       import('@/modules/iam/domain/password'),
     ])
-    const passwordHash = await hash(SEED_MANUFACTURER_PASSWORD, ARGON2_OPTIONS)
+    const passwordHash = await hash(SEED_PASSWORD, ARGON2_OPTIONS)
     await prisma.user.updateMany({
-      where: { email: { in: ['owner@egepergola.local', 'owner@anadolugunes.local'] } },
+      where: { email: { in: [SEED_MANUFACTURER_EMAIL, 'owner@anadolugunes.local'] } },
       data: { passwordHash },
     })
     await prisma.user.updateMany({
       where: {
-        email: { in: ['owner@egepergola.local', 'owner@anadolugunes.local'] },
+        email: { in: [SEED_MANUFACTURER_EMAIL, 'owner@anadolugunes.local'] },
         emailVerifiedAt: null,
       },
       data: { emailVerifiedAt: new Date() },
@@ -537,14 +528,14 @@ async function seedPilotManufacturer(prisma: PrismaClient): Promise<void> {
     import('@/modules/iam/domain/password'),
   ])
 
-  const user = await prisma.user.findUnique({ where: { email: SEED_MANUFACTURER_EMAIL } })
+  const user = await prisma.user.findUnique({ where: { email: SEED_PILOT_OWNER_EMAIL } })
   const company = await prisma.company.findUnique({ where: { slug: 'marmara-cam-sistemleri' } })
   if (user === null || company === null) return
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      passwordHash: await hash(SEED_MANUFACTURER_PASSWORD, ARGON2_OPTIONS),
+      passwordHash: await hash(SEED_PASSWORD, ARGON2_OPTIONS),
       emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
     },
   })

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { SEED_CUSTOMER_EMAIL } from '../prisma/seed/accounts'
+
 /**
  * `/hesap/verilerim` — the account's own controls over its own data, `19` §Data subject
  * rights.
@@ -21,7 +23,7 @@ import { expect, test } from '@playwright/test'
  * not signing in).
  */
 
-const CUSTOMER = 'musteri@pergola.local'
+const CUSTOMER = SEED_CUSTOMER_EMAIL
 
 test.describe('KVKK · the account can reach its own data controls', () => {
   test('the page is behind the auth wall', async ({ page }) => {

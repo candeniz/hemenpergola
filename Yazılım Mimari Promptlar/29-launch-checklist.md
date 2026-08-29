@@ -82,7 +82,7 @@ sequencing is `ADR-030`'s, not a preference.
 | F3 | Build profiles | ✅ | `mobile/eas.json` — development / preview / production, autoIncrement on both build-producing profiles; `preview` carries a reachable `EXPO_PUBLIC_API_URL` written per run by `scripts/tunnel.mjs` (13.3), HTTPS so no cleartext exception exists anywhere; NOT in CI (no credentials; 11.1's reasoning stands) |
 | F4 | Store listing, tr + en | ✅ | `mobile/store/listing.tr.md`, `listing.en.md` — name, short/long copy, keywords, screenshot plan, age+category with reasons; claims cross-checked against `00` and `docs/index.html` |
 | F5 | Data-safety declarations, derived from `19` + `04` | ✅ | `mobile/store/veri-guvenligi.md` — per-class rows, deletion path (10.2's flow), no tracking/ads/diagnostics |
-| F6 | Expo account + EAS projectId | ⏳ | **user** — unlocks `eas build`, and push-token fetch on some dev paths (Q32) |
+| F6 | Expo account + EAS projectId | ✅ | done 2026-08-29 — `expo.dev/accounts/enesaakkus/projects/hemen-pergola`; `projectId` and `owner` are in `mobile/app.json`, and a `preview` build has run (it is what took `versionCode` to 2). F7 is still open, so standalone push stays silent (Q32) |
 | F7 | Firebase project → FCM key in EAS | ⏳ | **user** — standalone Android push (Q32); dev path works without |
 | F8 | Apple Developer account ($99/yr) | ⏳ | **user** — bundle id registration, signing, TestFlight; also iOS push |
 | F9 | Google Play Console ($25 once) | ⏳ | **user** — package registration, signing, internal testing track |
@@ -91,8 +91,8 @@ sequencing is `ADR-030`'s, not a preference.
 
 ## Summary
 
-**47 rows. Evidenced: 24 · Waiting on a named human or infrastructure step: 25 · Not
-started: 0.**
+**47 rows. Evidenced: 25 · Waiting on a named human or infrastructure step: 24 · Not
+started: 0.** (F6 crossed over on 2026-08-29.)
 
 The two numbers exceed 47 because **C2 and C10 carry both marks** — an error-tracking port
 that is built and a provider that is not contracted; a matching path measured here and

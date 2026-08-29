@@ -146,8 +146,8 @@ Her turda:
 Demo hesapları `"Hemen Pergola.cmd"` penceresindekilerle aynı:
 
 ```
-Musteri   musteri@pergola.local    / phase4-core-flow-customer-password
-Uretici   owner@egepergola.local   / phase3-pilot-manufacturer-password
+Musteri   musteri@dikont.com   / 1234
+Uretici   uretici@dikont.com   / 1234
 ```
 
 ---

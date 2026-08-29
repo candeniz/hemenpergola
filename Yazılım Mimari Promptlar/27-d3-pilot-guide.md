@@ -17,8 +17,8 @@ docker compose up -d && pnpm seed demo && pnpm dev
 | | |
 |---|---|
 | Adres | `http://localhost:3000/giris` |
-| E-posta | `owner@marmaracam.local` |
-| Parola | `phase3-pilot-manufacturer-password` |
+| E-posta | `uretici2@dikont.com` |
+| Parola | `1234` |
 | Firma | Marmara Cam Sistemleri (İstanbul, doğrulanmış) |
 
 Hesap **bilerek eksik bırakıldı**: ürünler işaretli, hizmet bölgesi tanımlı, **fiyat listesi

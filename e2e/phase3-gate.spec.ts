@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
 
+import { SEED_PASSWORD, SEED_PILOT_OWNER_EMAIL } from '../prisma/seed/accounts'
+
 /**
  * The Phase 3 gate — `21-development-roadmap.md`: *a verified company has a published price
  * book, service areas and products — that is, it is **matchable**.*
@@ -28,9 +30,9 @@ import { expect, test, type APIRequestContext } from '@playwright/test'
  * archives whatever was live.
  */
 
-/** `SEED_MANUFACTURER_EMAIL` / `SEED_MANUFACTURER_PASSWORD` in `prisma/seed/profiles.ts`. */
-const OWNER_EMAIL = 'owner@marmaracam.local'
-const OWNER_PASSWORD = 'phase3-pilot-manufacturer-password'
+/** The D3 pilot company — deliberately the one seeded WITHOUT a price book. */
+const OWNER_EMAIL = SEED_PILOT_OWNER_EMAIL
+const OWNER_PASSWORD = SEED_PASSWORD
 
 type Envelope<T> = { data: T } | { error: { code: string; message: string } }
 

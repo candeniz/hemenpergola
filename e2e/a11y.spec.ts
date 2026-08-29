@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { SEED_CUSTOMER_EMAIL, SEED_PILOT_OWNER_EMAIL } from '../prisma/seed/accounts'
+
 /**
  * The a11y stage of the pipeline (`23` §Pipeline). Unlike the core-flow gate this runs for
  * real from Phase 0 — the shells, the type scale and the token palette are exactly the
@@ -50,8 +52,8 @@ const ROUTES = [
 ] as const
 
 const SEED_EMAILS = {
-  customer: 'musteri@pergola.local',
-  manufacturer: 'owner@marmaracam.local',
+  customer: SEED_CUSTOMER_EMAIL,
+  manufacturer: SEED_PILOT_OWNER_EMAIL,
 } as const
 
 for (const route of ROUTES) {

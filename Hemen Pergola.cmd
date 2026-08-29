@@ -72,9 +72,9 @@ echo.
 echo   Hazir: http://localhost:3000
 echo.
 echo   Demo hesaplari:
-echo     Musteri   musteri@pergola.local      / phase4-core-flow-customer-password
-echo     Uretici   owner@egepergola.local     / phase3-pilot-manufacturer-password
-echo     Admin     admin@pergola.local        / phase2-gate-admin-password
+echo     Musteri   musteri@dikont.com    / 1234
+echo     Uretici   uretici@dikont.com    / 1234
+echo     Admin     admin@dikont.com      / 1234
 echo.
 echo   Giden e-postalar:  http://localhost:3000/api/dev/mailbox
 echo   MinIO konsolu:     http://localhost:9001  (pergola / pergola-secret)

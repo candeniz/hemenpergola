@@ -24,7 +24,7 @@
     },
     "android": {
       "package": "com.hemenpergola.app",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#162839"
@@ -39,6 +39,13 @@
           "color": "#162839"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7f535d92-7343-4372-ba18-d82cc6a9b526"
+      }
+    },
+    "owner": "enesaakkus"
   }
 }
