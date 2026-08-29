@@ -49,3 +49,23 @@ giriş ekranındaki alandan çalışma anında değiştirilebiliyor, yani APK bi
 (`mobile/TEST-APK.md`). `production` bu bayrağı **taşımaz** ve
 `test/mobile-server-override.test.ts` bunu iddia eder: mağaza sürümünde uygulamayı yabancı
 bir sunucuya yönlendirebilen bir alan, kimlik bilgisini o sunucuya teslim eder.
+
+## Bağımlılık sürümleri — SDK ne diyorsa o, bir istisnayla
+
+`npx expo install --check` (ya da `pnpm --filter mobile run doctor`) Expo SDK 57'nin
+beklediği sürümleri söyler ve depo onlara hizalıdır. Bu bir stil tercihi değil: ilk
+`preview` build'i tam olarak bu yüzden düştü — `expo-modules-core` `WorkletRuntime::executeSync`
+çağırıyordu, kurulu `react-native-worklets` onu dışa aktarmıyordu, ve `gradlew` içinde
+patladı. İkisi de SDK 57'nin içindeydi; sapma yama seviyesindeydi. Bunu bir daha bulut
+build'i yakarak öğrenmemek için `expo-doctor` CI'nın mobil adımında koşuyor.
+
+**Tek dışlama: `typescript`.** Doctor `~6.0.3` istiyor, depo `5.9.3`'te ve bu **kök
+workspace'in kararı**. Bir TypeScript major'ı web'i, `src/` altındaki her şeyi, testleri ve
+CI'yı ilgilendirir; mobil paketin onu bir yan etki olarak sürüklemesi, kararı veren yerin
+dışında vermek olurdu. `mobile/package.json`'daki `expo.install.exclude` bunu kayda geçirir,
+doctor da artık bu yüzden yeşil kalır — sarı bırakılmış bir uyarı değil, yazılmış bir karar.
+TS 6 geçişi `25-progress.md` §Open questions'ta Q35 olarak duruyor.
+
+Komut, `run` ile: `pnpm doctor` pnpm'in yerleşik komutu olduğu için script'i gölgeler, ve
+script'e `expo-doctor` adı verilemez — doctor'ın kendisi `node_modules/.bin` ile çakışan
+script adını hata sayıyor.

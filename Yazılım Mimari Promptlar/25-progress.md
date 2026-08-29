@@ -20,7 +20,7 @@ checklist and submitted to the stores after the web launches. It exposed that `0
 entry points has been half true — 46 of 132 service capabilities have no `/api/v1` path —
 which is Phase 10.
 
-What remains is mostly not code: 24 of `29-launch-checklist.md`'s **47** items wait on a
+What remains is mostly not code: 25 of `29-launch-checklist.md`'s **48** items wait on a
 legal entity, processor agreements, hosting and provider accounts, an editorial session with
 a pilot manufacturer, five product decisions, and one Android phone. (Recounted in 13.5 —
 the number here and in `29` said "18 of 36" against a file that had grown through Phases
@@ -63,7 +63,7 @@ proven — not when the code is written.
 | 6 | Offer request lifecycle | **✅ gate met · 10/10** | `e2e/core-flow.spec.ts` green — **all nine F1 steps, 2026-08-24**: configure → offers → select+consent → accept+disclosure → survey → offer (KDV once) → WON |
 | 7 | Communication + trust | **✅ gate met · 3/3** | every notification event fires with a `tr` template — **proven 2026-08-24**, both halves: `notification-catalog.test.ts` renders all 20 catalogue events and `templates.test.ts` renders the `auth.*` family, each from the code's own list. Messaging (ADR-028), reviews with moderation, and the recompute-equality-tested aggregates all landed the same day |
 | 8 | Public site + SEO | **✅ gate met · 5/5** | performance budgets met in CI — **proven 2026-08-24, run #15**: the strict five-template Lighthouse stage (no skip path, median-of-3, budgets+conditions welded to `18`) ran 4.6 min against the real stack and passed. Slugs+redirects (8.5), public pages+sitemap+JSON-LD (8.1+8.4), city pages from supply (8.2), the block CMS (8.3), brand swap (Q1) |
-| 9 | Hardening + launch | **🟡 · 25 evidenced / 24 waiting (47 rows)** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
+| 9 | Hardening + launch | **🟡 · 25 evidenced / 25 waiting (48 rows)** | pre-launch checklist ticked by evidence — `29-launch-checklist.md` carries every item with a test name or the thing it waits on. **Code-side complete 2026-08-25: there is no remaining code task.** The waiting items are five chains with named owners — Q2 legal (counsel, İYS, processor agreements), provisioning (hosting/DB/storage/mail/SMS, backup rehearsal, worker image; never previously named as a task), editorial (price guides, real portfolios, pilot catalogue Q11–17), product decisions (Q10, Q19, request limit, edge limiter, public-CSP follow-up), and one Android device |
 | 10 | The API the mobile app consumes | **✅ gate met · 4/4** | `test/api-surface.test.ts` green — **proven 2026-08-25, in the tree, 5/5.** 76 of 132 missing at first honest measurement → 0 of 133: every method registered with `serviceMethod()` is reachable through a route handler or sits on a reasoned exception list (`WEB_ONLY`: endWebSession, listPublicSlugs · `INTERNAL`: listCompaniesCoveringPoint · `NO_SURFACE`: **empty, and the empty list is the assertion**). 10.1 decided and measured, 10.2 KVKK + core flow, 10.3 erasure verification + supply/reviews/profile, 10.4 the public reads and the rest |
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
@@ -3962,10 +3962,70 @@ duracak kod olurdu.
 bekleyen oldu — `29` §Summary ve buradaki §Status ile Faz 9 satırı buna göre düzeltildi.
 `mobile/eas.json` ölü bir tünel adresiyle yamalı kalmıştı, geri alındı ve commit'lenmedi.
 
+### 2026-08-29 — Faz 13.6b · düşen build, sürüm sapması ve sessizce yok sayılan iki ayar
+
+**İlk `preview` build'i düştü ve sebebi native'di.** `expo-modules-core@57.0.13`,
+`react-native-worklets@0.12.1`'de bulunmayan `WorkletRuntime::executeSync`'i çağırıyordu;
+hata `Run gradlew` adımında, `WorkletJSCallInvoker.cpp:27`'de patladı. İkisi de SDK 57'nin
+içindeydi — sapma **yama** seviyesindeydi, major değil. `expo doctor` bunu build'in içinde
+zaten raporlamıştı ve kimse okumamıştı. Kaydediliyor çünkü kaydedilmemiş bir başarısızlık
+iki kez yaşanır.
+
+**1 · Sürümler hizalandı.** `npx expo install --check`'in beklediklerine: `expo ~57.0.18`,
+`expo-constants ~57.0.16`, `expo-linking ~57.0.8`, `expo-notifications ~57.0.15`,
+`expo-router ~57.0.17`, `expo-secure-store ~57.0.2`, `react-native 0.86.3`,
+`eslint-config-expo ~57.0.2`. Hepsi SDK 57'nin içinde; major yükseltme yok.
+
+`typescript` **alınmadı**. Doctor `~6.0.3` istiyor, depo `5.9.3`'te, ve bu kök workspace'in
+kararı — bir TypeScript major'ı `src/`'yi, testleri, lint yapılandırmasını ve CI'yı
+ilgilendirir; mobil paketin onu yan etki olarak sürüklemesi kararı veren yerin dışında
+vermek olurdu. `mobile/package.json`'a `expo.install.exclude` ile yazıldı, gerekçe
+`mobile/store/surumleme-ve-imza.md`'de, geçişin kendisi **Q35** olarak tabloda.
+
+pnpm 11'in asgari yayın yaşı yedi paketi reddetti; `pnpm install` bunları
+`pnpm-workspace.yaml`'daki `minimumReleaseAgeExclude`'a ekledi. Ne olduğu ve neden alındığı
+dosyada yazılı.
+
+Hizalama **yeni bir sorun doğurdu ve o da yakalandı**: `expo-asset@57.0.15`
+`expo-constants: ~57.0.15` istiyor, SDK'nın beklediği `57.0.16` bunu karşılıyor ama pnpm iki
+ayrı kopya çözdü — ve bir native build tek kopya taşıyabilir. `overrides` ile tekilleştirildi.
+Bu, düşen build'in sınıfının bir katman aşağısı: JS testlerinin göremeyeceği, `gradlew`
+zamanında patlayacak bir şey.
+
+**2 · `app.json`'daki iki ölü anahtar silindi.** `newArchEnabled` **doğrulandı**: dize
+`@expo/config-types`'ın `ExpoConfig`'inde yok, Expo araç zincirinde ve RN gradle
+şablonlarında hiç geçmiyor — RN 0.86'da yeni mimari koşulsuz. Yani anahtar zaten
+okunmuyordu; silmek davranışı değiştirmiyor, doctor'ın "unknown property" demesinin sebebi
+buydu.
+
+`splash` ise **gerçekten bir kayıptı**. SDK 57'de açılış ekranı `expo-splash-screen`
+eklentisiyle yapılandırılıyor; `app.json`'un kökündeki blok hiç okunmuyordu, yani
+`29` §F2'nin "ikon ve splash ✅" iddiası yanlıştı — ikon vardı, splash yoktu. Eklentiye
+taşındı (aynı yer tutucu görsel, aynı `#162839` zemin) ve `expo-splash-screen` bağımlılık
+olarak eklendi; paket hiç kurulu değildi, yani eklenti olmadan taşımanın da bir anlamı
+olmayacaktı.
+
+**3 · Doctor CI'ya girdi.** `pnpm --filter mobile run doctor`, `ci.yml`'in mobil adımında
+lint+typecheck'in yanında. **Doctor'dan hiçbir kontrol dışlanmadı** — 21/21 temiz. Tek
+dışlama doctor'ın *bağımlılık* kontrolündeki `typescript` ve o da yukarıda yazılı. `run`
+zorunlu: `pnpm doctor` pnpm'in yerleşiği, script'e `expo-doctor` adı da verilemiyor çünkü
+doctor `node_modules/.bin` ile çakışan script adını hata sayıyor.
+
+**4 · Q34 `29`'a girdi** (§B, satır **B7**). Faz 9 kapısı `29`'un tam tikli olması; yalnız
+`25`'in soru tablosunda duran bir lansman riski, kimsenin okumadığı bir risktir —
+`ADR-022`/Q23'ün dersi tam olarak bu. Mekanizma bu turda kurulmadı, satır yazıldı. Sayım 48
+satır, 25 kanıtlı / 25 bekleyen.
+
+**5 · Tünel uyarısı tamamlandı.** Kutu MinIO kimlik bilgilerini söylüyordu; 13.6a'dan sonra
+doğru olan daha basit ve daha kötü: demo parolaları `1234` ve biri (`admin@dikont.com`)
+yönetim paneli admini, yani tünel açıkken `/yonetim` internette. Adresin rastgele olması
+güvenlik değil — tahmin edilmeye karşı korur, sızmaya karşı korumaz.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |
 | Q34 | **Nothing stops `pnpm seed` from running against production.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal. `20` §Test data and `23` §Environments describe seeds as a `local`/`preview`/test thing, and `prisma/seed/accounts.ts` leans on that when it justifies a four-character password — but a described convention is not a mechanism, and the profiles wipe-and-rewrite users and companies. Found while moving the demo credentials in 13.6a and deliberately NOT fixed there (out of that task's scope). The fix is small: refuse unless `APP_ENV` is `local`/`test`, with an explicit override flag for `preview`. | nothing today; the first production database is where it stops being theoretical | the guard is the operator's memory, which is the control `19` §Data location does not accept anywhere else |
 | Q33 | **The KVKK data export does not carry the notification surface.** `buildExportPackage` (`modules/privacy/application/privacy-service.ts`) collects the user row, consents, projects, offer requests, reviews and sent messages — and **not** `PushToken`, `NotificationPreference` or `Notification`. All three are personal data held about the subject (`04`, `19` §Retention), so an export that omits them is incomplete in the KVKK sense, not merely thin. Narrowed here in 13.5: the phase-12 documentation debt it used to also name is **closed** — `13`'s channel table, flow and event catalogue (generated from `domain/catalog.ts` now, with a drift test), `04` §PushToken, `06`'s three endpoints, `19`'s processor and retention entries, and `29`'s recount. **Third deferral refused: this goes in 13.6, alone.** | 13.6 · a complete subject access request | the export ships silently incomplete, which is the failure mode a regulator asks about |
 | ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |

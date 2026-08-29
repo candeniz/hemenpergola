@@ -69,6 +69,21 @@ jobs:
       - name: Mobile lint + typecheck (ADR-030 — the Expo app shares the pipeline, not the store)
         run: pnpm --filter mobile lint && pnpm --filter mobile typecheck
 
+      # The native half, which lint and typecheck cannot see. The first preview build died
+      # inside `gradlew` on `expo-modules-core` calling a symbol `react-native-worklets` did
+      # not export — a version skew INSIDE SDK 57 that expo-doctor had already reported and
+      # nobody had read (13.6b). It also catches the two things that make a config key
+      # silently dead (`newArchEnabled`, `splash`) and duplicate native modules.
+      #
+      # Nothing is excluded from doctor itself; the one dependency it is told to ignore is
+      # `typescript`, argued in `mobile/store/surumleme-ve-imza.md`. Red here fails the job.
+      #
+      # `run` is not optional: `pnpm doctor` is a built-in pnpm command and would shadow
+      # the script. The script cannot be renamed to `expo-doctor` either — doctor itself
+      # fails a script whose name collides with a binary in `node_modules/.bin`.
+      - name: Mobile doctor (Expo SDK 57 — the native half a typecheck cannot see)
+        run: pnpm --filter mobile run doctor
+
       - name: Format
         run: pnpm format:check
 

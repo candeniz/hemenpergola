@@ -64,8 +64,11 @@ script bunu büyük harflerle yazar ve tüm yığını kapatır — sessizce yen
 uygulamanın elindeki adres eskisi olur.
 
 > Tünel açıkken yerel sunucun internete açıktır. MinIO kimlik bilgileri `.env.example`
-> içinde, yani public depoda: adresi bulan okumakla kalmaz, depoya yazabilir de. Yalnız
-> demo verisiyle çalış, iş bitince Ctrl+C ile kapat.
+> içinde, yani public depoda: adresi bulan okumakla kalmaz, depoya yazabilir de. Dahası
+> demo parolaları `1234` ve bunlardan biri (`admin@dikont.com`) yönetim paneli admini —
+> yani tünel açıkken `/yonetim` internette. Adresin rastgele olması güvenlik değildir:
+> tahmin edilmeye değil, sızmaya karşı korumasızdır. Yalnız demo verisiyle çalış, iş
+> bitince Ctrl+C ile kapat.
 
 ---
 

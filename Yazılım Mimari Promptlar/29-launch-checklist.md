@@ -32,6 +32,7 @@ Status legend: ✅ evidenced · ⏳ code ready, waiting on a named human/infra s
 | B4 | CAPTCHA / lockout after failed logins | ⏳ | bekliyor: **Q10** — provider choice + KVKK assessment; `noopCaptchaProvider` port is in place, progressive delay + lockout notice work today |
 | B5 | Virus scanning on uploads | ⏳ | bekliyor: **Q19** — scanner choice; `virusScanStatus` gates serving today (PENDING files serve only to their uploader) |
 | B6 | Dependency audit in CI | ⏳ | bekliyor: enable Dependabot on the repo (one setting); lockfile committed |
+| B7 | **`pnpm seed` cannot be run against production** | ⏳ | **not built, and today nothing stops it.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal — while the profiles wipe and rewrite users, companies and memberships, and `prisma/seed/accounts.ts` seeds a four-character password for an account that holds the admin panel. `20` §Test data and `23` §Environments *describe* seeds as a `local`/`preview`/test thing; description is not a mechanism. Found in 13.6a, written here in 13.6b because a launch risk that lives only in `25`'s question table is a risk nobody reads (`ADR-022`/Q23 is that lesson). bekliyor: **a product/ops decision** on the guard's shape — refuse unless `APP_ENV` is `local`/`test`, with an explicit override for `preview`. Tracked as Q34 |
 
 ## C · Operations
 
@@ -78,7 +79,7 @@ sequencing is `ADR-030`'s, not a preference.
 | # | Item | Status | Evidence / waiting on |
 |---|---|---|---|
 | F1 | App identity: name, bundle id, version scheme, locales | ✅ | `mobile/app.json` — com.hemenpergola.app, 0.1.0, tr+en; versioning rules in `mobile/store/surumleme-ve-imza.md` |
-| F2 | Icon and splash — placeholder, token-derived | ✅ (placeholder) | `scripts/generate-mobile-brand.mjs` → `mobile/assets/`; PLACEHOLDER by declaration — real brand art is the user's call (13.1) |
+| F2 | Icon and splash — placeholder, token-derived | ✅ (placeholder) | `scripts/generate-mobile-brand.mjs` → `mobile/assets/`; PLACEHOLDER by declaration — real brand art is the user's call (13.1). **The splash half of this was false until 13.6b**: SDK 57 configures it through the `expo-splash-screen` plugin and the block at the root of `app.json` was not read at all (the package was not even installed), so the tick covered an icon and nothing else. Plugin-configured now, same art, same `#162839`; `expo-doctor` in CI fails on the schema error that hid it |
 | F3 | Build profiles | ✅ | `mobile/eas.json` — development / preview / production, autoIncrement on both build-producing profiles; `preview` carries a reachable `EXPO_PUBLIC_API_URL` written per run by `scripts/tunnel.mjs` (13.3), HTTPS so no cleartext exception exists anywhere; NOT in CI (no credentials; 11.1's reasoning stands) |
 | F4 | Store listing, tr + en | ✅ | `mobile/store/listing.tr.md`, `listing.en.md` — name, short/long copy, keywords, screenshot plan, age+category with reasons; claims cross-checked against `00` and `docs/index.html` |
 | F5 | Data-safety declarations, derived from `19` + `04` | ✅ | `mobile/store/veri-guvenligi.md` — per-class rows, deletion path (10.2's flow), no tracking/ads/diagnostics |
@@ -91,8 +92,9 @@ sequencing is `ADR-030`'s, not a preference.
 
 ## Summary
 
-**47 rows. Evidenced: 25 · Waiting on a named human or infrastructure step: 24 · Not
-started: 0.** (F6 crossed over on 2026-08-29.)
+**48 rows. Evidenced: 25 · Waiting on a named human or infrastructure step: 25 · Not
+started: 0.** (F6 crossed over on 2026-08-29; B7 was added the same day — a risk that
+existed before it had a row here.)
 
 The two numbers exceed 47 because **C2 and C10 carry both marks** — an error-tracking port
 that is built and a provider that is not contracted; a matching path measured here and

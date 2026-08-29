@@ -5,15 +5,9 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "platforms": ["ios", "android"],
     "scheme": "hemenpergola",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#162839"
-    },
     "ios": {
       "bundleIdentifier": "com.hemenpergola.app",
       "buildNumber": "1",
@@ -37,6 +31,15 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#162839"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#162839",
+          "imageWidth": 200
         }
       ]
     ],
