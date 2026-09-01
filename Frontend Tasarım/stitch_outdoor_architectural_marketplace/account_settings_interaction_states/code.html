@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings States</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f8f9fa",
+                        "outline": "#74777d",
+                        "on-tertiary-container": "#d87316",
+                        "secondary": "#006d37",
+                        "surface-dim": "#d9dadb",
+                        "on-warning-container": "#2b1700",
+                        "surface-container-low": "#f3f4f5",
+                        "primary-container": "#162839",
+                        "on-primary-fixed-variant": "#37485b",
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary-container": "#7d8fa4",
+                        "on-error-container": "#93000a",
+                        "primary": "#011323",
+                        "surface-tint": "#4e6073",
+                        "on-background": "#191c1d",
+                        "outline-variant": "#c4c6cd",
+                        "on-secondary-fixed": "#00210c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "warning": "#f78b30",
+                        "surface": "#ffffff",
+                        "secondary-container": "#7bf8a1",
+                        "text-muted": "#43474c",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-container": "#411d00",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "primary-fixed": "#d2e4fb",
+                        "on-secondary-container": "#0b723b",
+                        "inverse-primary": "#b6c8df",
+                        "surface-variant": "#e1e3e4",
+                        "warning-container": "#ffdfc0",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-fixed-dim": "#80d997",
+                        "surface-container": "#edeeef",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "primary-fixed-dim": "#b6c8df",
+                        "on-secondary-fixed-variant": "#005228",
+                        "secondary-fixed": "#9bf6b2",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary": "#220c00",
+                        "on-surface-variant": "#43474c",
+                        "inverse-surface": "#2e3132",
+                        "text-main": "#191c1d",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-primary-fixed": "#0a1d2d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-lg": "24px",
+                        "margin-desktop": "32px",
+                        "stack-sm": "8px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "sidebar-width": "280px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "headline-sm": ["Montserrat"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-background text-text-main antialiased min-h-screen p-margin-desktop font-body-md">
+<header class="mb-stack-lg border-b border-outline/10 pb-stack-md">
+<h1 class="font-headline-lg text-headline-lg text-primary">Settings States</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Interaction states for profile configuration</p>
+</header>
+<main class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- State 1: Saving -->
+<article class="bg-surface rounded-lg shadow-sm border border-outline/10 p-stack-lg flex flex-col gap-stack-md relative overflow-hidden pointer-events-none opacity-80">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-stack-sm border-b border-outline/10 pb-2">Profile Details</h2>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Full Name</label>
+<input class="bg-surface-container-low border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none" disabled="" type="text" value="Jane Doe"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Email Address</label>
+<input class="bg-surface-container-low border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none" disabled="" type="email" value="jane.doe@structura.com"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Role</label>
+<input class="bg-surface-container-low border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none" disabled="" type="text" value="Senior Architect"/>
+</div>
+<div class="mt-auto pt-stack-md border-t border-outline/10 flex justify-end">
+<button class="bg-primary-container text-on-primary-container font-label-lg text-label-lg py-2 px-6 rounded flex items-center gap-2 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined spin text-[18px]">progress_activity</span>
+                    Saving...
+                </button>
+</div>
+</article>
+<!-- State 2: Saved -->
+<article class="bg-surface rounded-lg shadow-sm border border-outline/10 p-stack-lg flex flex-col gap-stack-md relative overflow-hidden">
+<div class="bg-secondary-container text-on-secondary-container px-4 py-3 rounded mb-stack-sm flex items-center gap-2 font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                Changes saved successfully.
+            </div>
+<h2 class="font-headline-sm text-headline-sm text-primary mb-stack-sm border-b border-outline/10 pb-2">Profile Details</h2>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Full Name</label>
+<input class="bg-transparent border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="Jane Doe"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Email Address</label>
+<input class="bg-transparent border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="email" value="jane.doe@structura.com"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Role</label>
+<input class="bg-transparent border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="Senior Architect"/>
+</div>
+<div class="mt-auto pt-stack-md border-t border-outline/10 flex justify-end">
+<button class="bg-primary text-on-primary font-label-lg text-label-lg py-2 px-6 rounded hover:bg-primary/90 transition-colors">
+                    Save Changes
+                </button>
+</div>
+</article>
+<!-- State 3: Error -->
+<article class="bg-surface rounded-lg shadow-sm border border-error/30 p-stack-lg flex flex-col gap-stack-md relative overflow-hidden">
+<h2 class="font-headline-sm text-headline-sm text-primary mb-stack-sm border-b border-outline/10 pb-2">Profile Details</h2>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Full Name</label>
+<input class="bg-transparent border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="Jane Doe"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-error">Phone Number</label>
+<input class="bg-error-container/10 border-2 border-error rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none text-error" type="tel" value="Invalid Phone Number"/>
+<p class="font-body-sm text-body-sm text-error mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                    Please enter a valid format (e.g. +1 555 123 4567)
+                </p>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Role</label>
+<input class="bg-transparent border border-outline/20 rounded px-3 py-2 text-text-main font-body-md w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="Senior Architect"/>
+</div>
+<div class="mt-auto pt-stack-md border-t border-outline/10">
+<div class="text-error font-body-sm text-body-sm mb-3 flex items-start gap-2 bg-error-container/20 p-2 rounded">
+<span class="material-symbols-outlined text-[16px] mt-0.5">warning</span>
+<span>There was a problem saving your changes. Please review the highlighted fields and try again.</span>
+</div>
+<div class="flex justify-end">
+<button class="bg-primary text-on-primary font-label-lg text-label-lg py-2 px-6 rounded hover:bg-primary/90 transition-colors">
+                        Retry Save
+                    </button>
+</div>
+</div>
+</article>
+</main>
+</body></html>
