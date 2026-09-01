@@ -182,6 +182,31 @@ The two request-detail screens are the **same route in two states**, split by
 `super_admin_invoices_transactions`, `super_admin_configurator_builder`. Designs exist;
 features do not. Leave them out of the navigation entirely rather than shipping dead links.
 
+### Out of the navigation until they are built (task 13.8)
+
+The rule above was broken for a year in a quieter way: **eleven links pointed at pages
+nobody had built**, and a link to a 404 is the same promise as a disabled link, only louder.
+`nav-items.test.ts` now resolves every href against `src/app`, so this cannot recur silently.
+
+They are out of the navigation and come back one at a time, each with its page. The reason
+differs and the difference is what decides the order:
+
+| Route | Screen | Why not yet |
+|---|---|---|
+| `/panel/[id]/ekip` | `manufacturer_team_management` | **Nothing missing but the page.** `listMembers`, `inviteMember`, `changeMemberRole`, `removeMember` all exist. First in line |
+| `/hesap/talepler` | `offer_request_form_arte_outdoor` | Requests are listed per project (`listRequestsForProject`); a cross-project list is a new service method |
+| `/hesap/mesajlar` | `customer_messages_arte_outdoor` | Same shape: threads exist per request, an inbox does not |
+| `/yonetim/musteriler` | `super_admin_customer_management` | No admin customer-list service; `19` §Data minimisation makes what it may show a decision, not a query |
+| `/hesap/ayarlar` | — (compose from settings patterns) | Profile and locale writes are named in `06` §Auth and not built (Phase 10.4) |
+| `/hesap/kayitli-firmalar` | `saved_companies_outdoor_systems` | **No `SavedCompany` table.** A feature, not a page |
+| `/yonetim/sikayetler` | `super_admin_complaints_disputes` | **No `Complaint` table.** Same |
+| `/panel/[id]/analitik` | `manufacturer_performance_analytics` | The aggregates it shows — response time, win rate, views — are not computed. `Company` carries denormalised review ratings and nothing else |
+| `/yonetim/metrikler` | `super_admin_platform_metrics_analytics` | Same: `dashboardCounts` answers "what is waiting now", not a time series |
+| `/yonetim/pazar-fiyatlari` | `super_admin_market_pricing_dashboard` | No aggregate behind it, and `ADR-006` makes what may be aggregated a decision |
+| `/yonetim/bildirimler` | `super_admin_global_notification_settings` | **Redundant.** `/yonetim/ayarlar` is the `PlatformSetting` surface and already holds these values |
+
+`25-progress.md` §Open questions carries the same list with a phase and an owner.
+
 ### System states
 
 `access_denied_permission_required` → `app/[locale]/forbidden.tsx` and the 403 boundary.

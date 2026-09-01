@@ -68,7 +68,7 @@ proven — not when the code is written.
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
 | 13 | Store readiness (13.1–13.5) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). **13.5** the leg that carries that decision — an unreachable server is now a result and a state rather than a rejected promise, the address field reaches the screen where it is needed, and the CSP's development branch revived every strict page under `pnpm dev` (dead since Faz 9). Q33's documentation half closed with it. `29` §F carries eleven rows with owners; submission waits on F6–F11 |
-| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`). **14.2** the 404 and the error boundaries, and the audit that found three links pointing at pages that DO exist under other names |
+| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`). **14.2** the 404 and the error boundaries, and the audit that found three links pointing at pages that DO exist under other names. **13.8** the portal dashboard — the landing point of a manufacturer sign-in, which 404'd — plus `/panel`'s redirect, and eleven dead links out of the navigation with a reason each |
 
 ## Log
 
@@ -4200,10 +4200,63 @@ o satır silinene kadar kırılıyor, on üçüncüsü eklenince hemen kırılı
 gerektirir — internetten keyfi dize kabul eden, kendi hız sınırı ve kendi KVKK kuralı olan bir
 yüzey. Sınırın içinde icat edilmedi.
 
+### 2026-09-02 — Faz 13.8 · navigasyonun ölü bağlantıları, ve girişin varış noktası
+
+**Bu, faz tablosunun "web tamam" dediği bir yerde bulundu.** Fazlar 4, 6, 7, 8 kapıları
+kanıtlı; F1 sürüm kapısı dokuz adımı gerçek sayfalardan yürüyor. Yine de bir üretici giriş
+yaptığında gördüğü ilk şey **Next'in 404'üydü**: `nav-items.ts` Faz 3'ten beri portalın kendi
+"Panel" bağlantısını `/panel/[companyId]`'ye yöneltiyor ve o sayfa hiç yazılmamıştı. Sürüm
+kapısı görmedi çünkü `core-flow.spec.ts` doğrudan `/panel/{id}/talepler`'e gidiyor ve
+**"Panel" düğmesine hiç basmıyor**.
+
+**Ölçüm: sekiz değil, on iki.** 14.2'de yazılan disk-çözümlemeli test envanteri boşaltılınca
+tam liste çıktı — müşteri tarafındaki dördü (`/hesap/talepler`, `/hesap/mesajlar`,
+`/hesap/kayitli-firmalar`, `/hesap/ayarlar`) sayıma dahil değildi.
+
+**Biri yapıldı, on biri navigasyondan çıktı.**
+
+`/panel/[companyId]` — `manufacturer_portal_dashboard_final`. Beş sayı, dönüşüm hunisi,
+süresi yaklaşanlar, son talepler. **Hepsi `listLeadsForCompany`'nin zaten döndürdüğü
+verilerden**; yeni tablo yok. Sayma işi `domain/dashboard-summary.ts`'te, saf ve testli.
+Huni **kümülatif** — kazanılmış bir talep kabul aşamasından da geçmiştir; ayrık saymak her
+şeyi kapatmış bir firmaya "kabul edilen: 0" gösterirdi ve bu veri gibi görünen bir hata olurdu.
+
+Servis metodu yazmak zorunda kaldım (`getPortalDashboard`) ve sebebi mimari: `app/` bir
+domain modülünü import edemez (`CLAUDE.md` 2), sayma ise domain aritmetiği. Sayfa tek soru
+soruyor, servis yanıtlıyor; sorgu yine aynı sorgu.
+
+Tasarımın gösterip bu sayfanın **göstermediği** üç şey: eğilim farkları ("+3 this week"),
+rapor indirme, ve satır başına **müşteri adı**. İlk ikisi bir **geçmiş** gerektiriyor —
+`OfferRequest`'te `createdAt` ve güncel durum var, "geçen salı kaç tanesi bekliyordu"
+yanıtlanabilir değil, yalnızca tahmin edilebilir; ölçülmüş gibi duran bir tahmin, hiç sayı
+olmamasından kötüdür. Üçüncüsü `ADR-006` ve `19` §Disclosure: iletişim verisi **kabulde**,
+kayıtla ve bildirimle açılır. Pano o olay değil.
+
+`/panel` (id'siz) yer tutucu kartı bırakıp karar veriyor: **tek üyelik varsa doğrudan
+`/panel/{id}`'ye yönleniyor**, birden fazlaysa seçici gösteriyor, hiç yoksa kimin davet
+etmesi gerektiğini söylüyor. Her seferinde tek cevaplı bir soru soran seçici, okunmayan ve
+tıklanıp geçilen bir sayfadır.
+
+**On bir bağlantı navigasyondan çıktı**, gerekçeleri `07` §Out of the navigation'da tabloyla,
+ve `25`'te **Q37** olarak faz/sahip ile. Üç sınıf: sayfası eksik olan (`/ekip` — bütün
+servisler hazır, sırada o), bir servis uzakta olanlar, ve bir **özellik** uzakta olanlar
+(`SavedCompany` ve `Complaint` tabloları hiç yok; analitik/metrik/pazar-fiyatı toplamları
+hesaplanmıyor). `/yonetim/bildirimler` gereksiz — `/yonetim/ayarlar` zaten `PlatformSetting`
+yüzeyi.
+
+**E2E'nin bunu neden görmediği de kapandı.** `portal-navigation.spec.ts` üç kabuğu da
+insanın gezdiği gibi geziyor: giriş yap, navigasyondaki **her** girdiye git, 200 iste. Liste
+`nav-items.ts`'ten okunuyor, yani yarın eklenen bir bağlantı yarın yürünüyor. Disk kontrolü
+dosyanın varlığını kanıtlıyor; bu, bağlantının **çalıştığını** — ki bunlar farklı iddialar:
+bir sayfa var olup bir guard'da 500 verebilir.
+
+`nav-items.test.ts`'in envanteri artık **boş**, ve boşluğun kendisi iddia.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
 | Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |
 | Q34 | **Nothing stops `pnpm seed` from running against production.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal. `20` §Test data and `23` §Environments describe seeds as a `local`/`preview`/test thing, and `prisma/seed/accounts.ts` leans on that when it justifies a four-character password — but a described convention is not a mechanism, and the profiles wipe-and-rewrite users and companies. Found while moving the demo credentials in 13.6a and deliberately NOT fixed there (out of that task's scope). The fix is small: refuse unless `APP_ENV` is `local`/`test`, with an explicit override flag for `preview`. | nothing today; the first production database is where it stops being theoretical | the guard is the operator's memory, which is the control `19` §Data location does not accept anywhere else |

@@ -133,26 +133,17 @@ describe('14.2 · navigation links reach a page', () => {
   const APP = join(process.cwd(), 'src', 'app', '[locale]')
 
   /**
-   * Routes the navigation advertises and nobody has built yet. **This list may only get
-   * shorter.** Every entry has a committed Stitch design; `25-progress.md` §Faz 14 tracks
-   * them.
+   * **Empty, and that is the assertion** (task 13.8).
+   *
+   * It held twelve routes when 14.2 pinned it. One was built (`/panel/[companyId]`, the
+   * portal dashboard — the landing point of a manufacturer sign-in, which 404'd) and eleven
+   * left the navigation for `07` §Deferred screens with a reason each. A link to a 404 is
+   * the promise `07` forbids, so the honest end state is a list with nothing in it.
+   *
+   * If this ever needs an entry again, the entry is the argument: say why the link ships
+   * before the page.
    */
-  const UNBUILT = [
-    '/hesap/ayarlar',
-    '/hesap/kayitli-firmalar',
-    '/hesap/mesajlar',
-    '/hesap/talepler',
-    // The portal's own dashboard: `/panel` is a placeholder shell, and the sidebar's
-    // "Panel" link points at `/panel/[companyId]`, which nobody built. Next in line.
-    '/panel/[companyId]',
-    '/panel/[companyId]/analitik',
-    '/panel/[companyId]/ekip',
-    '/yonetim/bildirimler',
-    '/yonetim/metrikler',
-    '/yonetim/musteriler',
-    '/yonetim/pazar-fiyatlari',
-    '/yonetim/sikayetler',
-  ]
+  const UNBUILT: string[] = []
 
   /**
    * Does a `page.tsx` exist for this route? Segments are matched literally first, then

@@ -600,6 +600,44 @@
       "sun": "Paz"
     }
   },
+  "portal": {
+    "title": "Panel",
+    "subtitle": "Bekleyen işler önce. Sayılar bu firmanın kendi taleplerinden geliyor.",
+    "counts": {
+      "pending": "Yeni talep",
+      "accepted": "Kabul edilen",
+      "surveyScheduled": "Keşif",
+      "offerSent": "Gönderilen teklif",
+      "won": "Kazanılan"
+    },
+    "funnel": {
+      "title": "Dönüşüm hunisi",
+      "received": "Gelen",
+      "accepted": "Kabul edilen",
+      "offered": "Teklif verilen",
+      "won": "Kazanılan",
+      "empty": "Henüz talep yok.",
+      "value": "{count} · %{percent}"
+    },
+    "deadlines": {
+      "title": "Süresi yaklaşanlar",
+      "empty": "Yanıt bekleyen talep yok.",
+      "due": "Son yanıt {when}"
+    },
+    "recent": {
+      "title": "Son talepler",
+      "empty": "Henüz talep yok.",
+      "viewAll": "Tümünü gör",
+      "area": "{area} m²",
+      "noArea": "Ölçü girilmemiş"
+    },
+    "chooser": {
+      "title": "Firma seç",
+      "body": "Birden fazla firmada üyeliğiniz var. Devam etmek için birini seçin.",
+      "none": "Hiçbir firmada üyeliğiniz yok. Bir firma yöneticisinin sizi davet etmesi gerekiyor.",
+      "open": "Aç"
+    }
+  },
   "wizard": {
     "title": "Projenizi yapılandırın",
     "startTitle": "Projenizi tarif edin",

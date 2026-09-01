@@ -14,6 +14,14 @@ import { serviceMethod } from '@/shared/service/registry'
 
 import { statusAfterSubmission } from '@/modules/project/domain/status'
 
+import {
+  mostRecent,
+  soonestDeadlines,
+  summarise,
+  type DashboardLead,
+  type DashboardSummary,
+} from '../domain/dashboard-summary'
+
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
 
 // Re-exported for app/: pages and actions may not reach into domain, even for a type the
@@ -72,6 +80,7 @@ import {
   type CustomerRequestListItem,
   type DeclineInput,
   type GetLeadInput,
+  type GetPortalDashboardInput,
   type LeadListItem,
   type ListLeadsInput,
   type ListRequestsForProjectInput,
@@ -705,6 +714,50 @@ export const getLeadForCompany = serviceMethod<GetLeadInput, LeadView>(
 )
 
 // ── list (manufacturer) — the inbox, contact-free by construction ────────────
+
+/**
+ * The portal dashboard — task 13.8, `manufacturer_portal_dashboard_final`.
+ *
+ * It exists because `app/` may not import a domain module (`CLAUDE.md` non-negotiable 2) and
+ * the counting is domain arithmetic. So the page asks one question and this answers it:
+ * **the same leads the inbox returns, summarised**. No second query, no new table, and no
+ * number that is not already a fact — `domain/dashboard-summary.ts` argues what the design
+ * shows that this deliberately omits.
+ */
+export const getPortalDashboard = serviceMethod<
+  GetPortalDashboardInput,
+  {
+    summary: DashboardSummary
+    deadlines: DashboardLead[]
+    recent: DashboardLead[]
+  }
+>(
+  'offer',
+  'getPortalDashboard',
+  { kind: 'permission', permission: PERMISSIONS.OFFER_REQUEST_READ },
+  async (actor, input) => {
+    // Straight through the inbox: one place decides what a company may see about its own
+    // requests, and it is not this one.
+    const leads = await listLeadsForCompany(actor, input as ListLeadsInput)
+    if (!leads.ok) return err(leads.error)
+
+    const rows: DashboardLead[] = leads.value.leads.map((lead) => ({
+      offerRequestId: lead.offerRequestId,
+      status: lead.status,
+      slaExpiresAt: lead.slaExpiresAt,
+      createdAt: lead.createdAt,
+      areaM2: lead.areaM2,
+      cityName: lead.cityName,
+      districtName: lead.districtName,
+    }))
+
+    return ok({
+      summary: summarise(rows),
+      deadlines: [...soonestDeadlines(rows)],
+      recent: [...mostRecent(rows)],
+    })
+  },
+)
 
 export const listLeadsForCompany = serviceMethod<ListLeadsInput, { leads: LeadListItem[] }>(
   'offer',

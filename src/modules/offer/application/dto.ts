@@ -175,3 +175,13 @@ export const listCalendarSchema = z.object({
   month: z.coerce.number().int().min(1).max(12).optional(),
 })
 export type ListCalendarInput = z.infer<typeof listCalendarSchema>
+
+/* ── Portal dashboard (offer-request-service) ───────────────────────────── */
+
+/**
+ * The manufacturer dashboard takes no input — it is "this company, now" (task 13.8). The
+ * empty object rather than `void` so the shape matches every other use case and the route
+ * handler has something to parse.
+ */
+export const getPortalDashboardSchema = z.object({})
+export type GetPortalDashboardInput = z.infer<typeof getPortalDashboardSchema>

@@ -600,6 +600,44 @@
       "sun": "Sun"
     }
   },
+  "portal": {
+    "title": "Dashboard",
+    "subtitle": "What is waiting, first. The numbers come from this company’s own requests.",
+    "counts": {
+      "pending": "New requests",
+      "accepted": "Accepted",
+      "surveyScheduled": "Site surveys",
+      "offerSent": "Offers sent",
+      "won": "Won"
+    },
+    "funnel": {
+      "title": "Conversion funnel",
+      "received": "Received",
+      "accepted": "Accepted",
+      "offered": "Offered",
+      "won": "Won",
+      "empty": "No requests yet.",
+      "value": "{count} · {percent}%"
+    },
+    "deadlines": {
+      "title": "Deadlines approaching",
+      "empty": "Nothing waiting on a reply.",
+      "due": "Reply by {when}"
+    },
+    "recent": {
+      "title": "Recent requests",
+      "empty": "No requests yet.",
+      "viewAll": "View all",
+      "area": "{area} m²",
+      "noArea": "No dimensions given"
+    },
+    "chooser": {
+      "title": "Choose a company",
+      "body": "You are a member of more than one company. Pick one to continue.",
+      "none": "You are not a member of any company. A company administrator has to invite you.",
+      "open": "Open"
+    }
+  },
   "wizard": {
     "title": "Configure your project",
     "startTitle": "Describe your project",
