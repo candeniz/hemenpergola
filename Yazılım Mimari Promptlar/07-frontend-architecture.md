@@ -151,7 +151,7 @@ the names are equally arbitrary, and the omissions were the real defect.
 | `/fiyatlandirma` | `manufacturer_pricing_management` |
 | `/hizmet-bolgeleri` | `manufacturer_service_area_management` |
 | `/portfoy` | `manufacturer_portfolio_management` |
-| `/degerlendirmeler` | `manufacturer_reviews_management` |
+| `/yorumlar` | `manufacturer_reviews_management` — built as `yorumlar`, not `degerlendirmeler`; the nav pointed at the latter until 14.2 |
 | `/ekip` | `manufacturer_team_management` |
 | `/analitik` | `manufacturer_performance_analytics` |
 | `/ayarlar` | `manufacturer_company_settings` |
@@ -168,8 +168,8 @@ The two request-detail screens are the **same route in two states**, split by
 | `/musteriler`, `/musteriler/[id]` | `super_admin_customer_management`, `super_admin_customer_detail_profile` |
 | `/talepler` | `super_admin_offer_request_management` |
 | `/katalog` | `super_admin_product_catalog_management` |
-| `/degerlendirmeler`, `/sikayetler` | `super_admin_reviews_moderation`, `super_admin_complaints_disputes` |
-| `/cms` | `super_admin_cms_seo_management` |
+| `/yorumlar`, `/sikayetler` | `super_admin_reviews_moderation`, `super_admin_complaints_disputes` — moderation shipped as `yorumlar` (14.2) |
+| `/icerik` | `super_admin_cms_seo_management` — shipped as `icerik` (14.2) |
 | `/bildirimler` | `super_admin_global_notification_settings` |
 | `/denetim` | `super_admin_audit_logs` |
 | `/metrikler` | `super_admin_platform_metrics_analytics` |

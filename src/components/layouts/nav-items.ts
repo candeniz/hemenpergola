@@ -18,6 +18,12 @@ export type NavItem = {
 }
 
 /*
+ * Task 14.2 closed three more, and they were the worse kind: the page EXISTED and the link
+ * missed it. `/degerlendirmeler` and `/yonetim/degerlendirmeler` were built as `yorumlar`,
+ * `/yonetim/cms` as `/yonetim/icerik`. `nav-items.test.ts` now resolves every href against
+ * `src/app` rather than against `07`'s route map, because a route map is a document and a
+ * document can describe a page nobody built — which is how these survived from Phase 3.
+ *
  * Task 8.3 closed the nav's 404s: `/urunler` (a listing that never existed — the route
  * map only has `/urunler/[slug]`) became `/kategoriler`, and `/projeler` (a portfolio
  * showcase nothing builds yet) became `/sehirler` — a real page with real supply behind
@@ -56,7 +62,7 @@ export const manufacturerNav: readonly NavItem[] = [
   { href: '/fiyatlandirma', labelKey: 'pricing', icon: 'payments' },
   { href: '/hizmet-bolgeleri', labelKey: 'serviceAreas', icon: 'home' },
   { href: '/portfoy', labelKey: 'portfolio', icon: 'description' },
-  { href: '/degerlendirmeler', labelKey: 'reviews', icon: 'star' },
+  { href: '/yorumlar', labelKey: 'reviews', icon: 'star' },
   { href: '/ekip', labelKey: 'team', icon: 'group' },
   { href: '/analitik', labelKey: 'analytics', icon: 'query_stats' },
   { href: '/ayarlar', labelKey: 'settings', icon: 'settings' },
@@ -78,9 +84,9 @@ export const adminNav: readonly NavItem[] = [
   { href: '/yonetim/musteriler', labelKey: 'customers', icon: 'group' },
   { href: '/yonetim/talepler', labelKey: 'requests', icon: 'pending_actions' },
   { href: '/yonetim/katalog', labelKey: 'catalog', icon: 'inventory_2' },
-  { href: '/yonetim/degerlendirmeler', labelKey: 'reviews', icon: 'star' },
+  { href: '/yonetim/yorumlar', labelKey: 'reviews', icon: 'star' },
   { href: '/yonetim/sikayetler', labelKey: 'complaints', icon: 'warning' },
-  { href: '/yonetim/cms', labelKey: 'cms', icon: 'description' },
+  { href: '/yonetim/icerik', labelKey: 'cms', icon: 'description' },
   { href: '/yonetim/bildirimler', labelKey: 'notifications', icon: 'notifications' },
   { href: '/yonetim/denetim', labelKey: 'audit', icon: 'visibility' },
   { href: '/yonetim/metrikler', labelKey: 'metrics', icon: 'query_stats' },

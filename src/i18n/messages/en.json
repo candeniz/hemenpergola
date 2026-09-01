@@ -312,6 +312,22 @@
     "inspectionNote": "The final price is set after the technical inspection.",
     "incomplete": "Some options you selected are not in this company’s price book, so the range may be incomplete."
   },
+  "errors": {
+    "notFound": {
+      "title": "This page doesn’t exist",
+      "body": "The link may be old, or the page may have moved.",
+      "home": "Go to homepage",
+      "browse": "Browse products",
+      "elsewhere": "Elsewhere"
+    },
+    "unexpected": {
+      "title": "Something went wrong",
+      "body": "The problem is on our side. Trying again usually works.",
+      "retry": "Try again",
+      "home": "Go to homepage",
+      "reference": "Reference: {reference}"
+    }
+  },
   "home": {
     "heroTitle": "Find the right outdoor system for your project.",
     "heroBody": "Discover premium pergolas, structural glass systems, and technical outdoor enclosures engineered for precision and built to last.",

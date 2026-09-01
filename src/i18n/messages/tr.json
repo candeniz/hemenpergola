@@ -312,6 +312,22 @@
     "inspectionNote": "Kesin fiyat teknik keşif sonrası belirlenir.",
     "incomplete": "Seçtiğiniz bazı özellikler bu firmanın fiyat listesinde yok; aralık eksik olabilir."
   },
+  "errors": {
+    "notFound": {
+      "title": "Bu sayfa yok",
+      "body": "Bağlantı eski olabilir ya da sayfa taşınmış olabilir.",
+      "home": "Ana sayfaya git",
+      "browse": "Ürünlere göz at",
+      "elsewhere": "Başka yerlere"
+    },
+    "unexpected": {
+      "title": "Bir şeyler ters gitti",
+      "body": "Sorun bizim tarafımızda. Tekrar denemek çoğu zaman işe yarar.",
+      "retry": "Tekrar dene",
+      "home": "Ana sayfaya git",
+      "reference": "Referans: {reference}"
+    }
+  },
   "home": {
     "heroTitle": "Projeniz için doğru dış mekân sistemini bulun.",
     "heroBody": "Bioklimatik pergolalar, cam sistemleri ve teknik dış mekân çözümleri — ölçülerinize göre hesaplanmış fiyatlarla, doğrulanmış üreticilerden.",

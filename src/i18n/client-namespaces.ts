@@ -16,6 +16,9 @@ export const CLIENT_MESSAGE_NAMESPACES = [
   'auth',
   'common',
   'consent',
+  // `[locale]/error.tsx` is a client component by Next's contract — an error boundary
+  // has to re-render on the client to offer `reset()`.
+  'errors',
   // Transitively client: estimate-band.tsx carries no 'use client' of its own but is
   // rendered by match-results.tsx (client) — the scan below follows one import hop for
   // exactly this case, which the first draft missed and the release gate caught.

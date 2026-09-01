@@ -68,7 +68,7 @@ proven — not when the code is written.
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
 | 13 | Store readiness (13.1–13.5) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). **13.5** the leg that carries that decision — an unreachable server is now a result and a state rather than a rejected promise, the address field reaches the screen where it is needed, and the CSP's development branch revived every strict page under `pnpm dev` (dead since Faz 9). Q33's documentation half closed with it. `29` §F carries eleven rows with owners; submission waits on F6–F11 |
-| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`) |
+| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`). **14.2** the 404 and the error boundaries, and the audit that found three links pointing at pages that DO exist under other names |
 
 ## Log
 
@@ -4145,10 +4145,66 @@ Testler: 13 birim (ızgara aritmetiği, saat dilimi), 7 entegrasyon (şirket kap
 bağlantısı 404 değil, URL ile aylar arası gezinme ve yıl sınırı, bozuk parametre, keşif
 randevusunun İstanbul gününe düşmesi, üç maddelik efsane).
 
+### 2026-09-02 — Faz 14.2 · 404, hata sınırları, ve menünün asıl hâli
+
+**404 ve hata sınırı yoktu.** `src/app` altında ne `not-found.tsx` ne `error.tsx` ne
+`global-error.tsx` vardı; beş sayfa bilerek `notFound()` çağırıyor (tedarik olmayan şehir,
+bilinmeyen kategori, üç sahip kapsamlı sayfa), yani bu varsayımsal bir yüzey değil —
+**desteklenen bir sorunun cevabıydı ve onu bir yabancı render ediyordu**: Next'in yerleşik
+"404 · This page could not be found" sayfası, dil ne olursa olsun İngilizce, kabuğun dışında.
+Hata tarafı daha kötüydü: production'da çıplak "Application error: a client-side exception
+has occurred", geri dönüş yolu yok.
+
+Üçü de yazıldı, `404_page_not_found` ve `unexpected_error` tasarımlarından.
+
+**Yakalayıcı rota gerekti ve bunu e2e ilk koşuda buldu.** `[locale]/not-found.tsx` yalnız
+**açıkça** `notFound()` çağrıldığında devreye giriyor; hiçbir rotayla eşleşmeyen bir yol
+locale segmentine hiç girmiyor ve Next kendi sayfasına düşüyor. `[locale]/[...rest]/page.tsx`
+— en düşük öncelikli eşleşme, tek işi ulaşılmak, başarısız olmak ve kardeşine devretmek.
+
+**`global-error.tsx`, `I18N-01`'in tutamadığı tek yer.** `NextIntlClientProvider` az önce
+düşen layout'un içinde: okunacak katalog yok, okunacak çözülmüş dil yok. `navigator.language`
+tahmin ederdi, ve dürüst olmak için var olan tek sayfada yanlış tahmin etmek iki dili birden
+göstermekten kötü. Bu yüzden **iki dil, üç kısa satır, tasarım sistemi yok** — token'lar da o
+layout'un import ettiği `globals.css`'ten geliyor, yani renkler satır içi. Deponun tek
+`eslint-disable react/jsx-no-literals`'ı burada, gerekçesiyle, ve
+`test/error-boundary.test.ts` **ikincisinin eklenmesini** kırıyor.
+
+Sınırlar `error.digest`'ten başka hiçbir şey göstermiyor. Next mesajı production'da tam da
+bu yüzden digest'le değiştiriyor; `error.message`'ı render etmek onu geri alır ve hatanın
+şeklini onu tetikleyene verir. Bu, sınırın kendisi hakkında sınanacak asıl şey olduğu için
+statik testte iddia ediliyor — bir throw rotası, teste hizmet etmek için kurulmuş bir
+production yüzeyi olurdu.
+
+**Ve asıl bulgu: menü denetimi.** `nav-items.test.ts` artık her href'i `07`'ye değil
+**diske** çözüyor. Üç bağlantı, sayfası **var olan** ama başka adla yapılmış yüzeyleri
+ıskalıyormuş — Faz 2/3'ten beri:
+
+```
+/degerlendirmeler         -> /yorumlar          (üretici değerlendirmeleri)
+/yonetim/degerlendirmeler -> /yonetim/yorumlar  (moderasyon kuyruğu)
+/yonetim/cms              -> /yonetim/icerik    (CMS editörü)
+```
+
+Bunlar "yapılmamış" değil, **yanlış slug** — ve bir rota haritası doküman olduğu için testler
+yeşil kaldı. Üçü de düzeltildi ve `07` yapılana göre güncellendi. Dördüncüsü daha kötü:
+portal kenar çubuğundaki **"Panel"** bağlantısı `/panel/[companyId]`'ye gidiyor ve orada
+sayfa yok; `/panel` yalnız bir yer tutucu kabuk. Sırada o var.
+
+Kalanlar `UNBUILT` olarak **çivilendi**: liste yalnız kısalabilir — bir tanesi yapılınca test
+o satır silinene kadar kırılıyor, on üçüncüsü eklenince hemen kırılıyor.
+`api-surface.test.ts`'in ulaşılamayan-yetenek envanteriyle aynı düzen.
+
+**Q36 açıldı:** istemci render'ı sırasındaki bir throw hiçbir yere raporlanmıyor.
+`error-tracker.ts` `server-only` ve öyle kalmalı; raporlamak bir **istemci hata ucu**
+gerektirir — internetten keyfi dize kabul eden, kendi hız sınırı ve kendi KVKK kuralı olan bir
+yüzey. Sınırın içinde icat edilmedi.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |
 | Q34 | **Nothing stops `pnpm seed` from running against production.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal. `20` §Test data and `23` §Environments describe seeds as a `local`/`preview`/test thing, and `prisma/seed/accounts.ts` leans on that when it justifies a four-character password — but a described convention is not a mechanism, and the profiles wipe-and-rewrite users and companies. Found while moving the demo credentials in 13.6a and deliberately NOT fixed there (out of that task's scope). The fix is small: refuse unless `APP_ENV` is `local`/`test`, with an explicit override flag for `preview`. | nothing today; the first production database is where it stops being theoretical | the guard is the operator's memory, which is the control `19` §Data location does not accept anywhere else |
 | Q33 | **The KVKK data export does not carry the notification surface.** `buildExportPackage` (`modules/privacy/application/privacy-service.ts`) collects the user row, consents, projects, offer requests, reviews and sent messages — and **not** `PushToken`, `NotificationPreference` or `Notification`. All three are personal data held about the subject (`04`, `19` §Retention), so an export that omits them is incomplete in the KVKK sense, not merely thin. Narrowed here in 13.5: the phase-12 documentation debt it used to also name is **closed** — `13`'s channel table, flow and event catalogue (generated from `domain/catalog.ts` now, with a drift test), `04` §PushToken, `06`'s three endpoints, `19`'s processor and retention entries, and `29`'s recount. **Third deferral refused: this goes in 13.6, alone.** | 13.6 · a complete subject access request | the export ships silently incomplete, which is the failure mode a regulator asks about |
