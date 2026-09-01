@@ -68,6 +68,7 @@ proven — not when the code is written.
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
 | 13 | Store readiness (13.1–13.5) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). **13.5** the leg that carries that decision — an unreachable server is now a result and a state rather than a rejected promise, the address field reaches the screen where it is needed, and the CSP's development branch revived every strict page under `pnpm dev` (dead since Faz 9). Q33's documentation half closed with it. `29` §F carries eleven rows with owners; submission waits on F6–F11 |
+| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`) |
 
 ## Log
 
@@ -4091,6 +4092,58 @@ Ve `pnpm-workspace.yaml`'daki `minimumReleaseAgeExclude` yorumu **yanlıştı**,
 (yok) tanımlı, ve pnpm'in kendi varsayılanı `0` — kaynağında `minimumReleaseAge ?? 0`.
 Hiçbir şey reddedilmedi; `pnpm install` listeye ekliyor çünkü liste var. Liste bugün etkisiz
 ve temiz bir klon aynı şekilde çözer.
+
+### 2026-09-01 — Faz 14.1 · üretici takvimi, ve menünün reklamını yaptığı 404'ler
+
+**Bulgu önce.** `nav-items.ts` Faz 3'ten beri `/takvim`, `/ekip`, `/analitik`,
+`/yonetim/musteriler`, `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`,
+`/hesap/ayarlar` bağlantılarını taşıyor ve **hiçbirinin sayfası yok** — yani sevk edilmiş
+kenar çubuğu 404'lerin reklamını yapıyor. Dosyanın kendi yorumu tam bu hatayı anlatıyor:
+*"a link to a 404 advertises a page the same way a disabled link advertises a feature."*
+`nav-items.test.ts` yakalamadı çünkü href'in **dokümandaki rota haritasında** olduğunu iddia
+ediyor, diskte bir sayfa olduğunu değil. Onikisinin de Stitch tasarımı depoda hazır; yeni
+tasarım üretmeye gerek yok.
+
+**14.1 ilkini kapattı: `/panel/[companyId]/takvim`.**
+
+Katman katman:
+
+- **`offer/domain/calendar.ts` — saf.** Ay ızgarası (her zaman 42 hücre, **pazartesi
+  başlangıçlı**; `tr` haftası pazartesi başlar, Stitch'in `SUN` başlığı değil), gün
+  kovalama, ve asıl mesele: bir UTC anının **hangi İstanbul gününe** düştüğü. Yerel 00:30'daki
+  bir randevu UTC'de önceki gündür; UTC parçalarından kurulmuş bir ızgara onu bir hücre erken
+  koyar ve üretici keşfe bir gün geç gider. Ofset `Intl`'den **anı anına türetiliyor**, 2016'dan
+  beri geçerli `+03` sabiti yazılmıyor: sabit bugün doğru, ülke saat politikasını bir daha
+  değiştirdiğinde sessizce yanlış olurdu. `zonedInstant` iki geçişli — ofset tahminde değil
+  **cevapta** okunuyor.
+- **`listCalendar` servisi** — şirket kapsamlı, pencere ayın değil **ızgaranın** (ödünç alınan
+  ilk ve son hücrelerdeki olaylar da görünmeli). "Şimdi hangi ay" sorusunu servis yanıtlıyor
+  ve cevabı sonuçla birlikte döndürüyor, çünkü `app/` bir domain modülünü import edemez
+  (`CLAUDE.md` 2. maddesi) ve bu bir saat dilimi sorusu.
+- **`GET /api/v1/companies/{id}/calendar`** — `api-surface.test.ts`'in istediği yol.
+- **Sayfa + `CalendarBoard`** — sunucu bileşeni, ay gezinmesi `<Link>` ile URL üzerinden:
+  paylaşılabilir, geri tuşu çalışır, JavaScript'siz render olur. `lg` altında ızgara yerine
+  **ajanda listesi**; telefonda yedi sütunlu ay ya okunmaz ya da kimsenin keşfetmediği bir
+  yatay kaydırmadır.
+
+**Üç olay tipi, tasarımın dördü değil (`ADR-034`).** "Meetings" ve "general/follow-up"un
+arkasında hiçbir varlık yok; bir efsaneyi doldurmak için tablo icat etmek kuyruğun köpeği
+sallamasıdır. Ay/Hafta/Gün geçişi de yapılmadı — tek görünüm render eden bir kontrol yalan
+söyler.
+
+**Müşteri adı bu yüzeye hiç gelmiyor.** `ADR-006` ve `19` §Disclosure iletişim verisini
+kabule bağlıyor; takvim o yüzey değil. Başlıklar proje adı ve teklif numarası, ikinci satır
+şehir. Entegrasyon testi `ADR-026` tuzağını da kontrol ediyor — serbest metne yazılmış
+telefon numarası dahil.
+
+Başlıksız bir proje **kimliğine değil türüne** düşüyor: ekranda ham bir `cmt…` görmek,
+çevrilmemiş bir mesaj anahtarı görmekle aynı kusur. (İlk render'da tam olarak bu çıktı ve
+düzeltildi.)
+
+Testler: 13 birim (ızgara aritmetiği, saat dilimi), 7 entegrasyon (şirket kapsamı, üç tablo,
+ızgara penceresi, iptal edilmiş randevu, iletişim verisi yok, admin yolu), 5 e2e (menü
+bağlantısı 404 değil, URL ile aylar arası gezinme ve yıl sınırı, bozuk parametre, keşif
+randevusunun İstanbul gününe düşmesi, üç maddelik efsane).
 
 ## Open questions — need a human answer before the phase that hits them
 

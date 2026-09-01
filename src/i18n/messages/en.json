@@ -557,6 +557,33 @@
     "uploading": "Uploading…",
     "uploadFailed": "Upload failed"
   },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Site surveys, response deadlines and offer validity in one place.",
+    "today": "Today",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "upcoming": "Upcoming",
+    "upcomingEmpty": "Nothing left this month.",
+    "empty": "Nothing scheduled this month.",
+    "legend": "Event types",
+    "kind": {
+      "survey": "Site survey",
+      "request_deadline": "Response deadline",
+      "offer_expiry": "Offer expiry"
+    },
+    "openRequest": "Open request",
+    "moreInDay": "+{count} more",
+    "weekday": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
   "wizard": {
     "title": "Configure your project",
     "startTitle": "Describe your project",

@@ -1189,3 +1189,47 @@ settable before the first request — which is the sign-in itself.
 **Reverses if.** The store build ever needs a configurable endpoint (it should not — that is
 what a build profile is for), or the address moves into a signed configuration rather than
 free text.
+
+---
+
+## ADR-034 — The manufacturer calendar shows three kinds of event, not the design's four
+
+**Context.** `manufacturer_project_calendar` legends four event types: deadlines, meetings,
+surveys, and general/follow-up. Task 14.1 built the screen. Three of those legend entries
+have an entity behind them and one and a half do not:
+
+| Legend | Domain |
+|---|---|
+| Surveys | `Appointment.scheduledAt` — `11` §Survey |
+| Deadlines | `OfferRequest.slaExpiresAt` while `PENDING`, and `Offer.validUntil` while `SENT` |
+| Meetings | **nothing** |
+| General/Follow-up | **nothing** |
+
+There is no calendar-event table, no "meeting" concept anywhere in `04-data-model.md`, and
+nothing in `11` or `15` that creates one. A manufacturer cannot today add an arbitrary entry
+to their own calendar, because there is nothing to add it to.
+
+**Decision.** Three kinds — `survey`, `request_deadline`, `offer_expiry` — and a legend with
+three rows. The deadline legend entry is split in two rather than merged, because the two
+clocks belong to different people: `request_deadline` is the manufacturer's own SLA, and
+`offer_expiry` is the customer's decision window. Merging them would make "a deadline" mean
+two different obligations in one colour.
+
+**Rejected.** *An ad-hoc `CalendarEvent` table* so the manufacturer can add meetings and
+follow-ups: that is a feature — with its own CRUD, its own permissions, its own notification
+questions and its own place in `04` — arriving as a side effect of filling a legend.
+`CLAUDE.md` §Do not build these is explicit that a design existing is not a decision to build
+it, and this is the same rule one screen further out. *Rendering an empty legend entry*: a
+legend row for a colour nothing can produce is the disabled-link problem from
+`nav-items.ts` — it advertises a feature.
+
+**Consequences.** `offer/domain/calendar.ts` types `CalendarEventKind` as a closed union of
+three, so a fourth needs a domain change and a compile error names every place that has to
+answer for it. The Month/Week/Day toggle in the design is likewise not built: the month view
+is the one that answers "what is coming", and a toggle that renders one view is a control
+that lies. `manufacturer_appointment_detail` remains unbuilt — chips link to the existing
+request detail, which already carries the appointment.
+
+**Reverses if.** Manufacturers ask to put their own entries on it. That is a real feature
+request with a real table behind it, and it starts with `04` and this log, not with the
+legend.

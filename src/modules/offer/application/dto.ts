@@ -156,3 +156,22 @@ export type ScheduleAppointmentInput = z.infer<typeof scheduleAppointmentSchema>
 
 export const completeAppointmentSchema = z.object({ offerRequestId: z.string().min(1) })
 export type CompleteAppointmentInput = z.infer<typeof completeAppointmentSchema>
+
+/* ── Calendar (appointment-service) ─────────────────────────────────────── */
+
+/**
+ * One month of the manufacturer calendar (task 14.1). Year and month rather than a date
+ * range, because the range is the SIX-WEEK GRID and only `domain/calendar.ts` knows where
+ * that starts — a caller passing `from`/`to` would be reimplementing it, and eventually
+ * disagreeing with the grid it is filling.
+ *
+ * Both are **optional**, and the service resolves the missing ones to the current month in
+ * `Europe/Istanbul`. That resolution cannot live in the caller: `app/` may not import a
+ * domain module (`CLAUDE.md` non-negotiable 2), and "which month is it right now" is a
+ * time-zone question `domain/calendar.ts` owns. So the answer comes back in the result.
+ */
+export const listCalendarSchema = z.object({
+  year: z.coerce.number().int().min(2000).max(2100).optional(),
+  month: z.coerce.number().int().min(1).max(12).optional(),
+})
+export type ListCalendarInput = z.infer<typeof listCalendarSchema>

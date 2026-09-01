@@ -557,6 +557,33 @@
     "uploading": "Yükleniyor…",
     "uploadFailed": "Yükleme başarısız"
   },
+  "calendar": {
+    "title": "Takvim",
+    "subtitle": "Keşif randevuları, yanıt süreleri ve teklif geçerlilikleri tek yerde.",
+    "today": "Bugün",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "upcoming": "Yaklaşanlar",
+    "upcomingEmpty": "Bu ayın kalanında bir şey yok.",
+    "empty": "Bu ayda kayıtlı bir şey yok.",
+    "legend": "Olay türleri",
+    "kind": {
+      "survey": "Keşif randevusu",
+      "request_deadline": "Yanıt süresi",
+      "offer_expiry": "Teklif geçerliliği"
+    },
+    "openRequest": "Talebi aç",
+    "moreInDay": "+{count} tane daha",
+    "weekday": {
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt",
+      "sun": "Paz"
+    }
+  },
   "wizard": {
     "title": "Projenizi yapılandırın",
     "startTitle": "Projenizi tarif edin",
