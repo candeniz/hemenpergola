@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { mostRecent, soonestDeadlines, summarise, type DashboardLead } from './dashboard-summary'
+import {
+  mostRecent,
+  soonestDeadlines,
+  summarise,
+  type DashboardLead,
+  type StatusCounts,
+} from './dashboard-summary'
 import type { OfferRequestStatus } from './state-machine'
 
 /**
@@ -9,6 +15,10 @@ import type { OfferRequestStatus } from './state-machine'
  * The property worth a test is the **cumulative funnel**: a `WON` request also passed
  * through `ACCEPTED`, so counting stages exclusively would show "accepted: 0" for a company
  * that closed everything — a bug that looks like data and would be believed.
+ *
+ * `summarise` takes a count per status rather than rows (task 14.3). Passing rows is how the
+ * inbox's `take: 100` leaked into the totals; the shape here now matches what one aggregate
+ * query returns, so there is no page for a ceiling to hide behind.
  */
 
 let sequence = 0
@@ -27,15 +37,14 @@ const lead = (status: OfferRequestStatus, offsets: { sla?: number; created?: num
 
 describe('13.8 · dashboard summary', () => {
   it('counts each headline status exactly', () => {
-    const { counts } = summarise([
-      lead('PENDING'),
-      lead('PENDING'),
-      lead('ACCEPTED'),
-      lead('SURVEY_SCHEDULED'),
-      lead('SURVEY_COMPLETED'),
-      lead('OFFER_SENT'),
-      lead('WON'),
-    ])
+    const { counts } = summarise({
+      PENDING: 2,
+      ACCEPTED: 1,
+      SURVEY_SCHEDULED: 1,
+      SURVEY_COMPLETED: 1,
+      OFFER_SENT: 1,
+      WON: 1,
+    })
 
     expect(counts).toEqual({
       pending: 2,
@@ -48,7 +57,7 @@ describe('13.8 · dashboard summary', () => {
   })
 
   it('is a CUMULATIVE funnel — a won request also reached accepted and offered', () => {
-    const { funnel, total } = summarise([lead('WON')])
+    const { funnel, total } = summarise({ WON: 1 })
     expect(total).toBe(1)
 
     // Every stage is 1: the request passed through all of them.
@@ -61,13 +70,7 @@ describe('13.8 · dashboard summary', () => {
   })
 
   it('narrows honestly when requests stall', () => {
-    const { funnel } = summarise([
-      lead('PENDING'),
-      lead('PENDING'),
-      lead('DECLINED'),
-      lead('ACCEPTED'),
-      lead('WON'),
-    ])
+    const { funnel } = summarise({ PENDING: 2, DECLINED: 1, ACCEPTED: 1, WON: 1 })
 
     // 5 received · 2 got past acceptance (ACCEPTED, WON) · 1 offered (WON) · 1 won.
     expect(funnel.map((row) => row.count)).toEqual([5, 2, 1, 1])
@@ -75,14 +78,26 @@ describe('13.8 · dashboard summary', () => {
   })
 
   it('divides by nothing safely', () => {
-    const { funnel, total } = summarise([])
+    const { funnel, total } = summarise({})
     expect(total).toBe(0)
     expect(funnel.every((row) => row.count === 0 && row.ofTotal === 0)).toBe(true)
   })
 
   it('a declined request counts as received and no further', () => {
-    const { funnel } = summarise([lead('DECLINED'), lead('EXPIRED')])
+    const { funnel } = summarise({ DECLINED: 1, EXPIRED: 1 })
     expect(funnel.map((row) => row.count)).toEqual([2, 0, 0, 0])
+  })
+
+  it('is not fooled by a page — 121 requests total 121', () => {
+    // The regression 14.3 exists for. Counts come from one aggregate now, so there is no
+    // list length to inherit.
+    const overThePage: StatusCounts = { PENDING: 70, WON: 30, DECLINED: 21 }
+    const { total, counts, funnel } = summarise(overThePage)
+
+    expect(total).toBe(121)
+    expect(counts.won).toBe(30)
+    expect(funnel[0]?.count).toBe(121)
+    expect(funnel[3]?.ofTotal).toBe(25)
   })
 
   describe('soonestDeadlines', () => {

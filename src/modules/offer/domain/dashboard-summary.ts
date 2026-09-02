@@ -3,10 +3,23 @@ import type { OfferRequestStatus } from './state-machine'
 /**
  * The portal dashboard's arithmetic — task 13.8, `manufacturer_portal_dashboard_final`.
  *
- * Pure: it takes the leads the inbox already returns and counts them. **No new service
- * method and no new table**, which is the constraint the task set and also the honest one —
- * every number here is a fact the system already holds, and a dashboard that needed new
- * capability would be a feature wearing a summary's clothes.
+ * Pure: it arranges numbers, it does not gather them. **No new table** — every figure here
+ * is a fact the system already holds.
+ *
+ * ## Counts, not rows (task 14.3)
+ *
+ * `summarise` used to take the lead rows and tally them, which quietly inherited the
+ * inbox's `take: 100`: a company with 121 requests saw the newest hundred described as its
+ * totals, **as percentages**. That is the failure this module's own comment refuses two
+ * paragraphs down — worse, in fact, because the number was genuinely measured, of the wrong
+ * set. It now takes a count per status, which the caller gets from one aggregate query, and
+ * the ceiling has nowhere to hide.
+ *
+ * `soonestDeadlines` and `mostRecent` still take rows, and that is not an oversight: they
+ * are the two blocks the page labels as a window ("approaching", "recent"), so a page of
+ * rows is exactly the right input. A `PENDING` request is also younger than
+ * `offer_request.sla_hours` — the expiry job moves it on — so the soonest clocks are always
+ * inside the newest page.
  *
  * ## What the design shows that this cannot
  *
@@ -88,13 +101,19 @@ const REACHED: Record<FunnelStage, readonly OfferRequestStatus[]> = {
 
 export const FUNNEL_STAGES = ['received', 'accepted', 'offered', 'won'] as const
 
-export function summarise(leads: readonly DashboardLead[]): DashboardSummary {
-  const has = (status: OfferRequestStatus): number =>
-    leads.filter((lead) => lead.status === status).length
+/**
+ * How many requests sit in each status. Partial because a status with no rows is absent
+ * from a `groupBy`, which is the shape the database returns and the one a caller should not
+ * have to pad.
+ */
+export type StatusCounts = Readonly<Partial<Record<OfferRequestStatus, number>>>
 
-  const total = leads.length
+export function summarise(byStatus: StatusCounts): DashboardSummary {
+  const has = (status: OfferRequestStatus): number => byStatus[status] ?? 0
+
+  const total = Object.values(byStatus).reduce((sum, count) => sum + (count ?? 0), 0)
   const funnel = FUNNEL_STAGES.map((stage) => {
-    const count = leads.filter((lead) => REACHED[stage].includes(lead.status)).length
+    const count = REACHED[stage].reduce((sum, status) => sum + has(status), 0)
     return {
       stage,
       count,

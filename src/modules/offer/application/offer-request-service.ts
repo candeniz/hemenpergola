@@ -20,6 +20,7 @@ import {
   summarise,
   type DashboardLead,
   type DashboardSummary,
+  type StatusCounts,
 } from '../domain/dashboard-summary'
 
 import { transition, type OfferRequestStatus } from '../domain/state-machine'
@@ -735,11 +736,39 @@ export const getPortalDashboard = serviceMethod<
   'offer',
   'getPortalDashboard',
   { kind: 'permission', permission: PERMISSIONS.OFFER_REQUEST_READ },
-  async (actor, input) => {
-    // Straight through the inbox: one place decides what a company may see about its own
-    // requests, and it is not this one.
-    const leads = await listLeadsForCompany(actor, input as ListLeadsInput)
+  async (actor) => {
+    const allowed = authorize(actor, PERMISSIONS.OFFER_REQUEST_READ)
+    if (!allowed.ok) return err(allowed.error)
+    if (actor.companyId === null) {
+      return ok({ summary: summarise({}), deadlines: [], recent: [] })
+    }
+
+    /*
+     * **Two queries, because they answer two different questions** (task 14.3).
+     *
+     * The totals come from an aggregate over every request this company has. Deriving them
+     * from the list instead — which 13.8 did — inherits its `take: 100`, and a company past
+     * that ceiling reads the newest hundred as its own totals, in percentages. Measured, of
+     * the wrong set, which is worse than not measured at all.
+     *
+     * The two window blocks keep coming from the list, and that is what they are: the page
+     * labels them "recent" and "approaching". Ownership stays in the `where` clause on both
+     * (`CLAUDE.md` §3), and the list still goes through `listLeadsForCompany`, so what a
+     * company may see about its own requests is decided in one place.
+     */
+    const [grouped, leads] = await Promise.all([
+      prisma.offerRequest.groupBy({
+        by: ['status'],
+        where: { companyId: actor.companyId },
+        _count: { _all: true },
+      }),
+      listLeadsForCompany(actor, {}),
+    ])
     if (!leads.ok) return err(leads.error)
+
+    const byStatus: StatusCounts = Object.fromEntries(
+      grouped.map((row) => [row.status, row._count._all]),
+    )
 
     const rows: DashboardLead[] = leads.value.leads.map((lead) => ({
       offerRequestId: lead.offerRequestId,
@@ -752,7 +781,7 @@ export const getPortalDashboard = serviceMethod<
     }))
 
     return ok({
-      summary: summarise(rows),
+      summary: summarise(byStatus),
       deadlines: [...soonestDeadlines(rows)],
       recent: [...mostRecent(rows)],
     })

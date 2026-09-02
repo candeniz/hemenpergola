@@ -68,7 +68,7 @@ proven — not when the code is written.
 | 11 | Mobile application (Expo / React Native) | **🟡 · çekirdek akış yazıldı; kapının cihaz bacağı bekliyor** | the core flow walkable on a device against production (`ADR-030`). Built alongside the launch checklist, in the stores after the web launches |
 | 12 | Notifications: inbox + push channel | **✅ gate met** | the inbox lists what the dispatcher writes (web + mobile + API), push is `13`'s fourth channel under `ADR-027`'s unchanged rules, the device token lives and dies by `19` — dispatch/preference/mandatory all integration-asserted, purity scan is map-driven. Dev-mode push only; standalone needs Q32's accounts |
 | 13 | Store readiness (13.1–13.5) | **✅ gate met (kod+içerik) · gönderim ⏳** | **13** identity, placeholder assets (token-derived, declared placeholder), eas profiles, tr+en listing, data-safety from `19`+`04`. **13.1** three fixes: the A7 handler, the notification plugin, one-schema decision. **13.3** a test APK that can reach the server at all — tunnel + derived addresses. **13.4** the three things that would have broken the E6 round itself: the CSP that silently blocked *every* browser upload since Phase 9 (now derived from `S3_ENDPOINT`, with the first e2e that uploads a file), a tunnel death that used to pass in silence, and one APK instead of one per round (`ADR-033`). **13.5** the leg that carries that decision — an unreachable server is now a result and a state rather than a rejected promise, the address field reaches the screen where it is needed, and the CSP's development branch revived every strict page under `pnpm dev` (dead since Faz 9). Q33's documentation half closed with it. `29` §F carries eleven rows with owners; submission waits on F6–F11 |
-| 14 | The screens the nav already advertises | **🟡 · 14.1 done** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`). **14.2** the 404 and the error boundaries, and the audit that found three links pointing at pages that DO exist under other names. **13.8** the portal dashboard — the landing point of a manufacturer sign-in, which 404'd — plus `/panel`'s redirect, and eleven dead links out of the navigation with a reason each |
+| 14 | The screens the nav already advertises | **🟡 · 14.1 · 14.2 · 13.8 · 14.3 landed** | `07`'s route map lists screens the shells link to and nobody built, so the sidebar has been advertising 404s: `/takvim`, `/ekip`, `/analitik` (manufacturer), `/musteriler`, `/sikayetler`, `/metrikler`, `/pazar-fiyatlari`, `/bildirimler` (admin), `/hesap/talepler`, `/hesap/mesajlar`, `/hesap/kayitli-firmalar`, `/hesap/ayarlar` (customer). Every one has a committed Stitch design. `nav-items.test.ts` did not catch it: it asserts an href is in the route-map DOCUMENT, not that a page exists on disk. **14.1** the manufacturer calendar (`ADR-034`). **14.2** the 404 and the error boundaries, and the audit that found three links pointing at pages that DO exist under other names. **13.8** the portal dashboard — the landing point of a manufacturer sign-in, which 404'd — plus `/panel`'s redirect, and eleven dead links out of the navigation with a reason each. **14.3** that dashboard's totals, which the first version took from a 100-row page. **Read the order by date, not by number:** 14.1 (1 Eyl), 14.2 (2 Eyl), **13.8** (2 Eyl — numbered into phase 13 by the task that asked for it, committed after 14.2), 14.3 (2 Eyl). Nothing is renumbered retroactively: a commit message is a worse thing to falsify than a sequence is to read out of order |
 
 ## Log
 
@@ -4251,6 +4251,48 @@ dosyanın varlığını kanıtlıyor; bu, bağlantının **çalıştığını** 
 bir sayfa var olup bir guard'da 500 verebilir.
 
 `nav-items.test.ts`'in envanteri artık **boş**, ve boşluğun kendisi iddia.
+
+### 2026-09-02 — Faz 14.3 · panonun sayıları gerçek olsun
+
+13.8 panoyu doğru şeyi gösterecek biçimde kurdu ve **sayılarını kesik bıraktı.**
+`getPortalDashboard` özeti `listLeadsForCompany`'den alıyordu; o metot `take: 100` ile
+sınırlı. Yüz talebin altındaki bir firmada rakamlar doğru ve hata görünmez; üstünde huni
+sessizce **en yeni yüzü** anlatıyor ve sayfa bunu firmanın kendi toplamı gibi, üstelik
+**yüzdeyle** sunuyor.
+
+Bu, aynı turda eğilim çizgileri için reddedilen şeyin ta kendisi — hatta bir adım kötüsü:
+o rakam tahmin değildi, **gerçekten ölçülmüştü, yanlış kümenin.**
+
+**Kırmızı önce.** 121 talepli bir firma için entegrasyon testi; eskiler `WON`, en yeniler
+`PENDING` olacak şekilde sıralandı ki hata sıralamanın arkasına saklanamasın:
+
+```
+AssertionError: the list takes 100; the summary must not inherit that ceiling:
+  expected 100 to be 121
+AssertionError: expected 9 to be 30      ← counts.won
+AssertionError: expected 100 to be 121   ← funnel.received
+```
+
+Otuz kazanılmış talebin **dokuzunu** görüyordu.
+
+**Düzeltme: sayım listeden ayrıldı.** Toplamlar tek bir `groupBy` sorgusundan geliyor;
+`summarise` artık satır değil **duruma göre sayım** alıyor, yani devralabileceği bir sayfa
+uzunluğu yok. `StatusCounts` kısmi (`Partial`) çünkü satırı olmayan durum bir `groupBy`
+sonucunda hiç görünmez — veritabanının döndürdüğü şekil bu, ve çağıranın onu doldurmak
+zorunda kalmaması doğru olan.
+
+**İki blok listeden beslenmeye devam ediyor** ve bu bir eksiklik değil: sayfa onları
+"son talepler" ve "süresi yaklaşanlar" diye etiketliyor — ikisi de bir pencere, ve girdileri
+bir sayfa satır olmalı. Ayrıca `PENDING` bir talep `offer_request.sla_hours`'tan genç
+(süre dolunca iş onu ilerletiyor), yani en yakın saatler her zaman en yeni sayfanın içinde.
+
+**Cast düştü.** `input as ListLeadsInput` bir sözleşme beyan ediyordu, çağrılan metot onu
+yok sayıyordu. `getPortalDashboard` artık kendi yetkilendirmesini yapıyor ve listeyi açıkça
+`{}` ile çağırıyor; `app/` tarafında değişen bir şey yok.
+
+**Numaralandırma.** 13.8, 14.2'den sonra commit'lendi çünkü onu isteyen görev onu faz 13'e
+numaralamıştı. Faz tablosu artık sırayı **tarihle** okutuyor. Geriye dönük numara
+uydurulmadı: bir commit mesajını sahtelemek, bir sırayı sırasız okumaktan kötüdür.
 
 ## Open questions — need a human answer before the phase that hits them
 
