@@ -106,6 +106,37 @@ reminders and security alerts ignore quiet hours.
 - Delivery attempts are logged with status; the log holds the event type and recipient id,
   **not** the rendered body.
 
+## Inbox
+
+The in-app inbox (`/hesap/bildirimler`, and the mobile screen) is the newest fifty
+notifications, newest first. It is a **reading list**, not the record — a point that only
+matters once, and it matters then.
+
+**An event that has been renamed leaves rows the build can no longer name, and the inbox
+omits them.** Templates live in this repository rather than the database, so a rename is a
+pure code change with no migration for rows already written; those rows keep the old string
+and, because `ADR-027` exempts mandatory events from the ninety-day sweep, they keep it
+indefinitely. On the day of the rename they are also the newest rows a user has.
+
+The inbox hides them and the KVKK export carries them (`19` §Export), and the two answers are
+consistent because the questions differ:
+
+- the **export** answers a statutory access request and owes completeness. A row omitted
+  there is data withheld from its subject, so it goes in with its type and its dates even
+  when nothing can render it;
+- the **inbox** owes intelligibility. Both surfaces render a row as `privacy.events.<type>`,
+  so an unnamed row is a raw message key on screen; on mobile it is worse, because the tap
+  target derives its destination from the type and would go nowhere. Inventing a generic
+  label ("a notification") would put a row on screen that says nothing and leads nowhere,
+  which is not a better answer than absence — and the subject can still see it, in full, in
+  the export.
+
+**The filter belongs in the query, not after the take.** Filtering the fifty rows after
+fetching them spends the quota on rows that are then discarded: twelve orphans cost the
+reader twelve real notifications, and fifty cost the whole screen — an inbox reporting
+"empty" with readable rows directly beneath it. This was the shipped behaviour from 12.2
+until 14.8.
+
 ## Digest
 
 Message notifications collapse: first unread message notifies immediately, further messages

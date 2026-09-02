@@ -4534,6 +4534,43 @@ dosyada**, yani bu turun değil. Şüphelenilmemiş olmasının sebebi belirtini
 monotonik bir sayaç eklendi; sayaç koşunun izinde de görünüyor (`…-1`, `…-1`, `…-1`, `…-2` —
 üç eşzamanlı ekiş, tam olarak yarışın kendisi).
 
+---
+
+### 2026-09-03 · 14.8 — gelen kutusu da bir yeniden adlandırmadan sağ çıkıyor
+
+14.7 dışa aktarımı kurtardı; aynı olgunun ikinci yüzü gelen kutusundaydı ve **hiç testi
+yoktu** — `listNotifications` 12.2'de tek bir iddia olmadan yayına girmiş.
+
+**1 · Asıl soru: tanınmayan satır gelen kutusunda görünmeli mi? Hayır — ve neden dışa
+aktarımdaki cevabın tersi olduğu artık `13` §Inbox'ta yazılı.** İki yüzey iki farklı soruya
+cevap veriyor: dışa aktarım yasal bir erişim talebine cevap veriyor ve **eksiksizlik** borcu
+var — orada atlanan satır, sahibinden gizlenmiş veridir. Gelen kutusunun borcu
+**anlaşılırlık**: her iki yüzey de satırı `privacy.events.<type>` ile render ediyor, yani
+tanınmayan bir satır ekranda ham bir mesaj anahtarı; mobilde daha kötü, çünkü dokunma hedefi
+gideceği yeri tipten türetiyor ve hiçbir yere gitmiyor. Genel bir etiket uydurmak ("bir
+bildirim") hiçbir şey söylemeyen ve hiçbir yere götürmeyen bir satır demek — yokluğundan iyi
+değil. Ve veri sahibi onu yine de görebiliyor: dışa aktarımda, tam hâliyle.
+
+**2 · `take` filtreden önce geliyordu.** Süzme `take: 50`'den sonra JavaScript'te
+koşuyordu, yani kota bir satır sonra atılacak kayıtlara harcanıyordu. Süzme sorguya taşındı
+(`where: { type: { in: ALL_NOTIFICATION_TYPES } }`) — eleme sonrası 50'yi ayrıca garanti
+etmeye gerek kalmadı, çünkü artık `take` zaten okunabilir satırları sayıyor. Seçim bu yönde
+çünkü tek tanım: ikinci yol (fazladan çekip elemek) kotayı iki yerde tarif eder ve "kaç
+fazla?" sorusunun kalıcı bir cevabı yok. Yan fayda: `as NotificationType` cast'i artık elle
+yazılmış bir korumaya değil sorgunun kendisine dayanıyor — Q39'un istediği şekil, o yol için.
+
+**Kırmızıdan yeşile.** Yeni `notification-inbox.integration.test.ts`, 60 tanınır satırın
+üstüne 12 yeniden adlandırılmış satır koyuyor (hepsi daha yeni — gerçekçi olan bu, çünkü
+yeniden adlandırma *şimdi* oluyor):
+
+```
+× fifty readable rows … expected […] to have a length of 50 but got 38
+× a full page of renamed rows does not empty the inbox … expected [] to have a length of 10
+```
+
+İkincisi asıl olan: 50 tanınmaz satırın altında 10 okunabilir bildirim dururken gelen kutusu
+**boş** dönüyordu. Düzeltmeden sonra dördü de yeşil.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

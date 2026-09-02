@@ -25,6 +25,29 @@ import type { ListNotificationsInput, NotificationListItem } from './dto'
  *
  * The newest 50: the history's job is "what happened lately", and `13`'s 90-day retention
  * sweep bounds the table — pagination can arrive with a screen that needs it.
+ *
+ * **A type the catalogue no longer knows is excluded, and it is excluded in the QUERY**
+ * (task 14.8). Two separate points, and the second one is the bug.
+ *
+ * *Why exclude.* Renaming an event is a pure code change — templates live in the repository,
+ * not the database (`13`) — with no migration for rows already written, and `ADR-027` keeps
+ * mandatory events out of the ninety-day sweep, so orphaned rows stay indefinitely and are
+ * the NEWEST things in the list on the day of the rename. Both surfaces render the row as
+ * `privacy.events.${type}`, so showing one means a raw message key on screen, and on mobile a
+ * row whose tap derives its destination from the type and therefore goes nowhere. The subject
+ * loses nothing: 14.7 put exactly these rows in the KVKK export, with their type and their
+ * dates, and that is where the completeness obligation lives. `13` §Inbox carries the
+ * argument for why the two surfaces answer differently — the export is the record, this is a
+ * reading list.
+ *
+ * *Why in the query.* The filter used to run in JavaScript, after `take: 50`. The quota was
+ * therefore spent on rows that were discarded a line later: twelve orphans cost the reader
+ * twelve real notifications, and fifty cost them the entire screen — an inbox reporting
+ * "empty" with readable rows sitting directly underneath. `where` makes the take mean fifty
+ * readable rows, which is what the number was always supposed to promise.
+ *
+ * It also makes the cast below true by construction rather than by a hand-written guard
+ * repeated per call site — the shape Q39 wants everywhere.
  */
 export const listNotifications = serviceMethod<
   ListNotificationsInput,
@@ -40,22 +63,20 @@ export const listNotifications = serviceMethod<
     if (actor.userId === null) return err(notFound('Notification'))
 
     const rows = await prisma.notification.findMany({
-      where: { userId: actor.userId },
+      where: { userId: actor.userId, type: { in: ALL_NOTIFICATION_TYPES as string[] } },
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: { id: true, type: true, payload: true, readAt: true, createdAt: true },
     })
 
     return ok({
-      notifications: rows
-        .filter((row) => (ALL_NOTIFICATION_TYPES as string[]).includes(row.type))
-        .map((row) => ({
-          id: row.id,
-          type: row.type as NotificationType,
-          payload: (row.payload ?? {}) as Record<string, unknown>,
-          readAt: row.readAt,
-          createdAt: row.createdAt,
-        })),
+      notifications: rows.map((row) => ({
+        id: row.id,
+        type: row.type as NotificationType,
+        payload: (row.payload ?? {}) as Record<string, unknown>,
+        readAt: row.readAt,
+        createdAt: row.createdAt,
+      })),
     })
   },
 )
