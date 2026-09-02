@@ -11,8 +11,14 @@ buraya koyuyor — *veri girişi zahmetli gelirse fiyat yok, fiyat yoksa ürün 
 ## Oturumdan önce
 
 ```bash
-docker compose up -d && pnpm seed demo && pnpm dev
+docker compose down -v && docker compose up -d && pnpm prisma migrate deploy && pnpm seed demo && pnpm dev
 ```
+
+`down -v` **bilerek**: `pnpm test:e2e` her koşuda demo veritabanına ~6 proje ve 5 teklif
+talebi bırakıyor (14.7'de ölçüldü, `25` §Q38). Hiçbiri bozulmuş veri değil — gerçek akışın
+kanıtı — ama üretici karşısında açılan bir liste yüzlerce test projesiyle başlıyorsa oturum
+ürünü değil artığı gösterir. Bir pilot oturumdan önce sıfırlamak bu yüzden bir adım, tercih
+değil.
 
 | | |
 |---|---|

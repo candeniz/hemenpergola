@@ -85,6 +85,17 @@ working notes, and the right asks for an intelligible copy. Nothing is lost: wha
 means reaches the reader through the rendered text, and the identifiers that do not are
 already in the package's `offerRequests` section, where they can be correlated.
 
+**A notification the catalogue can no longer render still appears, with its title and body
+empty.** Templates live in the repository rather than the database (`13`), so renaming an
+event is a pure code change with no migration for rows already written — and `ADR-027` keeps
+mandatory events out of the ninety-day sweep, so those rows outlive the rename indefinitely.
+The choice at export time is therefore between dropping such a row and carrying it
+unrendered, and dropping it is not available: the row is the subject's data, and its type and
+its dates are meaningful on their own. `renderNotification` returns `null` for a type it does
+not know exactly as it does for a subscription, and the package keeps the row. Before 14.7 it
+threw, which failed the whole export for that subject on a rate-limited endpoint — a
+statutory obligation broken by an internal rename, with retrying no help.
+
 **Every field a notification payload carries passes the same test messages pass:** it must
 not be the other side's personal data. An export leaves our custody, so a payload that
 carried a customer's name or address would disclose it to whoever holds the file — and, worse,

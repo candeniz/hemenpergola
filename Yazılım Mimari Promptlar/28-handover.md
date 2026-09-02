@@ -92,6 +92,12 @@ pnpm seed demo                # or: minimal | e2e
 pnpm dev
 ```
 
+The demo database **grows as you test it**: a full `pnpm test:e2e` leaves about six projects
+and five offer requests behind, every run (measured in 14.7 — `25` §Q38 explains why they are
+kept rather than swept). Nothing breaks; the seeded accounts simply accumulate history. Add
+`docker compose down -v` in front of the block above to start clean — and do it before showing
+the product to anyone (`27` §Before the session).
+
 The worker is a second entrypoint from the same image (`23` §Runtime):
 
 ```

@@ -247,14 +247,35 @@ export const TEMPLATES: Record<NotificationType, Record<Locale, Renderer> | null
   supply_gap_watch: null,
 }
 
-/** Render one notification for one recipient. Returns null for subscription rows. */
+/**
+ * Render one notification for one recipient. `null` when there is nothing to render.
+ *
+ * Two ways that happens, and the second is why this is `== null` rather than `=== null`
+ * (task 14.7):
+ *
+ *   **A subscription row.** `supply_gap_watch` is standing intent, never dispatched, and its
+ *   template is explicitly `null`. Known, expected, handled.
+ *
+ *   **A type this build no longer knows.** `TEMPLATES[type]` is `undefined` then, and the
+ *   strict check let it through to `family[locale](…)`, which threw. That is not
+ *   hypothetical: `13` keeps templates in the repository rather than the database, so
+ *   renaming an event is a pure code change with no migration for rows already written — and
+ *   those rows outlive it, because `ADR-027` keeps mandatory events out of the 90-day sweep.
+ *   The first rename would have broken the KVKK export permanently, for every subject
+ *   holding such a row, on a rate-limited endpoint where retrying does not help.
+ *
+ * `== null` catches both. Callers that must distinguish them can, by asking the catalogue;
+ * nobody needs to today, and inventing the distinction would be inventing a decision.
+ */
 export function renderNotification(
   type: NotificationType,
   locale: Locale,
   payload: Payload,
 ): RenderedNotification | null {
-  const family = TEMPLATES[type]
-  if (family === null) return null
+  const family = TEMPLATES[type] as (typeof TEMPLATES)[NotificationType] | undefined
+  // `== null` on purpose: null (a subscription) and undefined (a type this build does not
+  // know) are both "nothing to render", and telling them apart is not this function's job.
+  if (family === null || family === undefined) return null
   return family[locale](payload)
 }
 

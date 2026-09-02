@@ -375,6 +375,52 @@ describe('9.1 · export and erasure', () => {
     expect(raw).not.toContain('ExponentPushToken')
   }, 60_000)
 
+  it('a notification type the catalogue no longer knows does not break the export', async () => {
+    const prisma = getPrisma()
+
+    /*
+     * **The failure this guards against is a renaming, not a bug** — task 14.7.
+     *
+     * `13` keeps templates in the repository, not the database, so renaming an event is a
+     * pure code change with no migration for the rows already written. Those rows outlive
+     * it: `retention-policy.ts` excludes mandatory events from the 90-day sweep (`ADR-027`),
+     * so a `contact_disclosed` row is there for good.
+     *
+     * Before 14.7 such a row threw. `TEMPLATES[type]` is `undefined` for an unknown key, the
+     * guard tested `=== null`, and the next line called `family[locale](payload)` on
+     * undefined. The whole export died — a KVKK obligation, on a rate-limited endpoint, so
+     * retrying did not help either.
+     */
+    await prisma.notification.create({
+      data: {
+        userId: customerId,
+        type: 'offer_received_renamed_in_a_later_phase',
+        payload: { companyName: 'Ege Pergola' },
+      },
+    })
+
+    const receipt = await requestDataExport(customerActor(), {})
+    expect(receipt.ok, 'the export must survive a row the catalogue cannot render').toBe(true)
+
+    const token = /token=([A-Za-z0-9_-]+)/.exec(sentMail.at(-1)?.text ?? '')?.[1]
+    const download = await downloadDataExport(anonymousActor(), { token: token! })
+    expect(download.ok).toBe(true)
+    if (!download.ok) return
+
+    const pkg = JSON.parse(new TextDecoder().decode(download.value.body)) as {
+      notifications: { type: string; title: string | null; body: string | null }[]
+    }
+
+    // Carried, not dropped: the subject was sent something, and the answer says so even
+    // when this codebase can no longer phrase it.
+    const orphan = pkg.notifications.find(
+      (row) => row.type === 'offer_received_renamed_in_a_later_phase',
+    )
+    expect(orphan).toBeDefined()
+    expect(orphan?.title).toBeNull()
+    expect(orphan?.body).toBeNull()
+  }, 60_000)
+
   it('erasure anonymises: personal fields go, commercial ids stay, sessions die', async () => {
     const prisma = getPrisma()
 

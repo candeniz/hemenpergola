@@ -4462,11 +4462,84 @@ turdaki hiçbir şey değildi — 22:24'ten kalma bir `pnpm dev` + `worker` yı�
 tutuyordu. Süreçler kapatılınca koşu 1.6 dakikaya ve 85 yeşile döndü. Kayda geçiyor çünkü
 aynı belirti bir sonraki sefer koda bakılarak aranabilir.
 
+---
+
+### 2026-09-03 · 14.7 — bilinmeyen bildirim tipi dışa aktarımı düşürmüyor, ve Q38 kapandı
+
+**1 · Bir yeniden adlandırma, bir KVKK yükümlülüğünü kalıcı olarak kırabilirdi.**
+`renderNotification` koruması `family === null`'a bakıyordu; kataloğun tanımadığı bir tip
+için `TEMPLATES[type]` `undefined` döner, korumayı geçer, bir satır sonra
+`family[locale](payload)` atar. Bugün böyle bir satır yok — ama şablonlar depoda durduğu için
+(`13`) bir olayı yeniden adlandırmak saf bir kod değişikliği, eski satırlar için göç yok, ve
+`ADR-027` zorunlu olayları 90 günlük süpürgenin dışında tuttuğu için o satırlar süresiz
+yaşıyor. Yani kırılma ilk yeniden adlandırmada, o kullanıcı için kalıcı ve oran sınırlı bir
+uçta olurdu: tekrar denemek işe yaramaz.
+
+Önce kırmızı: kataloğun tanımadığı tipte bir satırı olan kullanıcının dışa aktarımı bugünkü
+kodda `TypeError: Cannot read properties of undefined (reading 'tr')` ile düştü. Sonra
+`notification-templates.ts:274` iki durumu birden karşılıyor — abonelik satırı (`null`, kasıtlı)
+ve tanınmayan tip (`undefined`) — ve neden ikisinin de "render edilecek bir şey yok" demek
+olduğu fonksiyonun üstünde yazılı. Satır pakete **tipiyle ve tarihleriyle** giriyor, başlığı
+ve gövdesi `null`: satır veri sahibinin verisi, düşürmek bir cevap değil.
+
+**Cast'in kendisi:** `row.type as NotificationType` bir doğrulama değil, bir iddia. Aynı cast
+üç yerde daha var ve **ikisi zaten korumalı** — `dispatch-job.ts:92` ve `inbox-service.ts:54`
+cast'ten önce `ALL_NOTIFICATION_TYPES.includes(row.type)` süzüyor; üçüncüsü
+(`catalog.ts:184`) kataloğun kendi anahtarlarını daraltıyor, yani veritabanına hiç dokunmuyor.
+Korumasız tek yol dışa aktarımdı ve bu turda düzeltilen o. Doğru yer bir Zod parse'ı olurdu ve
+`Notification.type` şemada `String` — `File.ownerType`'ın aksine, ki o bir Prisma enum'u ve
+oradaki `as OwnerType` cast'lerini veritabanının kendisi garanti ediyor. Fark ölçüldü, kalanı
+**Q39** olarak tabloda.
+
+**2 · Q38 kapandı, üç yarısı üç ayrı cevapla.** Önce ölçüm, sonra karar:
+
+| bırakan | koşu başına | karar |
+|---|---|---|
+| `core-flow` — yürünen taslaklar | 4 proje, teklif talebi yok | **(a) temizlendi** |
+| `core-flow` — tamamlanan angajman | 1 proje + 1 talep + teklif/onam/ifşa | **(b) sınırı yazıldı** |
+| `messaging-reviews` — SQL fixture'ı | 4 proje + 4 talep + 4 onam | **(b) sınırı yazıldı** |
+| `attachment-upload` — anonim taslak | 1 proje | **(c) Q25 zaten süpürüyor** |
+
+**(a):** `core-flow.spec.ts` artık açtığı proje kimliklerini kaydediyor ve worker'a özel bir
+`afterAll`'da yalnız **teklif talebi taşımayanları** siliyor. `NOT EXISTS` bir kolaylık değil,
+kararın kendisi: bir projeye `OfferRequest` bağlandığı an ona bir `Consent`, bir
+`ContactDisclosure` ve bir `Offer` de bağlanır — `retention-policy.ts`'in hiçbir yerde
+süpürmediği beş `LEGAL_HOLD_TABLES`'ın üçü. Bunlardan silen bir kapı spec'i, uygulamanın asla
+yapamayacağı şeyin kopyalanabilir bir örneği olurdu; örnek satırdan değerli.
+
+**(b) neden (a) değil:** `messaging-reviews`'un fixture'larını da toplamayı denedim ve
+**patladı** — `Review_offerRequestId_fkey`. `OfferRequest` en az beş taraftan `Restrict` ile
+tutuluyor ve bu kasıtlı (`19` §Disclosure record: "tam olarak bir kez" bir veritabanı
+özelliği). Yani spec ya o FK grafiğini kendi içinde kopyalar ya da grafik büyüdüğü gün
+kırmızıya döner — ikisi de kapı takımına ürünle ilgisi olmayan bir bakım vergisi. Karar:
+angajmanlar kalıyor, büyümenin sınırı `28` §Kurulum ve `27` §Oturumdan önce'ye bir cümle
+olarak yazıldı (`docker compose down -v`, ve bir pilottan önce her hâlükârda).
+
+**(c) doğrulandı:** `attachment-upload`'ın bıraktığı satır `anonymousKey != null`,
+`customerId = null` — `expiredAnonymousDraftsWhere`'in tanımı bu, yani Q25'in 30 günlük kuralı
+onu zaten kapsıyor. Q38'in o yarısı kendiliğinden kapanıyor.
+
+**Ölçüm — iki ardışık tam koşu, ikisi de 85 geçti.** Koşu başına: **+6 proje** (1 anonim
+taslak, 1 angajman, 4 fixture), +5 talep, +5 onam, +1 teklif, +1 ifşa, **+0 kullanıcı**.
+Değişiklikten önce aynı koşu **+10 proje** bırakıyordu; fark tam olarak (a)'nın sildiği dört
+boş taslak. Kanıt satır satır: son koşunun bıraktığı altı projeden beşi teklif talebi taşıyor,
+biri anonim taslak — **sahipli boş taslak sıfır**.
+
+**Yol boyunca — ölçerken bulunan gerçek bir kırmızı.** `messaging-reviews.spec.ts` fixture
+kimliğini `prj_e2e_${RUN}-${Date.now()}` ile üretiyordu. `RUN` geliştirici makinesinde sabit
+(`PW_RUN_ID` bir CI değişkeni), yani aynı milisaniyede eken iki worker aynı kimliği üretiyor
+ve ikincisi `Project_pkey` ile ölüyordu. Üst üste iki koşuda tekrarlandı — **dokunulmamış
+dosyada**, yani bu turun değil. Şüphelenilmemiş olmasının sebebi belirtinin yanıltıcılığı:
+"duplicate key" artık kalmış bir satır gibi okunuyor, yarış gibi değil. Kimliğe worker'a özel
+monotonik bir sayaç eklendi; sayaç koşunun izinde de görünüyor (`…-1`, `…-1`, `…-1`, `…-2` —
+üç eşzamanlı ekiş, tam olarak yarışın kendisi).
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. **Both of those cleaned up in 14.6** (`account.spec.ts`, `phase4-gate.spec.ts`): recorded ids, never a name pattern, deleted in a worker-local `afterAll`. Measured over two consecutive full runs, the e2e user count held at 42. **What still grows is anonymous project drafts**, and they are named here rather than left in a commit message: `core-flow.spec.ts` leaves 5 per run and `attachment-upload.spec.ts` leaves 1 (measured, 14.6). Neither reaches a public surface — a draft is visible only to whoever holds its cookie — and both walk the wizard for real, so the drafts are the evidence rather than a fixture. The same class of debt, one table over. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
+| Q39 | **Turning a database string into a union is an assertion, not a validation — three places, all currently guarded by hand.** `dispatch-job.ts:92` and `inbox-service.ts:54` filter through `ALL_NOTIFICATION_TYPES` before casting, and 14.7 made the export survive an unknown type; `catalog.ts:184` narrows the catalogue's own keys and never touches the database. So nothing is broken today — the point is that the guard is a convention repeated per call site, and the fourth call site is the one that forgets. The right shape is a parse at the boundary (`z.enum(ALL_NOTIFICATION_TYPES)`) returning `NotificationType | null`, which is what `CLAUDE.md` §Conventions already asks for at boundaries. Note `Notification.type` is a plain `String` column *by design* (the catalogue is code, not data, so an enum would need a migration per event); the same-looking `as OwnerType` casts in `file-service.ts` are backed by a real Prisma enum and are a different case. | nothing today | three hand-written guards stay correct until someone adds a fourth reader |
+| Q38 | **Nothing stops `pnpm test:e2e` from running against production — Q34's sibling, and this is all that remains of it.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` and `baseURL` from the environment exactly as the seed does, with no `APP_ENV` check and no refusal — and unlike the seed it also *deletes* afterwards. The litter half is finished: 14.4 (`phase2-gate`), 14.6 (`account`, `phase4-gate`) and 14.7 (`core-flow`'s bare drafts) clean up by recorded id, the e2e user count has held at 42 across every measured pair of runs, and what a run still leaves is deliberate and bounded — six projects, five requests, five consents, one offer, one disclosure, measured in 14.7 with the reasoning in that entry and the reset step in `27` and `28`. The fix for what is left has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
 | Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
 | Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |

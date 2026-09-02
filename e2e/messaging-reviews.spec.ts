@@ -18,6 +18,7 @@ import { SEED_CUSTOMER_EMAIL, SEED_MANUFACTURER_EMAIL } from '../prisma/seed/acc
  */
 
 const RUN = Number(process.env.PW_RUN_ID ?? 1) % 250
+let planted = 0
 
 async function pgQuery<T>(sql: string, params: unknown[]): Promise<T[]> {
   const { Client } = await import('pg')
@@ -79,7 +80,17 @@ async function plantEngagement(status: string): Promise<{ projectId: string; req
   )
   expect(customer && company && product && city).toBeTruthy()
 
-  const suffix = `${RUN}-${Date.now()}`
+  /*
+   * `Date.now()` alone was not unique — task 14.7. `RUN` is constant on a developer machine
+   * (`PW_RUN_ID` is a CI variable), so two workers planting inside the same millisecond
+   * produced the same `prj_e2e_…` and the second one died on `Project_pkey`. Reproduced twice
+   * in a row while measuring Q38; it had been an occasional red in a suite nobody suspected,
+   * because a duplicate key reads like a leftover row rather than a race.
+   *
+   * The counter is per worker and monotonic, which is all the discrimination the id needs.
+   */
+  planted += 1
+  const suffix = `${RUN}-${Date.now()}-${planted}`
   const [project] = await pgQuery<{ id: string }>(
     `INSERT INTO "Project" ("id","customerId","productId","status","quantity","areaM2","cityId","createdAt","updatedAt")
      VALUES ($1,$2,$3,'SUBMITTED',1,20,$4,now(),now()) RETURNING "id"`,

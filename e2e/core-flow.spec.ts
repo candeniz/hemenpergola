@@ -54,9 +54,71 @@ async function signIn(page: Page): Promise<void> {
   await page.waitForURL(/\/hesap/, { timeout: 30_000 })
 }
 
+/*
+ * Every project this run creates, by id, so the run can take back what it left — task 14.7,
+ * closing the half of Q38 that was cleanable.
+ *
+ * Ids, never a name pattern: the wizard's projects have no name to match on, and even where
+ * one exists a pattern sweeps rows a person may have created by hand. Module scope, so the
+ * array is **per worker** — Playwright spreads a file's tests across workers and `afterAll`
+ * runs in each of them, so a worker that deletes only what it recorded cannot delete a row a
+ * sibling is still using. 14.4 learned that the expensive way.
+ */
+const createdProjectIds: string[] = []
+
+/** `/proje/<id>` → the id, recorded. Returns it so a caller can use it too. */
+function recordProject(url: string): string {
+  const id = /\/proje\/([^/?#]+)/.exec(url)?.[1] ?? ''
+  if (id !== '' && id !== 'yeni') createdProjectIds.push(id)
+  return id
+}
+
+async function query<T>(sql: string, params: unknown[]): Promise<T[]> {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString:
+      process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
+  })
+  await client.connect()
+  try {
+    return (await client.query(sql, params)).rows as T[]
+  } finally {
+    await client.end()
+  }
+}
+
+test.afterAll(async () => {
+  if (createdProjectIds.length === 0) return
+
+  /*
+   * **Only the drafts that stayed drafts.** The `NOT EXISTS` is the decision, not a
+   * convenience: the moment a project carries an `OfferRequest` it also carries a `Consent`,
+   * a `ContactDisclosure` and an `Offer` — three of the five `LEGAL_HOLD_TABLES` that
+   * `retention-policy.ts` refuses to sweep anywhere. A gate spec that deleted from them would
+   * be a copyable example of doing the one thing the application may never do, and the
+   * example is worth more than the row. So one engagement per run stays, and Q38 records the
+   * bound instead (`25` §Open questions).
+   *
+   * The FKs make this safe rather than lucky: answers, attachments and estimates cascade;
+   * `OfferRequest.project` is `Restrict`, so if the guard were ever wrong the delete would
+   * fail loudly instead of taking a lifecycle with it.
+   */
+  const deleted = await query<{ id: string }>(
+    `DELETE FROM "Project" p
+      WHERE p."id" = ANY($1::text[])
+        AND NOT EXISTS (SELECT 1 FROM "OfferRequest" r WHERE r."projectId" = p."id")
+      RETURNING p."id"`,
+    [createdProjectIds],
+  )
+  console.info(
+    `core-flow cleanup: ${deleted.length}/${createdProjectIds.length} drafts removed ` +
+      `(the rest carry an offer request and are kept — Q38)`,
+  )
+})
+
 /** The shared walk — see `wizard-walk.ts`; both gates assert the same READY. */
 async function configureToReady(page: Page, cityName: string): Promise<void> {
-  await startDraft(page)
+  recordProject(await startDraft(page))
   await walkWizardToReady(page, cityName)
 }
 
@@ -120,6 +182,7 @@ test.describe('F1 · core flow (release gate)', () => {
     // lookahead this resolves before the redirect and captures the wrong URL.
     await page.waitForURL(/\/proje\/(?!yeni)[^/]+$/)
     const url = page.url()
+    recordProject(url)
 
     // Dimensions, then leave the step so it is written.
     await page.getByLabel(/genişlik|width/i).fill('5000')
