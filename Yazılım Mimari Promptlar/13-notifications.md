@@ -141,6 +141,31 @@ adds the event and forgets both files together. Mobile is covered by the same as
 than a second one: it imports these files through `@messages/*` (`I18N-01`, pinned in
 `mobile-boundary.test.ts`), so there is one catalogue, not two.
 
+**A row navigates on mobile and does not on the web, and the reason is the route maps**
+(14.10). It is tempting to explain this as a difference in what an inbox *is* — an action
+list on the phone, a record on the desktop — and that explanation would be invented after the
+fact. The real reason is smaller and checkable: a notification's payload identifies an **offer
+request**, expo-router has a route keyed by exactly that (`(musteri)/talep/[id]`,
+`(uretici)/talep/[id]`), and the web map has none. The web surfaces sit under a parent the
+notification has never carried — `hesap/projeler/[id]/talepler` needs the *project*,
+`panel/[companyId]/talepler/[requestId]` needs the *company*.
+
+Making the row a link therefore costs one of three things, and none of them is small: widen
+every payload with a second id (the payload vocabulary is closed — `19` §Export), join
+`OfferRequest` for fifty rows on every inbox render (a service feature, and it still lands the
+customer on a *list* rather than the request), or add a redirect route that resolves an id and
+bounces (a new screen, which `07` §Out of the navigation is the register for). The row stays
+text until one of those is wanted for its own sake.
+
+`notification-target-web.test.ts` pins the fact rather than the decision: if the web map ever
+grows a route reachable from an offer request alone, it goes red, and this paragraph should be
+reopened rather than the test deleted.
+
+**On the web the manufacturer has no inbox at all** — `/hesap/bildirimler` is a customer
+route, and nothing under `/panel/[companyId]` lists notifications. Mobile shows one screen to
+both shells. That is a missing surface rather than a difference in behaviour, and it is
+recorded as such (`25` §Open questions), not built here.
+
 **The filter belongs in the query, not after the take.** Filtering the fifty rows after
 fetching them spends the quota on rows that are then discarded: twelve orphans cost the
 reader twelve real notifications, and fifty cost the whole screen — an inbox reporting

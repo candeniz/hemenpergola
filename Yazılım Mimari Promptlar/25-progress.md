@@ -4614,10 +4614,62 @@ sonra ağaç geri alındı, `git status` yalnız yeni dosyayı gösterdi.
 **Eksik anahtar çıkmadı** — 21 olayın 21'inin iki dilde karşılığı var, ölü anahtar yok. Yeni
 kullanıcı dizesi eklenmedi.
 
+---
+
+### 2026-09-03 · 14.10 — web gelen kutusu satırının neden bir yere gitmediği
+
+**Karar: (b) — web'de satır düz metin kalıyor.** Ama gerekçe prompt'un önerdiği ikilem
+değil ("mobilde eylem, web'de kayıt"); o açıklamayı sonradan uydurmak olurdu. Gerçek sebep
+daha küçük ve **kontrol edilebilir**: bildirimin payload'ı bir **teklif talebini** tanımlıyor,
+expo-router'da tam olarak onunla anahtarlanan bir rota var, web'de yok.
+
+| | teklif talebi yüzeyi | gereken kimlik |
+|---|---|---|
+| mobil `(musteri)` / `(uretici)` | `talep/[id]` | teklif talebi — payload'da var |
+| web `(customer)` | `hesap/projeler/[id]/talepler` | **proje** |
+| web `(manufacturer)` | `panel/[companyId]/talepler/[requestId]` | **firma** |
+
+Ve payload'lar heterojen: `offer_request_created` ve `supply_gap_watch` `projectId` taşıyor,
+`contact_disclosed` ve `price_book_published` `companyId`, geri kalanların çoğu yalnız
+`offerRequestId`. Yani müşteri tarafındaki `contact_disclosed`, `offer_request_declined`,
+`message_received`, `survey_scheduled` satırları için web'in istediği `projectId` **hiçbir
+yerde yok**.
+
+(a)'nın bedeli üç seçenekten biri ve hiçbiri küçük değil: (i) her payload'a ikinci bir id
+eklemek — sözlük 14.6'da kapatıldı (`19` §Export); (ii) her gelen kutusu render'ında elli satır
+için `OfferRequest` join'lemek — bu bir servis özelliği, ve müşteriyi yine talebin kendisine
+değil bir **listeye** indiriyor, yani mobil paritesi de vermiyor; (iii) id çözüp yönlendiren
+yeni bir rota — yeni ekran, `07` §Out of the navigation'ın defteri. Bir bağlantı için üç fiyat.
+
+**Karar bir testle tutuluyor, kararın kendisi değil dayandığı olgu.**
+`notification-target-web.test.ts` diskteki iki rota haritasını çözüyor (13.8'in navigasyon
+testinin şekli) ve "teklif talebiyle tek başına ulaşılan web rotası yok" diyor. Mutasyonla
+doğrulandı: `hesap/talepler/[requestId]/page.tsx` eklenince kırmızı, silinince yeşil. O gün
+gelirse `13` §Inbox yeniden açılacak — test silinmeyecek.
+
+**3 · Üretici tarafı ölçüldü: web'de üreticinin gelen kutusu hiç yok.** `/hesap/bildirimler`
+bir müşteri rotası (`(customer)` grubunda, `customerNav`'da); `/panel/[companyId]` altında
+bildirim listeleyen hiçbir sayfa yok. Mobil ise tek ekranı iki kabuğa birden gösteriyor
+(`app/bildirimler.tsx`, kabuğu `session.role`'dan seçiyor). Yani asıl asimetri bağlantı değil:
+**bir yüzey eksik.** Yeni ekran bu turun kapsamı dışı — Q40 olarak tabloda.
+
+**Yol boyunca — ikinci bir tanım bulundu, düzeltilmedi.** `mobile/app/bildirimler.tsx:61`
+hedefi **kendi içinde** türetiyor (`session.role` → kabuk, sonra bir üçlü koşul), oysa aynı
+eşleme `push-target.ts`'te zaten var ve worker push'a onu damgalıyor. İki tanım, ve ikisi
+küçük şekillerde ayrışıyor: `pushTargetPath` kabuğu olayın `audience`'ından seçiyor,
+ekran oturumun rolünden; ve `offerRequestId` yokken `pushTargetPath` kabuk anasayfasını
+döndürürken ekran hiçbir şey yapmıyor. Bugün ikisi aynı sonucu veriyor. Düzeltmedim çünkü
+mobil sözleşme yalnız `@contracts/*` (yani `application/dto`) içeri alabiliyor ve
+`push-target.ts` `domain/`'de — `dto.ts`'ten yeniden dışa vurmak (`isMandatory` gibi) mümkün
+ama davranışı da değiştirirdi (hesap düzeyi satırlar tıklanır hâle gelirdi), ve bu turun kararı
+web tarafıydı. **Q41** olarak tabloda.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q41 | **The mobile inbox derives its own tap target instead of using the one the worker stamps.** `push-target.ts` is pure domain and the worker calls it to put `data.url` on every push; `mobile/app/bildirimler.tsx` re-implements the same mapping inline, so a tap in the list and a tap on a push are two definitions of one destination. They agree today and diverge in two small ways already: the shell comes from the event's `audience` in one and from `session.role` in the other, and an event with no `offerRequestId` navigates to the shell home from a push but does nothing in the list. The fix is a re-export through `application/dto` (the `isMandatory` precedent — mobile may import `@contracts/*`, not `domain/`), which also changes behaviour, which is why 14.10 measured it and left it. | nothing today — the two agree | one destination stays defined twice, and the copy is the one a person sees most |
+| Q40 | **A manufacturer has no notification inbox on the web.** `/hesap/bildirimler` is a customer route in the `(customer)` group and appears only in `customerNav`; nothing under `/panel/[companyId]` lists notifications, while mobile shows the single `app/bildirimler.tsx` screen to both shells. So a manufacturer's in-app history — SLA reminders, new requests, messages — exists only if they installed the app. The capability is already there (`listNotifications` scopes by `userId` and asserts nothing about the shell), so this is a page, not a feature. Found in 14.10 while deciding whether the row should be a link; the missing surface is the larger half of that asymmetry. | nothing today | the manufacturer's history is mobile-only, undeclared anywhere, and invisible to whoever plans the portal |
 | Q39 | **Turning a database string into a union is an assertion, not a validation — three places, all currently guarded by hand.** `dispatch-job.ts:92` and `inbox-service.ts:54` filter through `ALL_NOTIFICATION_TYPES` before casting, and 14.7 made the export survive an unknown type; `catalog.ts:184` narrows the catalogue's own keys and never touches the database. So nothing is broken today — the point is that the guard is a convention repeated per call site, and the fourth call site is the one that forgets. The right shape is a parse at the boundary (`z.enum(ALL_NOTIFICATION_TYPES)`) returning `NotificationType | null`, which is what `CLAUDE.md` §Conventions already asks for at boundaries. Note `Notification.type` is a plain `String` column *by design* (the catalogue is code, not data, so an enum would need a migration per event); the same-looking `as OwnerType` casts in `file-service.ts` are backed by a real Prisma enum and are a different case. | nothing today | three hand-written guards stay correct until someone adds a fourth reader |
 | Q38 | **Nothing stops `pnpm test:e2e` from running against production — Q34's sibling, and this is all that remains of it.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` and `baseURL` from the environment exactly as the seed does, with no `APP_ENV` check and no refusal — and unlike the seed it also *deletes* afterwards. The litter half is finished: 14.4 (`phase2-gate`), 14.6 (`account`, `phase4-gate`) and 14.7 (`core-flow`'s bare drafts) clean up by recorded id, the e2e user count has held at 42 across every measured pair of runs, and what a run still leaves is deliberate and bounded — six projects, five requests, five consents, one offer, one disclosure, measured in 14.7 with the reasoning in that entry and the reset step in `27` and `28`. The fix for what is left has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
 | Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
