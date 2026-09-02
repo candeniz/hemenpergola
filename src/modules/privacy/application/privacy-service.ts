@@ -10,6 +10,7 @@ import { brandName } from '@/modules/notification/domain/brand'
 import { getMailer } from '@/modules/notification/infrastructure/mailer'
 import { prisma } from '@/shared/db'
 import { err, notFound, ok, precondition, rateLimited } from '@/shared/result'
+import type { NotificationType } from '@/modules/notification/domain/catalog'
 import { serviceMethod } from '@/shared/service/registry'
 import { getStorage } from '@/shared/storage'
 
@@ -146,6 +147,9 @@ async function buildExportPackage(userId: string): Promise<Record<string, unknow
       select: { channel: true, type: true, enabled: true },
       orderBy: [{ type: 'asc' }, { channel: 'asc' }],
     }),
+    /*
+     * `payload` is selected to be RENDERED, not to be exported. See below.
+     */
     prisma.notification.findMany({
       where: { userId },
       select: { type: true, payload: true, readAt: true, createdAt: true },
@@ -165,6 +169,44 @@ async function buildExportPackage(userId: string): Promise<Record<string, unknow
       orderBy: { createdAt: 'asc' },
     }),
   ])
+
+  /*
+   * **What was sent, not what produced it** — task 14.6.
+   *
+   * A notification is a message a person received; `payload` is the template's input. Handing
+   * over `{"offerRequestId":"cmt…","areaM2":42}` answers the access request with a machine's
+   * working notes, which is the same objection 14.5 made to the raw push token: an access
+   * request asks for an intelligible copy, and an opaque identifier bag is not one.
+   *
+   * The raw payload is **dropped rather than kept as a secondary field**. Everything in it
+   * that means something reaches the reader through the rendered text, and the identifiers
+   * that do not — `offerRequestId` above all — are already in this package's own
+   * `offerRequests` section, where they can actually be correlated. A second, less readable
+   * copy of the same facts is not more transparency; it is more surface.
+   *
+   * Rendered in the subject's **own locale**, because that is the language the notification
+   * was delivered in — `notification.dispatch` reads the same field.
+   *
+   * A row with no template (`supply_gap_watch` is standing intent, never dispatched) keeps
+   * its type and its dates and says so with nulls, rather than vanishing from the answer.
+   */
+  const { renderNotification } =
+    await import('@/modules/notification/domain/notification-templates')
+  const locale = user.locale === 'en' ? 'en' : 'tr'
+  const renderedNotifications = notifications.map((row) => {
+    const rendered = renderNotification(
+      row.type as NotificationType,
+      locale,
+      (row.payload ?? {}) as Record<string, string | number>,
+    )
+    return {
+      type: row.type,
+      title: rendered?.title ?? null,
+      body: rendered?.body ?? null,
+      readAt: row.readAt,
+      createdAt: row.createdAt,
+    }
+  })
 
   return {
     exportedAt: new Date().toISOString(),
@@ -199,7 +241,7 @@ async function buildExportPackage(userId: string): Promise<Record<string, unknow
     reviews,
     messagesSent: sentMessages,
     notificationPreferences,
-    notifications,
+    notifications: renderedNotifications,
     devices,
   }
 }

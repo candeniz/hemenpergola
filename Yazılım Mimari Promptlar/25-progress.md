@@ -4414,11 +4414,59 @@ detayından düştüğünü iddia ediyor. `09`'un uygunluk koduna dokunulmadı.
 temizlik borcunu taşıdığını raporlamıştı ama tabloya yazmamıştı — commit mesajında duran bir
 borç, kimsenin okumadığı bir borçtur.
 
+### 2026-09-02 — Faz 14.6 · dışa aktarımdaki bildirimler okunabilir, ve kalan test artıkları
+
+Küçük tur, yeni yetenek yok.
+
+**1 · Bildirimler artık render edilmiş hâlde.** Paket `Notification.payload`'ı ham
+veriyordu — `{"offerRequestId":"cmt…","areaM2":42}`. Bu, 14.5'in ham push jetonuna yaptığı
+itirazın aynısı: erişim hakkı **anlaşılır bir kopya** ister, opak bir kimlik torbası değil.
+Katalog her olayı zaten başlık + gövdeye render ediyor, ve dışa aktarım artık onu veriyor.
+
+**Ham payload ikincil alan olarak bırakılmadı, tamamen çıkarıldı.** İçindeki anlamlı her şey
+render edilmiş metinden okunuyor; anlamlı olmayanlar — başta `offerRequestId` — zaten aynı
+paketin `offerRequests` bölümünde, korelasyon kurulabilecek yerde duruyor. Aynı olguların
+daha az okunabilir ikinci bir kopyası, daha fazla şeffaflık değil, daha fazla yüzeydir.
+
+Dil: **kullanıcının kendi locale'i** — bildirimin gönderildiği dil; `notification.dispatch`
+aynı alanı okuyor. Şablonu olmayan satır (`supply_gap_watch` duran niyet, hiç
+gönderilmiyor) tipini ve tarihlerini koruyup başlığı null bırakıyor, cevaptan kaybolmuyor.
+
+**2 · Kural yazıldı, çünkü bugüne kadar yalnızca tesadüfen doğruydu.** Payload'lar temiz —
+ifşa öncesi tek olay `offer_request_received` yalnız şehir, alan ve kimlik taşıyor — ama bu
+test payload'lar için **hiç yapılmamıştı**. Kural `19` §Export'ta: bir payload alanı,
+mesajlar için geçerli olan "öteki tarafın verisi" testinden geçer.
+
+Testle de tutuluyor: `notification-catalog.test.ts` izin verilen kelime dağarcığını çiviliyor
+ve yeni bir anahtarda kırmızıya dönüyor — mutasyonla doğrulandı (`customerEmail` eklenince
+iki test birden düştü). İki ad-benzeri alan listede ve ikisi de **gerekçeli**: `companyName`
+üreticinin public dizin adı, `senderName` yalnız `message_received`'da ve mesajlaşma
+`ADR-028`'e göre kabulde açılıyor — yani ifşa kaydı ve bildirimi çoktan olmuş.
+
+**3 · Devreden temizlik borcu kapandı.** `account.spec.ts` ve `phase4-gate.spec.ts` artık
+açtıklarını topluyor. `phase2-gate`'in düzeni: **kaydedilmiş kimliklerle**, ad kalıbıyla
+süpürmeden, worker'a özel bir dizi üzerinden — 14.4'ün takvim spec'inde düştüğü tuzak tam
+olarak buydu, `afterAll` worker başına koşuyor ve önek süpürgesi kardeş worker'ın ektiğini
+siliyordu. E-posta üretildiği yerde kaydediliyor, yani yeni bir çağrı yeri unutamıyor.
+Projeler kullanıcıdan **önce** siliniyor: `Project.customer` `onDelete: SetNull`, yani
+yalnız kullanıcıyı silmek taslakları sahipsiz artık olarak bırakırdı.
+
+Ölçüm — iki ardışık tam koşu, ikisi de 85 geçti: **e2e kullanıcı sayısı 42 → 42 → 42**,
+`phase4-gate` tek başına **+0 proje**, `account.spec` tek başına **+0 kullanıcı**. Kalan
+büyüme başka spec'lerden ve ölçüldü: `core-flow` koşu başına +5, `attachment-upload` +1
+anonim taslak. İkisi de sihirbazı gerçekten yürüyor, yani taslaklar fixture değil kanıt;
+Q38'e iliştirildi.
+
+**Yol boyunca:** bir tam koşu 5.3 dakika sürüp dört testi zaman aşımına uğrattı. Sebep bu
+turdaki hiçbir şey değildi — 22:24'ten kalma bir `pnpm dev` + `worker` yığını CPU'yu %96'da
+tutuyordu. Süreçler kapatılınca koşu 1.6 dakikaya ve 85 yeşile döndü. Kayda geçiyor çünkü
+aynı belirti bir sonraki sefer koda bakılarak aranabilir.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. **Two specs still leave rows behind and are named here rather than left in a commit message** (14.4 reported them, 14.5 attached them): `account.spec.ts` registers users and `phase4-gate.spec.ts` registers a user and creates projects. Neither reaches a public surface — no directory card, no sitemap entry, no city count — which is why they were not worth a turn; the debt is the same class and the symptom is not. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
+| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. **Both of those cleaned up in 14.6** (`account.spec.ts`, `phase4-gate.spec.ts`): recorded ids, never a name pattern, deleted in a worker-local `afterAll`. Measured over two consecutive full runs, the e2e user count held at 42. **What still grows is anonymous project drafts**, and they are named here rather than left in a commit message: `core-flow.spec.ts` leaves 5 per run and `attachment-upload.spec.ts` leaves 1 (measured, 14.6). Neither reaches a public surface — a draft is visible only to whoever holds its cookie — and both walk the wizard for real, so the drafts are the evidence rather than a fixture. The same class of debt, one table over. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
 | Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
 | Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |

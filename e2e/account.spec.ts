@@ -64,9 +64,54 @@ test.beforeEach(async ({ page }, testInfo) => {
 const PASSWORD = 'e2e-account-password-1'
 const NEW_PASSWORD = 'e2e-account-password-2'
 
+/**
+ * **What the run creates, the run removes** — task 14.6, closing the half `14.4` deferred.
+ *
+ * These rows never reach a public surface — no directory card, no sitemap entry, no city
+ * count — which is why the gate spec's company came first. But the debt is the same class and
+ * the database grows on every run: forty-two `e2e-…@example.com` users had accumulated on the
+ * demo database by the time this was written.
+ *
+ * **By recorded id, never by pattern.** `afterAll` runs per worker and Playwright spreads one
+ * file's tests across workers, so a hook that swept `LIKE 'e2e-%'` would delete rows a
+ * sibling worker was still using — the trap 14.4 walked into with the calendar spec. This
+ * array is worker-local: each hook removes exactly what its own tests made, and an empty one
+ * removes nothing.
+ *
+ * Projects go first. `Project.customer` is `onDelete: SetNull`, so deleting the user alone
+ * would leave the drafts behind as orphans — litter that no longer even names its owner.
+ */
+const created: { emails: string[]; projectIds: string[] } = { emails: [], projectIds: [] }
+
+async function pgExec(sql: string, params: unknown[]): Promise<void> {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString:
+      process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
+  })
+  await client.connect()
+  try {
+    await client.query(sql, params)
+  } finally {
+    await client.end()
+  }
+}
+
+test.afterAll(async () => {
+  if (created.projectIds.length > 0) {
+    await pgExec(`DELETE FROM "Project" WHERE "id" = ANY($1::text[])`, [created.projectIds])
+  }
+  if (created.emails.length > 0) {
+    await pgExec(`DELETE FROM "User" WHERE "email" = ANY($1::text[])`, [created.emails])
+  }
+})
+
 /** A fresh address per run, so a re-run is not a duplicate registration. */
 function uniqueEmail(label: string): string {
-  return `e2e-${label}-${Date.now()}-${Math.floor(Math.random() * 10_000)}@example.com`
+  const email = `e2e-${label}-${Date.now()}-${Math.floor(Math.random() * 10_000)}@example.com`
+  // Recorded where it is minted, so a new call site cannot forget to.
+  created.emails.push(email)
+  return email
 }
 
 type Mail = { to: string; subject: string; text: string; link: string | null }

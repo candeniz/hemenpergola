@@ -204,4 +204,76 @@ describe('notification catalogue (phase gate)', () => {
       )
     }
   })
+
+  /**
+   * **Every payload field passes the "other side's data" test** — task 14.6.
+   *
+   * The KVKK export renders these payloads into the subject's own copy, and messages have
+   * had this rule since Phase 7: an export carries what the subject WROTE, never what the
+   * other side wrote, because a copy that leaves our custody must not carry a third party's
+   * personal data. Payloads had never been held to it. They pass today by accident — the one
+   * pre-disclosure event, `offer_request_received`, carries a city, an area and an id — and
+   * an accident is not a rule.
+   *
+   * So the allowed vocabulary is pinned. The two name-shaped fields on it are argued rather
+   * than assumed:
+   *
+   *   `companyName`   a manufacturer's display name, which is public directory data — the
+   *                   same field `/ureticiler` lists to anonymous visitors.
+   *   `senderName`    only on `message_received`, and messaging opens at acceptance
+   *                   (`ADR-028`), so by the time it can be sent the contact disclosure has
+   *                   already happened with its record and its notification.
+   *
+   * A new key fails here and the failure is the question: whose data is this, and has the
+   * subject already been told? `19` §Export carries the rule in prose.
+   */
+  it('19 §Export · no payload field carries a third party’s personal data', () => {
+    const ALLOWED = new Set([
+      // Counts, times and machine references — nobody's personal data.
+      'companyCount',
+      'hoursLeft',
+      'offerNumber',
+      'rating',
+      'validUntil',
+      'version',
+      'when',
+      // Place, not person: a city is where the work is, at city granularity.
+      'cityName',
+      'areaM2',
+      // A moderator's published grounds for rejecting a review — about the text, not a person.
+      'reason',
+      // Argued above.
+      'companyName',
+      'senderName',
+    ])
+
+    const offenders: string[] = []
+    for (const type of ALL_NOTIFICATION_TYPES) {
+      for (const key of Object.keys(NOTIFICATION_EVENTS[type].sample)) {
+        if (!ALLOWED.has(key)) offenders.push(`${type}.${key}`)
+      }
+    }
+
+    expect(
+      offenders,
+      'a new payload field: whose data is it, and has the subject been told? See 19 §Export.',
+    ).toEqual([])
+  })
+
+  /**
+   * The blunt half of the same rule: whatever the vocabulary says, an address or a number
+   * must never appear. This catches a field that slips onto the list above by looking
+   * harmless — `contact`, say — and then carries an email.
+   */
+  it('19 §Export · no payload SAMPLE contains an email or a phone number', () => {
+    const offenders: string[] = []
+    for (const type of ALL_NOTIFICATION_TYPES) {
+      const serialised = JSON.stringify(NOTIFICATION_EVENTS[type].sample)
+      if (/[\w.+-]+@[\w-]+\.[\w.]+/.test(serialised)) offenders.push(`${type} · email`)
+      if (/(\+90|0)\s?5\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/.test(serialised)) {
+        offenders.push(`${type} · phone`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
 })

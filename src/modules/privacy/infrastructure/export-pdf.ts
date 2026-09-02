@@ -135,9 +135,13 @@ export async function renderExportPdf(pkg: ExportPackage): Promise<Uint8Array> {
   if (notifications.length === 0) doc.text('Kayıt yok.')
   for (const notification of notifications) {
     const row = notification as Record<string, unknown>
+    // The rendered title and body — what the person actually received (14.6). The type is
+    // kept beside it as the machine name, which is what a support conversation quotes.
     doc.text(
-      `${line(row.createdAt)} · ${line(row.type)} · ${row.readAt === null ? 'okunmadı' : 'okundu'}`,
+      `${line(row.createdAt)} · ${row.readAt === null ? 'okunmadı' : 'okundu'} · ${line(row.type)}`,
     )
+    if (row.title !== null && row.title !== undefined) doc.text(`   ${line(row.title)}`)
+    if (row.body !== null && row.body !== undefined) doc.text(`   ${line(row.body)}`)
   }
 
   heading('Kayıtlı cihazlarınız')

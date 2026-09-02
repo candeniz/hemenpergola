@@ -38,8 +38,63 @@ import { assertReady, startDraft, walkWizardToReady } from './wizard-walk'
 
 const PASSWORD = 'e2e-phase4-gate-password-1'
 
+/**
+ * **What the run creates, the run removes** — task 14.6, closing the half `14.4` deferred.
+ *
+ * These rows never reach a public surface — no directory card, no sitemap entry, no city
+ * count — which is why the gate spec's company came first. But the debt is the same class and
+ * the database grows on every run: forty-two `e2e-…@example.com` users had accumulated on the
+ * demo database by the time this was written.
+ *
+ * **By recorded id, never by pattern.** `afterAll` runs per worker and Playwright spreads one
+ * file's tests across workers, so a hook that swept `LIKE 'e2e-%'` would delete rows a
+ * sibling worker was still using — the trap 14.4 walked into with the calendar spec. This
+ * array is worker-local: each hook removes exactly what its own tests made, and an empty one
+ * removes nothing.
+ *
+ * Projects go first. `Project.customer` is `onDelete: SetNull`, so deleting the user alone
+ * would leave the drafts behind as orphans — litter that no longer even names its owner.
+ */
+const created: { emails: string[]; projectIds: string[] } = { emails: [], projectIds: [] }
+
+async function pgExec(sql: string, params: unknown[]): Promise<void> {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString:
+      process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
+  })
+  await client.connect()
+  try {
+    await client.query(sql, params)
+  } finally {
+    await client.end()
+  }
+}
+
+test.afterAll(async () => {
+  if (created.projectIds.length > 0) {
+    await pgExec(`DELETE FROM "Project" WHERE "id" = ANY($1::text[])`, [created.projectIds])
+  }
+  if (created.emails.length > 0) {
+    await pgExec(`DELETE FROM "User" WHERE "email" = ANY($1::text[])`, [created.emails])
+  }
+})
+
 function uniqueEmail(): string {
-  return `e2e-phase4-${Date.now()}-${Math.floor(Math.random() * 10_000)}@example.com`
+  const email = `e2e-phase4-${Date.now()}-${Math.floor(Math.random() * 10_000)}@example.com`
+  created.emails.push(email)
+  return email
+}
+
+/**
+ * `startDraft`, with the draft recorded. The helper is shared with other specs and stays
+ * unaware of this file's bookkeeping; the id comes out of the URL it already returns.
+ */
+async function newDraft(page: Page): Promise<string> {
+  const url = await startDraft(page)
+  const id = /\/proje\/([^/?]+)/.exec(url)?.[1]
+  if (id !== undefined) created.projectIds.push(id)
+  return url
 }
 
 type Mail = { to: string; subject: string; text: string; link: string | null }
@@ -80,7 +135,7 @@ test.describe('Phase 4 gate · an anonymous draft survives a restart and is clai
     const first: BrowserContext = await browser.newContext()
     const page = await first.newPage()
 
-    const draftUrl = await startDraft(page)
+    const draftUrl = await newDraft(page)
     await walkWizardToReady(page, 'İstanbul')
 
     /*
@@ -216,9 +271,9 @@ test.describe('Phase 4 gate · an anonymous draft survives a restart and is clai
     const context = await browser.newContext()
     const page = await context.newPage()
 
-    await startDraft(page)
-    await startDraft(page)
-    await startDraft(page)
+    await newDraft(page)
+    await newDraft(page)
+    await newDraft(page)
 
     await page.goto('/proje/yeni')
     await page

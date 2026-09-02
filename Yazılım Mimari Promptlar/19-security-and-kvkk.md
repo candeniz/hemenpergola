@@ -77,6 +77,27 @@ This is a redaction of an internal identifier on security grounds, not a refusal
 right. `privacy.integration.test.ts` asserts both halves: the device appears, the address
 does not.
 
+**Notifications are exported as they were received, not as they were built.** The package
+carries each notification's rendered title and body, in the subject's own locale — the
+language it was delivered in — and drops the raw `payload`. A payload is the template's
+input; `{"offerRequestId":"cmt…","areaM2":42}` answers an access request with a machine's
+working notes, and the right asks for an intelligible copy. Nothing is lost: what the payload
+means reaches the reader through the rendered text, and the identifiers that do not are
+already in the package's `offerRequests` section, where they can be correlated.
+
+**Every field a notification payload carries passes the same test messages pass:** it must
+not be the other side's personal data. An export leaves our custody, so a payload that
+carried a customer's name or address would disclose it to whoever holds the file — and, worse,
+would do so *before* acceptance for the one event that reaches an un-disclosed manufacturer.
+The payloads satisfy this today (`offer_request_received` carries a city, an area and an id),
+but they had never been held to it, and a rule that holds by accident holds until the next
+field. Two name-shaped fields are on the allowed list and both are argued rather than
+assumed: `companyName` is a manufacturer's public directory name, and `senderName` appears
+only on `message_received`, which `ADR-028` opens at acceptance — after the disclosure record
+and its notification. `notification-catalog.test.ts` pins the vocabulary and fails on a new
+key, so adding one asks the question out loud: whose data is this, and has the subject
+already been told?
+
 **Erasure is anonymisation, not deletion.** `User` becomes `deleted-{hash}@anonymised.local`
 with personal fields nulled; projects, offers, reviews and audit rows keep their ids and
 lose their identifiers. Financial and audit records are retained on legal-obligation basis.

@@ -338,7 +338,7 @@ describe('9.1 · export and erasure', () => {
 
     const pkg = JSON.parse(new TextDecoder().decode(download.value.body)) as {
       notificationPreferences: { channel: string; type: string; enabled: boolean }[]
-      notifications: { type: string; readAt: string | null }[]
+      notifications: { type: string; title: string | null; body: string | null }[]
       devices: { platform: string; lastSeenAt: string }[]
     }
 
@@ -347,7 +347,20 @@ describe('9.1 · export and erasure', () => {
       type: 'offer_received',
       enabled: false,
     })
-    expect(pkg.notifications.map((row) => row.type)).toContain('offer_received')
+    /*
+     * **Rendered, in the subject's own language** — task 14.6. An access request asks for an
+     * intelligible copy; `{"companyName":"Ege Pergola"}` is the template's input, not the
+     * message the person received.
+     */
+    const received = pkg.notifications.find((row) => row.type === 'offer_received')
+    expect(received).toBeDefined()
+    expect(received?.title, 'a rendered Turkish title, not a payload').toBe('Yeni teklif geldi')
+    expect(received?.body).toContain('Ege Pergola')
+
+    // And the raw payload is gone, not demoted to a second field: the identifiers that mean
+    // anything are already in this package's `offerRequests` section.
+    expect(JSON.stringify(pkg.notifications)).not.toContain('payload')
+    expect(JSON.stringify(pkg.notifications)).not.toContain('companyName')
     expect(pkg.devices.map((row) => row.platform)).toContain('android')
 
     /*
