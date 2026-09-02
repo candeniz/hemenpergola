@@ -4571,6 +4571,49 @@ yeniden adlandırma *şimdi* oluyor):
 İkincisi asıl olan: 50 tanınmaz satırın altında 10 okunabilir bildirim dururken gelen kutusu
 **boş** dönüyordu. Düzeltmeden sonra dördü de yeşil.
 
+---
+
+### 2026-09-03 · 14.9 — gelen kutusu etiketleri kataloğa bağlandı
+
+14.8 arka kapıyı kapattı: tanınmayan tip gelen kutusuna girmiyor, çünkü ekranda ham bir
+mesaj anahtarı olurdu. Aynı görüntü **ön kapıdan** hâlâ mümkündü — kataloğa eklenmiş ama
+etiketi olmayan bir olay süzgeçten geçer ve müşteriye `privacy.events.the_new_thing` diye
+görünür.
+
+**Neyin tutmadığı ölçüldü.** `messages.test.ts` `tr`'yi `en`'e karşı kıyaslıyor, yani **iki
+dilden birden eksik** bir anahtarı göremiyor — ve hata tam olarak bu şekilde oluyor, çünkü
+tek bir commit olayı ekler ve iki dosyayı birden unutur. `mobile-i18n.test.ts` ise
+`t(locale, '…')` çağrılarını **düz dizgeyle** tarıyor; gelen kutusu
+`` t(locale, `privacy.events.${item.type}`) `` yazıyor, yani hiçbir statik tarama çözemiyor.
+21–21 örtüşme yalnız alışkanlıkla duruyordu.
+
+`test/notification-labels.test.ts` **çift yönlü**, 13.8'in navigasyon envanteri gibi: katalog
+etiketleri geçemez, etiketler de kataloğu geçemez. Tek yönlü bir kontrol, yeniden
+adlandırılmış bir olayın eski etiketini iki dosyada sonsuza kadar bırakır ve katalog arkeoloji
+hâline gelir. Beşinci bir iddia da var: bir etiketin olayın kendi anahtarı olması
+(`"offer_accepted": "offer_accepted"`) öteki dördünü geçer ve ekrana eksik anahtarla aynı
+makine dizgesini basar.
+
+**Mobil ayrı bir iddiaya girmedi, çünkü ayrı bir liste yok.** `mobile/src/i18n/index.ts` aynı
+iki dosyayı `@messages/*` üzerinden içeri alıyor (`I18N-01` — kopyalanmaz, içe aktarılır) ve
+bu eşleme `mobile-boundary.test.ts:123`'te zaten çivili. İkinci bir kopya çıkarsa önce o test
+düşer; bu test anlamını korur. Yeni bir çözücü açılmadı.
+
+**Mutasyonla dört kez doğrulandı:**
+
+| mutasyon | yeni test | `messages.test.ts` |
+|---|---|---|
+| kataloğa etiketsiz olay (`mutation_probe_event`) | **3 kırmızı** | yeşil |
+| `tr`'den bir anahtar sil | **2 kırmızı** | kırmızı (parite) |
+| **iki dilden birden** anahtar sil | **3 kırmızı** | **6/6 yeşil** |
+| olayı olmayan ölü etiket ekle | **2 kırmızı** | yeşil |
+
+Üçüncü satır boşluğun kendisi: mevcut koruma tamamen yeşilken yeni test kırmızı. Dördünden
+sonra ağaç geri alındı, `git status` yalnız yeni dosyayı gösterdi.
+
+**Eksik anahtar çıkmadı** — 21 olayın 21'inin iki dilde karşılığı var, ölü anahtar yok. Yeni
+kullanıcı dizesi eklenmedi.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |

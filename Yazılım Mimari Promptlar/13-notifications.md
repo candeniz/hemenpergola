@@ -131,6 +131,16 @@ consistent because the questions differ:
   which is not a better answer than absence — and the subject can still see it, in full, in
   the export.
 
+**Every event the inbox can show has a label, and a test holds it** (`notification-labels.test.ts`,
+14.9). The catalogue above and the `privacy.events.*` namespace in `src/i18n/messages/{tr,en}.json`
+are one list rendered twice, and the binding is asserted in both directions: an event added
+without a label fails, and a label left behind by a rename fails. Nothing had kept them
+aligned — `messages.test.ts` compares the two locales against each other, so a key missing
+from both is invisible to it, and that is precisely the shape of the mistake, since one commit
+adds the event and forgets both files together. Mobile is covered by the same assertion rather
+than a second one: it imports these files through `@messages/*` (`I18N-01`, pinned in
+`mobile-boundary.test.ts`), so there is one catalogue, not two.
+
 **The filter belongs in the query, not after the take.** Filtering the fifty rows after
 fetching them spends the quota on rows that are then discarded: twelve orphans cost the
 reader twelve real notifications, and fifty cost the whole screen — an inbox reporting
