@@ -150,12 +150,57 @@ request**, expo-router has a route keyed by exactly that (`(musteri)/talep/[id]`
 notification has never carried — `hesap/projeler/[id]/talepler` needs the *project*,
 `panel/[companyId]/talepler/[requestId]` needs the *company*.
 
-Making the row a link therefore costs one of three things, and none of them is small: widen
-every payload with a second id (the payload vocabulary is closed — `19` §Export), join
-`OfferRequest` for fifty rows on every inbox render (a service feature, and it still lands the
-customer on a *list* rather than the request), or add a redirect route that resolves an id and
-bounces (a new screen, which `07` §Out of the navigation is the register for). The row stays
-text until one of those is wanted for its own sake.
+**Resolving the parent id is cheap, and 14.10 said otherwise — that was wrong.**
+`OfferRequest.projectId`, `.customerId` and `.companyId` are all non-null, so one query per
+rendered page resolves every row's parent for both shells at once:
+`findMany({ where: { id: { in: offerRequestIds } }, select: { id: true, projectId: true, companyId: true } })`.
+Not per row, and not a join per render — one statement, on a primary key, for at most fifty
+ids. The corrected cost of (a) is one query, one DTO field and a path map.
+
+**What still stops it is the destination, not the price.** On the web a customer has no
+per-request surface at all: `hesap/projeler/[id]/talepler` is the *list* of a project's
+requests, and `/hesap/talepler` was removed from the navigation in 13.8 because it does not
+exist (`25` §Q37, class (b)). So a `message_received` row would tell the reader they have a
+message and land them on a list of requests with no message on it — a link *near* the thing,
+which is worse than text because it looks like it worked. Mobile has `talep/[id]` and lands on
+the request itself; that is the whole of the difference.
+
+This makes the trigger precise, and it is not "some route keyed by a request": **build the
+customer per-request surface (Q37 (b)) and option (a) becomes both cheap and correct.** Until
+then the third option — a redirect route that resolves an id and bounces — would only move the
+same wrong landing behind an extra hop.
+
+### Which rows could be linked today, and why none of them are
+
+Measured in 14.11, from the `notify()` call sites rather than the catalogue's samples:
+
+| event | audience | ids in the payload | needs | resolvable today |
+|---|---|---|---|---|
+| `offer_request_created` | customer | `projectId` | `projectId` | **free** |
+| `supply_gap_watch` | customer | `projectId`, `productId`, `cityId`, `districtId` | `projectId` | **free** |
+| `contact_disclosed` | customer | `offerRequestId`, `companyId` | `projectId` | one batched query |
+| `offer_request_declined` | customer | `offerRequestId` | `projectId` | one batched query |
+| `offer_received`, `offer_revised` | customer | `offerRequestId` | `projectId` | one batched query |
+| `offer_request_expired`, `survey_scheduled`, `message_received` | both | `offerRequestId` | `projectId` / `companyId` | one batched query |
+| `appointment_reminder` | both | `appointmentId`, `offerRequestId` | ” | one batched query |
+| `offer_expiring` | both | `offerId` | ” | two queries (`Offer` → `OfferRequest`) |
+| `offer_request_received` | manufacturer | `offerRequestId`, `projectId` | `companyId` | one batched query |
+| `offer_request_sla_reminder`, `offer_accepted`, `offer_rejected` | manufacturer | `offerRequestId` | `companyId` | one batched query |
+| `company_verified`, `company_rejected`, `price_book_published` | manufacturer | `companyId` | `companyId` | **free** |
+| `review_published`, `review_responded`, `review_rejected` | both sides | `reviewId`, `rating`/`reason`/`companyName` | a review surface | no target either way |
+
+Five events are free of any query. Three of those are manufacturer-audience and therefore moot
+on the web, where the manufacturer has no inbox at all (below). On the only web inbox that
+exists, the free subset is exactly **two** events.
+
+**And the free subset is not shipped on its own.** Two reasons, and the second is the one that
+decides it. A list of identical dated rows where some are links and some are not gives the
+reader no way to tell which is which before clicking — an unpredictable affordance is worse
+than a uniform absence of one. And the two free rows are precisely the least useful
+destinations: `offer_request_created` would return the customer to the request list they just
+created, and `supply_gap_watch` is standing intent rather than an event, whose "destination" is
+a project with no supply behind it. The batched query makes (a) available for every row at
+once; there is no reason to special-case the two that need no query, and a good reason not to.
 
 `notification-target-web.test.ts` pins the fact rather than the decision: if the web map ever
 grows a route reachable from an offer request alone, it goes red, and this paragraph should be

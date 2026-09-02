@@ -4664,11 +4664,61 @@ mobil sözleşme yalnız `@contracts/*` (yani `application/dto`) içeri alabiliy
 ama davranışı da değiştirirdi (hesap düzeyi satırlar tıklanır hâle gelirdi), ve bu turun kararı
 web tarafıydı. **Q41** olarak tabloda.
 
+---
+
+### 2026-09-03 · 14.11 — 14.10'un fiyatı yanlıştı; karar duruyor, gerekçesi değişti
+
+**1 · İkinci maliyet yanlış yazılmıştı.** `13` §Inbox "her render'da elli satır için
+`OfferRequest` join'i, bir servis özelliği" diyordu. Doğrusu değil: `OfferRequest.projectId`,
+`.customerId` ve `.companyId` şemada **zorunlu**, yani sayfa başına **tek** sorgu iki kabuğun
+ihtiyacını birden çözüyor —
+`findMany({ where: { id: { in: ids } }, select: { id: true, projectId: true, companyId: true } })`.
+Satır başına değil, join değil: en çok elli id, birincil anahtar üzerinde, tek ifade. (a)'nın
+gerçek fiyatı **bir sorgu, bir DTO alanı ve bir yol eşlemesi**.
+
+**Karar yine (b), ama artık tek bir gerekçeye dayanıyor ve o gerekçe fiyat değil: varış.**
+Web'de müşterinin talep-başına yüzeyi **yok** — `hesap/projeler/[id]/talepler` projenin talep
+*listesi*, ve `/hesap/talepler` 13.8'de navigasyondan çıkarıldı çünkü mevcut değil (Q37,
+sınıf (b)). Yani `message_received` satırı okuyucuya "mesajın var" deyip onu üzerinde mesaj
+olmayan bir listeye indirirdi: **şeyin kendisine değil yanına** bir bağlantı, ki bu düz
+metinden kötü, çünkü çalışmış gibi görünüyor. Mobilde `talep/[id]` var ve talebin kendisine
+iniyor; farkın tamamı bu.
+
+Bu, tetiği de kesinleştiriyor. Eskiden "teklif talebiyle anahtarlanan herhangi bir web
+rotası" diyordum; doğrusu: **Q37 (b)'nin müşteri talep-başına yüzeyi yapılırsa (a) hem ucuz
+hem doğru olur.** `notification-target-web.test.ts`'in iddiası aynı olguyu tuttuğu için
+değişmedi — o rota ortaya çıktığında zaten kırmızıya dönüyor.
+
+**2 · Bedava altküme ölçüldü ve kayda geçti.** Tablo `13` §Inbox'ta, `notify()` çağrı
+yerlerinden çıkarıldı (kataloğun `sample` alanlarından değil — onlar şablon render'ı için ve
+id taşımıyor). Beş olay hiç ek sorgu istemiyor: `offer_request_created` ve `supply_gap_watch`
+(müşteri, `projectId`), `company_verified`, `company_rejected`, `price_book_published`
+(üretici, `companyId`). Üçü üretici tarafında, ve web'de üreticinin gelen kutusu yok (Q40),
+yani **var olan tek web gelen kutusunda bedava altküme tam olarak iki olay.**
+
+**Karar: bedava altküme tek başına yayınlanmıyor.** İki sebep, ikincisi belirleyici. Aynı
+görünen tarihli satırların bazısı bağlantı bazısı değilse, okuyucunun tıklamadan önce ayırt
+etme yolu yok — öngörülemez bir affordance, tekdüze yokluğundan kötü. Ve o iki satır zaten en
+işe yaramaz hedefler: `offer_request_created` müşteriyi az önce oluşturduğu talep listesine
+geri götürür, `supply_gap_watch` ise olay değil **duran niyet** ve "hedefi" arkasında arz
+olmayan bir proje. Toplu sorgu (a)'yı zaten bütün satırlar için açıyor; sorgu istemeyen ikisini
+özel durum yapmanın sebebi yok, yapmamanın sebebi var.
+
+**3 · Q41 eksik yazılmıştı — düzeltildi, ve bulgu beklediğimden ağır.** İki ayrışma noktası
+sıralıydı ama "bugün ikisi aynı sonucu veriyor" diyordu. **Vermiyor.** `pushTargetPath`
+kabuğu olayın `audience`'ından seçiyor (`=== 'manufacturer'` değilse `(musteri)`), ve **beş
+olay `audience: 'both'`**: `offer_request_expired`, `survey_scheduled`, `appointment_reminder`,
+`offer_expiring`, `message_received`. Yani bu olaylardan birini alan bir **üreticinin push
+bildirimi** `(musteri)/talep/…`'e derin bağlanıyor, aynı satır listede tıklanınca
+`(uretici)/talep/…`'e gidiyor. `message_received` en sık olaylardan biri. `pushTargetPath`'in
+testi de yok. Bu turda kod değiştirilmedi (sınır), ama Q41 artık gizil bir risk değil
+**bugünkü davranış** olarak yazılı ve etkilenen beş olayı adıyla sayıyor.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q41 | **The mobile inbox derives its own tap target instead of using the one the worker stamps.** `push-target.ts` is pure domain and the worker calls it to put `data.url` on every push; `mobile/app/bildirimler.tsx` re-implements the same mapping inline, so a tap in the list and a tap on a push are two definitions of one destination. They agree today and diverge in two small ways already: the shell comes from the event's `audience` in one and from `session.role` in the other, and an event with no `offerRequestId` navigates to the shell home from a push but does nothing in the list. The fix is a re-export through `application/dto` (the `isMandatory` precedent — mobile may import `@contracts/*`, not `domain/`), which also changes behaviour, which is why 14.10 measured it and left it. | nothing today — the two agree | one destination stays defined twice, and the copy is the one a person sees most |
+| Q41 | **The mobile tap target is defined twice, and the two definitions already disagree — five events, in production.** `push-target.ts` is pure domain and `dispatch-job.ts:175` calls it to stamp `data.url` on every push; `mobile/app/bildirimler.tsx:61` re-implements the mapping inline. Two divergence points, and 14.10 recorded them as latent when the first is live. **(1) The shell.** `pushTargetPath` picks it from the event's `audience` (`audience === 'manufacturer' ? '(uretici)' : '(musteri)'`), the screen from `session.role`. Five events are `audience: 'both'` — `offer_request_expired`, `survey_scheduled`, `appointment_reminder`, `offer_expiring`, `message_received` — so for a MANUFACTURER receiving any of them the push deep-links into `(musteri)/talep/…` while the same row tapped in the list goes to `(uretici)/talep/…`. `message_received` is among the most frequent events there is. `pushTargetPath` has no test. **(2) No `offerRequestId`.** The push goes to the shell home; the list row does nothing. So when the two are next reported as disagreeing, the question is which of these two — and the first one is not a risk, it is the current behaviour. The fix for the duplication is a re-export through `application/dto` (the `isMandatory` precedent — mobile may import `@contracts/*`, not `domain/`); the fix for the shell is `audience: 'both'` needing the recipient, which the pure function is not given. Measured in 14.10, sharpened in 14.11, code untouched in both. | a manufacturer's push for five events, including every new message | one destination defined twice, the copies already differ, and nothing fails |
 | Q40 | **A manufacturer has no notification inbox on the web.** `/hesap/bildirimler` is a customer route in the `(customer)` group and appears only in `customerNav`; nothing under `/panel/[companyId]` lists notifications, while mobile shows the single `app/bildirimler.tsx` screen to both shells. So a manufacturer's in-app history — SLA reminders, new requests, messages — exists only if they installed the app. The capability is already there (`listNotifications` scopes by `userId` and asserts nothing about the shell), so this is a page, not a feature. Found in 14.10 while deciding whether the row should be a link; the missing surface is the larger half of that asymmetry. | nothing today | the manufacturer's history is mobile-only, undeclared anywhere, and invisible to whoever plans the portal |
 | Q39 | **Turning a database string into a union is an assertion, not a validation — three places, all currently guarded by hand.** `dispatch-job.ts:92` and `inbox-service.ts:54` filter through `ALL_NOTIFICATION_TYPES` before casting, and 14.7 made the export survive an unknown type; `catalog.ts:184` narrows the catalogue's own keys and never touches the database. So nothing is broken today — the point is that the guard is a convention repeated per call site, and the fourth call site is the one that forgets. The right shape is a parse at the boundary (`z.enum(ALL_NOTIFICATION_TYPES)`) returning `NotificationType | null`, which is what `CLAUDE.md` §Conventions already asks for at boundaries. Note `Notification.type` is a plain `String` column *by design* (the catalogue is code, not data, so an enum would need a migration per event); the same-looking `as OwnerType` casts in `file-service.ts` are backed by a real Prisma enum and are a different case. | nothing today | three hand-written guards stay correct until someone adds a fourth reader |
 | Q38 | **Nothing stops `pnpm test:e2e` from running against production — Q34's sibling, and this is all that remains of it.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` and `baseURL` from the environment exactly as the seed does, with no `APP_ENV` check and no refusal — and unlike the seed it also *deletes* afterwards. The litter half is finished: 14.4 (`phase2-gate`), 14.6 (`account`, `phase4-gate`) and 14.7 (`core-flow`'s bare drafts) clean up by recorded id, the e2e user count has held at 42 across every measured pair of runs, and what a run still leaves is deliberate and bounded — six projects, five requests, five consents, one offer, one disclosure, measured in 14.7 with the reasoning in that entry and the reset step in `27` and `28`. The fix for what is left has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
