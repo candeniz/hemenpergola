@@ -280,11 +280,27 @@ function toCard(row: {
  * about a real verified company, and refusing a direct link would 404 something that exists.
  * What changes is whether the site *advertises* it — the directory and the sitemap.
  */
-const LISTABLE_COMPANY_WHERE = {
+const LISTABLE_COMPANY = {
   status: 'VERIFIED' as const,
   deletedAt: null,
-  serviceAreas: { some: { isActive: true } },
 } as const
+
+/** Reachable through an active coverage row — the half `09` §1 makes a hard filter. */
+const HAS_COVERAGE = { serviceAreas: { some: { isActive: true } } } as const
+
+const LISTABLE_COMPANY_WHERE = { ...LISTABLE_COMPANY, ...HAS_COVERAGE } as const
+
+/**
+ * The same predicate written from the **other end of the relation** — for queries that start
+ * at a `City` or a `ServiceArea` and ask about the company.
+ *
+ * Derived rather than retyped (task 14.5). Four copies of `status: 'VERIFIED'` used to sit in
+ * this file, two of them hand-written, and they agreed only because nobody had changed the
+ * rule yet. Adding a term to `LISTABLE_COMPANY` — the suspension `ADR-031` anticipates — would
+ * have moved the directory and left the city count and the city detail on the old rule:
+ * `/sehirler` saying "3 ÜRETİCİ" over a page listing two.
+ */
+const LISTABLE_COMPANY_FROM_SERVICE_AREA = { isActive: true, company: LISTABLE_COMPANY } as const
 
 export const listPublicManufacturers = serviceMethod<
   Record<string, never>,
@@ -340,7 +356,10 @@ export const getPublicManufacturer = serviceMethod<{ slug: string }, PublicManuf
   { kind: 'anonymous', why: 'a manufacturer profile is a public canonical URL (07 §Route map)' },
   async (_actor, input) => {
     const row = await prisma.company.findFirst({
-      where: { slug: input.slug, status: 'VERIFIED', deletedAt: null },
+      // `LISTABLE_COMPANY` without `HAS_COVERAGE`: the profile is deliberately outside the
+      // listing rule (a direct link to a real company must work), but the half about which
+      // companies exist publicly is the same one, derived rather than retyped.
+      where: { slug: input.slug, ...LISTABLE_COMPANY },
       select: {
         ...MANUFACTURER_CARD_SELECT,
         foundedYear: true,
@@ -422,7 +441,8 @@ export const listPublicCities = serviceMethod<Record<string, never>, PublicCity[
       select: {
         name: true,
         serviceAreas: {
-          where: { isActive: true, company: { status: 'VERIFIED', deletedAt: null } },
+          // The count under a city name and the list on its page must be the same set.
+          where: LISTABLE_COMPANY_FROM_SERVICE_AREA,
           select: { companyId: true },
         },
       },
@@ -453,9 +473,9 @@ export const getPublicCity = serviceMethod<{ slug: string }, PublicCityDetail>(
 
     const companies = await prisma.company.findMany({
       where: {
-        status: 'VERIFIED',
-        deletedAt: null,
-        serviceAreas: { some: { isActive: true, cityId: city.id } },
+        ...LISTABLE_COMPANY,
+        // Coverage of THIS city, which is `HAS_COVERAGE` narrowed rather than rewritten.
+        serviceAreas: { some: { ...HAS_COVERAGE.serviceAreas.some, cityId: city.id } },
       },
       orderBy: [{ reviewCount: 'desc' }, { displayName: 'asc' }],
       select: MANUFACTURER_CARD_SELECT,

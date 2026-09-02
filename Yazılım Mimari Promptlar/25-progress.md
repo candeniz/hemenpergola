@@ -4353,16 +4353,77 @@ ajanda — ve gizli kopyayı bulmak DOM hakkında doğru, ekran hakkında yanlı
 temizlik `afterAll` yerine **testin içine** alındı: Playwright bir dosyanın testlerini
 worker'lara dağıtıyor, yani bir worker'ın kancası ötekinin az önce ektiği satırı silebiliyor.
 
+### 2026-09-02 — Faz 14.5 · biriken borç: KVKK dışa aktarımı ve dört ince kontrol
+
+Yeni yetenek yok; açık bırakılmış beş şey kapandı.
+
+**1 · KVKK dışa aktarımı tamamlandı — Q33 kapandı.** `buildExportPackage` artık
+`NotificationPreference`, `Notification` ve `PushToken` da topluyor. Karar zor değildi ve
+gerekçesi kod tabanının kendisinde duruyordu: `performAnonymisation` üçünü de siliyor. **Silme
+hakkının ulaştığı veriye erişim hakkı da ulaşır**; üçünü dışarıda bırakan bir paket sorulandan
+daha dar bir soruyu yanıtlıyordu.
+
+**Ham push jetonu hariç, ve bu bir boşluk değil bir karar.** Jeton bir *cihaz adresi*: onu
+elinde tutan o telefona bildirim gönderebilir — bir telefon numarasından çok bir oturum
+jetonuna yakın. Paket ise imzalı bir bağlantının arkasında, bir posta kutusunda, otuz gün
+boyunca gözetimimizden çıkıyor. Erişim hakkının borcu **işlemenin bilgisi**, ve "bir Android
+cihazınız kayıtlı, son görülme 20'sinde" bunu eksiksiz açıklıyor; opak bir
+`ExponentPushToken[…]` dizesi kişinin yapabileceği hiçbir şey eklemiyor. §Data
+minimisation kendi cevabımıza da uygulanır. PDF bunu **söylüyor** — kimseye söylenmeyen bir
+redaksiyon, eksiklik gibi okunur. Gerekçe `19` §Export'a yazıldı, koda yorum olarak değil.
+
+**2 · Native peer kontrolü sessizce geçebiliyordu.** `bridgeSources.length === 0` bir nottu:
+`expo-modules-core` klasör düzenini değiştirse script "kontrol edecek bir şey yok" deyip
+**sıfır dönerek geçecekti**, ve iki bulut build'ini öldüren sınıf yeniden görünmez olacaktı.
+Mutasyonla gösterildi (klasör geçici taşındı → `passed`, çıkış 0), sonra hata hâline
+getirildi (aynı mutasyon → çıkış 1). Konusunu bulamayan bir kontrol geçmemiştir, koşamamıştır.
+
+**3 · Kopya kontrolü hiçbir şey denetlemiyormuş.** Yazılışı npm/hoisted yerleşimi varsayıyor
+ve `<paket>/node_modules/<paket>` altında iç içe kopya arıyordu; pnpm'in katı yerleşiminde
+ikinci kopya `.pnpm/<hash>/node_modules/` altında **kardeş** durur. Varsayım değil, ölçüm:
+`mobile/package.json`'a `expo-constants@57.0.14` sabitlenip `expo-asset` hâlâ `~57.0.15`
+isterken ağaçta iki gerçek sürüm oluştu ve kontrol **"no module is doubled", çıkış 0** dedi —
+13.6b'de gerçekten yaşanan çift kopyanın aynısı.
+
+Tarama, native build'in sorduğu soruyu soracak biçimde yeniden yazıldı: **hangi paket hangi
+kopyayı bağlıyor.** Her native ad `mobile/`'dan ve mobile'ın her doğrudan bağımlılığından —
+her biri gerçek yolunda — çözülüyor ve dönen ayrı sürümler sayılıyor. `.pnpm`'in klasör
+adlarını okumak daha basit ve yanlış olurdu: depo, kurulumun kullanmayı bıraktığı girdileri
+tutuyor (13.6c üçünün öylece kaldığını görmüştü). Aynı çift kopyaya karşı artık kırmızı, ve
+hangi paketin hangisini bağladığını yazıyor.
+
+**4 · Huninin paydası enum'a bağlandı.** `REACHED.received` on üç değeri de sayıyordu ama
+bunu zorlayan bir şey yoktu; enum'a eklenen bir değer sessizce paydanın dışında kalır, ilk
+basamak %100'ün altına düşer ve altındaki bütün yüzdeler gerçekten küçük bir kümeye göre
+hesaplanırdı — 14.3'ün düzelttiği hatanın bir seviye yukarısı. `Record<OfferRequestStatus,
+true>` bunu **derleyiciye** çiviliyor: enum genişlediği gün eksik durumun adını tsc söylüyor,
+bir testten daha erken ve daha yüksek sesle. `accepted`/`offered`/`won` kasıtlı olarak dar ve
+elle yazılı kaldı — onlar yaşam döngüsü hakkında yargı, yeni bir durum onlara varsayılan
+olarak ait değil.
+
+**5 · "Tek tanım" gerçekten tek oldu.** `status: 'VERIFIED'` dört kez yazılıydı, ikisi
+tamamen elle. Bugün hepsi aynı şeyi söylüyordu — çünkü kuralı henüz kimse değiştirmemişti.
+`LISTABLE_COMPANY`'ye bir terim eklemek (`ADR-031`'in beklediği askıya alma) dizini
+değiştirir, şehir sayımını ve şehir detayını eski kuralda bırakırdı: `/sehirler`'de
+"1 ÜRETİCİ" yazarken sayfada hiç firma olmaması. Artık tek sabitten türetiliyor — ilişkinin
+öbür ucundan yazılan hâli (`LISTABLE_COMPANY_FROM_SERVICE_AREA`) dahil — ve bir test
+listelenemez hâle gelen firmanın **aynı anda** dizinden, şehir sayımından ve şehir
+detayından düştüğünü iddia ediyor. `09`'un uygunluk koduna dokunulmadı.
+
+**Q38'e iki spec iliştirildi.** 14.4 `account.spec.ts` ve `phase4-gate.spec.ts`'in aynı
+temizlik borcunu taşıdığını raporlamıştı ama tabloya yazmamıştı — commit mesajında duran bir
+borç, kimsenin okumadığı bir borçtur.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
+| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. **Two specs still leave rows behind and are named here rather than left in a commit message** (14.4 reported them, 14.5 attached them): `account.spec.ts` registers users and `phase4-gate.spec.ts` registers a user and creates projects. Neither reaches a public surface — no directory card, no sitemap entry, no city count — which is why they were not worth a turn; the debt is the same class and the symptom is not. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
 | Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
 | Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |
 | Q34 | **Nothing stops `pnpm seed` from running against production.** `prisma/seed/index.ts` reads `DATABASE_URL` and runs the requested profile against whatever it points at — no `APP_ENV` check, no confirmation, no refusal. `20` §Test data and `23` §Environments describe seeds as a `local`/`preview`/test thing, and `prisma/seed/accounts.ts` leans on that when it justifies a four-character password — but a described convention is not a mechanism, and the profiles wipe-and-rewrite users and companies. Found while moving the demo credentials in 13.6a and deliberately NOT fixed there (out of that task's scope). The fix is small: refuse unless `APP_ENV` is `local`/`test`, with an explicit override flag for `preview`. | nothing today; the first production database is where it stops being theoretical | the guard is the operator's memory, which is the control `19` §Data location does not accept anywhere else |
-| Q33 | **The KVKK data export does not carry the notification surface.** `buildExportPackage` (`modules/privacy/application/privacy-service.ts`) collects the user row, consents, projects, offer requests, reviews and sent messages — and **not** `PushToken`, `NotificationPreference` or `Notification`. All three are personal data held about the subject (`04`, `19` §Retention), so an export that omits them is incomplete in the KVKK sense, not merely thin. Narrowed here in 13.5: the phase-12 documentation debt it used to also name is **closed** — `13`'s channel table, flow and event catalogue (generated from `domain/catalog.ts` now, with a drift test), `04` §PushToken, `06`'s three endpoints, `19`'s processor and retention entries, and `29`'s recount. **Third deferral refused: this goes in 13.6, alone.** | 13.6 · a complete subject access request | the export ships silently incomplete, which is the failure mode a regulator asks about |
+| ~~Q33~~ | **Closed 2026-09-02 (14.5).** The KVKK export now carries `NotificationPreference`, `Notification` and `PushToken` — the raw token withheld, argued in `19` §Export. The documentation half closed in 13.5. |  |  |
 | ~~Q1~~ | ~~Brand name.~~ **CLOSED 2026-08-24: "Hemen Pergola".** The placeholder-token default did its job — the swap was one `brand.name` entry (both catalogues; mail reads the same entry via `brandName()`), and no slug ever embedded the brand, so no URL changed. What Q1 leaves open moves to Q2/Q3: the GSM alphanumeric sender field is 11 characters, "Hemen Pergola" does not fit, and the *abbreviated* sender ID is decided with the İYS application — configuration, hardcoded nowhere. | ~~Phase 0~~ closed | brand rendered from `brand.name`; `SAME_IN_BOTH` pins it as the fifth legitimate identical string |
 | Q2 | Legal entity, İYS registration, VERBİS status, and who reviews the KVKK texts | **Phase 0–1** (not Phase 9): İYS registration needs the entity, and Q3 needs İYS | development continues on the log-only adapter; the production disclosure path stays blocked |
 | Q3 | SMS provider and sender ID (allocated only to İYS-registered businesses; provider approval itself commonly 1–3 business days) | **no longer blocks Phase 1** — task 1.5 closed on the log adapter, which is what the row asked for. Must clear by Phase 6 (disclosure) | log-only `SmsSender` adapter; the port and the whole OTP flow are built and tested against it, so the real adapter is one file |

@@ -45,7 +45,17 @@ import {
 } from './dto'
 
 async function buildExportPackage(userId: string): Promise<Record<string, unknown>> {
-  const [user, consents, projects, requests, reviews, sentMessages] = await Promise.all([
+  const [
+    user,
+    consents,
+    projects,
+    requests,
+    reviews,
+    sentMessages,
+    notificationPreferences,
+    notifications,
+    devices,
+  ] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -122,6 +132,38 @@ async function buildExportPackage(userId: string): Promise<Record<string, unknow
       select: { body: true, sentAt: true },
       orderBy: { sentAt: 'asc' },
     }),
+    /*
+     * The notification surface — task 14.5, closing `Q33`.
+     *
+     * All three are personal data by this codebase's own reckoning: `performAnonymisation`
+     * below deletes every one of them, the retention sweep prunes idle push tokens at 180
+     * days (`19` §Retention), and `mobile/store/veri-guvenligi.md` declares the device id to
+     * the stores. Data the erasure right reaches is data the access right reaches; an export
+     * that omitted them would be answering a narrower question than the one asked.
+     */
+    prisma.notificationPreference.findMany({
+      where: { userId },
+      select: { channel: true, type: true, enabled: true },
+      orderBy: [{ type: 'asc' }, { channel: 'asc' }],
+    }),
+    prisma.notification.findMany({
+      where: { userId },
+      select: { type: true, payload: true, readAt: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+    /*
+     * **The raw token is deliberately not selected.** It is a live address for a device:
+     * anyone holding it can push to that handset, and this package leaves our custody as a
+     * file behind a signed link. What the access right owes is knowledge of the processing —
+     * that these devices are registered, which platform, when they were last seen — and an
+     * opaque `ExponentPushToken[…]` string adds nothing a person can act on. `19` §Export
+     * carries the argument; this is data minimisation applied to the answer, not a gap in it.
+     */
+    prisma.pushToken.findMany({
+      where: { userId },
+      select: { platform: true, createdAt: true, lastSeenAt: true },
+      orderBy: { createdAt: 'asc' },
+    }),
   ])
 
   return {
@@ -156,6 +198,9 @@ async function buildExportPackage(userId: string): Promise<Record<string, unknow
     })),
     reviews,
     messagesSent: sentMessages,
+    notificationPreferences,
+    notifications,
+    devices,
   }
 }
 

@@ -52,6 +52,31 @@ are logged identically.
 | Objection / restriction | consent revocation, notification preferences | immediate |
 | Complaint | contact route in the privacy notice | — |
 
+### Export — what goes in, and the one thing that does not
+
+The package is the answer to an access request, so the rule is simple and the exception is
+argued rather than assumed: **data the erasure right reaches, the access right reaches.**
+`performAnonymisation` deletes `NotificationPreference`, `Notification` and `PushToken`
+alongside the profile, which settles all three — they are personal data by this system's own
+reckoning, and an export that omitted them would answer a narrower question than the one
+asked. They are in the package and in the PDF (task 14.5, closing `Q33`).
+
+**The raw push token is not.** A `PushToken` row is disclosed — platform, when it was
+registered, when it was last seen — but the token string itself is withheld, and the PDF says
+so in as many words rather than leaving a silent gap. The reasoning:
+
+- the token is a **live capability**, not a description of one. Whoever holds it can send a
+  notification to that handset; it is closer to a session token than to a phone number;
+- the export **leaves our custody** — a file behind a signed link, in an inbox, for 30 days;
+- what the right owes is knowledge of the processing, and "you have an Android device
+  registered, last seen on the 20th" discloses that completely. An opaque
+  `ExponentPushToken[…]` string tells the subject nothing further they can act on;
+- §Data minimisation applies to *our* answer as much as to our collection.
+
+This is a redaction of an internal identifier on security grounds, not a refusal of the
+right. `privacy.integration.test.ts` asserts both halves: the device appears, the address
+does not.
+
 **Erasure is anonymisation, not deletion.** `User` becomes `deleted-{hash}@anonymised.local`
 with personal fields nulled; projects, offers, reviews and audit rows keep their ids and
 lose their identifiers. Financial and audit records are retained on legal-obligation basis.

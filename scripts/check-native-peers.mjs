@@ -27,7 +27,7 @@
  * No semver dependency on purpose: version RANGES are `expo-doctor`'s job and it does that
  * well. This asks the question doctor cannot — whether the code fits together.
  */
-import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -129,7 +129,23 @@ if (coreDir === null) {
     /\.cpp$/,
   )
   if (bridgeSources.length === 0) {
-    notes.push('expo-modules-core ships no worklets bridge sources; nothing to check.')
+    /*
+     * **A missing source tree is a failure, not a note** (task 14.5).
+     *
+     * It used to push a line and carry on, so the script exited 0 saying "nothing to check"
+     * — which is what it would do the day `expo-modules-core` moves this directory. The
+     * check would go quiet, CI would stay green, and the class of skew that killed two cloud
+     * builds would be invisible again. A check that cannot find its subject has not passed;
+     * it has failed to run.
+     *
+     * The header side already has the right asymmetry: if the worklets headers cannot be
+     * read, every symbol reads as undeclared and the script fails loudly.
+     */
+    problems.push(
+      `expo-modules-core@${version('expo-modules-core')} ships no worklets bridge sources at ` +
+        `android/src/main/cpp/worklets. Either the package moved them — in which case this ` +
+        `script needs the new path — or the install is broken. Either way nothing was checked.`,
+    )
   }
 
   const headers = filesUnder(join(workletsDir, 'Common', 'cpp'), /\.h$/)
@@ -165,8 +181,25 @@ if (coreDir === null) {
 
 // ── 2 · one copy of each native module ───────────────────────────────────────
 /**
- * Nested copies are what a duplicate looks like from the app's side: `mobile/node_modules`
- * resolves one, and something below it carries its own. Gradle links both.
+ * **Resolved from the graph, not from nesting** (rewritten in task 14.5).
+ *
+ * The first version looked for `<package>/node_modules/<package>` — the npm shape, where a
+ * second copy nests inside the dependent that asked for it. pnpm's strict layout does not
+ * work that way: every version lives in its own `.pnpm/<hash>/node_modules/<name>` directory
+ * and dependents link to it as a **sibling**. The scan therefore found nothing, ever — and
+ * that was proven, not assumed: pinning `expo-constants@57.0.14` in `mobile/package.json`
+ * while `expo-asset` still asked for `~57.0.15` put two real versions in the tree and the
+ * check reported "no module is doubled" and exited 0. Exactly the duplicate 13.6b hit.
+ *
+ * What it does now is ask the question a native build asks: **who links which copy.**
+ * Autolinking walks the project's dependency graph, so this resolves each native name from
+ * `mobile/` and from every one of mobile's direct dependencies — each at its real path,
+ * because that is where pnpm keeps the sibling `node_modules` a package can see — and counts
+ * the distinct versions that come back.
+ *
+ * Reading `.pnpm`'s directory names instead would be simpler and wrong: the store keeps
+ * entries an install has stopped using (13.6c watched three of them linger), so the answer
+ * would be full of copies nothing links.
  */
 const NATIVE = [
   'expo-modules-core',
@@ -176,43 +209,29 @@ const NATIVE = [
   'expo-constants',
 ]
 
+function versionAt(base, name) {
+  try {
+    const manifest = createRequire(join(base, 'noop.js')).resolve(`${name}/package.json`)
+    return { version: JSON.parse(readFileSync(manifest, 'utf8')).version, from: base }
+  } catch {
+    return null
+  }
+}
+
 for (const name of NATIVE) {
-  const dir = packageDir(name)
-  if (dir === null) continue
-
-  const nested = []
-  const scan = (packageRoot) => {
-    const modules = join(packageRoot, 'node_modules')
-    try {
-      if (!statSync(modules).isDirectory()) return
-    } catch {
-      return
-    }
-    for (const entry of readdirSync(modules)) {
-      if (entry !== name) continue
-      try {
-        const found = JSON.parse(readFileSync(join(modules, entry, 'package.json'), 'utf8'))
-        if (found.version !== version(name)) nested.push(`${found.version} (under ${packageRoot})`)
-      } catch {
-        /* not a package */
-      }
-    }
+  const seen = new Map() // version → the first package that links it
+  for (const base of RESOLUTION_BASES) {
+    const found = versionAt(base, name)
+    if (found !== null && !seen.has(found.version)) seen.set(found.version, found.from)
   }
 
-  for (const sibling of readdirSync(join(MOBILE, 'node_modules'))) {
-    if (sibling.startsWith('@')) {
-      for (const scoped of readdirSync(join(MOBILE, 'node_modules', sibling))) {
-        scan(join(MOBILE, 'node_modules', sibling, scoped))
-      }
-    } else {
-      scan(join(MOBILE, 'node_modules', sibling))
-    }
-  }
-
-  if (nested.length > 0) {
+  if (seen.size > 1) {
+    const detail = [...seen.entries()]
+      .map(([version, from]) => `${version} (linked from ${from.replace(ROOT, '.')})`)
+      .join(', ')
     problems.push(
-      `${name} resolves to ${version(name)} but a second copy is reachable: ` +
-        `${nested.join(', ')}. A native build may link only one.`,
+      `${name} resolves to ${seen.size} different versions in this tree: ${detail}. ` +
+        `A native build may link only one.`,
     )
   }
 }

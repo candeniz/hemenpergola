@@ -100,6 +100,40 @@ describe('13.8 · dashboard summary', () => {
     expect(funnel[3]?.ofTotal).toBe(25)
   })
 
+  it('the denominator is every status the enum has — 14.5', () => {
+    /*
+     * The compiler already guards this (`Record<OfferRequestStatus, true>`), and the test
+     * says the same thing from the other side: whatever the enum grows to, one request in
+     * ANY status is one request received, and the first bar stays at 100%.
+     */
+    const everyStatus: OfferRequestStatus[] = [
+      'PENDING',
+      'ACCEPTED',
+      'DECLINED',
+      'EXPIRED',
+      'CANCELLED',
+      'SURVEY_SCHEDULED',
+      'SURVEY_COMPLETED',
+      'OFFER_SENT',
+      'OFFER_ACCEPTED',
+      'OFFER_REJECTED',
+      'WON',
+      'LOST',
+      'CLOSED',
+    ]
+    const oneEach = Object.fromEntries(everyStatus.map((status) => [status, 1]))
+
+    const { total, funnel } = summarise(oneEach)
+    expect(total).toBe(everyStatus.length)
+    expect(funnel[0]?.count, 'every status counts as received').toBe(everyStatus.length)
+    expect(funnel[0]?.ofTotal).toBe(100)
+
+    // And one at a time, so a single forgotten status cannot hide inside a total.
+    for (const status of everyStatus) {
+      expect(summarise({ [status]: 1 }).funnel[0]?.count, status).toBe(1)
+    }
+  })
+
   describe('soonestDeadlines', () => {
     it('is PENDING only, soonest first', () => {
       const late = lead('PENDING', { sla: 20 })

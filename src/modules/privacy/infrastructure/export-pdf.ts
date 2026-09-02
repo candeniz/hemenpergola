@@ -28,6 +28,9 @@ type ExportPackage = {
   offerRequests?: unknown[]
   reviews?: unknown[]
   messagesSent?: unknown[]
+  notificationPreferences?: unknown[]
+  notifications?: unknown[]
+  devices?: unknown[]
 }
 
 const FONT_DIR = join(process.cwd(), 'src', 'app', '[locale]', 'fonts')
@@ -113,6 +116,46 @@ export async function renderExportPdf(pkg: ExportPackage): Promise<Uint8Array> {
   for (const message of messages) {
     const row = message as Record<string, unknown>
     doc.text(`${line(row.sentAt)} — ${line(row.body)}`)
+  }
+
+  heading('Bildirim tercihleriniz')
+  const preferences = pkg.notificationPreferences ?? []
+  // Absence of a row means enabled (`13` §Preferences), so an empty list is an answer and
+  // says so rather than looking like missing data.
+  if (preferences.length === 0) doc.text('Kayıtlı tercih yok — hepsi açık.')
+  for (const preference of preferences) {
+    const row = preference as Record<string, unknown>
+    doc.text(
+      `${line(row.type)} · ${line(row.channel)} · ${row.enabled === true ? 'açık' : 'kapalı'}`,
+    )
+  }
+
+  heading('Size gönderilen bildirimler')
+  const notifications = pkg.notifications ?? []
+  if (notifications.length === 0) doc.text('Kayıt yok.')
+  for (const notification of notifications) {
+    const row = notification as Record<string, unknown>
+    doc.text(
+      `${line(row.createdAt)} · ${line(row.type)} · ${row.readAt === null ? 'okunmadı' : 'okundu'}`,
+    )
+  }
+
+  heading('Kayıtlı cihazlarınız')
+  const devices = pkg.devices ?? []
+  if (devices.length === 0) doc.text('Kayıt yok.')
+  for (const device of devices) {
+    const row = device as Record<string, unknown>
+    doc.text(
+      `${line(row.platform)} · kayıt ${line(row.createdAt)} · son görülme ${line(row.lastSeenAt)}`,
+    )
+  }
+  if (devices.length > 0) {
+    // Says out loud what was left out and why — a redaction nobody is told about reads as
+    // an omission (`19` §Export).
+    doc.text(
+      'Cihaz adresi (push jetonu) güvenlik gerekçesiyle bu dosyaya yazılmaz; jetonu bilen ' +
+        'o cihaza bildirim gönderebilir.',
+    )
   }
 
   doc.end()

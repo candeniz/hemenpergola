@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import {
+  getPublicCity,
   listPublicCities,
   listPublicManufacturers,
   listPublicSlugs,
@@ -141,6 +142,58 @@ describe('14.4 · the directory lists supply, not just verification', () => {
     // supplies nothing, so it adds no city — the two surfaces cannot disagree.
     expect(cities.value.map((row) => row.name)).toContain('SupplyCity')
     expect(cities.value.map((row) => row.name)).not.toContain('InactiveCity')
+  })
+
+  it('one company leaving the rule drops from all three surfaces at once — 14.5', async () => {
+    const prisma = getPrisma()
+    const city = await prisma.city.create({ data: { name: 'BirlikteŞehir', plateCode: 921 } })
+    const company = await prisma.company.create({
+      data: {
+        slug: 'supply-birlikte',
+        legalName: 'Birlikte A.Ş.',
+        displayName: 'Birlikte',
+        status: 'VERIFIED',
+        verifiedAt: new Date(),
+      },
+    })
+    const area = await prisma.serviceArea.create({
+      data: { companyId: company.id, kind: 'CITY', cityId: city.id, isActive: true },
+    })
+
+    const surfaces = async () => {
+      const [list, cities, detail] = await Promise.all([
+        listPublicManufacturers(anonymous(), {}),
+        listPublicCities(anonymous(), {}),
+        getPublicCity(anonymous(), { slug: 'birliktesehir' }),
+      ])
+      return {
+        directory: list.ok ? list.value.some((card) => card.slug === 'supply-birlikte') : false,
+        cityCount: cities.ok
+          ? (cities.value.find((row) => row.name === 'BirlikteŞehir')?.manufacturerCount ?? 0)
+          : -1,
+        cityDetail: detail.ok
+          ? detail.value.manufacturers.some((card) => card.slug === 'supply-birlikte')
+          : false,
+      }
+    }
+
+    const before = await surfaces()
+    expect(before.directory).toBe(true)
+    expect(before.cityCount).toBe(1)
+    expect(before.cityDetail).toBe(true)
+
+    /*
+     * Now make it unlistable by the one term the three surfaces share. Before 14.5 the count
+     * under a city name and the list on its page were written by hand, so a change to the
+     * rule moved the directory and left those two behind: `/sehirler` saying "1 ÜRETİCİ"
+     * over a page listing none.
+     */
+    await prisma.serviceArea.update({ where: { id: area.id }, data: { isActive: false } })
+
+    const after = await surfaces()
+    expect(after.directory, 'directory').toBe(false)
+    expect(after.cityCount, 'the count beside the city name').toBe(0)
+    expect(after.cityDetail, 'the list on the city page').toBe(false)
   })
 
   it('the fixture is what the test thinks it is', () => {

@@ -67,23 +67,47 @@ export type DashboardSummary = {
 
 export type FunnelStage = 'received' | 'accepted' | 'offered' | 'won'
 
-/** Which statuses mean a request has *reached at least* each stage. */
+/**
+ * Every status there is, as the denominator — task 14.5.
+ *
+ * `received` is the funnel's **base**, so it has to be the whole enum: a status added to
+ * `OfferRequestStatus` and forgotten here would silently fall out of the denominator, the
+ * first bar would drop below 100%, and the percentages under it would all be computed
+ * against a set smaller than reality. That is 14.3's bug one level up — a number that looks
+ * measured, of the wrong set.
+ *
+ * `Record<OfferRequestStatus, true>` is what stops it: the compiler names the missing status
+ * the day someone extends the enum, which is earlier and louder than a test. `RECEIVED_ALL`
+ * is derived from its keys, so the list cannot be complete for the type checker and short
+ * for the arithmetic.
+ */
+const EVERY_STATUS: Record<OfferRequestStatus, true> = {
+  PENDING: true,
+  ACCEPTED: true,
+  DECLINED: true,
+  EXPIRED: true,
+  CANCELLED: true,
+  SURVEY_SCHEDULED: true,
+  SURVEY_COMPLETED: true,
+  OFFER_SENT: true,
+  OFFER_ACCEPTED: true,
+  OFFER_REJECTED: true,
+  WON: true,
+  LOST: true,
+  CLOSED: true,
+}
+
+const RECEIVED_ALL = Object.keys(EVERY_STATUS) as OfferRequestStatus[]
+
+/**
+ * Which statuses mean a request has *reached at least* each stage.
+ *
+ * `accepted`, `offered` and `won` are deliberately narrow and hand-written — they are
+ * judgements about the lifecycle, and a new status does NOT belong to them by default. Only
+ * `received` is the denominator, and only it is derived.
+ */
 const REACHED: Record<FunnelStage, readonly OfferRequestStatus[]> = {
-  received: [
-    'PENDING',
-    'ACCEPTED',
-    'SURVEY_SCHEDULED',
-    'SURVEY_COMPLETED',
-    'OFFER_SENT',
-    'OFFER_ACCEPTED',
-    'OFFER_REJECTED',
-    'WON',
-    'LOST',
-    'DECLINED',
-    'EXPIRED',
-    'CANCELLED',
-    'CLOSED',
-  ],
+  received: RECEIVED_ALL,
   accepted: [
     'ACCEPTED',
     'SURVEY_SCHEDULED',

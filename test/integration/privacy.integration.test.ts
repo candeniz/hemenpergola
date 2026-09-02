@@ -307,6 +307,61 @@ describe('9.1 · export and erasure', () => {
     expect(raw).not.toContain('anonymised.local')
   }, 60_000)
 
+  it('carries the notification surface — Q33, task 14.5', async () => {
+    const prisma = getPrisma()
+
+    /*
+     * All three are personal data by this codebase's own reckoning: `performAnonymisation`
+     * deletes every one of them. Data the erasure right reaches is data the access right
+     * reaches, and until 14.5 the export answered a narrower question than the one asked.
+     */
+    await prisma.notificationPreference.create({
+      data: { userId: customerId, channel: 'email', type: 'offer_received', enabled: false },
+    })
+    await prisma.notification.create({
+      data: { userId: customerId, type: 'offer_received', payload: { companyName: 'Ege Pergola' } },
+    })
+    await prisma.pushToken.create({
+      data: {
+        userId: customerId,
+        token: 'ExponentPushToken[export-secret-address]',
+        platform: 'android',
+      },
+    })
+
+    const receipt = await requestDataExport(customerActor(), {})
+    expect(receipt.ok).toBe(true)
+    const token = /token=([A-Za-z0-9_-]+)/.exec(sentMail.at(-1)?.text ?? '')?.[1]
+    const download = await downloadDataExport(anonymousActor(), { token: token! })
+    expect(download.ok).toBe(true)
+    if (!download.ok) return
+
+    const pkg = JSON.parse(new TextDecoder().decode(download.value.body)) as {
+      notificationPreferences: { channel: string; type: string; enabled: boolean }[]
+      notifications: { type: string; readAt: string | null }[]
+      devices: { platform: string; lastSeenAt: string }[]
+    }
+
+    expect(pkg.notificationPreferences).toContainEqual({
+      channel: 'email',
+      type: 'offer_received',
+      enabled: false,
+    })
+    expect(pkg.notifications.map((row) => row.type)).toContain('offer_received')
+    expect(pkg.devices.map((row) => row.platform)).toContain('android')
+
+    /*
+     * And the redaction, which is the half a reviewer would not think to check: the device
+     * is disclosed, its ADDRESS is not. A push token is a live capability — whoever holds it
+     * can push to that handset — and this file leaves our custody behind a signed link.
+     */
+    const raw = JSON.stringify(pkg)
+    expect(raw, 'the raw push token must never leave in an export').not.toContain(
+      'export-secret-address',
+    )
+    expect(raw).not.toContain('ExponentPushToken')
+  }, 60_000)
+
   it('erasure anonymises: personal fields go, commercial ids stay, sessions die', async () => {
     const prisma = getPrisma()
 
@@ -401,6 +456,11 @@ describe('9.1 · the export PDF renders Turkish', () => {
       consents: [],
       reviews: [],
       messagesSent: [],
+      // 14.5's three sections, with the glyphs that break a WinAnsi font in their headings
+      // and their values — "Bildirim tercihleriniz", "Kayıtlı cihazlarınız", "okunmadı".
+      notificationPreferences: [{ type: 'offer_received', channel: 'email', enabled: false }],
+      notifications: [{ createdAt: '2026-08-02', type: 'contact_disclosed', readAt: null }],
+      devices: [{ platform: 'android', createdAt: '2026-08-01', lastSeenAt: '2026-08-20' }],
     })
 
     // A real PDF, not a stub.

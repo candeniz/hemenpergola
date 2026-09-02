@@ -40,7 +40,7 @@ allowBuilds:
 # `expo-doctor`'s duplicate-native-module check is what fails if this ever drifts, and it
 # runs in CI now.
 overrides:
-  expo-constants: 57.0.16
+  expo-constants: 57.0.17
 
 # NOTE (corrected in 13.6c): this list is INERT as things stand. `minimumReleaseAge` is not
 # set here, there is no root `.npmrc`, the machine has no global one, and pnpm's own default
@@ -50,14 +50,15 @@ overrides:
 # when it moves a package; the entries only start meaning something if someone sets
 # `minimumReleaseAge`. A clean clone therefore resolves exactly as this one does.
 #
-# `jose` came first; the rest arrived in 13.6b when the mobile dependencies were aligned
-# with Expo SDK 57. Every one is a PATCH inside SDK 57.
+# `jose` came first; the rest arrived when the mobile dependencies were aligned with Expo
+# SDK 57 — 13.6b, and again in 14.5 as upstream published newer patches. Every one is a
+# PATCH inside SDK 57, and `expo-doctor` in CI is what makes the drift visible at all.
 minimumReleaseAgeExclude:
   - jose@6.2.9
   - '@expo/cli@57.0.20'
   - '@expo/env@2.4.3'
   - '@expo/fingerprint@0.20.11'
   - '@expo/metro-config@57.0.12'
-  - expo-constants@57.0.16
-  - expo-font@57.0.2
+  - expo-constants@57.0.16 || 57.0.17
+  - expo-font@57.0.2 || 57.0.3
   - expo@57.0.18
