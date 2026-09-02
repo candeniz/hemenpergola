@@ -97,6 +97,50 @@ async function codeFromSms(request: APIRequestContext, phone: string): Promise<s
   return message?.code ?? ''
 }
 
+/**
+ * **What the gate creates, the gate removes** — task 14.4.
+ *
+ * This spec verifies a company through the real API, which is the whole point: the gate is
+ * *"an admin verifies a manufacturer"*, and a fixture that plants a `VERIFIED` row proves
+ * nothing about the flow. What it also did was leave the company behind, and a verified
+ * company is **public** — eight `Gate Pergola <timestamp>` cards had accumulated in
+ * `/ureticiler` on the demo database, none of them able to quote anyone.
+ *
+ * So the flow stays real and the cleanup is a separate step. It runs on `afterAll` rather
+ * than inside the test so a failing assertion still tidies up: a red test that also poisons
+ * the next run is two problems.
+ *
+ * It deletes **only what this file made**, matched on the run stamps it generated — never a
+ * `LIKE 'Gate Pergola%'` sweep, which would also take a company someone created by hand
+ * while debugging.
+ */
+const created: { companyIds: string[]; userEmails: string[] } = { companyIds: [], userEmails: [] }
+
+async function pgExec(sql: string, params: unknown[]): Promise<void> {
+  const { Client } = await import('pg')
+  const client = new Client({
+    connectionString:
+      process.env.DATABASE_URL ?? 'postgresql://pergola:pergola@localhost:5432/pergola',
+  })
+  await client.connect()
+  try {
+    await client.query(sql, params)
+  } finally {
+    await client.end()
+  }
+}
+
+test.afterAll(async () => {
+  if (created.companyIds.length > 0) {
+    // Memberships and documents cascade from `Company`; anything that would `Restrict` —
+    // an offer request, a price book — this spec never creates.
+    await pgExec(`DELETE FROM "Company" WHERE "id" = ANY($1::text[])`, [created.companyIds])
+  }
+  if (created.userEmails.length > 0) {
+    await pgExec(`DELETE FROM "User" WHERE "email" = ANY($1::text[])`, [created.userEmails])
+  }
+})
+
 test.describe('Phase 2 gate', () => {
   test.setTimeout(180_000)
 
@@ -201,6 +245,7 @@ test.describe('Phase 2 gate', () => {
     /* ── A manufacturer walks in ─────────────────────────────────────────── */
 
     const founderEmail = `gate-founder-${run}@example.com`
+    created.userEmails.push(founderEmail)
     const phone = `0555 ${run.slice(-3)} ${run.slice(-2)} 11`
 
     data<{ userId: string }>(
@@ -254,6 +299,7 @@ test.describe('Phase 2 gate', () => {
       }),
       'create company',
     )
+    created.companyIds.push(company.companyId)
     expect(company.status).toBe('PENDING')
     expect(company.role).toBe('OWNER')
 

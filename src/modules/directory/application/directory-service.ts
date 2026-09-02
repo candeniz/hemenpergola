@@ -263,6 +263,29 @@ function toCard(row: {
   }
 }
 
+/**
+ * **What the site is willing to call supply** — one definition, task 14.4.
+ *
+ * `VERIFIED` alone is not enough. `09` §1 makes a `ServiceArea` a *hard* eligibility filter:
+ * a verified company that covers nowhere can never be a match candidate, so a directory card
+ * for it is a road that ends — the customer clicks a manufacturer who is structurally unable
+ * to quote them.
+ *
+ * `18`'s city pages have used exactly this criterion since Phase 8 ("the count of city pages
+ * is READ FROM SUPPLY"); the directory used the looser one, and the two disagreed. Two
+ * definitions of supply in one codebase is the drift this repository keeps closing, so there
+ * is now one constant and `SUPPLIED_CITY_WHERE` is expressed in terms of it.
+ *
+ * The **profile** page deliberately does not apply it: `/ureticiler/[slug]` is a real page
+ * about a real verified company, and refusing a direct link would 404 something that exists.
+ * What changes is whether the site *advertises* it — the directory and the sitemap.
+ */
+const LISTABLE_COMPANY_WHERE = {
+  status: 'VERIFIED' as const,
+  deletedAt: null,
+  serviceAreas: { some: { isActive: true } },
+} as const
+
 export const listPublicManufacturers = serviceMethod<
   Record<string, never>,
   PublicManufacturerCard[]
@@ -272,7 +295,7 @@ export const listPublicManufacturers = serviceMethod<
   { kind: 'anonymous', why: 'the manufacturer directory is a public page (07 §Route map)' },
   async () => {
     const rows = await prisma.company.findMany({
-      where: { status: 'VERIFIED', deletedAt: null },
+      where: LISTABLE_COMPANY_WHERE,
       orderBy: [{ reviewCount: 'desc' }, { displayName: 'asc' }],
       select: MANUFACTURER_CARD_SELECT,
     })
@@ -297,7 +320,9 @@ export const listPublicSlugs = serviceMethod<Record<string, never>, PublicSlugs>
         select: { locale: true, slug: true },
       }),
       prisma.company.findMany({
-        where: { status: 'VERIFIED', deletedAt: null },
+        // The sitemap advertises the same set the directory lists — a URL offered to a
+        // crawler that the site itself will not link is the inconsistency one layer out.
+        where: LISTABLE_COMPANY_WHERE,
         select: { slug: true },
       }),
     ])
@@ -377,7 +402,11 @@ const SUPPLIED_CITY_WHERE = {
   serviceAreas: {
     some: {
       isActive: true,
-      company: { status: 'VERIFIED' as const, deletedAt: null },
+      // The same predicate the directory applies, read from the other end of the relation.
+      company: {
+        status: LISTABLE_COMPANY_WHERE.status,
+        deletedAt: LISTABLE_COMPANY_WHERE.deletedAt,
+      },
     },
   },
 } as const

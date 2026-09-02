@@ -203,6 +203,23 @@ describe('8.1 · the three-review rule in the public DTO', () => {
     })
     companyId = company.id
     companySlug = company.slug
+
+    /*
+     * A service area, because 14.4 made one the price of being listed: `09` §1 treats
+     * coverage as a hard eligibility filter, so the directory and the sitemap now carry
+     * companies that can actually serve somebody. This suite's subject is the three-review
+     * rule and the sitemap's source, not supply — the coverage is a precondition it has to
+     * meet, and `directory-supply.integration.test.ts` is where the rule itself is tested.
+     */
+    // Its own city: the integration database carries migrations and nothing else, so there
+    // is none to borrow, and `plateCode` is unique across the suites that share it. 992 is
+    // free — the others sit at 900–919 and 934–990.
+    const city = await getPrisma().city.create({
+      data: { name: 'DizinTestiŞehir', plateCode: 992 },
+    })
+    await getPrisma().serviceArea.create({
+      data: { companyId: company.id, kind: 'CITY', cityId: city.id, isActive: true },
+    })
   }, 120_000)
 
   it('hides the average below three published reviews, however full the columns are', async () => {

@@ -4294,10 +4294,70 @@ yok sayıyordu. `getPortalDashboard` artık kendi yetkilendirmesini yapıyor ve 
 numaralamıştı. Faz tablosu artık sırayı **tarihle** okutuyor. Geriye dönük numara
 uydurulmadı: bir commit mesajını sahtelemek, bir sırayı sırasız okumaktan kötüdür.
 
+### 2026-09-02 — Faz 14.4 · dizindeki test çöpü, ve dizinin kendi kuralı
+
+**Yerel demo veritabanında `/ureticiler` on kayıt gösteriyordu, yedisi
+`Gate Pergola <timestamp>`.** Kaynak `phase2-gate.spec.ts`: her koşuda gerçek API üzerinden
+bir firma açıyor, admin akışıyla `VERIFIED` yapıyor ve **hiçbir şey silmiyor**. Doğrulanmış
+firma public bir yüzey olduğu için çöp doğrudan dizine düşüyordu. Şehir sayfaları
+etkilenmiyordu, çünkü onlar hizmet bölgesine göre sayıyor — ve bu, aşağıdaki kararın da
+ipucu.
+
+**1 · Testin artığını test topluyor.** Kapı gerçek API'yi kullanmaya devam ediyor; kapının
+anlamı o, `VERIFIED` bir satır eken bir fixture akış hakkında hiçbir şey kanıtlamaz.
+Temizlik ayrı bir adım ve `afterAll`'da — kırmızı bir test aynı zamanda bir sonraki koşuyu
+da zehirliyorsa iki sorun var demektir. Silme **yalnız o koşunun ürettiği** kimliklerle
+eşleşiyor; `LIKE 'Gate Pergola%'` süpürgesi hata ayıklarken elle açılmış bir firmayı da
+alırdı.
+
+**Aynı sınıftan iki spec daha var ve raporlanıyor:** `account.spec.ts` (kullanıcı kaydeder)
+ve `phase4-gate.spec.ts` (kullanıcı + proje). İkisi de kayıt bırakıyor, ama **hiçbiri public
+bir yüzeye düşmüyor** — kullanıcı ve proje dizinde, sitemap'te, şehir sayfasında görünmez.
+Borç aynı sınıf, semptom değil; bu turda kapatılmadı ve gerekçesi bu.
+
+**2 · Dizinin kuralı: doğrulanmış *ve* hizmet verebilir.** `09` §1 hizmet bölgesini **sert**
+bir uygunluk filtresi yapıyor — hiçbir yeri kapsamayan doğrulanmış bir firma asla eşleşme
+adayı olamaz, yani dizindeki kartı biten bir yol. `18`'in şehir sayfaları Faz 8'den beri tam
+bu ölçütü kullanıyor ("the count of city pages is READ FROM SUPPLY"). Dizin gevşek olanı
+kullanıyordu ve ikisi birbirine katılmıyordu.
+
+Artık **tek sabit** (`LISTABLE_COMPANY_WHERE`) ve `SUPPLIED_CITY_WHERE` onun üzerinden
+yazılı. Sitemap de aynı kümeyi duyuruyor: sitenin kendi bağlamadığı bir URL'i tarayıcıya
+sunmak, aynı tutarsızlığın bir katman dışı. **Profil sayfası kural dışı bırakıldı** ve bu da
+iddia ediliyor: `/ureticiler/[slug]` gerçek ve doğrulanmış bir firmanın sayfası, doğrudan
+bir bağlantıyı reddetmek var olan bir şeyi 404 yapmak olurdu. Değişen şey sitenin onu
+**duyurup duyurmadığı**.
+
+**3 · Dizini bir test tutuyor.** `/ureticiler`'in içeriğini iddia eden hiçbir test yoktu;
+çöp bu yüzden aylarca görünmedi. `directory-supply.integration.test.ts` yedi iddia taşıyor —
+kapsayan listeleniyor, kapsamayan listelenmiyor, **pasif** hizmet bölgesi kapsama sayılmıyor,
+sitemap aynı kümeyi duyuruyor, profil hâlâ çözülüyor, ve şehir sayfalarıyla dizin aynı
+yüklemi paylaştığı için çelişemiyor.
+
+**4 · Q38 açıldı**, Q34'ün kardeşi: `pnpm test:e2e` hangi veritabanına bakıyorsa oraya
+gerçek kayıt yazıyor — ve 14.4'ten sonra oradan **siliyor** da. Mekanizma kurulmadı, satır
+yazıldı.
+
+**5 · Yerel veri temizlendi**, belgelenen yolla — `docker compose down -v` + ilk kurulum
+(`up -d`, `migrate deploy`, `seed demo`). Tohuma silme mantığı eklenmedi; Q34'ün gerekçesi
+aynen geçerli. Sıfırlamadan sonra e2e **iki kez ardışık** koşuldu: ikisi de 85 geçti,
+`Gate Pergola` sayısı her ikisinden sonra **0**.
+
+**Bonus: ardışık koşu 14.1'in kendi kararsızlığını ortaya çıkardı** — aynı sınıftan, aynı
+turda düzeltildi. `manufacturer-calendar.spec.ts` her koşuda **aynı ana** bir randevu ekiyor
+ve bırakıyordu; üçü birikince ızgaranın "+1 tane daha" taşması o koşunun kendi çipini
+gizledi ve iddia sahte bir kırmızı verdi. Üç şey düzeltildi: sorgu `ORDER BY` aldı (tekrarlı
+koşu aynı talebi seçsin), çip artık **hem** ait olduğu talebe **hem** türüne göre ve
+`:visible` ile aranıyor (tahta olayı iki kez render ediyor — `lg` üstünde ızgara, altında
+ajanda — ve gizli kopyayı bulmak DOM hakkında doğru, ekran hakkında yanlış bir cümledir), ve
+temizlik `afterAll` yerine **testin içine** alındı: Playwright bir dosyanın testlerini
+worker'lara dağıtıyor, yani bir worker'ın kancası ötekinin az önce ektiği satırı silebiliyor.
+
 ## Open questions — need a human answer before the phase that hits them
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
+| Q38 | **Nothing stops `pnpm test:e2e` from running against production either — Q34's sibling.** The suite signs in, registers users and, in `phase2-gate.spec.ts`, creates and verifies a real company through the real API. It reads `DATABASE_URL` (and `baseURL`) from the environment like the seed does, with no `APP_ENV` check and no refusal. 14.4 made the gate clean up after itself, which fixes the litter but not the aim: a suite pointed at the wrong database still writes to it, and unlike the seed it also *deletes* afterwards. Found while clearing eight `Gate Pergola` cards out of the demo directory. The fix has the same shape as Q34's: refuse unless `APP_ENV` is `local`/`test`. | nothing today | the guard is whoever set the environment variable, which is the control `19` §Data location does not accept anywhere else |
 | Q37 | **Eleven screens left the navigation in 13.8 and need a phase each.** They were links to 404s; `07` §Out of the navigation carries the table with the reason per route. Three classes, and they are not the same question. **(a) Nothing missing but the page** — `/panel/[id]/ekip`: every service exists, so this is scheduling, not a decision. **(b) A service away** — `/hesap/talepler`, `/hesap/mesajlar`, `/yonetim/musteriler`, `/hesap/ayarlar`: the per-item surfaces exist, the cross-cutting list or the profile write does not. **(c) A feature away** — `/hesap/kayitli-firmalar` and `/yonetim/sikayetler` need tables that do not exist (`SavedCompany`, `Complaint`); `/panel/[id]/analitik`, `/yonetim/metrikler` and `/yonetim/pazar-fiyatlari` need aggregates nobody computes; `/yonetim/bildirimler` is redundant with `/yonetim/ayarlar` and may simply never come back. | nothing today — every one is out of the navigation, so the product is honest about what it has | the list sits still and the screens stay designed-but-absent, which is the state `07` §Deferred was written to keep visible |
 | Q36 | **A throw during CLIENT rendering is never reported.** `onRequestError` sees server errors; `[locale]/error.tsx` catches the client half and deliberately does not report it, because `shared/observability/error-tracker.ts` is `server-only` — it is the seam a contracted processor will hang from (`19` §Data location, the Q2 chain). Reporting from the boundary needs a **client error endpoint**, which accepts arbitrary strings from the internet and therefore needs its own rate limit, its own PII rule and its own decision. Noticed while building the boundary in 14.2 and deliberately not invented there. | nothing today — this was equally true before the boundary existed | client-side failures stay invisible, which is survivable until the first one a user reports and nobody can find |
 | Q35 | **TypeScript 6 — a root-workspace decision, surfaced by the mobile package.** Expo SDK 57's dependency check wants `typescript ~6.0.3`; the repository is on `5.9.3`. A TypeScript major touches `src/`, the tests, the lint config and CI, so the mobile package cannot drag it in as a side effect of `npx expo install --check` — it is excluded there via `expo.install.exclude` (13.6b), with the reasoning in `mobile/store/surumleme-ve-imza.md`. The question is when the root takes TS 6, not whether mobile may. | nothing today — the exclusion keeps `expo-doctor` green and the SDK does not require it at build time | the repository stays on 5.9.3 and the exclusion stays, which is a written decision rather than drift |
